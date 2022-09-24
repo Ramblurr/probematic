@@ -1,0 +1,54 @@
+{:name "probematic"
+ :environment #profile {:prod #or [#env APP_ENVIRONMENT "prod"]
+                        :dev "dev"
+                        :test "test"}
+ :secrets #include "../secrets.edn"
+
+ :redis          {:pool {}
+                  :spec {:uri ""}}
+
+ :cookie-session-config {:cookie-secret          #or [#env COOKIE_SECRET nil]
+                         :cookie-default-max-age 86400}
+
+ :ig/system      {:app.ig/profile                    #profile {:prod :prod
+                                                               :dev  :dev
+                                                               :test :test}
+
+                  :app.ig/env                        {:profile #ig/ref :app.ig/profile}
+
+                  :app.ig/pedestal                   {:service {:io.pedestal.http/type   :jetty
+                                                                :io.pedestal.http/routes []
+                                                                :io.pedestal.http/port #long #or [#env WEBSITES_PORT #profile {:dev 6161 :test 6162} 6160]
+                                                                :io.pedestal.http/host #or [#env HTTP_BIND_HOST "localhost"]
+                                                                ;:io.pedestal.http/resource-path "/static"
+                                                                :io.pedestal.http/join?  false}
+                                                      :env     #ig/ref :app.ig/env
+                                                      :profile #ig/ref :app.ig/profile
+                                                      :routes  #ig/ref :app.ig.router/routes
+                                                      :handler #ig/ref :app.ig/handler}
+
+                  :app.ig/handler                    {:env                   #ig/ref :app.ig/env}
+
+
+
+                  :app.ig.router/routes              {:routes #ig/refset :app.ig/routes
+                                                      :db             #ig/ref :ol.hikari-cp.ig/hikari-connection
+                                                      :env            #ig/ref :app.ig/env
+                                                      :ds             #ig/ref :ol.hikari-cp.ig/hikari-connection}
+
+                  :ol.hikari-cp.ig/hikari-connection   #profile {:dev {:jdbc-url "jdbc:mysql://root:probematic@127.0.0.1:3311/probematic"}
+                                                                 :test {:jdbc-url "jdbc:mysql://root:probematic@127.0.0.1:3311/probematic-test"}
+                                                                 :prod {:jdbc-url #env DATABASE_URL}}
+
+                  :ol.sql.migratus.ig/migratus       {:store            :database
+                                                      :db               {:datasource #ig/ref :ol.hikari-cp.ig/hikari-connection}
+                                                      :migrate-on-init? true}
+                  :ol.ig/jobs                        {:job-defs #ig/ref :app.ig.jobs/definitions
+                                                      :env      #ig/ref :app.ig/env}
+
+                  :app.ig.jobs/definitions           {:env #ig/ref :app.ig/env}}
+
+ :jobs           {:job/ping {:job/frequency     [10 :seconds]
+                             :job/initial-delay [100000 :seconds]}
+
+                  }}
