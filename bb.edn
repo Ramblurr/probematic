@@ -1,0 +1,13 @@
+{:deps {local/deps {:local/root "."}}
+
+ :tasks
+ {; backend
+  repl  (shell "source .env && clojure -A:dev -M:inspect/reveal-nrepl-cider")
+  repl-term  (shell "clojure -A:test -A:dev -M:repl/cider-refactor")
+  ; frontend
+  npm-install (shell {:dir "./"} "npm" "install")
+  repl-ui {:depends [npm-install]
+           :task  (shell {:dir "./"} "npx shadow-cljs -A dev watch app")}
+
+  tailwind-css (shell {:dir "./"} "npx" "tailwindcss" "-i" "resources/public/css/main.css" "-o" "resources/public/css/compiled/main.css")
+  watch-css (shell {:dir "./"} "npx" "tailwindcss" "-w" "-i" "resources/public/css/main.css" "-o" "resources/public/css/compiled/main.css")}}

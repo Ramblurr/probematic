@@ -16,6 +16,10 @@
          io.pedestal/pedestal.service         {:mvn/version "0.5.10"}
          io.pedestal/pedestal.interceptor     {:mvn/version "0.5.10"}
 
+         ;; CTMX
+         hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
+         ctmx/ctmx {:mvn/version "1.4.5"}
+
          ;; http-client based on java 11
          hato/hato                            {:mvn/version "0.8.2"}
 

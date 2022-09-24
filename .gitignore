@@ -22,3 +22,5 @@ log
 .cpcache
 session.json
 secrets.edn
+node_modules
+resources/public/css/compiled/*

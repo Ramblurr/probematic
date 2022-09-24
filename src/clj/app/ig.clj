@@ -42,8 +42,7 @@
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
       true server/default-interceptors
-    ;  true (route.helpers/extra-interceptors system)
-        ;; swap in the reitit router
+      ;; swap in the reitit router
       true (pedestal/replace-last-interceptor
             (pedestal/routing-interceptor
              (http/router routes)

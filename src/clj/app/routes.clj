@@ -1,5 +1,8 @@
 (ns app.routes
   (:require
+   [app.routes.home :refer [home-routes]]
+   [app.routes.songs :refer [songs-routes]]
+   [app.routes.login :refer [login-routes]]
    [app.routes.pedestal-reitit]
    [app.auth.auth-endpoint :as auth.endpoint]
    [app.auth :as auth]
@@ -7,17 +10,17 @@
    [app.routes.helpers :as route.helpers]
    [reitit.ring :as ring]
    [reitit.swagger :as swagger]
-   [reitit.swagger-ui :as swagger-ui]
-   [ring.util.http-response :as r]))
+   [reitit.swagger-ui :as swagger-ui]))
 
 (defn routes [{:keys [] :as system}]
   (let [session-interceptor (auth/session-interceptor system)]
     ["" {:coercion     route.helpers/default-coercion
-         :interceptors [route.helpers/exception-interceptor
-                        session-interceptor]}
+         :muuntaja     route.helpers/formats-instance
+         :interceptors route.helpers/default-interceptors}
 
-     ;; Index
-     ;["/" (index-route frontend-index-adapter index-csp)]
+     (home-routes)
+     (songs-routes)
+     (login-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
      ["/login-backend"
       {:get {:handler (partial #'auth.endpoint/login-page system)}}]
@@ -39,12 +42,12 @@
        {:get {:summary "Check if a user is currently authenticated"
               :responses {200 {:body [:map [:loggedIn :boolean]]}}
               :handler auth.endpoint/logged-in-handler}}]
-      ["/login"
-       {:post {:summary "Authenticate a user"
-               :parameters {:body [:map
-                                   [:username  :string]
-                                   [:password  :string]]}
-               :handler (partial #'auth.endpoint/login-handler! system)}}]
+      ;["/login"
+      ; {:post {:summary "Authenticate a user"
+      ;         :parameters {:body [:map
+      ;                             [:username  :string]
+      ;                             [:password  :string]]}
+      ;         :handler (partial #'auth.endpoint/login-handler! system)}}]
 
       ["/login-form"
        {:get {:no-doc true
@@ -70,5 +73,5 @@
 (defn default-handler [{:keys [] :as system}]
   (ring/routes
    (wrap-swagger-ui "/api" "/api/swagger.json")
-   (ring/create-resource-handler)
+   (ring/create-resource-handler {:path "/"})
    (ring/create-default-handler)))

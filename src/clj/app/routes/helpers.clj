@@ -1,6 +1,7 @@
 (ns app.routes.helpers
   (:require
    [app.schemas :as schemas]
+   [io.pedestal.http.body-params :as body-params]
    [io.pedestal.http.secure-headers :as secure-headers]
    [luminus-transit.time :as time]
    [muuntaja.core :as m]
@@ -10,12 +11,12 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [reitit.swagger :as swagger]
-   [clojure.string :as str])
+   [ring.middleware.keyword-params :as keyword-params]
+   [reitit.swagger :as swagger])
   (:import
    (java.sql SQLException)))
 
-(def ^:private relaxed-csp "img-src 'self' data:; object-src 'none'; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'")
+(def ^:private relaxed-csp "img-src 'self' data:; object-src 'none'; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://rsms.me; connect-src 'self'")
 
 (derive ::error ::exception)
 (derive ::failure ::exception)
@@ -27,6 +28,13 @@
    :body   {:message   message
             :exception (str exception)
             :uri       (:uri request)}})
+
+(def keyword-params-interceptor
+  {:name ::keyword-params
+   :enter (fn [ctx]
+            (let [request (:request ctx)]
+              (assoc ctx :request
+                     (keyword-params/keyword-params-request request))))})
 
 (def exception-interceptor
   (exception/exception-interceptor
@@ -49,6 +57,15 @@
                            (.printStackTrace e)
                            (handler e request))})))
 
+(def tap-interceptor
+  {:name :tap-interceptr
+   :enter (fn [req]
+            (tap> (-> req :request))
+            (tap> (-> req :request :params))
+            (tap> (-> req :request :body-params))
+            (tap> (-> req :request :form-params))
+            req)})
+
 (def default-interceptors [swagger/swagger-feature
                            ;; query-params & form-params
                            (parameters/parameters-interceptor)
@@ -64,6 +81,8 @@
                            (coercion/coerce-response-interceptor)
                            ;; coercing request parameters
                            (coercion/coerce-request-interceptor)
+                           ;; htmx reequires all params (query, form etc) to be keywordized
+                           keyword-params-interceptor
                            ;; multipart
                            (multipart/multipart-interceptor)])
 
