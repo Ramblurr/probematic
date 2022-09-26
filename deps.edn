@@ -19,6 +19,7 @@
          ;; CTMX
          hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
          ctmx/ctmx {:mvn/version "1.4.5"}
+         com.github.jtidy/jtidy {:mvn/version "1.0.2"}
 
          ;; http-client based on java 11
          hato/hato                            {:mvn/version "0.8.2"}
@@ -63,6 +64,7 @@
          ol/mysql                             {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.mysql"}
          ol/sql.migratus.ig                   {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "fcfe7db6ed1669b9144ae25ab498340832169a5d" :deps/root "lib/ol.sql.migratus.ig"}
          ol/system                            {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.system"}
+         ol/http-kit.ig                            {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.http-kit.ig"}
          ol/jobs                              {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "090895af4fa6bb556d9e82c7809e6807380ead80" :deps/root "lib/ol.jobs"}}
  :aliases
  {:dev     {:extra-paths ["env/dev/clj"
