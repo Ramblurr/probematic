@@ -21,7 +21,7 @@
          :interceptors route.helpers/default-interceptors}
 
      (home-routes)
-     (songs-routes)
+     (songs-routes system)
      (events-routes system)
      (login-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]

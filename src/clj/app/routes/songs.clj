@@ -2,6 +2,7 @@
   (:require
    [app.routes.shared :as ui]
    [app.render :as render]
+   [app.db :as db]
    [app.icons :as icon]
    [ctmx.core :as ctmx]
    [tick.core :as t]
@@ -94,8 +95,8 @@
             :hx-trigger "keyup changed delay:500ms"
             :hx-target "#songs-list"}]])
 
-(ctmx/defcomponent ^:endpoint songs-list [req song]
-  (let [filtered-songs (search-songs song _songs)]
+(ctmx/defcomponent ^:endpoint songs-list [req all-songs song]
+  (let [filtered-songs (search-songs song all-songs)]
 
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
            :id "songs-list"}
@@ -113,24 +114,25 @@
              :class "sr-only peer"}]
     [:span {:class "rounded border-4 mx-0 my-1 p-2 block basis-1/2 border-gray-200 peer-checked:border-green-200"}  title]]])
 
-(defn song-toggle-list []
+(defn song-toggle-list [all-songs]
   [:ul {:class "p-0 m-0 flex flex-wrap"}
-   (map song-toggler _songs)])
+   (map song-toggler all-songs)])
 
-(defn songs-list-routes []
+(defn songs-list-routes [conn]
   (ctmx/make-routes
    "/songs"
    (fn [req]
-     (render/html5-response
-      [:div {:class "mt-6"}
-       [:div {:class "flex space-x-4"}
-        (songs-filter req)
-        [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
-         (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
-         "Song"]]
+     (let [songs (db/songs @conn)]
+       (render/html5-response
+        [:div {:class "mt-6"}
+         [:div {:class "flex space-x-4"}
+          (songs-filter req)
+          [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
+           (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
+           "Song"]]
 
-       (songs-list req "")
-       (song-toggle-list)]))))
+         (songs-list req songs "")
+         (song-toggle-list songs)])))))
 
 (defn songs-new-routes []
   (ctmx/make-routes
@@ -151,7 +153,7 @@
          [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
          [:button {:type "submit", :class "ml-3 btn btn-sm btn-indigo-high"} "Save"]]]]))))
 
-(defn songs-routes []
+(defn songs-routes [{:keys [conn]}]
   [""
-   (songs-list-routes)
+   (songs-list-routes conn)
    (songs-new-routes)])

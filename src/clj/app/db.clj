@@ -85,7 +85,62 @@
    {:db/ident       :dialogflow/entity-value
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/doc         "The last known value used as the entity in dialogflow. This should usually be the title."}])
+    :db/doc         "The last known value used as the entity in dialogflow. This should usually be the title."}
+
+   {:db/ident       :song/play-count
+    :db/valueType   :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/doc         "The total number of times the song has been played"}
+
+   {:db/ident       :song/title
+    :db/valueType   :db.type/string
+    :db/unique      :db.unique/value
+    :db/cardinality :db.cardinality/one
+    :db/index       true
+    :db/doc         "The title of the song"}
+
+   {:db/ident       :song/play-count
+    :db/valueType   :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/doc         "The total number of times the song has been played"}
+
+   {:db/ident       :song/last-played
+    :db/valueType   :db.type/instant
+    :db/cardinality :db.cardinality/one
+    :db/doc         "The time the song was last played"}
+
+   {:db/ident       :song/active?
+    :db/valueType   :db.type/boolean
+    :db/cardinality :db.cardinality/one
+    :db/index       true
+    :db/doc         "Whether or not the song is part of the active repertoire"}
+
+   {:db/ident       :played/song
+    :db/valueType   :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/index       true
+    :db/doc         "The song that was played"}
+
+   {:db/ident       :played/gig
+    :db/valueType   :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/index       true
+    :db/doc         "The gig/probe that the song was played at"}
+
+   {:db/ident       :played/rating
+    :db/valueType   :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/index       true
+    :db/doc         "The impression of how well the song was played"}
+
+   {:db/ident       :played/emphasis
+    :db/valueType   :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/index       true
+    :db/doc         "Intensiv or normal when played at a probe"}
+
+   ;
+   ])
 
 (defn idempotent-schema-install! [conn]
   (d/transact conn schema))
@@ -275,6 +330,26 @@
   (d/transact conn [{:db/id                    (:db/id session)
                      :session/last-activity-at (t/inst)}]))
 
+(defn create-song-tx [title]
+  {:song/title title
+   :song/active? true
+   :song/play-count 0})
+
+(defn create-song! [conn title]
+  (d/transact conn [(create-song-tx title)]))
+
+(defn song-db->model [entity]
+  (-> entity
+      export-entity))
+
+(defn songs-db->model [es]
+  (->> es
+       (map song-db->model)
+       (sort-by :song/title)))
+
+(defn songs [db]
+  (songs-db->model
+   (find-all db :song/title)))
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -336,5 +411,31 @@
   (type
    (t/zoned-date-time
     #inst "2020-05-11"))
+
+  (def _titles
+    ["Kingdom Come"
+     "Surfin"
+     "Asterix" ,
+     "Bella Ciao" ,
+     "Cumbia Sobre el Mar" ,
+     "Der Zug um 7.40" ,
+     "Grenzrenner" ,
+     "Inner Babylon" ,
+     "Kids Aren't Alright" ,
+     "Klezma 34" ,
+     "Laisse Tomber Les Filles" ,
+     "L’estaca del pueblo" ,
+     "Metanioa" ,
+     "Monkeys Rally" ,
+     "Montserrat Serrat" ,
+     "Rasta Funk" ,
+     "Tammurriata Nera" ,
+     "Tschufittl Cocek" ,
+     "You Move You Lose" ,
+     "Odessa Bulgar"])
+
+  (d/transact conn
+              (mapv create-song-tx _titles))
+  (songs @conn)
   ;
   )

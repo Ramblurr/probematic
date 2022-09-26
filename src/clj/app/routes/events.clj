@@ -39,20 +39,6 @@
             [:li
              (event-row event)]) events)]))
 
-(def _events [{:event/title "Probe 2022-09-29"
-               :event/date (t/date "2022-09-29")
-               :event/type :event/probe
-               :event/location "Proberaum"
-               :event/id "A"
-               :event/status :event/confirmed}
-
-              {:event/title "Probe 2022-10-01"
-               :event/date (t/date "2022-10-01")
-               :event/type :event/probe
-               :event/location "Proberaum"
-               :event/id "B"
-               :event/status :event/unconfirmed}])
-
 (defn events-list-routes [{:keys [conn]}]
   (ctmx/make-routes
    "/events"
