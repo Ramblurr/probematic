@@ -4,8 +4,19 @@
                         :test "test"}
  :secrets #include "../secrets.edn"
 
- :redis          {:pool {}
-                  :spec {:uri ""}}
+ :airtable        {:token #ref [:secrets :airtable :token]
+                   :base #ref [:secrets :airtable :base]
+
+                   :all-people-table         {:name "People" :view "All People"}
+                   :gigo-linked-people-table {:name "People" :view "Gigo Linked"}
+                   :gigo-table               {:name "Gigo" :view "All"}}
+
+ :gigo            {:username #ref [:secrets :gigo :username]
+                   :password #ref [:secrets :gigo :password]}
+
+ :twilio          {:bot-number #ref [:secrets :twilio :bot-number]
+                   :twilio-account #ref [:secrets :twilio :twilio-account]
+                   :twilio-token  #ref [:secrets :twilio :twilio-token]}
 
  :cookie-session-config {:cookie-secret          #or [#env COOKIE_SECRET nil]
                          :cookie-default-max-age 86400}
@@ -20,20 +31,16 @@
                                                                 :io.pedestal.http/routes []
                                                                 :io.pedestal.http/port #long #or [#env WEBSITES_PORT #profile {:dev 6161 :test 6162} 6160]
                                                                 :io.pedestal.http/host #or [#env HTTP_BIND_HOST "localhost"]
-                                                                ;:io.pedestal.http/resource-path "/static"
+                                        ;:io.pedestal.http/resource-path "/static"
                                                                 :io.pedestal.http/join?  false
-                                                                :io.pedestal.http/secure-headers {
-                                                                                                  :content-security-policy-settings {
-                                                                                                                                     :img-src "'self' data:;"
+                                                                :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src "'self' data:;"
                                                                                                                                      :object-src "'none';"
                                                                                                                                      :default-src "'self';"
                                                                                                                                      :font-src "'self' https://rsms.me;"
                                                                                                                                      :script-src "'self' 'unsafe-inline' 'unsafe-eval';"
-                                                                                                                                      :style-src "'self' 'unsafe-inline' https://rsms.me;"
-                                                                                                                                     :connect-src "'self'"
+                                                                                                                                     :style-src "'self' 'unsafe-inline' https://rsms.me;"
+                                                                                                                                     :connect-src "'self'"}}}
 
-                                                                                                                                     }}
-                                                                }
                                                       :env     #ig/ref :app.ig/env
                                                       :profile #ig/ref :app.ig/profile
                                                       :routes  #ig/ref :app.ig.router/routes
@@ -41,26 +48,26 @@
 
                   :app.ig/handler                    {:env                   #ig/ref :app.ig/env}
 
-
-
                   :app.ig.router/routes              {:routes #ig/refset :app.ig/routes
-                                                      :db             #ig/ref :ol.hikari-cp.ig/hikari-connection
-                                                      :env            #ig/ref :app.ig/env
-                                                      :ds             #ig/ref :ol.hikari-cp.ig/hikari-connection}
+                                                      :env            #ig/ref :app.ig/env}
 
-                  :ol.hikari-cp.ig/hikari-connection   #profile {:dev {:jdbc-url "jdbc:mysql://root:probematic@127.0.0.1:3311/probematic"}
-                                                                 :test {:jdbc-url "jdbc:mysql://root:probematic@127.0.0.1:3311/probematic-test"}
-                                                                 :prod {:jdbc-url #env DATABASE_URL}}
-
-                  :ol.sql.migratus.ig/migratus       {:store            :database
-                                                      :db               {:datasource #ig/ref :ol.hikari-cp.ig/hikari-connection}
-                                                      :migrate-on-init? true}
                   :ol.ig/jobs                        {:job-defs #ig/ref :app.ig.jobs/definitions
                                                       :env      #ig/ref :app.ig/env}
 
-                  :app.ig.jobs/definitions           {:env #ig/ref :app.ig/env}}
+                  :app.ig/gigo-client        {:env #ig/ref :app.ig/env}
+
+                  :ol.datahike.ig/database            {:db-file #profile {:prod #or [#env DB_PATH "/data/sno-gigo.db"]
+                                                                          :dev "dev.db"
+                                                                          :test "test.db"}}
+
+                  :ol.datahike.ig/connection          {:db-config #ig/ref :ol.datahike.ig/database}
+                  :app.ig/app-db             {:conn #ig/ref :ol.datahike.ig/connection}
+
+                  :app.ig.jobs/definitions {:env #ig/ref :app.ig/env}}
 
  :jobs           {:job/ping {:job/frequency     [10 :seconds]
                              :job/initial-delay [100000 :seconds]}
-
-                  }}
+                  :job/sync-members    {:job/frequency     [1 :hours]
+                                        :job/initial-delay [3 :seconds]}
+                  :job/update-airtable {:job/frequency     [1 :hours]
+                                        :job/initial-delay [2 :seconds]}}}

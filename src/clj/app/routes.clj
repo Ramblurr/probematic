@@ -9,6 +9,7 @@
    [app.auth :as auth]
    [app.health.health-endpoint :as health]
    [app.routes.helpers :as route.helpers]
+   [app.features :as f]
    [reitit.ring :as ring]
    [reitit.swagger :as swagger]
    [reitit.swagger-ui :as swagger-ui]))
@@ -40,6 +41,20 @@
       ["/health"
        {:summary "Retrieve the current health status of the system"
         :get health/healthcheck!}]
+      ["/features"
+       {:get {:swagger {:info {:title "Get a list of active features"}}
+              :handler f/list-features-handler}}]
+      ["/features/enable" {:post {:swagger {:info {:title "Enable a feature"}}
+                                  :parameters {:body [:map [:feature :string]]}
+                                  :responses {200 {:body [:map [:feature :string]
+                                                          [:value :boolean]]}
+                                              400 {:body  [:map [:msg :string]]}}
+                                  :handler f/enable-feature-handler}}]
+      ["/features/disable" {:post {:swagger {:info {:title "Disable a feature"}}
+                                   :responses {200 {:body [:map [:feature :string]
+                                                           [:value :boolean]]}
+                                               400 {:body  [:map [:msg :string]]}}
+                                   :handler f/disable-feature-handler}}]
       ["/logged-in"
        {:get {:summary "Check if a user is currently authenticated"
               :responses {200 {:body [:map [:loggedIn :boolean]]}}

@@ -6,12 +6,8 @@
    [app.schemas :as schemas]
    [integrant.repl.state :as state]
    [malli.dev :as md]
-   [migratus.core :as migratus]
    [ol.app.dev.dev-extras :refer :all]
    [ol.system :as system]))
-
-(defn create-migration [config name]
-  (migratus/create config name))
 
 ;(mr/set-default-registry! schemas/registry)
 ;
@@ -25,9 +21,6 @@
   (md/stop!)
 
   ;rich-comment-setup
-  (do
-    (def ds (:ol.hikari-cp.ig/hikari-connection state/system))
-    (def migratus (:ol.sql.migratus.ig/migratus state/system)))
 
   (set-prep! {:profile :dev})
   (keys state/system)
@@ -39,10 +32,6 @@
 
   (system/system-config {:profile :dev})
 
-  (create-migration migratus "audit log")
-
-  (migratus/init migratus)
-  (migratus/migrate migratus)
 
   (seeds/seed! ds)
 

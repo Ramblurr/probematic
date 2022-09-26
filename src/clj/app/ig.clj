@@ -4,14 +4,13 @@
    [app.config :as config]
    [app.jobs :as jobs]
    [app.routes :as routes]
+   [app.db :as db]
    [app.routes.helpers :as route.helpers]
    [clojure.tools.logging :as log]
    [integrant.core :as ig]
    [io.pedestal.http :as server]
    [ol.hikari-cp.ig]
    [ol.jobs.ig]
-   [ol.mysql]
-   [ol.sql.migratus.ig]
    [ol.system :as system]
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]))
@@ -54,3 +53,14 @@
 (defmethod ig/halt-key! ::pedestal
   [_ server]
   (server/stop server))
+
+(defmethod ig/init-key ::gigo-client
+  [_ {:keys [env] :as opts}]
+  {:username (get-in env [:gigo :username])
+   :password (get-in env [:gigo :password])
+   :cookie-atom (atom nil)})
+
+(defmethod ig/init-key ::app-db
+  [_ {:keys [conn]}]
+  (db/idempotent-schema-install! conn)
+  conn)
