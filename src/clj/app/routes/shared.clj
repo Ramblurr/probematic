@@ -31,16 +31,16 @@
     (get labels is-active)]))
 
 (def gig-status-colors
-  {:event/confirmed {:text-color "text-green-800"
-                     :bg-color "bg-green-100"
-                     :label "Confirmed"}
-   :event/unconfirmed {:text-color "text-orange-800"
-                       :bg-color "bg-orange-100"
-                       :label "Unconfirmed"}
+  {:status/confirmed {:text-color "text-green-800"
+                      :bg-color "bg-green-100"
+                      :label "Confirmed"}
+   :status/unconfirmed {:text-color "text-orange-800"
+                        :bg-color "bg-orange-100"
+                        :label "Unconfirmed"}
 
-   :event/cancelled {:text-color "text-red-800"
-                     :bg-color "bg-red-100"
-                     :label "Cancelled"}})
+   :status/cancelled {:text-color "text-red-800"
+                      :bg-color "bg-red-100"
+                      :label "Cancelled"}})
 
 (defn gig-status [status]
   (let [{:keys [text-color bg-color label]} (gig-status-colors status)]

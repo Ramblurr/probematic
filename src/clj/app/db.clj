@@ -77,6 +77,11 @@
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
     :db/doc         "Where the gig takes place"}
+
+   {:db/ident       :gig/status
+    :db/valueType   :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/doc         "The status of the gig"}
    {:db/ident       :dialogflow/entity-value
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one

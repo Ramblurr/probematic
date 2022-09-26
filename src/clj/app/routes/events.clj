@@ -16,8 +16,7 @@
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-       ; (ui/gig-status status)
-        ]]
+        (ui/gig-status status)]]
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
