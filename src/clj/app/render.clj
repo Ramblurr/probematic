@@ -46,6 +46,7 @@ generate output the way we want -- formatted and without sending warnings.
               :href "/css/compiled/main.css"}]]
      [:body body]
 
+     [:script {:src "/js/hyperscript.org@0.9.7.js"}]
      [:script {:src "/js/htmx.js"}]
      [:script {:src "/js/helpers.js"}]
      (when js [:script {:src (str "/js" js)}])))))
