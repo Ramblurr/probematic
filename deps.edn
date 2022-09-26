@@ -21,6 +21,10 @@
          ctmx/ctmx {:mvn/version "1.4.5"}
          com.github.jtidy/jtidy {:mvn/version "1.0.2"}
 
+         ;; html to hiccup
+         taipei.404/html-to-hiccup {:mvn/version "0.1.8"}
+
+
          ;; http-client based on java 11
          hato/hato                            {:mvn/version "0.8.2"}
 

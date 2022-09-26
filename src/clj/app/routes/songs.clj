@@ -28,13 +28,15 @@
        [:div {:class "ml-2 flex flex-shrink-0"}
         (bool-bubble active)]]
       [:div {:class "mt-2 sm:flex sm:justify-between"}
-       [:div {:class "sm:flex"}
+       [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
          (icon/hashtag {:class style-icon})
+         "Played "
          play-count]
-        [:p {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6"}
+        [:p {:class "mt-2 flex items-center text-sm text-gray-500 mt-0 ml-6"}
 
          (icon/star-outline {:class style-icon})
+         "Score "
          score]]
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
         (icon/calendar {:class style-icon})
@@ -72,15 +74,16 @@
              (norm keyword))) all-songs))
 
 (ctmx/defcomponent ^:endpoint songs-filter [req]
-  [:div {:class "relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
+  [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
    [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
-    "Song"]
+    "Search Songs"]
    [:input {:type "text"
             :name "song"
             :id "song"
             :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
             :placeholder "Watermelon Man"
             :hx-get "songs-list"
+            :hx-push-url "true"
             :hx-trigger "keyup changed delay:500ms"
             :hx-target "#songs-list"}]])
 
@@ -91,11 +94,40 @@
            :id "songs-list"}
      (song-list filtered-songs)]))
 
-(defn songs-routes []
+(defn songs-list-routes []
   (ctmx/make-routes
    "/songs"
    (fn [req]
      (render/html5-response
       [:div {:class "mt-6"}
-       (songs-filter req)
+       [:div {:class "flex space-x-4"}
+        (songs-filter req)
+        [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
+         (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
+         "Song"]]
+
        (songs-list req "")]))))
+
+(defn songs-new-routes []
+  (ctmx/make-routes
+   "/songs/new"
+   (fn [req]
+     (render/html5-response
+      [:div {:class "mt-6"}
+       [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
+        [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
+         "Song Name"]
+        [:input {:type "text"
+                 :name "song"
+                 :id "song"
+                 :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+                 :placeholder "Watermelon Man"}]]
+       [:div {:class "pt-5"}
+        [:div {:class "flex justify-end"}
+         [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
+         [:button {:type "submit", :class "ml-3 btn btn-sm btn-indigo-high"} "Save"]]]]))))
+
+(defn songs-routes []
+  [""
+   (songs-list-routes)
+   (songs-new-routes)])

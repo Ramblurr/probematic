@@ -74,6 +74,12 @@
 .btn-gray-low:focus {@apply outline-none border-gray-300 ring-gray-500;}
 .btn-gray-low:active {@apply text-gray-200;}
 
+.btn-clear-normal {@apply text-gray-700 bg-white border-gray-300;}
+.btn-clear-normal:hover {@apply bg-gray-50;}
+.btn-clear-normal:focus {@apply outline-none ring-2 ring-indigo-500 ring-offset-2;}
+.btn-clear-normal:active {@apply bg-white;}
+
+
  .icon {
       width: 1em;
       height: 1em;
