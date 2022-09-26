@@ -63,10 +63,14 @@
                   :ol.datahike.ig/connection          {:db-config #ig/ref :ol.datahike.ig/database}
                   :app.ig/app-db             {:conn #ig/ref :ol.datahike.ig/connection}
 
-                  :app.ig.jobs/definitions {:env #ig/ref :app.ig/env}}
+                  :app.ig.jobs/definitions {:env #ig/ref :app.ig/env
+                                            :gigo #ig/ref :app.ig/gigo-client
+                                            :conn #ig/ref :app.ig/app-db}}
 
  :jobs           {:job/ping {:job/frequency     [10 :seconds]
                              :job/initial-delay [100000 :seconds]}
+                  :job/sync-gigs       {:job/frequency     [10 :minutes]
+                                        :job/initial-delay [2 :seconds]}
                   :job/sync-members    {:job/frequency     [1 :hours]
                                         :job/initial-delay [3 :seconds]}
                   :job/update-airtable {:job/frequency     [1 :hours]

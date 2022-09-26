@@ -29,8 +29,8 @@
   (routes/routes system))
 
 (defmethod ig/init-key :app.ig.jobs/definitions
-  [_ {:keys [env] :as system}]
-  (jobs/job-defs env))
+  [_ system]
+  (jobs/job-defs system))
 
 (defmethod ig/init-key ::pedestal
   [_ {:keys [service routes handler env] :as system}]
