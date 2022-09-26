@@ -2,6 +2,7 @@
   (:require
    [app.routes.home :refer [home-routes]]
    [app.routes.songs :refer [songs-routes]]
+   [app.routes.events :refer [events-routes]]
    [app.routes.login :refer [login-routes]]
    [app.routes.pedestal-reitit]
    [app.auth.auth-endpoint :as auth.endpoint]
@@ -20,6 +21,7 @@
 
      (home-routes)
      (songs-routes)
+     (events-routes)
      (login-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
      ["/login-backend"

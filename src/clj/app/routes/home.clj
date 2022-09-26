@@ -15,4 +15,4 @@
                       [:li
                        [:a {:href "/songs"} "Songs"]]
                       [:li
-                       [:a {:href "/occasions"} "Gigs/Probes"]]]]]]]))))
+                       [:a {:href "/events"} "Gigs/Probes"]]]]]]]))))

@@ -12,9 +12,7 @@
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
    [ring.middleware.keyword-params :as keyword-params]
-   [reitit.swagger :as swagger])
-  (:import
-   (java.sql SQLException)))
+   [reitit.swagger :as swagger]))
 
 (def ^:private relaxed-csp "img-src 'self' data:; object-src 'none'; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://rsms.me; connect-src 'self'")
 
@@ -45,9 +43,6 @@
 
      ;; ex-data with ::exception or ::failure
      ::exception         (partial handler "exception")
-
-     ;; SQLException and all it's child classes
-     SQLException        (partial handler "sql-exception")
 
      ;; override the default handler
      ::exception/default (partial handler "default")

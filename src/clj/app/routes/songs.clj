@@ -1,22 +1,11 @@
 (ns app.routes.songs
   (:require
+   [app.routes.shared :as ui]
    [app.render :as render]
    [app.icons :as icon]
    [ctmx.core :as ctmx]
    [tick.core :as t]
    [clojure.string :as clojure.string]))
-(defn bool-bubble [is-active]
-  [:span {:class
-          (render/cs "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                     (when is-active "text-green-800 bg-green-100")
-                     (when (not is-active) "text-red-800 bg-red-100"))}
-   (if is-active "Active" "Inactive")])
-
-(defn datetime [dt]
-  (if dt
-    [:time {:dateetime (str dt)}
-     (t/format (t/formatter "dd-MMM-yyyy") dt)]
-    "never"))
 
 (defn song-row [{:song/keys [title active last-played score play-count]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -26,7 +15,7 @@
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (bool-bubble active)]]
+        (ui/bool-bubble active)]]
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
@@ -41,7 +30,7 @@
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
         (icon/calendar {:class style-icon})
         [:p "Last Played "
-         (datetime last-played)]]]]]))
+         (ui/datetime last-played)]]]]]))
 
 (defn song-list [songs]
   (if (empty? songs)
@@ -55,8 +44,26 @@
               :song/score 0
               :song/play-count 1
               :song/last-played (t/today)
-              :song/active true}
+              :song/active true
+              :song/selected false}
              {:song/title "Watermelon Man"
+              :song/score 0
+              :song/play-count 1
+              :song/last-played (t/today)
+              :song/active true}
+
+             {:song/title "Tschufittl Cocek"
+              :song/score 0
+              :song/play-count 1
+              :song/last-played (t/today)
+              :song/active true}
+
+             {:song/title "Rasta Funk"
+              :song/score 0
+              :song/play-count 1
+              :song/last-played (t/today)
+              :song/active true}
+             {:song/title "YMYL"
               :song/score 0
               :song/play-count 1
               :song/last-played (t/today)
@@ -94,6 +101,22 @@
            :id "songs-list"}
      (song-list filtered-songs)]))
 
+(defn song-toggler [{:song/keys [title selected]}]
+  [:li (comment {:class
+                 (render/cs
+                  "rounded border-4 mx-0 my-1 p-2 block basis-1/2 "
+                  (if  selected "border-green-200" "border-gray-200"))
+                 :_ "on click toggle between .border-gray-200 and .border-green-200"})
+   [:label {:for title}
+    [:input {:type "checkbox"
+             :id title
+             :class "sr-only peer"}]
+    [:span {:class "rounded border-4 mx-0 my-1 p-2 block basis-1/2 border-gray-200 peer-checked:border-green-200"}  title]]])
+
+(defn song-toggle-list []
+  [:ul {:class "p-0 m-0 flex flex-wrap"}
+   (map song-toggler _songs)])
+
 (defn songs-list-routes []
   (ctmx/make-routes
    "/songs"
@@ -106,7 +129,8 @@
          (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
          "Song"]]
 
-       (songs-list req "")]))))
+       (songs-list req "")
+       (song-toggle-list)]))))
 
 (defn songs-new-routes []
   (ctmx/make-routes
