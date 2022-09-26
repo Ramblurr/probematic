@@ -49,6 +49,7 @@
                   :app.ig/handler                    {:env                   #ig/ref :app.ig/env}
 
                   :app.ig.router/routes              {:routes #ig/refset :app.ig/routes
+                                                      :conn #ig/ref :ol.datahike.ig/connection
                                                       :env            #ig/ref :app.ig/env}
 
                   :ol.ig/jobs                        {:job-defs #ig/ref :app.ig.jobs/definitions

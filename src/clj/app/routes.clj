@@ -14,7 +14,7 @@
    [reitit.swagger :as swagger]
    [reitit.swagger-ui :as swagger-ui]))
 
-(defn routes [{:keys [] :as system}]
+(defn routes [{:keys [conn] :as system}]
   (let [session-interceptor (auth/session-interceptor system)]
     ["" {:coercion     route.helpers/default-coercion
          :muuntaja     route.helpers/formats-instance
@@ -22,7 +22,7 @@
 
      (home-routes)
      (songs-routes)
-     (events-routes)
+     (events-routes system)
      (login-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
      ["/login-backend"

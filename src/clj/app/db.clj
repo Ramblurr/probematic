@@ -1,6 +1,8 @@
 (ns app.db
   (:require [datahike.api :as d]
-            [tick.core :as t]))
+            [datahike.impl.entity :as de]
+            [tick.core :as t]
+            [clojure.walk :as clojure.walk]))
 
 (def SESSION_TIMEOUT (t/new-duration 20 :minutes))
 
@@ -71,6 +73,10 @@
     :db/valueType   :db.type/instant
     :db/cardinality :db.cardinality/one
     :db/doc         "The date the gig takes place. Stored as an instant. Disregard the time portion"}
+   {:db/ident       :gig/location
+    :db/valueType   :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/doc         "Where the gig takes place"}
    {:db/ident       :dialogflow/entity-value
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
@@ -78,6 +84,15 @@
 
 (defn idempotent-schema-install! [conn]
   (d/transact conn schema))
+
+(defn export-entity
+  [entity]
+  (clojure.walk/prewalk
+   (fn [x]
+     (if (de/entity? x)
+       (into {} x)
+       x))
+   entity))
 
 (defn find-by
   "Returns the unique entity identified by attr and val."
@@ -146,16 +161,39 @@
                (mapv :db/id
                      (find-all db :member/name))))
 
+(defn gig-db->model [entity]
+  (-> entity
+      export-entity
+      (update :gig/date t/zoned-date-time)))
+(defn gigs-db->model [es]
+  (->> es
+       (map gig-db->model)
+       (sort-by :gig/date)))
+
 (defn gigs [db]
-  (find-all db :gig/id))
+  (gigs-db->model
+   (find-all db :gig/id)))
 
 (defn gigs-before [db t]
-  (entities db (d/q '[:find [?e ...]
-                      :in $ ?now
-                      :where
-                      [?e :gig/id _]
-                      [?e :gig/date ?date]
-                      [(< ?date ?now)]] db t)))
+  (gigs-db->model
+   (entities db (d/q '[:find [?e ...]
+                       :in $ ?now
+                       :where
+                       [?e :gig/id _]
+                       [?e :gig/date ?date]
+                       [(< ?date ?now)]] db t))))
+
+(defn gigs-after [db t]
+  (gigs-db->model
+   (entities db (d/q '[:find [?e ...]
+                       :in $ ?now
+                       :where
+                       [?e :gig/id _]
+                       [?e :gig/date ?date]
+                       [(>= ?date ?now)]] db t))))
+
+(defn gigs-future [db]
+  (gigs-after db (t/inst)))
 
 (defn gigs-missing-dialogflow-entity [db]
   (entities db (d/q '[:find [?e ...]
@@ -286,5 +324,12 @@
   (gigs-missing-dialogflow-entity @conn)
   (mapv :member/name (members @conn))
 
+  (->
+   (gigs-future @conn)
+   first)
+
+  (type
+   (t/zoned-date-time
+    #inst "2020-05-11"))
   ;
   )

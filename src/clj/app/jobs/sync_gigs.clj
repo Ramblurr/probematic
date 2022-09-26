@@ -20,6 +20,7 @@
 (defn- gig-tx [gig]
   {:gig/id    (:id gig)
    :gig/title (:title gig)
+   :gig/location (:address gig)
    :gig/date  (t/inst (t/at (:date gig) (t/midnight)))})
 
 (defn- update-gigs-db! [conn gigs]

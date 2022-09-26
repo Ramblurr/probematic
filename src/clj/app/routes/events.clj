@@ -5,9 +5,10 @@
    [app.icons :as icon]
    [ctmx.core :as ctmx]
    [tick.core :as t]
-   [clojure.string :as clojure.string]))
+   [clojure.string :as clojure.string]
+   [app.db :as db]))
 
-(defn event-row [{:event/keys [status title location date type id]}]
+(defn event-row [{:gig/keys [status title location date]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
     [:a {:href "#", :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
@@ -15,7 +16,8 @@
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (ui/gig-status status)]]
+       ; (ui/gig-status status)
+        ]]
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
@@ -52,30 +54,33 @@
                :event/id "B"
                :event/status :event/unconfirmed}])
 
-(defn events-list-routes []
+(defn events-list-routes [{:keys [conn]}]
   (ctmx/make-routes
    "/events"
    (fn [req]
-     (render/html5-response
-      [:div {:class "mt-6"}
-       [:div {:class ""}
-        (ui/divider-left "Upcoming")
-        [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
-               :id "songs-list"}
-         (event-list _events)]
-        (ui/divider-left "Past")
-        [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
-               :id "songs-list"}
-         (event-list [])]
+     (let [events (db/gigs-future @conn)]
+       (tap> (:gig/date (first events)))
 
-;
-        [:a {:href "/events/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
-         (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
-         "Gig/Probe"]]
+       (render/html5-response
+        [:div {:class "mt-6"}
+         [:div {:class ""}
+          (ui/divider-left "Upcoming")
+          [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
+                 :id "songs-list"}
+           (event-list events)]
+          (ui/divider-left "Past")
+          [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
+                 :id "songs-list"}
+           (event-list [])]
 
-       ;
-       ]))))
+                                        ;
+          [:a {:href "/events/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
+           (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
+           "Gig/Probe"]]
 
-(defn events-routes []
+                                        ;
+         ])))))
+
+(defn events-routes [conn]
   [""
-   (events-list-routes)])
+   (events-list-routes conn)])
