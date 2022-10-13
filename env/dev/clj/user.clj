@@ -6,3 +6,9 @@
   (require 'dev)
   (in-ns 'dev)
   :loaded)
+
+(comment
+
+  (dev)
+  ;;
+  )

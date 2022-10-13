@@ -90,13 +90,22 @@
             :id "song"
             :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
             :placeholder "Watermelon Man"
-            :hx-get "songs-list"
+            :hx-get "songs"
             :hx-push-url "true"
             :hx-trigger "keyup changed delay:500ms"
             :hx-target "#songs-list"}]])
 
-(ctmx/defcomponent ^:endpoint songs-list [req all-songs song]
-  (let [filtered-songs (search-songs song all-songs)]
+(ctmx/defcomponent ^:endpoint songs-list2 [req conn song]
+  (let [all-songs (db/songs @conn)
+        filtered-songs (search-songs song all-songs)]
+
+    [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
+           :id "songs-list"}
+     (song-list filtered-songs)]))
+
+(defn songs-list [req conn song]
+  (let [all-songs (db/songs @conn)
+        filtered-songs (search-songs song all-songs)]
 
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
            :id "songs-list"}
@@ -122,17 +131,34 @@
   (ctmx/make-routes
    "/songs"
    (fn [req]
-     (let [songs (db/songs @conn)]
-       (render/html5-response
-        [:div {:class "mt-6"}
-         [:div {:class "flex space-x-4"}
-          (songs-filter req)
-          [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
-           (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
-           "Song"]]
+     (render/html5-response
+      [:div {:class "mt-6"}
+       [:div {:class "flex space-x-4"}
+        (songs-filter req)
+        [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
+         (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
+         "Song"]]
 
-         (songs-list req songs "")
-         (song-toggle-list songs)])))))
+       (songs-list req conn "")
+        ; (song-toggle-list songs)
+       ]))))
+
+(defn handler-list-songs [conn {:keys [parameters htmx?] :as req}]
+  (let [{:keys [song]} (:query parameters)]
+    (if htmx?
+      (render/partial-response
+       (songs-list req conn song))
+      (render/html5-response
+       [:div {:class "mt-6"}
+        [:div {:class "flex space-x-4"}
+         (songs-filter req)
+         [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
+          (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
+          "Song"]]
+
+        (songs-list req conn song)
+                                        ; (song-toggle-list songs)
+        ]))))
 
 (defn songs-new-routes []
   (ctmx/make-routes
@@ -155,5 +181,8 @@
 
 (defn songs-routes [{:keys [conn]}]
   [""
-   (songs-list-routes conn)
-   (songs-new-routes)])
+   ["/songs" {:get {:handler (partial #'handler-list-songs conn)
+                    :parameters {:query [:map [:song {:default ""}  :string]]}}}]
+  ; (songs-list-routes conn)
+  ; (songs-new-routes)
+   ])

@@ -34,6 +34,21 @@
               (assoc ctx :request
                      (keyword-params/keyword-params-request request))))})
 
+(def htmx-interceptor
+  {:name ::htmx
+   :enter (fn [ctx]
+            (let [request (:request ctx)
+                  headers (:headers request)]
+              (if (some? (get headers "hx-request"))
+                (-> ctx
+                    (assoc-in [:request :htmx]
+                              (->> headers
+                                   (filter (fn [[key _]] (.startsWith key "hx-")))
+                                   (map (fn [[key val]] [(keyword key) val]))
+                                   (into {})))
+                    (assoc-in [:request :htmx?] true))
+                (assoc-in ctx [:request :htmx?] false))))})
+
 (def exception-interceptor
   (exception/exception-interceptor
    (merge
@@ -78,11 +93,14 @@
                            (coercion/coerce-request-interceptor)
                            ;; htmx reequires all params (query, form etc) to be keywordized
                            keyword-params-interceptor
+                           htmx-interceptor
                            ;; multipart
                            (multipart/multipart-interceptor)])
 
 (def default-coercion
-  (-> rcm/default-options (assoc-in [:options :registry] schemas/registry) rcm/create))
+  (-> rcm/default-options
+      (assoc-in [:options :registry] schemas/registry)
+      rcm/create))
 
 (def formats-instance
   (m/create

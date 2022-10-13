@@ -51,5 +51,9 @@ generate output the way we want -- formatted and without sending warnings.
      [:script {:src "/js/helpers.js"}]
      (when js [:script {:src (str "/js" js)}])))))
 
+(defn partial-response [body]
+  (html-response
+   (hiccup/html body)))
+
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
