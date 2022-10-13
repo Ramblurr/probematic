@@ -209,8 +209,8 @@
   (future-done? result)
   @result
   (t/day-of-week (t/date (t/inst)))
-  ;(update-dialogflow-gig-entities! (-> _opts :env) (-> _opts :conn) (-> _opts :df-clients :entity-types-client))
+                                        ;(update-dialogflow-gig-entities! (-> _opts :env) (-> _opts :conn) (-> _opts :df-clients :entity-types-client))
   (prune-gig-entities-before! (:env _opts) (:conn _opts) (-> _opts :df-clients :entity-types-client) (t/at (t/new-date 2022 8 1) (t/midnight)))
   (create-dialogflow-gig-entities! (:env _opts) (:conn _opts) (-> _opts :df-clients :entity-types-client))
-  ;
+                                        ;
   )

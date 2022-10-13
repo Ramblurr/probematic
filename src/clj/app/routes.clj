@@ -23,7 +23,7 @@
 
      (home-routes)
      (songs-routes)
-     (events-routes system)
+     (events-routes)
      (login-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
      ["/login-backend"
