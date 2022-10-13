@@ -106,30 +106,6 @@
        (songs-list req "")
         ; (song-toggle-list songs)
        ]))))
-(defn filter-vals
-  ([m]
-   (into {}
-         (for [[k v] m :when v] [k v]))))
-
-(defn input
-  ([type title]
-   (input type title nil nil nil))
-  ([type title name]
-   (input type title name nil nil))
-  ([type title name placeholder]
-   (input type title name placeholder nil))
-  ([type title name placeholder value]
-   [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
-    [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
-     title]
-    [:input {:class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
-             :type type
-             :name name
-             :value value
-             :required true
-             :placeholder placeholder}]]))
-
-(def text (partial input "text"))
 
 (ctmx/defcomponent ^:endpoint song-new [req song-name]
   (case (:request-method req)
@@ -142,7 +118,7 @@
       (response/redirect "/songs/"))
 
     [:form {:id id :hx-post "song-new" :class "mt-6"}
-     (text "New Song Name"  (path "song") "Watermelon Man" (value "song"))
+     (render/text "New Song Name"  (path "song") "Watermelon Man" (value "song"))
      [:div {:class "pt-5"}
       [:div {:class "flex justify-end"}
        [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
