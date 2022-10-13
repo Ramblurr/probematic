@@ -49,6 +49,13 @@
                     (assoc-in [:request :htmx?] true))
                 (assoc-in ctx [:request :htmx?] false))))})
 
+(defn system-interceptor
+  "Install the integrant system map into the request under the :system key"
+  [system]
+  {:name ::system
+   :enter (fn [ctx]
+            (assoc-in ctx [:request :system] system))})
+
 (def exception-interceptor
   (exception/exception-interceptor
    (merge
@@ -91,9 +98,9 @@
                            (coercion/coerce-response-interceptor)
                            ;; coercing request parameters
                            (coercion/coerce-request-interceptor)
+                           htmx-interceptor
                            ;; htmx reequires all params (query, form etc) to be keywordized
                            keyword-params-interceptor
-                           htmx-interceptor
                            ;; multipart
                            (multipart/multipart-interceptor)])
 

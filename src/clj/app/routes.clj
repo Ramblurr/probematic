@@ -14,14 +14,15 @@
    [reitit.swagger :as swagger]
    [reitit.swagger-ui :as swagger-ui]))
 
-(defn routes [{:keys [conn] :as system}]
+(defn routes [system]
   (let [session-interceptor (auth/session-interceptor system)]
     ["" {:coercion     route.helpers/default-coercion
          :muuntaja     route.helpers/formats-instance
-         :interceptors route.helpers/default-interceptors}
+         :interceptors (conj  route.helpers/default-interceptors
+                              (route.helpers/system-interceptor system))}
 
      (home-routes)
-     (songs-routes system)
+     (songs-routes)
      (events-routes system)
      (login-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]

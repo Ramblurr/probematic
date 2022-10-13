@@ -41,35 +41,6 @@
             [:li
              (song-row song)]) songs)]))
 
-(def _songs [{:song/title "Hooray"
-              :song/score 0
-              :song/play-count 1
-              :song/last-played (t/today)
-              :song/active true
-              :song/selected false}
-             {:song/title "Watermelon Man"
-              :song/score 0
-              :song/play-count 1
-              :song/last-played (t/today)
-              :song/active true}
-
-             {:song/title "Tschufittl Cocek"
-              :song/score 0
-              :song/play-count 1
-              :song/last-played (t/today)
-              :song/active true}
-
-             {:song/title "Rasta Funk"
-              :song/score 0
-              :song/play-count 1
-              :song/last-played (t/today)
-              :song/active true}
-             {:song/title "YMYL"
-              :song/score 0
-              :song/play-count 1
-              :song/last-played (t/today)
-              :song/active true}])
-
 (defn norm [s]
   (-> s
       (clojure.string/upper-case)
@@ -87,28 +58,19 @@
     "Search Songs"]
    [:input {:type "text"
             :name "song"
-            :id "song"
+            :id id
             :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
             :placeholder "Watermelon Man"
-            :hx-get "songs"
-            :hx-push-url "true"
+            :hx-get "songs-list"
+            ;; :hx-push-url "true"
             :hx-trigger "keyup changed delay:500ms"
-            :hx-target "#songs-list"}]])
+            :hx-target (hash "../songs-list")}]])
 
-(ctmx/defcomponent ^:endpoint songs-list2 [req conn song]
-  (let [all-songs (db/songs @conn)
+(ctmx/defcomponent ^:endpoint songs-list [req song]
+  (let [all-songs (db/songs @(-> req :system :conn))
         filtered-songs (search-songs song all-songs)]
-
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
-           :id "songs-list"}
-     (song-list filtered-songs)]))
-
-(defn songs-list [req conn song]
-  (let [all-songs (db/songs @conn)
-        filtered-songs (search-songs song all-songs)]
-
-    [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
-           :id "songs-list"}
+           :id id}
      (song-list filtered-songs)]))
 
 (defn song-toggler [{:song/keys [title selected]}]
@@ -127,7 +89,7 @@
   [:ul {:class "p-0 m-0 flex flex-wrap"}
    (map song-toggler all-songs)])
 
-(defn songs-list-routes [conn]
+(defn songs-list-routes []
   (ctmx/make-routes
    "/songs"
    (fn [req]
@@ -139,27 +101,9 @@
          (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
          "Song"]]
 
-       (songs-list req conn "")
+       (songs-list req "")
         ; (song-toggle-list songs)
        ]))))
-
-(defn handler-list-songs [conn {:keys [parameters htmx?] :as req}]
-  (let [{:keys [song]} (:query parameters)]
-    (if htmx?
-      (render/partial-response
-       (songs-list req conn song))
-      (render/html5-response
-       [:div {:class "mt-6"}
-        [:div {:class "flex space-x-4"}
-         (songs-filter req)
-         [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
-          (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
-          "Song"]]
-
-        (songs-list req conn song)
-                                        ; (song-toggle-list songs)
-        ]))))
-
 (defn songs-new-routes []
   (ctmx/make-routes
    "/songs/new"
@@ -179,10 +123,7 @@
          [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
          [:button {:type "submit", :class "ml-3 btn btn-sm btn-indigo-high"} "Save"]]]]))))
 
-(defn songs-routes [{:keys [conn]}]
+(defn songs-routes []
   [""
-   ["/songs" {:get {:handler (partial #'handler-list-songs conn)
-                    :parameters {:query [:map [:song {:default ""}  :string]]}}}]
-  ; (songs-list-routes conn)
-  ; (songs-new-routes)
-   ])
+   (songs-list-routes)
+   (songs-new-routes)])
