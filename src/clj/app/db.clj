@@ -352,6 +352,10 @@
   (util/isort-by :song/title
                  (songs-db->model
                   (find-all db :song/title))))
+(defn song-by-title [db title]
+  (song-db->model
+   (find-by db :song/title title)))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
