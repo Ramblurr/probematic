@@ -82,3 +82,37 @@ generate output the way we want -- formatted and without sending warnings.
                           :placeholder placeholder})]]))
 
 (def text (partial input "text"))
+
+(def button-priority-classes {:secondary
+                              "border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                              :white
+                              "border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              :primary
+                              "border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"})
+
+(defn button [& {:keys [tag label disabled? class attr icon priority centered?]
+                 :or   {class ""
+                        priority :white
+                        tag :a}
+                 :as   args}]
+  [tag (merge
+        {:class
+         (cs
+          "inline-flex items-center rounded-md border"
+          (priority button-priority-classes)
+          (when centered? "items-center justify-center")
+          class)}
+        attr)
+   (when icon (icon  {:class "-ml-1 mr-2 h-5 w-5"}))
+   label])
+
+(defn page-header [& {:keys [title subtitle buttons] :as args}]
+  [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
+   [:div {:class "flex items-center space-x-5"}
+    [:div
+     [:h1 {:class "text-2xl font-bold text-gray-900"} title]
+     (when subtitle
+       [:p {:class "text-sm font-medium text-gray-500"}
+        subtitle])]]
+   [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
+    buttons]])

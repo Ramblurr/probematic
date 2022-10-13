@@ -96,12 +96,15 @@
    "/songs"
    (fn [req]
      (render/html5-response
-      [:div {:class "mt-6"}
-       [:div {:class "flex space-x-4"}
-        (songs-filter req)
-        [:a {:href "/songs/new" :class "flex-initial inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}  "<!-- Heroicon name: mini/envelope -->"
-         (icon/plus {:class "-ml-1 mr-2 h-5 w-5"})
-         "Song"]]
+      [:div
+       (render/page-header :title "Songs"
+                           :buttons (list (render/button :label "New Song"
+                                                         :priority :primary
+                                                         :centered? true
+                                                         :attr {:href "/songs/new"}
+                                                         :icon icon/plus)))
+       [:div {:class "flex space-x-4 mt-8 sm:mt-0"}
+        (songs-filter req)]
 
        (songs-list req "")
         ; (song-toggle-list songs)
@@ -135,17 +138,20 @@
 
 (defn song-detail [req song-title]
   (if-let [song (db/song-by-title @(-> req :system :conn) song-title)]
-    [:div {:class "mx-auto max-w-3xl px-4 sm:px-6 md:flex md:items-center md:justify-between md:space-x-5 lg:max-w-7xl lg:px-8"}
-     [:div {:class "flex items-center space-x-5"}
-      [:div
-       [:h1 {:class "text-2xl font-bold text-gray-900"} (:song/title song)]
-       [:p {:class "text-sm font-medium text-gray-500"}
-        "Last played " (ui/datetime (:song/last-played song))]]]
-     [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
-      [:button {:type "button", :class "inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100"}
-       "Add Comment"]
-      [:button {:type "button", :class "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100"}
-       "Log Play"]]]
+    [:div
+     (render/page-header :title song-title
+
+                         :subtitle (list  "Last played " (ui/datetime (:song/last-played song)))
+                         :buttons (list  (render/button :label "Comment"
+                                                        :priority :white
+                                                        :centered? true
+                                                        :attr {:href "/songs/new"})
+                                         (render/button :label "Log Play"
+                                                        :priority :primary
+                                                        :centered? true
+                                                        :class "items-center justify-center "
+                                                        :attr {:href "/songs/new"})))]
+
     [:div
      [:p "Song not found."]
      [:a {:href "/songs/" :class "underline hover:text-indigo-600 text-indigo-500"} "Back to song list"]]))
