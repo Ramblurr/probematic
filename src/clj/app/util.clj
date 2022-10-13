@@ -39,3 +39,8 @@
   ([x]
    (tap> x)
    x))
+
+(defn isort-by
+  "Like sort-by but for a case-insenstive string sort" [keyfn coll]
+  (sort-by
+   (comp clojure.string/lower-case keyfn) coll))

@@ -2,7 +2,8 @@
   (:require [datahike.api :as d]
             [datahike.impl.entity :as de]
             [tick.core :as t]
-            [clojure.walk :as clojure.walk]))
+            [clojure.walk :as clojure.walk]
+            [app.util :as util]))
 
 (def SESSION_TIMEOUT (t/new-duration 20 :minutes))
 
@@ -348,8 +349,9 @@
        (sort-by :song/title)))
 
 (defn songs [db]
-  (songs-db->model
-   (find-all db :song/title)))
+  (util/isort-by :song/title
+                 (songs-db->model
+                  (find-all db :song/title))))
 (comment
   (do
     (require '[integrant.repl.state :as state])
