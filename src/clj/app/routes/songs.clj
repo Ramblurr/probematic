@@ -98,16 +98,21 @@
      (render/html5-response
       [:div
        (render/page-header :title "Songs"
-                           :buttons (list (render/button :label "New Song"
-                                                         :priority :primary
-                                                         :centered? true
-                                                         :attr {:href "/songs/new"}
-                                                         :icon icon/plus)))
+                           :buttons (list
+                                     (render/button :label "Log Play"
+                                                    :priority :primary
+                                                    :centered? true
+                                                    :attr {:href "/songs/log-play/"}
+                                                    :icon icon/plus)
+                                     (render/button :label "New Song"
+                                                    :priority :white
+                                                    :centered? true
+                                                    :attr {:href "/songs/new"})))
        [:div {:class "flex space-x-4 mt-8 sm:mt-0"}
         (songs-filter req)]
 
        (songs-list req "")
-        ; (song-toggle-list songs)
+                                        ; (song-toggle-list songs)
        ]))))
 
 (ctmx/defcomponent ^:endpoint song-new [req song-name]
@@ -150,7 +155,7 @@
                                                         :priority :primary
                                                         :centered? true
                                                         :class "items-center justify-center "
-                                                        :attr {:href "/songs/new"})))]
+                                                        :attr {:href (str "/song/log-play/" song-title "/")})))]
 
     [:div
      [:p "Song not found."]
@@ -163,8 +168,63 @@
      (render/html5-response
       (song-detail req (-> req :path-params :song/title))))))
 
+(defn song-select [songs]
+  [:div
+   [:label {:for "song", :class "block text-sm font-medium text-gray-700"} "Song"]
+   [:select {:id "song", :name "location", :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
+    (for [song songs]
+      [:option {:selected false} (:song/title song)])]])
+
+(defn gig-select [gigs]
+  [:div
+   [:label {:for "song", :class "block text-sm font-medium text-gray-700"} "Gig/Probe"]
+   [:select {:id "song", :name "location", :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
+    (for [{:gig/keys [id date title]} gigs]
+      [:option {:selected false :value id}])]])
+
+(ctmx/defcomponent ^:endpoint songs-log-play [req]
+  (case (:request-method req)
+    :post
+    (let [params (-> req
+                     :params form/json-params-pruned)
+          conn (-> req :system :conn)]
+      ;; TODO log the play
+      (response/redirect "/songs/"))
+    (let [conn (-> req :system :conn)
+          songs (db/songs @conn)
+          gigs (db/gigs @conn)]
+
+      [:form {:id id :hx-post (path ".")}
+   ;; (render/text "New Song Name"  (path "song") "Watermelon Man" (value "song"))
+       (list
+        (render/select (path "song") "Songs" (map (fn [s]
+                                                    {:value (:song/title s)
+                                                     :label (:song/title s)
+                                                     :selected? false}) songs))
+
+        (render/select (path "gig") "Gig/Probe" (map (fn [{:gig/keys [id title date]}]
+                                                       {:value id
+                                                        :label (str title " " (when date (ui/format-dt date)))
+                                                        :selected? false}) gigs)))
+       [:div
+        [:div {:class "flex justify-end"}
+         [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
+         [:button {:class "ml-3 btn btn-sm btn-indigo-high"
+                   :type "submit"
+                   :hx-swap-oob "true"} "Save"]]]])))
+
+(defn songs-log-play-routes []
+  (ctmx/make-routes
+   "/songs/log-play/"
+   (fn [req]
+     (render/html5-response
+      [:div
+       (render/page-header :title "Log Play")
+       (songs-log-play req)]))))
+
 (defn songs-routes []
   [""
    (song-detail-routes)
+   (songs-log-play-routes)
    (songs-list-routes)
    (songs-new-routes)])

@@ -49,8 +49,11 @@
                        text-color bg-color)}
      label]))
 
+(defn format-dt [dt]
+  (t/format (t/formatter "dd-MMM-yyyy") dt))
+
 (defn datetime [dt]
   (if dt
     [:time {:dateetime (str dt)}
-     (t/format (t/formatter "dd-MMM-yyyy") dt)]
+     (format-dt dt)]
     "never"))
