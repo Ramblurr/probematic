@@ -5,8 +5,10 @@
    [app.db :as db]
    [app.icons :as icon]
    [ctmx.core :as ctmx]
+   [ctmx.form :as form]
    [tick.core :as t]
-   [clojure.string :as clojure.string]))
+   [clojure.string :as clojure.string]
+   [ctmx.response :as response]))
 
 (defn song-row [{:song/keys [title active last-played score play-count]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -104,24 +106,56 @@
        (songs-list req "")
         ; (song-toggle-list songs)
        ]))))
+(defn filter-vals
+  ([m]
+   (into {}
+         (for [[k v] m :when v] [k v]))))
+
+(defn input
+  ([type title]
+   (input type title nil nil nil))
+  ([type title name]
+   (input type title name nil nil))
+  ([type title name placeholder]
+   (input type title name placeholder nil))
+  ([type title name placeholder value]
+   [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
+    [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
+     title]
+    [:input {:class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+             :type type
+             :name name
+             :value value
+             :required true
+             :placeholder placeholder}]]))
+
+(def text (partial input "text"))
+
+(ctmx/defcomponent ^:endpoint song-new [req song-name]
+  (case (:request-method req)
+    :post
+    (let [song (-> req
+                   :params form/json-params-pruned
+                   :song)
+          conn (-> req :system :conn)]
+      (db/create-song! conn song)
+      (response/redirect "/songs/"))
+
+    [:form {:id id :hx-post "song-new" :class "mt-6"}
+     (text "New Song Name"  (path "song") "Watermelon Man" (value "song"))
+     [:div {:class "pt-5"}
+      [:div {:class "flex justify-end"}
+       [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
+       [:button {:class "ml-3 btn btn-sm btn-indigo-high"
+                 :type "submit"
+                 :hx-swap-oob "true"} "Save"]]]]))
+
 (defn songs-new-routes []
   (ctmx/make-routes
    "/songs/new"
    (fn [req]
      (render/html5-response
-      [:div {:class "mt-6"}
-       [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
-        [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
-         "Song Name"]
-        [:input {:type "text"
-                 :name "song"
-                 :id "song"
-                 :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
-                 :placeholder "Watermelon Man"}]]
-       [:div {:class "pt-5"}
-        [:div {:class "flex justify-end"}
-         [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-         [:button {:type "submit", :class "ml-3 btn btn-sm btn-indigo-high"} "Save"]]]]))))
+      (song-new req "")))))
 
 (defn songs-routes []
   [""

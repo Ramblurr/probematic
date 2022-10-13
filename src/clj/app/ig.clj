@@ -36,7 +36,7 @@
   [_ {:keys [service routes handler env] :as system}]
   (let [port (-> service :io.pedestal.http/port)
         host (-> service :io.pedestal.http/host)]
-    ;(tap> routes)
+    ;; (tap> routes)
     (log/info (format "Starting %s on %s:%d" (str (:name env "app") (when (config/dev-mode? env) " [DEV]")) host port))
     (cond-> service
       true (assoc :io.pedestal.http/allowed-origins
