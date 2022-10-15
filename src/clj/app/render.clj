@@ -110,7 +110,7 @@ generate output the way we want -- formatted and without sending warnings.
 
      [:input {:type "radio" :name name :value value :class "sr-only" :aria-labelledby id
               :_ "on change trigger radioChanged(value:[@value]) on .sr-only end
-                  on radioChanged(value) if value == [@value]
+                  on radioChanged(value) if I match <:checked/>
                     add .radio-button-checked to the closest parent <label/>
                     remove .radio-button-un-checked from the closest parent <label/>
                   else

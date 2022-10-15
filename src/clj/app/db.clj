@@ -340,7 +340,10 @@
    :song/play-count 0})
 
 (defn create-song! [conn title]
-  (d/transact conn [(create-song-tx title)]))
+  (try
+    (d/transact conn [(create-song-tx title)])
+    (catch clojure.lang.ExceptionInfo e
+      (ex-data e))))
 
 (defn song-db->model [entity]
   (-> entity
