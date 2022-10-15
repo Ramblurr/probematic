@@ -192,7 +192,7 @@
       (response/redirect "/songs/"))
     (let [conn (-> req :system :conn)
           songs (db/songs @conn)
-          gigs (db/gigs @conn)]
+          gigs (db/gigs-past @conn)]
 
       [:form {:id id :hx-post (path ".")}
    ;; (render/text "New Song Name"  (path "song") "Watermelon Man" (value "song"))

@@ -256,6 +256,9 @@
 (defn gigs-future [db]
   (gigs-after db (t/inst)))
 
+(defn gigs-past [db]
+  (gigs-before db (t/inst)))
+
 (defn gigs-missing-dialogflow-entity [db]
   (entities db (d/q '[:find [?e ...]
                       :in $
