@@ -70,6 +70,52 @@ generate output the way we want -- formatted and without sending warnings.
     (for [{:keys [value label selected?]} options]
       [:option {:selected selected? :value value} label])]])
 
+(def icon-sizes {:small "h-3 w-3"
+                 :normal "h-5 w-5"
+                 :large "h-10 w-10"})
+
+(def radio-option-state {:active "ring-2 ring-offset-2 ring-indigo-500"
+                         :checked "bg-indigo-600 border-transparent text-white hover:bg-indigo-700"
+                         :not-checked "bg-white border-gray-200 text-gray-900 hover:bg-gray-50"})
+
+(defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled?]
+                          :or {size :normal
+                               class ""
+                               icon-class ""
+                               disabled? false}}]
+  (let [checked? (= model value)]
+    [:label {:class
+             (cs  "radio-button"
+                  class
+                  (if checked?
+                    "radio-button-checked"
+                    "radio-button-not-checked"))}
+
+     [:input {:type "radio" :name name :value value :class "sr-only" :aria-labelledby id
+              :_ "on change trigger radioChanged(value:[@value]) on .sr-only end
+                  on radioChanged(value) if value == [@value]
+                    add .radio-button-checked to the closest parent <label/>
+                    remove .radio-button-un-checked from the closest parent <label/>
+                  else
+                    remove .radio-button-checked from the closest parent <label/>
+                    add .radio-button-un-checked to the closest parent <label/>
+                  end"}]
+     [:span
+      (icon {:checked checked?
+             :disabled disabled?
+             :class
+             (cs
+              (size icon-sizes)
+              icon-class)})]]))
+
+(defn radio-group-icon [& {:keys [options id label class]
+                           :or {class ""}}]
+  [:fieldset
+   [:legend {:class "block text-sm font-medium text-gray-700"} label]
+   [:div {:class (cs "mt-4 flex items-center space-x-3" class)}
+    (map-indexed radio-button
+                 options)]])
+
 (defn input
   ([type title]
    (input type title nil nil nil))

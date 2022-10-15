@@ -206,6 +206,11 @@
                                                        {:value id
                                                         :label (str title " " (when date (ui/format-dt date)))
                                                         :selected? false}) gigs)))
+       (render/radio-group-icon  :id "feeling" :label "Feeling"
+                                 :class "emotion-radio"
+                                 :options [{:id "good" :name "feeling" :label "Good" :value "good" :icon icon/smile :size :large :class "icon-smile"}
+                                           {:id "meh" :name "feeling" :label "Meh" :value "meh" :icon icon/meh :size :large :class "icon-meh"}
+                                           {:id "bad" :name "feeling" :label "Bad" :value "bad" :icon icon/sad :size :large :class "icon-sad"}])
        [:div
         [:div {:class "flex justify-end"}
          [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]

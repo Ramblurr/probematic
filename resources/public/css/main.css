@@ -80,8 +80,70 @@
 .btn-clear-normal:active {@apply bg-white;}
 
 
- .icon {
-      width: 1em;
+.icon {
+      /*width: 1em;
       height: 1em;
+       **/
       vertical-align: -.125em;
-    }
+}
+
+.radio-button {
+      @apply border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase sm:flex-1 cursor-pointer focus:outline-none;
+      @apply transition-all;
+}
+
+.radio-button-checked {
+      @apply bg-indigo-600 border-transparent text-white hover:bg-indigo-700;
+}
+.radio-button-not-checked {
+      @apply bg-white border-gray-200 text-gray-900 hover:bg-gray-50;
+}
+
+.radio-button:active {
+      @apply ring-2 ring-offset-2 ring-indigo-500;
+}
+
+.icon-smile {
+  @apply text-green-500;
+}
+.icon-sad {
+  @apply text-red-500;
+}
+
+.icon-meh {
+  @apply text-gray-500;
+}
+
+.radio-button-checked .icon-smile {
+  @apply text-white;
+}
+
+.radio-button-checked .icon-sad {
+  @apply text-white;
+}
+
+.radio-button-checked .icon-meh {
+  @apply text-white;
+}
+
+.emotion-radio .icon-sad.radio-button:active {
+      @apply ring-2 ring-offset-2 ring-red-500;
+}
+
+.emotion-radio .icon-meh.radio-button:active {
+      @apply ring-2 ring-offset-2 ring-gray-500;
+}
+.emotion-radio .icon-smile.radio-button:active {
+      @apply ring-2 ring-offset-2 ring-green-500;
+}
+.emotion-radio .icon-sad.radio-button-checked {
+  @apply bg-red-600 border-transparent text-white hover:bg-red-700;
+}
+
+.emotion-radio .icon-meh.radio-button-checked {
+  @apply bg-gray-600 border-transparent text-white hover:bg-gray-700;
+}
+
+.emotion-radio .icon-smile.radio-button-checked {
+  @apply bg-green-600 border-transparent text-white hover:bg-green-700;
+}
