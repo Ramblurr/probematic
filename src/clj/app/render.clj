@@ -4,7 +4,24 @@
   (:require
    [clojure.string :as clojure.string]
    [hiccup.core :as hiccup]
-   [hiccup.page :refer [html5]]))
+   [hiccup.page :as hiccup.page]
+   [hiccup2.core :refer [html]]))
+
+(defmacro html5-safe
+  "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
+  [options & contents]
+  (if-not (map? options)
+    `(html5-safe {} ~options ~@contents)
+    (if (options :xml?)
+      `(let [options# (dissoc ~options :xml?)]
+         (str (html {:mode :xml}
+                    (hiccup.page/xml-declaration (options# :encoding "UTF-8"))
+                    (hiccup.page/doctype :html5)
+                    (hiccup.page/xhtml-tag options# (options# :lang) ~@contents))))
+      `(let [options# (dissoc ~options :xml?)]
+         (str (html {:mode :html}
+                    (hiccup.page/doctype :html5)
+                    [:html options# ~@contents]))))))
 
 (defn configure-pretty-printer
   "Configure the pretty-printer (an instance of a JTidy Tidy class) to
@@ -13,7 +30,7 @@ generate output the way we want -- formatted and without sending warnings.
   []
   (doto (new Tidy)
     (.setSmartIndent true)
-;(.setTrimEmptyElements true)
+                                        ;(.setTrimEmptyElements true)
     (.setShowWarnings false)
     (.setQuiet true)))
 
@@ -34,7 +51,7 @@ generate output the way we want -- formatted and without sending warnings.
   ([body] (html5-response nil body))
   ([js body]
    (html-response
-    (html5
+    (html5-safe
      [:head
       [:meta {:charset "utf-8"}]
       [:meta {:name "viewport"
@@ -112,7 +129,7 @@ generate output the way we want -- formatted and without sending warnings.
                            :or {class ""}}]
   [:fieldset
    [:legend {:class "block text-sm font-medium text-gray-700"} label]
-   [:div {:class (cs "mt-4 flex items-center space-x-3" class)}
+   [:div {:class (cs "mt-1 flex items-center space-x-3" class)}
     (map-indexed radio-button
                  options)]])
 
