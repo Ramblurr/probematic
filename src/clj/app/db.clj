@@ -222,6 +222,33 @@
                (mapv :db/id
                      (find-all db :member/name))))
 
+;; ------------- Played Log
+(defn play-db->model [entity]
+  (-> entity
+      export-entity))
+
+(defn plays-db->model [es]
+  (->> es
+       (map play-db->model)))
+
+(defn create-play-tx [gig song rating emphasis]
+  {:played/song [:song/title (:song/title song)]
+   :played/gig [:gig/id (:gig/id gig)]
+   :played/rating rating
+   :played/emphasis emphasis})
+
+(defn create-play! [conn gig song rating emphasis]
+  (try
+    (d/transact conn [(create-play-tx gig song rating emphasis)])
+    (catch clojure.lang.ExceptionInfo e
+      (ex-data e))))
+
+(defn plays [db]
+  (plays-db->model
+   (find-all db :played/gig)))
+
+;; ------------- Gig
+
 (defn gig-db->model [entity]
   (-> entity
       export-entity
@@ -272,6 +299,10 @@
                       :where
                       [?e :gig/id _]
                       [?e :dialogflow/entity-value _]] db)))
+
+(defn gig-by-id [db id]
+  (gig-db->model
+   (find-by db :gig/id id)))
 
 (defn- sessions-> [db ents]
   (->> ents
@@ -368,6 +399,8 @@
     (require '[tick.core :as t])
     (def conn (:ol.datahike.ig/connection state/system)))
 
+  (plays @conn)
+
   {:session/member           [:member/name "Casey"]
    :session/started          (t/inst)
    :session/last-activity-at nil}
@@ -449,5 +482,5 @@
   (d/transact conn
               (mapv create-song-tx _titles))
   (songs @conn)
-  ;
+                                        ;
   )

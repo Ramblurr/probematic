@@ -12,40 +12,54 @@
    [ctmx.response :as response]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [req]
-  (case (:request-method req)
-    :post
-    (let [params (-> req
-                     :params form/json-params-pruned)
-          conn (-> req :system :conn)]
-      ;; TODO log the play
-      (response/redirect "/songs/"))
-    (let [conn (-> req :system :conn)
-          songs (db/songs @conn)
-          gigs (db/gigs-past @conn)]
+  (ctmx/with-req req
+    (let [result (and post? (controller/log-play! req))]
+      (if (:play result)
+        (response/redirect "/songs/")
+        (let [conn (-> req :system :conn)
+              songs (db/songs @conn)
+              gigs (db/gigs-past @conn)]
 
-      [:form {:id id :hx-post (path ".")}
-   ;; (render/text "New Song Name"  (path "song") "Watermelon Man" (value "song"))
-       (list
-        (render/select (path "song") "Songs" (map (fn [s]
-                                                    {:value (:song/title s)
-                                                     :label (:song/title s)
-                                                     :selected? false}) songs))
+          [:form {:id id :hx-post (path ".")
+                  :class "space-y-4"}
+           (list
+            (render/select :id (path "song")
+                           :label "Songs"
+                           :value (value "song")
+                           :options (map (fn [s]
+                                           {:value (:song/title s)
+                                            :label (:song/title s)
+                                            :selected? false}) songs))
 
-        (render/select (path "gig") "Gig/Probe" (map (fn [{:gig/keys [id title date]}]
-                                                       {:value id
-                                                        :label (str title " " (when date (ui/format-dt date)))
-                                                        :selected? false}) gigs)))
-       (render/radio-group-icon  :id "feeling" :label "Feeling"
-                                 :class "emotion-radio"
-                                 :options [{:id "good" :name "feeling" :label "Good" :value "good" :icon icon/smile :size :large :class "icon-smile"}
-                                           {:id "meh" :name "feeling" :label "Meh" :value "meh" :icon icon/meh :size :large :class "icon-meh"}
-                                           {:id "bad" :name "feeling" :label "Bad" :value "bad" :icon icon/sad :size :large :class "icon-sad"}])
-       [:div
-        [:div {:class "flex justify-end"}
-         [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-         [:button {:class "ml-3 btn btn-sm btn-indigo-high"
-                   :type "submit"
-                   :hx-swap-oob "true"} "Save"]]]])))
+            (render/select :id (path "gig")
+                           :label "Gig/Probe"
+                           :value (value "song")
+                           :options (map (fn [{:gig/keys [id title date]}]
+                                           {:value id
+                                            :label (str title " " (when date (ui/format-dt date)))
+                                            :selected? false}) gigs)))
+
+           (render/radio-button-group  :id (path  "play-type") :label "Play Type"
+                                       :required? true
+                                       :value (value "play-type")
+                                       :options [{:id (path "play-type/gig") :label "Gig" :value "play-emphasis/gig"  :size :large}
+                                                 {:id (path "play-type/gig") :label "Probe: Intensiv" :value "play-emphasis/intensiv"  :size :large}
+                                                 {:id (path "play-type/gig") :label "Probe: Durch" :value "play-emphasis/durch"  :size :large}])
+           (render/radio-button-group  :id (path  "feeling") :label "How'd it go?"
+                                       :required? true
+                                       :value (value "feeling")
+                                       :class "emotion-radio"
+                                       :options [{:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile"}
+                                                 {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"}
+                                                 {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"}])
+           (render/textarea :name (path  "comment") :label "Thoughts?"
+                            :value (value "comment"))
+
+           [:div
+            [:div {:class "flex justify-end"}
+             [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
+             [:button {:class "ml-3 btn btn-sm btn-indigo-high"
+                       :type "submit"} "Save"]]]])))))
 
 (defn song-detail [req song-title]
   (if-let [song (db/song-by-title @(-> req :system :conn) song-title)]
@@ -72,7 +86,7 @@
       (if (:song result)
         (response/redirect "/songs/")
         [:form {:id id :hx-post "song-new" :class "mt-6"}
-         (render/text "New Song Name"  (path "song") "Watermelon Man" (value "song"))
+         (render/text :label "New Song Name" :name  (path "song") :placeholder "Watermelon Man" :value (value "song"))
          [:div {:class "pt-5"}
           (when (:error result)
             [:span {:class "text-red-500 mb-1"}
@@ -146,6 +160,7 @@
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
            :id id}
      (song-list filtered-songs)]))
+
 (ctmx/defcomponent songs-page [req]
   [:div
    (render/page-header :title "Songs"
