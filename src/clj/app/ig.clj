@@ -13,7 +13,13 @@
    [ol.jobs.ig]
    [ol.system :as system]
    [reitit.http :as http]
-   [reitit.pedestal :as pedestal]))
+   [reitit.pedestal :as pedestal]
+   [ctmx.render :as ctmx.render]
+   [hiccup2.core :as hiccup2]))
+
+;; Ensure ctmx is using the XSS safe hiccup render function
+(alter-var-root #'ctmx.render/html (constantly
+                                    #(-> % ctmx.render/walk-attrs hiccup2/html str)))
 
 (defmethod ig/init-key ::profile [_ profile]
   profile)
