@@ -41,7 +41,5 @@ if [[ "$SSH_ENABLE" == "yes" ]]; then
   /usr/sbin/sshd
 fi
 
-/mysql-population-check.sh
-
 echo "execing: " "java ${JAVA_OPTS} ${JAVA_AGENT} -jar /app/probematic-backend.jar"
 exec /usr/sbin/gosu probematic java ${JAVA_OPTS} ${JAVA_AGENT} -jar /app/probematic-backend.jar

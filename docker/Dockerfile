@@ -5,7 +5,7 @@ RUN set -ex; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get update; \
-    apt-get install -y --no-install-recommends gosu vim rsync bash dnsutils procps wget ca-certificates default-mysql-client openssh-server; \
+    apt-get install -y --no-install-recommends gosu ca-certificates; \
     /usr/sbin/update-ca-certificates \
     apt-get autoremove -y; \
     rm -rf /var/lib/apt/lists/*
@@ -16,11 +16,10 @@ RUN groupadd --gid 1000 probematic \
 
 WORKDIR /app
 COPY ./docker/scripts/entrypoint.sh /entrypoint.sh
-COPY ./docker/scripts/mysql-population-check.sh /mysql-population-check.sh
-RUN chmod +rx /*.sh 
+RUN chmod +rx /*.sh
 
 ARG GIT_HASH
-COPY ./target/probematic-backend-${GIT_HASH}.jar /app/probematic-backend.jar
+COPY ./target/probematic-${GIT_HASH}.jar /app/probematic.jar
 RUN chown -R probematic:probematic /app
 
 STOPSIGNAL SIGTERM

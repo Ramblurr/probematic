@@ -4,10 +4,14 @@
  {; backend
   repl  (shell "clojure -A:dev -M:inspect/reveal-cider")
   repl-term  (shell "clojure -A:test -A:dev -M:repl/cider-refactor")
-  ; frontend
+                                        ; frontend
   npm-install (shell {:dir "./"} "npm" "install")
   repl-ui {:depends [npm-install]
            :task  (shell {:dir "./"} "npx shadow-cljs -A dev watch app")}
 
   tailwind-css (shell {:dir "./"} "npx" "tailwindcss" "-i" "resources/public/css/main.css" "-o" "resources/public/css/compiled/main.css")
-  watch-css (shell {:dir "./"} "npx" "tailwindcss" "-w" "-i" "resources/public/css/main.css" "-o" "resources/public/css/compiled/main.css")}}
+  watch-css (shell {:dir "./"} "npx" "tailwindcss" "-w" "-i" "resources/public/css/main.css" "-o" "resources/public/css/compiled/main.css")
+
+  clean (shell "clojure -T:build clean")
+  uberjar (shell "clojure -T:build uberjar")
+  test (shell "./bin/kaocha")}}
