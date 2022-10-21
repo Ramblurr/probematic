@@ -41,9 +41,11 @@
 (defmethod ig/init-key ::pedestal
   [_ {:keys [service routes handler env] :as system}]
   (let [port (-> service :io.pedestal.http/port)
-        host (-> service :io.pedestal.http/host)]
+        host (-> service :io.pedestal.http/host)
+        start-msg (format "Starting %s on %s:%d" (str (:name env "app") (when (config/dev-mode? env) " [DEV]")) host port)]
     ;; (tap> routes)
-    (log/info (format "Starting %s on %s:%d" (str (:name env "app") (when (config/dev-mode? env) " [DEV]")) host port))
+    (tap> start-msg)
+    (log/info start-msg)
     (cond-> service
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
