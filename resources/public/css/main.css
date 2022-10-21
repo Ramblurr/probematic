@@ -161,9 +161,6 @@
 }
 .toggler .icon  {
 }
-.toggler--feeling-good {
-  @apply border-green-200;
-}
 .toggler  .icon-smile:active {
       @apply ring-2 ring-offset-2 ring-green-500;
 }
@@ -176,15 +173,18 @@
       @apply ring-2 ring-offset-2 ring-blue-500;
 }
 
+.toggler--feeling-good {
+  @apply border-green-200 bg-green-100;
+}
 .toggler--feeling-bad {
-  @apply border-red-200;
+  @apply border-red-200 bg-red-100;
 }
 .toggler--feeling-meh {
-  @apply border-blue-200;
+  @apply border-blue-200 bg-blue-100;
 }
 
 .toggler--not-played {
-  @apply border-gray-200;
+  @apply border-gray-200 bg-gray-100;
 }
 
 
