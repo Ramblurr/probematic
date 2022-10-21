@@ -15,7 +15,7 @@
   (ctmx/with-req req
     (let [result (and post? (controller/log-play! req))]
       (if (:play result)
-        (response/redirect "/songs/")
+        (response/hx-redirect "/songs/")
         (let [conn (-> req :system :conn)
               songs (db/songs @conn)
               gigs (db/gigs-past @conn)]
