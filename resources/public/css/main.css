@@ -154,7 +154,7 @@
 
 
 .toggler-container {
-  @apply p-0 m-0 flex flex-col md:flex-row md:flex-wrap;
+  @apply p-0 m-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-0 md:gap-x-2;
 }
 .toggler {
   @apply rounded border-4 mx-0 my-1 p-2  basis-1/2 flex justify-between items-center;
@@ -205,7 +205,7 @@
   padding-bottom: 1px;
   @apply border-transparent border-solid border-b-2;
 }
-.icon-fist-punch svg {
+.icon-fist-punch {
   @apply text-purple-500;
 }
 .intensiv--checked.icon-fist-punch svg {

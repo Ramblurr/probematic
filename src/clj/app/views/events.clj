@@ -59,6 +59,29 @@
        "/"
        (name kw)))
 
+(defn log-play-legend []
+  (let [shared-classes "h-8 w-8 border-solid border-b-2 pb-1"]
+    [:div {:class ""}
+     [:h3 {:class "font-bold"}
+      "Legend"]
+
+     [:div {:class "flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 "}
+      [:div {:class "flex items-center justify-start"}
+       (icon/circle-xmark-outline {:class (render/cs shared-classes "icon-not-played border-gray-500")})
+       "Not Played"]
+      [:div {:class "flex items-center justify-start"}
+       (icon/smile {:class (render/cs shared-classes "icon-smile border-green-500")})
+       "Nice!"]
+      [:div {:class "flex items-center justify-start"}
+       (icon/meh {:class (render/cs shared-classes "icon-meh border-blue-500")})
+       "Okay"]
+      [:div {:class "flex items-center justify-start"}
+       (icon/sad {:class (render/cs shared-classes "icon-sad border-red-500")})
+       "Uh-oh"]
+      [:div {:class "flex justify-start items-center"}
+       (icon/fist-punch {:class (render/cs shared-classes "icon-fist-punch border-purple-500")})
+       "Intensiv geprobt"]]]))
+
 (ctmx/defcomponent ^:endpoint event-log-play [req]
   (ctmx/with-req req
     (let [result (and post? (controller/log-play! req))]
@@ -70,6 +93,7 @@
 
           [:form {:id id :hx-post (path ".")
                   :class "space-y-4"}
+           (log-play-legend)
            [:ul {:class "toggler-container"}
             (map-indexed (fn [idx song]
                            (let [check-id (str (path "intensive") "_" idx)
