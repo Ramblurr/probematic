@@ -1,6 +1,7 @@
 (ns app.routes.shared
   (:require
    [tick.core :as t]
+   [app.icons :as icon]
    [app.render :as render]))
 
 (defn divider-center [title]
@@ -42,12 +43,24 @@
                       :bg-color "bg-red-100"
                       :label "Cancelled"}})
 
-(defn gig-status [status]
+(def gig-status-icons
+  {:status/confirmed {:icon icon/circle-check
+                      :color "text-green-500"}
+   :status/unconfirmed {:icon icon/circle-question
+                        :color "text-orange-500"}
+   :status/cancelled {:icon icon/circle-xmark
+                      :color "text-red-500"}})
+
+(defn gig-status-bubble [status]
   (let [{:keys [text-color bg-color label]} (gig-status-colors status)]
     [:span {:class
             (render/cs "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                        text-color bg-color)}
      label]))
+
+(defn gig-status-icon [status]
+  (let [{:keys [icon color]} (gig-status-icons status)]
+    (icon {:class (str "mr-1.5 h-5 w-5 inline " color)})))
 
 (defn format-dt [dt]
   (t/format (t/formatter "dd-MMM-yyyy") dt))

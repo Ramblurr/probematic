@@ -14,9 +14,12 @@
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
+        (ui/gig-status-icon status)
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (ui/gig-status status)]]
+        [:a {:href "#", :class "inline-flex items-center rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-sm font-medium leading-5 text-gray-700 shadow-sm hover:bg-gray-50"}
+         "Log Plays"]]]
+
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
@@ -26,6 +29,7 @@
 
          (icon/calendar {:class style-icon})
          (ui/datetime date)]]
+
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
         ;(icon/calendar {:class style-icon})
         ;[:p "Last Played "]
