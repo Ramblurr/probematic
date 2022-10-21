@@ -1,15 +1,8 @@
 (ns app.controllers.songs
   (:require
    [ctmx.form :as form]
+   [app.controllers.common :refer [unwrap-params get-conn]]
    [app.db :as db]))
-
-(defn get-conn [req]
-  (-> req :system :conn))
-
-(defn unwrap-params
-  ([req] (-> req :params form/json-params-pruned))
-  ([req name]
-   (-> req :params form/json-params-pruned name)))
 
 (defn create-song! [req]
   (let [song (-> req

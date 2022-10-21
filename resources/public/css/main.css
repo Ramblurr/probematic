@@ -103,6 +103,10 @@
       @apply ring-2 ring-offset-2 ring-indigo-500;
 }
 
+.icon-not-played {
+  @apply text-gray-500;
+}
+
 .icon-smile {
   @apply text-green-500;
 }
@@ -111,7 +115,7 @@
 }
 
 .icon-meh {
-  @apply text-gray-500;
+  @apply text-blue-500;
 }
 
 .radio-button-checked .icon-smile {
@@ -131,7 +135,7 @@
 }
 
 .emotion-radio .icon-meh.radio-button:active {
-      @apply ring-2 ring-offset-2 ring-gray-500;
+      @apply ring-2 ring-offset-2 ring-blue-500;
 }
 .emotion-radio .icon-smile.radio-button:active {
       @apply ring-2 ring-offset-2 ring-green-500;
@@ -141,9 +145,71 @@
 }
 
 .emotion-radio .icon-meh.radio-button-checked {
-  @apply bg-gray-600 border-transparent text-white hover:bg-gray-700;
+  @apply bg-blue-600 border-transparent text-white hover:bg-blue-700;
 }
 
 .emotion-radio .icon-smile.radio-button-checked {
   @apply bg-green-600 border-transparent text-white hover:bg-green-700;
+}
+
+
+.toggler-container {
+  @apply p-0 m-0 flex flex-col md:flex-row md:flex-wrap;
+}
+.toggler {
+  @apply rounded border-4 mx-0 my-1 p-2  basis-1/2 flex justify-between items-center;
+}
+.toggler .icon  {
+}
+.toggler--feeling-good {
+  @apply border-green-200;
+}
+.toggler  .icon-smile:active {
+      @apply ring-2 ring-offset-2 ring-green-500;
+}
+
+.toggler  .icon-bad:active {
+      @apply ring-2 ring-offset-2 ring-red-500;
+}
+
+.toggler  .icon-meh:active {
+      @apply ring-2 ring-offset-2 ring-blue-500;
+}
+
+.toggler--feeling-bad {
+  @apply border-red-200;
+}
+.toggler--feeling-meh {
+  @apply border-blue-200;
+}
+
+.toggler--not-played {
+  @apply border-gray-200;
+}
+
+
+.toggler--checked.icon-not-played svg {
+  @apply border-gray-500;
+}
+.toggler--checked.icon-sad svg {
+  @apply border-red-500;
+}
+.toggler--checked.icon-meh svg {
+  @apply border-blue-500;
+}
+.toggler--checked.icon-smile svg {
+  @apply border-green-500;
+}
+
+.toggler svg {
+  padding-bottom: 1px;
+  @apply border-transparent border-solid border-b-2;
+}
+.icon-fist-punch svg {
+  @apply text-purple-500;
+}
+.intensiv--checked.icon-fist-punch svg {
+  padding-bottom: 1px;
+  @apply border-solid border-b-2;
+  @apply border-purple-500;
 }
