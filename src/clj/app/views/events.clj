@@ -84,12 +84,13 @@
 
 (ctmx/defcomponent ^:endpoint event-log-play [req]
   (ctmx/with-req req
-    (let [result (and post? (controller/log-play! req))]
-      (if (:play result)
+    (let [gig-id (-> req :path-params :gig/id)
+          result (and post? (controller/log-play! req gig-id))]
+      (if (:plays result)
         (response/hx-redirect "/events/")
         (let [conn (-> req :system :conn)
               songs (db/songs @conn)
-              gig (db/gig-by-id @conn (-> req :path-params :gig/id))]
+              gig (db/gig-by-id @conn gig-id)]
 
           [:form {:id id :hx-post (path ".")
                   :class "space-y-4"}

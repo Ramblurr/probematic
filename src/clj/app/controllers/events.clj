@@ -2,7 +2,7 @@
   (:require
    [medley.core :as m]
    [clojure.walk :as walk]
-   [app.controllers.common :refer [unwrap-params get-conn]]
+   [app.controllers.common :refer [unwrap-params get-conn save-log-play!]]
    [ctmx.form :as form]
    [app.db :as db]))
 
@@ -30,29 +30,17 @@
           {}
           data))
 
-(defn log-play! [req]
-  (comment
-    (let [conn (get-conn req)
-          {:keys [gig song play-type feeling comment]} (unwrap-params req)
-          gig (db/gig-by-id @conn gig)
-          song (db/song-by-title @conn song)
-          rating (keyword feeling)
-          emphasis (keyword play-type)
-          result (db/create-play! conn gig song rating emphasis)
-          error (-> result :error)]
-      (if error
-        error
-        {:play result})))
-  (let [foo (->> :params req form/nest-params walk/keywordize-keys parse-log-params group-by-song)]
-    ;; (tap> (:params req))
-    ;; (tap> (-> :params req form/nest-params))
-    ;; (tap> foo)
-    ;; (tap> (->> :params req form/nest-params (walk/postwalk form/vectorize-map)))
-    ;; (tap> (form/json-params (:params req)))
-    ;; (tap> (form/prune-params (-> :params req form/json-params)))
-    ;; (tap> (unwrap-params req))
-    {:error {}
-     :params foo}))
+(defn log-play! [req gig-id]
+  (let [conn (get-conn req)
+        foo (->> :params req form/nest-params walk/keywordize-keys parse-log-params group-by-song)
+        plays (filter (fn [m] (not= :play-rating/not-played (:played/rating m))) (vals foo))
+        results (map (fn [play]
+                       (save-log-play! conn gig-id (:song/title play) (:played/rating play) (:played/emphasis play))) plays)
+        errors (some #(contains? % :error) results)]
+    (if errors
+      {:error errors
+       :params foo}
+      {:plays results})))
 
 (comment
   (def data {:event-log-play {:intensive {:14 "play-emphasis/durch"
@@ -121,5 +109,5 @@
             (vals
              (parse-log-params data)))
 
-;; rich comment
+  ;; rich comment
   )
