@@ -1,11 +1,9 @@
 (ns app.views.events
   (:require
-   [app.routes.shared :as ui]
+   [app.views.shared :as ui]
    [app.render :as render]
    [app.icons :as icon]
    [ctmx.core :as ctmx]
-   [tick.core :as t]
-   [clojure.string :as clojure.string]
    [app.db :as db]))
 
 (defn event-row [{:gig/keys [status title location date]}]

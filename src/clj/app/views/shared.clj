@@ -1,4 +1,4 @@
-(ns app.routes.shared
+(ns app.views.shared
   (:require
    [tick.core :as t]
    [app.icons :as icon]

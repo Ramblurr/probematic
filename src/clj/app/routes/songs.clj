@@ -1,15 +1,8 @@
 (ns app.routes.songs
   (:require
-   [app.routes.shared :as ui]
    [app.render :as render]
-   [app.db :as db]
-   [app.icons :as icon]
    [app.views.songs :as view]
-   [ctmx.core :as ctmx]
-   [ctmx.form :as form]
-   [tick.core :as t]
-   [clojure.string :as clojure.string]
-   [ctmx.response :as response]))
+   [ctmx.core :as ctmx]))
 
 (defn songs-list-routes []
   (ctmx/make-routes
