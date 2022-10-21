@@ -168,24 +168,37 @@ generate output the way we want -- formatted and without sending warnings.
   (apply input (conj opts :type "text")))
 
 (def button-priority-classes {:secondary
-                              "border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                              "border-transparent bg-indigo-100 px-4 py-2  text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                               :white
-                              "border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary
-                              "border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"})
+                              "border-transparent bg-indigo-600 px-4 py-2  text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered?]
+(def button-sizes-classes {:xsmall "px-2.5 py-1.5 text-xs"
+                           :small "px-3 py-2 text-sm leading-4"
+                           :normal "px-4 py-2 text-sm"
+                           :large "px-4 py-2 text-base"
+                           :xlarge "px-6 py-3 text-base"})
+
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size]
                  :or   {class ""
                         priority :white
+                        size  :normal
+                        disabled? false
                         tag :a}
                  :as   args}]
+
   [tag (merge
         {:class
          (cs
-          "inline-flex items-center rounded-md border"
+          "inline-flex items-center border font-medium"
+          ;; "inline-flex items-center rounded-md border"
+          (size button-sizes-classes)
           (priority button-priority-classes)
           (when centered? "items-center justify-center")
-          class)}
+          class)
+         :disabled disabled?}
         attr)
    (when icon (icon  {:class "-ml-1 mr-2 h-5 w-5"}))
    label])
