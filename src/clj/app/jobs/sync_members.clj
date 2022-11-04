@@ -40,17 +40,24 @@
   (as-> (airtable/list-records! atc (:gigo-linked-people-table atc)) v
     (get v "records")
     (mapv #(get % "fields") v)
-    (mapv #(select-keys % ["Name" "Gigo ID" "Phone Number"]) v)
-    (mapv #(set/rename-keys % {"Gigo ID"      :gigo-id
-                               "Phone Number" :phone
-                               "Name"         :name}) v)
+    (mapv #(select-keys % ["Name" "Gigo ID" "Phone Number" "E-Mail" "Bandaktivität"]) v)
+    (mapv #(set/rename-keys % {"Gigo ID"       :gigo-id
+                               "Phone Number"  :phone
+                               "E-Mail"        :email
+                               "Bandaktivität" :active?
+                               "Name"          :name}) v)
     (mapv #(update-in % [:gigo-id] first) v)))
 
 (defn member-tx [person]
-  (->
-   {:member/gigo-key (:gigo-id person)
-    :member/name     (:name person)}
-   (m/assoc-some :member/phone (util/no-blanks (util/clean-number (:phone person))))))
+  (let [active-lookup {"Aktiv" true
+                       "Inaktiv" false}]
+    (->
+     {:member/gigo-key (:gigo-id person)
+      :member/name     (:name person)
+      :member/email    (:email person)
+      :member/active?  (get active-lookup (:active? person))}
+
+     (m/assoc-some :member/phone (util/no-blanks (util/clean-number (:phone person)))))))
 
 (defn update-member-data! [conn people]
   (d/transact conn {:tx-data  (mapv member-tx people)}))

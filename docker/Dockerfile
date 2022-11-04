@@ -1,4 +1,4 @@
-FROM docker.io/library/openjdk:17-slim-bullseye
+FROM docker.io/library/openjdk:17-slim
 MAINTAINER Casey Link <casey@outskirtslabs.com>
 
 RUN set -ex; \
