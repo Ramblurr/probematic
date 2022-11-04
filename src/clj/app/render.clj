@@ -72,6 +72,7 @@ generate output the way we want -- formatted and without sending warnings.
                :integrity "sha384-6GYN8BDHOJkkru6zcpGOUa//1mn+5iZ/MyT6mq34WFIpuOeLF52kSi721q0SsYF9"}]
      [:script {:src "/js/htmx.js"
                :integrity "sha384-mrsv860ohrJ5KkqRxwXXj6OIT6sONUxOd+1kvbqW351hQd7JlfFnM0tLetA76GU0"}]
+     [:script {:src "/js/nprogress.js"}]
      [:script {:src "/js/helpers.js"}]
      (when js [:script {:src (str "/js" js)}])))))
 

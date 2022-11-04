@@ -7,6 +7,9 @@
 @import "tailwindcss/utilities";
 /*@import "./custom-utilities.css";*/
 
+@import "./nprogress.css";
+
+
 :root {
   --yellow-400: #F5F569;
 }
