@@ -3,6 +3,7 @@
  :tasks
  {; backend
   repl  (shell "clojure -A:dev -M:inspect/reveal-cider")
+  repl-portal  (shell "clojure -A:dev -M:inspect/portal-cli-cider")
   repl-term  (shell "clojure -A:test -A:dev -M:repl/cider-refactor")
                                         ; frontend
   npm-install (shell {:dir "./"} "npm" "install")

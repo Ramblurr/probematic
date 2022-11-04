@@ -433,7 +433,7 @@
 
   (def just-gigs (get-all-gigs! config))
 
-  (get-gig-attendance! config (first (mapv :gig/id all-gigs)))
+  (get-gig-attendance! config (first (mapv :gig/gig-id all-gigs)))
 
   (def all-gigs (with-attendances! config just-gigs))
   (def id->gig (reduce (fn [all m] (assoc all (:id m) m)) {} all-gigs))

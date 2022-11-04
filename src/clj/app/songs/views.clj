@@ -1,29 +1,27 @@
-(ns app.views.songs
+(ns app.songs.views
   (:require
    [app.views.shared :as ui]
    [app.render :as render]
-   [app.controllers.songs :as controller]
-   [app.db :as db]
+   [app.songs.controller :as controller]
+   [app.gigs.controller :as gig.controller]
    [app.icons :as icon]
    [ctmx.core :as ctmx]
-   [ctmx.form :as form]
-   [tick.core :as t]
    [clojure.string :as clojure.string]
    [ctmx.response :as response]))
 
-(ctmx/defcomponent ^:endpoint songs-log-play [req]
+(ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
     (let [result (and post? (controller/log-play! req))]
       (if (:play result)
         (response/hx-redirect "/songs/")
         (let [conn (-> req :system :conn)
-              songs (db/songs @conn)
-              gigs (db/gigs-past @conn)]
+              songs (controller/find-all-songs db)
+              gigs (gig.controller/find-all-gigs db)]
 
           [:form {:id id :hx-post (path ".")
                   :class "space-y-4"}
            (list
-            (render/select :id (path "song")
+            (render/select :id (path "song-id")
                            :label "Songs"
                            :value (value "song")
                            :options (map (fn [s]
@@ -31,11 +29,11 @@
                                             :label (:song/title s)
                                             :selected? false}) songs))
 
-            (render/select :id (path "gig")
+            (render/select :id (path "gig-id")
                            :label "Gig/Probe"
                            :value (value "song")
-                           :options (map (fn [{:gig/keys [id title date]}]
-                                           {:value id
+                           :options (map (fn [{:gig/keys [gig-id title date]}]
+                                           {:value gig-id
                                             :label (str title " " (when date (ui/format-dt date)))
                                             :selected? false}) gigs)))
 
@@ -61,8 +59,8 @@
              [:button {:class "ml-3 btn btn-sm btn-indigo-high"
                        :type "submit"} "Save"]]]])))))
 
-(defn song-detail [req song-title]
-  (if-let [song (db/song-by-title @(-> req :system :conn) song-title)]
+(defn song-detail [{:keys [db] :as req} song-title]
+  (if-let [song (controller/retrieve-song db song-title)]
     [:div
      (render/page-header :title song-title
 
@@ -154,8 +152,8 @@
             :hx-trigger "keyup changed delay:500ms"
             :hx-target (hash "../songs-list")}]])
 
-(ctmx/defcomponent ^:endpoint songs-list [req song]
-  (let [all-songs (db/songs @(-> req :system :conn))
+(ctmx/defcomponent ^:endpoint songs-list [{:keys [db] :as req} song]
+  (let [all-songs (controller/find-all-songs db)
         filtered-songs (search-songs song all-songs)]
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
            :id id}

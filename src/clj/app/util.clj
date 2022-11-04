@@ -1,7 +1,7 @@
 (ns app.util
   (:require
    [medley.core :as m]
-
+   [ctmx.form :as form]
    [clojure.string :as str]))
 
 (defn clean-number [n]
@@ -44,3 +44,11 @@
   "Like sort-by but for a case-insenstive string sort" [keyfn coll]
   (sort-by
    (comp clojure.string/lower-case keyfn) coll))
+
+(defn unwrap-params
+  [req] (-> req :params form/json-params-pruned))
+
+(defn remove-nils
+  "Returns the map less any keys that have nil values"
+  [m]
+  (into {} (filter #(not (nil? (val %))) m)))

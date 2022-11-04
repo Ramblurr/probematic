@@ -31,5 +31,9 @@
           ]))))
 
   (dev)
+
+  (require '[portal.api :as p])
+  (p/open {:launcher :emacs})
+
   ;;
   )

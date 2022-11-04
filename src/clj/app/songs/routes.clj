@@ -1,7 +1,7 @@
-(ns app.routes.songs
+(ns app.songs.routes
   (:require
    [app.render :as render]
-   [app.views.songs :as view]
+   [app.songs.views :as view]
    [ctmx.core :as ctmx]))
 
 (defn songs-list-routes []

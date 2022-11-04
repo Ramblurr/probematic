@@ -1,13 +1,14 @@
 (ns app.jobs.sync-gigs
   (:require [ol.jobs-util :as jobs]
             [tick.core :as t]
-            [datahike.api :as d]
-            ;[dialogflow.core :as df-api]
+            [datomic.client.api :as d]
+                                        ;[dialogflow.core :as df-api]
             [clojure.string :as s]
             [clojure.set :as set]
             [app.db :as db]
             [app.gigo :as gigo]
-            [app.features :as f])
+            [app.features :as f]
+            [integrant.repl.state :as state])
 
   (:import (java.time DayOfWeek)))
 
@@ -18,15 +19,16 @@
 ;; We also need to store some details about the gigs outside the cache
 ;; in order to manage the dialogflow Gig entity
 (defn- gig-tx [gig]
-  {:gig/id    (:id gig)
-   :gig/title (:title gig)
-   :gig/location (:address gig)
-   :gig/status (:status gig)
-   :gig/date  (t/inst (t/at (:date gig) (t/midnight)))})
+  (doto
+   {:gig/gig-id    (:id gig)
+    :gig/title (:title gig)
+    :gig/location (:address gig)
+    :gig/status (:status gig)
+    :gig/date  (t/inst (t/at (:date gig) (t/midnight)))} tap>))
 
-(defn- update-gigs-db! [conn gigs]
-  (d/transact conn
-              (map gig-tx gigs)))
+(defn update-gigs-db! [conn gigs]
+  (d/transact conn {:tx-data
+                    (map gig-tx gigs)}))
 
 (defn probe? [g]
   (and
@@ -61,7 +63,7 @@
                   :old-ent-value (:value m)
                   :gig           (-> m
                                      (assoc :dialogflow/entity-value (:gig/title m))
-                                     (select-keys [:gig/title :gig/id :dialogflow/entity-value]))
+                                     (select-keys [:gig/title :gig/gig-id :dialogflow/entity-value]))
                   :changed?      changed?})))))
 (comment
   (defn update-dialogflow-gig-entities!
@@ -105,7 +107,7 @@
           existing (:entities (df-api/get-entity-type etc etn))
           gigs (->> (db/gigs-with-dialogflow-entity @conn)
                     (remove probe?) ;; we remove probe gigs because we don't want a million probes in the list
-                    (mapv #(select-keys % [:gig/id :gig/title :dialogflow/entity-value])))
+                    (mapv #(select-keys % [:gig/gig-id :gig/title :dialogflow/entity-value])))
           matches (match-entity-gig existing gigs)
           ents-to-update (conj (mapv :new-ent matches)
                                ;; we tack on the fixed probe gig to ensure it's always there
@@ -162,7 +164,7 @@
         @(df-api/batch-create-entities etc etn to-create "en")
         (d/transact conn
                     (->> gigs
-                         (mapv #(select-keys % [:gig/id :dialogflow/entity-value :gig/title]))
+                         (mapv #(select-keys % [:gig/gig-id :dialogflow/entity-value :gig/title]))
                          (mapv #(assoc % :dialogflow/entity-value (:gig/title %)))))
         {:created (count to-create)}))))
 
@@ -200,7 +202,7 @@
     (def _opts {:env        (:app.ig/env state/system)
                 :gigo       (:app.ig/gigo-client state/system)
                 :df-clients (:app.ig/dialogflow-session state/system)
-                :conn       (:ol.datahike.ig/connection state/system)}))
+                :conn       (-> state/system :app.ig/datomic-db :conn)}))
   (gigo/update-cache! (:gigo _opts))
 
   (update-gigs-db! (:conn _opts) @gigo/gigs-cache)

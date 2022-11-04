@@ -49,7 +49,8 @@
                   :app.ig/handler                    {:env                   #ig/ref :app.ig/env}
 
                   :app.ig.router/routes              {:routes #ig/refset :app.ig/routes
-                                                      :conn #ig/ref :ol.datahike.ig/connection
+                                                      ;; :conn #ig/ref :ol.datahike.ig/connection
+                                                      :datomic #ig/ref :app.ig/datomic-db
                                                       :env            #ig/ref :app.ig/env}
 
                   :ol.ig/jobs                        {:job-defs #ig/ref :app.ig.jobs/definitions
@@ -57,16 +58,21 @@
 
                   :app.ig/gigo-client        {:env #ig/ref :app.ig/env}
 
-                  :ol.datahike.ig/database            {:db-file #profile {:prod #or [#env DB_PATH "/data/sno-gigo.db"]
-                                                                          :dev "dev.db"
-                                                                          :test "test.db"}}
+                  ;; :ol.datahike.ig/database            {:db-file #profile {:prod #or [#env DB_PATH "/data/sno-gigo.db"]
+                  ;; ;;                                                         :dev "dev.db"
+                  ;; ;; ;;                                                         :test "test.db"}}
 
-                  :ol.datahike.ig/connection          {:db-config #ig/ref :ol.datahike.ig/database}
-                  :app.ig/app-db             {:conn #ig/ref :ol.datahike.ig/connection}
-
+                  ;; ;; ;; :ol.datahike.ig/connection          {:db-config #ig/ref :ol.datahike.ig/database}
+                  ;; ;; :app.ig/app-db
+                  ;; {:conn #ig/ref :ol.datahike.ig/connection}
+                  :app.ig/datomic-db             {:server-type :dev-local
+                                                  :system "dev"
+                                                  :db-name "probematic"
+                                                  :storage-dir #envf ["%s/datomic.data" PWD]}
                   :app.ig.jobs/definitions {:env #ig/ref :app.ig/env
                                             :gigo #ig/ref :app.ig/gigo-client
-                                            :conn #ig/ref :app.ig/app-db}}
+                                            ;; :conn  #ig/ref :app.ig/app-db
+                                            :datomic  #ig/ref :app.ig/datomic-db}}
 
  :jobs           {:job/ping {:job/frequency     [10 :seconds]
                              :job/initial-delay [100000 :seconds]}

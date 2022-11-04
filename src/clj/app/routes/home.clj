@@ -15,4 +15,6 @@
                       [:li
                        [:a {:href "/songs"} "Songs"]]
                       [:li
-                       [:a {:href "/events"} "Gigs/Probes"]]]]]]]))))
+                       [:a {:href "/events"} "Gigs/Probes"]]
+                      [:li
+                       [:a {:href "/insurance"} "Instrument Insurance"]]]]]]]))))

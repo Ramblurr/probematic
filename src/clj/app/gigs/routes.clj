@@ -1,7 +1,7 @@
-(ns app.routes.events
+(ns app.gigs.routes
   (:require
    [app.render :as render]
-   [app.views.events :as view]
+   [app.gigs.views :as view]
    [ctmx.core :as ctmx]))
 
 (defn events-list-route []
@@ -13,13 +13,13 @@
 
 (defn event-detail-route []
   (ctmx/make-routes
-   "/event/{gig/id}/"
+   "/event/{gig/gig-id}/"
    (fn [req]
      (render/html5-response nil))))
 
 (defn event-log-play-route []
   (ctmx/make-routes
-   "/event/{gig/id}/log-play"
+   "/event/{gig/gig-id}/log-play"
    (fn [req]
      (render/html5-response
       (view/event-log-play req)))))

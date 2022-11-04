@@ -140,7 +140,13 @@
     :db/index       true
     :db/doc         "Intensiv or normal when played at a probe"}
 
-   ;
+   {:db/ident :played/gig+song
+    :db/valueType :db.type/tuple
+    :db/tupleAttrs [:played/gig :played/song]
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity}
+
+;
    ])
 
 (defn idempotent-schema-install! [conn]
@@ -151,7 +157,7 @@
   (clojure.walk/prewalk
    (fn [x]
      (if (de/entity? x)
-       (into {} x)
+       (assoc (into {} x) :db/id (:db/id x))
        x))
    entity))
 
@@ -232,20 +238,34 @@
        (map play-db->model)))
 
 (defn create-play-tx [gig song rating emphasis]
-  {:played/song [:song/title (:song/title song)]
-   :played/gig [:gig/id (:gig/id gig)]
-   :played/rating rating
-   :played/emphasis emphasis})
+  (doto
+   {:played/song (:db/id song)
+    :played/gig (:db/id gig)
+    :played/gig+song [(:db/id gig) (:db/id song)]
+    :played/rating rating
+    :played/emphasis emphasis}
+    tap>))
 
 (defn create-play! [conn gig song rating emphasis]
   (try
-    (d/transact conn [(create-play-tx gig song rating emphasis)])
+    (d/transact conn (doto  [(create-play-tx gig song rating emphasis)] tap>))
     (catch clojure.lang.ExceptionInfo e
-      (ex-data e))))
+      {:error (ex-data e)
+       :exception e
+       :msg (ex-message e)})))
 
 (defn plays [db]
   (plays-db->model
    (find-all db :played/gig)))
+
+(defn plays-by-gig [db gig-id]
+  (plays-db->model
+   (find-all-by db :played/gig [:gig/id gig-id])))
+
+(comment
+  (plays-by-gig @conn "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD8zL_LCww")
+  ;;
+  )
 
 ;; ------------- Gig
 
@@ -399,6 +419,7 @@
     (require '[tick.core :as t])
     (def conn (:ol.datahike.ig/connection state/system)))
 
+  (plays-by-gig @conn "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD8zL_LCww")
   (plays @conn)
 
   {:session/member           [:member/name "Casey"]
@@ -482,5 +503,84 @@
   (d/transact conn
               (mapv create-song-tx _titles))
   (songs @conn)
+
+  (defn connect
+    []
+    (d/delete-database) ;; deletes the 'default' db
+    (d/create-database {:schema-flexibility :write})
+    (d/connect))
+  (def conn2 (connect))
+  (d/transact conn2 [;; this will be one part of the composite
+                     {:db/ident       :gig/title
+                      :db/valueType   :db.type/string
+                      :db/unique      :db.unique/value
+                      :db/cardinality :db.cardinality/one
+                      :db/doc         "The title of the gig"}
+                     ;; this will be the second part of the composite
+                     {:db/ident       :song/title
+                      :db/valueType   :db.type/string
+                      :db/unique      :db.unique/value
+                      :db/cardinality :db.cardinality/one
+                      :db/doc         "The title of the song"}
+
+                     ;; here we establish the references
+                     {:db/ident       :played/song
+                      :db/valueType   :db.type/ref
+                      :db/cardinality :db.cardinality/one
+                      :db/index       true
+                      :db/doc         "The song that was played"}
+                     {:db/ident       :played/gig
+                      :db/valueType   :db.type/ref
+                      :db/cardinality :db.cardinality/one
+                      :db/index       true
+                      :db/doc         "The gig that the song was played at"}
+
+                     ;; here is a simple attribute we will want to upsert
+                     {:db/ident       :played/quality
+                      :db/valueType   :db.type/keyword
+                      :db/cardinality :db.cardinality/one
+                      :db/index       true
+                      :db/doc         "Quality"}
+
+                     ;; finally our composite id
+                     {:db/ident :played/gig+song
+                      :db/valueType :db.type/tuple
+                      :db/tupleAttrs [:played/gig :played/song]
+                      :db/cardinality :db.cardinality/one
+                      :db/unique :db.unique/identity}])
+
+  ;; create the referenced entities
+  (d/transact conn2 [{:song/title "A"} {:gig/title "Z"}])
+  ;; create our entity that we want to upsert
+  (d/transact conn2 [{:played/gig [:gig/title "Z"]
+                      :played/song [:song/title "A"]
+                      :played/quality :quality/good}])
+
+  (let [ent (->> (d/q '[:find  [?e ...]
+                        :where [?e :played/gig [:gig/title "Z"]]]
+                      @conn2)
+                 first
+                 (d/entity @conn2)
+                 (into {}))]
+
+    ;; this simple upsert fails with
+    ;; Cannot add #datahike/Datom [10 :played/gig+song [8 7] 536870916 true] because
+    ;; of unique constraint: #datahike/Datom [9 :played/gig+song [8 7] 536870915
+    ;; true]
+    ;; (d/transact conn2 [{:played/gig (-> ent :played/gig :db/id)
+    ;;                     :played/song (-> ent :played/song :db/id)
+    ;;                     :played/quality :quality/bad}])
+
+    ;; this works! but it is not an upsert
+    (d/transact conn2 [{:db/id [:played/gig+song (:played/gig+song ent)] :played/quality :quality/bad}]))
+
+  (find-all-by @conn2 :played/gig [:gig/title "Z"])
+  (d/pull @conn2 '[*] 9)
+
+  (d/transact conn2 [{:db/id [:played/gig+song  [[:song/title "A"] [:gig/title "Z"]]]
+                      :played/quality :quality/good}])
+
+  (d/transact conn2 [{:a "a" :b "b" :c "c" :d "not-d"}]) ;;=> modifies :d
+  (d/transact conn2 [{:db/id [:ref/a+b+c [:a :b :c]] :a "not-a" :b "not-b" :c "not-c"}]) ;;=> modifies tuple values, unrelated to tuple ["not-a" "b" "c"]
                                         ;
   )

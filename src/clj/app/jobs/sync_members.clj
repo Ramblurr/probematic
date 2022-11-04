@@ -2,7 +2,7 @@
   (:require
    [clojure.set :as set]
    [clojure.string :as str]
-   [datahike.api :as d]
+   [datomic.client.api :as d]
    [jsonista.core :as j]
    [ol.jobs-util :as jobs]
    [org.httpkit.client :as client]
@@ -53,7 +53,7 @@
    (m/assoc-some :member/phone (util/no-blanks (util/clean-number (:phone person))))))
 
 (defn update-member-data! [conn people]
-  (d/transact conn (mapv member-tx people)))
+  (d/transact conn {:tx-data  (mapv member-tx people)}))
 
 (defn clean-phone-numbers [atc twi]
   (filter some?
@@ -98,7 +98,10 @@
     (require '[app.db :as db])
     (def _opts {:env  (:app.ig/env state/system)
                 :db   (:app.ig/env state/system)
-                :conn (:ol.datahike.ig/connection state/system)}))
+                ;; :conn (:ol.datahike.ig/connection state/system)
+                :conn (-> state/system :app.ig/datomic-db :conn)
+                ;;
+                }))
 
   (fetch-people-data! (-> _opts :env :airtable))
   (lookup-number (-> _opts :env :twilio) "+43600000" "AT")
@@ -106,11 +109,15 @@
   (clean-phone-numbers (-> _opts :env :airtable) (-> _opts :env :twilio))
   (clean-phone-numbers! (-> _opts :env :airtable) (-> _opts :env :twilio))
   (db/members @(:conn _opts))
+
+  (d/transact (:conn _opts) {:tx-data  (mapv member-tx (fetch-people-data! (-> _opts :env :airtable)))})
+
   (update-member-data! (:conn _opts) (fetch-people-data! (-> _opts :env :airtable)))
+  (d/transact (:conn _opts) {:tx-data []})
 
   (sync-members! (:conn _opts) (-> _opts :env :airtable) (-> _opts :env :twilio) nil)
 
   (d/transact (:conn _opts) [[:db.fn/retractAttribute 16 :member/permission-granted?]])
 
-  ;
+                                        ;
   )

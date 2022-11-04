@@ -5,17 +5,21 @@
    [app.jobs :as jobs]
    [app.routes :as routes]
    [app.db :as db]
+   [app.datomic :as datomic]
    [app.routes.helpers :as route.helpers]
    [clojure.tools.logging :as log]
    [integrant.core :as ig]
    [io.pedestal.http :as server]
-   [ol.hikari-cp.ig]
    [ol.jobs.ig]
    [ol.system :as system]
+   [datomic.client.api :as d]
+   [datomic.dev-local :as dl]
+
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]
    [ctmx.render :as ctmx.render]
-   [hiccup2.core :as hiccup2]))
+   [hiccup2.core :as hiccup2]
+   [app.debug :as debug]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -50,11 +54,12 @@
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
       true server/default-interceptors
-      ;; swap in the reitit router
+                 ;; swap in the reitit router
       true (pedestal/replace-last-interceptor
             (pedestal/routing-interceptor
              (http/router routes)
              handler))
+      (config/dev-mode? env) route.helpers/prone-exception-interceptor
       (config/dev-mode? env) (server/dev-interceptors)
       true (server/create-server)
       true (server/start))))
@@ -69,7 +74,17 @@
    :password (get-in env [:gigo :password])
    :cookie-atom (atom nil)})
 
-(defmethod ig/init-key ::app-db
-  [_ {:keys [conn]}]
-  (db/idempotent-schema-install! conn)
-  conn)
+(defmethod ig/init-key ::datomic-db
+  [_ config]
+  (println "\nStarted Datomic DB")
+  (let [db-name (select-keys config [:db-name])
+        client (d/client (select-keys config [:server-type :system :storage-dir]))
+        _ (d/create-database client db-name)
+        conn (d/connect client db-name)]
+    (datomic/load-dataset conn)
+    (assoc config :conn conn)))
+
+(defmethod ig/halt-key! ::datomic-db
+  [_ config]
+  (println "\nStopping Datomic DB")
+  (dl/release-db (select-keys config [:system :db-name])))

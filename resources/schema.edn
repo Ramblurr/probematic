@@ -1,0 +1,448 @@
+  [{:db/ident :member/name
+    :db/doc "A member's name"
+    :db/unique :db.unique/value
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :member/active?
+    :db/doc "Whether or not the member is active in the band"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :member/gigo-key
+    :db/doc "The gigo member key, a unique identifier"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :member/nudge-permission-granted?
+    :db/doc "Whether or not we have permission to nudge the user"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :member/phone
+    :db/doc "The phone number of the member"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :member/email
+    :db/doc "The email address of the member"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :member/section
+    :db/doc "The primary section of the member"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :section/name
+    :db/doc "The name of the section"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
+;;;; Gigs
+   {:db/ident :gig/gig-id
+    :db/doc "The gig id from gig-o-matic."
+    :db/valueType :db.type/string
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/title
+    :db/doc "The title of the gig"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/date
+    :db/doc "The date the gig takes place. Stored as an instant. Disregard the time portion"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/end-date
+    :db/doc "The date the gig ends if multiday."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/location
+    :db/doc "Where the gig takes place"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/outfit
+    :db/doc "What to wear"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/leader
+    :db/doc "Who is in charge"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/post-gig-plans
+    :db/doc "What's happening afterwards"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/more-details
+    :db/doc "who? what? where? when? why?"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/setlist
+    :db/doc "The songs being played"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/description
+    :db/doc "A public facing description"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/status
+    :db/doc "The scheduled status of the gig"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/comments
+    :db/doc "Comments added to the gig"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :gig/call-time
+    :db/doc "The time the band should be present and ready"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/set-time
+    :db/doc "The time the band starts playing"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/end-time
+    :db/doc "The time the gig ends"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/pay-deal
+    :db/doc "The compensation the band is receiving"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/contact
+    :db/doc "Who is in charge of the gig"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+;;;; Comments
+
+   {:db/ident :comment/comment-id
+    :db/doc "The id of the comment"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :comment/body
+    :db/doc "The message of the comment"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :comment/author
+    :db/doc "The author of the comment"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :comment/created-at
+    :db/doc "The time the comment was created."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+;;;; Songs
+   {:db/ident :song/title
+    :db/doc "The title of the song"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/song-id
+    :db/doc "The id of the song"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/play-count
+    :db/doc "The total number of times the song has been played"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/last-played
+    :db/doc "The time the song was last played"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/active?
+    :db/doc "Whether or not the song is part of the active repertoire"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+;;;; Play Log
+
+   {:db/ident :played/play-id
+    :db/doc "The id of this play record"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :played/song
+    :db/doc "The song that was played"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :played/gig
+    :db/doc "The gig/probe that the song was played at"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :played/rating
+    :db/doc "The impression of how well the song was played"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :played/emphasis
+    :db/doc "Intensiv or normal when played at a probe"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :played/gig+song
+    :db/unique :db.unique/value
+    :db/tupleAttrs [:played/gig :played/song]
+    :db/valueType :db.type/tuple
+    :db/cardinality :db.cardinality/one}
+
+;;;; Attendance
+
+   {:db/ident :attendance/gig
+    :db/doc "The gig/probe that was attended"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :attendance/member
+    :db/doc "The member that attended"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :attendance/section
+    :db/doc "The section the member is playing in for this gig"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :played/gig+member
+    :db/unique :db.unique/identity
+    :db/tupleAttrs [:attendance/gig :attendance/member]
+    :db/valueType :db.type/tuple
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :attendance/plan
+    :db/doc "The member's planned attendance state"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :attendance/updated
+    :db/doc "The instant when this attendance plan was last updated"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :attendance/comment
+    :db/doc "The member-added comment"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :attendance/motivation
+    :db/doc "The member-added motivation statement"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+;;;; Insurance - Item Category
+;;;;
+   {:db/ident :instrument.category/category-id
+    :db/doc "The id of the category"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.category/name
+    :db/doc "The name of the category"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.category/code
+    :db/doc "The category code"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+;;;; Insurance - Instruments
+;;;;
+   {:db/ident :instrument/owner
+    :db/doc "The owner of the instrument"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/category
+    :db/doc "The category of the instrument"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/name
+    :db/doc "A short description of the instrument"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/instrument-id
+    :db/doc "The id of the instrument"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/make
+    :db/doc "The manufacturer of the instrument"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/model
+    :db/doc "The model of the instrument"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/build-year
+    :db/doc "The year in which the item was manufactured"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument/serial-number
+    :db/doc "The serial number of the instrument"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+;;;; Insurance - Coverage Type
+
+   {:db/ident :insurance.coverage.type/type-id
+    :db/doc "The id of the coverage type"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.coverage.type/name
+    :db/doc "Name of the coverage type"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.coverage.type/description
+    :db/doc "A description of the coverage type"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.coverage.type/premium-factor
+    :db/doc "The factor multiplied against the base premium to determine the cost of this coverage type"
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+
+;;;;  Insurance - Instrument Coverage
+
+   {:db/ident :instrument.coverage/coverage-id
+    :db/doc "The id of the coverage"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.coverage/instrument
+    :db/doc "The instrument that is covered"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.coverage/types
+    :db/doc "The types of coverage this instrument has"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :instrument.coverage/private?
+    :db/doc "Whether or not the instrument is insured at the owner's expense"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.coverage/value
+    :db/doc "The value of the instrument"
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+
+;;;; Insurance - Policy
+   {:db/ident :insurance.policy/policy-id
+    :db/doc "The id of the policy"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/currency
+    :db/doc "The currency that he policy is denominated in"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/name
+    :db/doc "A human readable name for the policy"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/effective-at
+    :db/doc "The instant at which this policy takes effect"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/effective-until
+    :db/doc "The instant at which this policy ends"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/covered-instruments
+    :db/doc "The instrument coverages for this policy"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :insurance.policy/coverage-types
+    :db/doc "The allowed coverage types for this policy"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :insurance.policy/premium-factor
+    :db/doc "The factor used to determine the premium price per instrument"
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/category-factors
+    :db/doc "The valid category factors for this policy"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :insurance.category.factor/category-factor-id
+    :db/doc "The id of this category factor"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.category.factor/category
+    :db/doc "The category this price belongs to"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.category.factor/factor
+    :db/doc "The pricing factory for the category"
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+
+   ;; premium basis for an instrument = instrument value x category factor x premium-factor
+   ;; premium for additional coverage = premium basis x coverage premium factor
+   ;;
+   ]

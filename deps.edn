@@ -1,11 +1,11 @@
 {:paths ["resources" "src/clj"]
- :deps  {org.clojure/clojure                  {:mvn/version "1.10.3"}
+ :deps  {org.clojure/clojure                  {:mvn/version "1.11.1"}
          org.clojure/tools.macro              {:mvn/version "0.1.2"}
          org.clojure/core.cache               {:mvn/version "1.0.225"}
          org.clojure/tools.logging            {:mvn/version "1.2.4"}
 
          ;; Routing
-         metosin/reitit                       {:mvn/version "0.5.2"}
+         metosin/reitit                       {:mvn/version "0.5.18"}
 
          ;; HTTP, Ring, Pedestal
          metosin/ring-http-response           {:mvn/version "0.9.3"}
@@ -15,6 +15,7 @@
          io.pedestal/pedestal.jetty           {:mvn/version "0.5.10"}
          io.pedestal/pedestal.service         {:mvn/version "0.5.10"}
          io.pedestal/pedestal.interceptor     {:mvn/version "0.5.10"}
+         prone/prone                          {:mvn/version "2021-04-23"}
 
          ;; CTMX
          hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
@@ -24,8 +25,7 @@
          ;; html to hiccup
          taipei.404/html-to-hiccup {:mvn/version "0.1.8"}
 
-
-         ;; http-client based on java 11
+;; http-client based on java 11
          hato/hato                            {:mvn/version "0.8.2"}
 
          ;; Data
@@ -37,11 +37,12 @@
          org.babashka/sci                     {:mvn/version "0.2.8"}
          fmnoise/flow                         {:mvn/version "4.2.1"}
 
-         ;; SQL
-        io.replikativ/datahike {:mvn/version "0.5.1512"}
+         ;; Database
+         io.replikativ/datahike {:mvn/version "0.5.1512"}
+         com.datomic/dev-local {:mvn/version "1.0.243"}
+         com.yetanalytics/colossal-squuid {:mvn/version "0.1.5"}
 
-
-         ;; Authorization and Authentication
+;; Authorization and Authentication
          buddy/buddy-auth                     {:mvn/version "3.0.323"}
          buddy/buddy-core                     {:mvn/version "1.10.413"}
          buddy/buddy-hashers                  {:mvn/version "1.8.158"}
@@ -63,12 +64,13 @@
          com.github.javafaker/javafaker {:mvn/version "1.0.2"}
 
          ;; Shared Outskirts Labs libs
-         ol/datahike.ig                        {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.datahike.ig"}
-         ol/app.dev                           {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.app.dev"}
-         ol/hikari-cp.ig                      {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.hikari-cp.ig"}
-         ol/system                            {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.system"}
-         ol/http-kit.ig                            {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "b5288f03823494e54ff0af384cbe05b642e5a1e2" :deps/root "lib/ol.http-kit.ig"}
-         ol/jobs                              {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "090895af4fa6bb556d9e82c7809e6807380ead80" :deps/root "lib/ol.jobs"}}
+         ol/datahike.ig                       {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.datahike.ig"}
+         ol/app.dev                           {:local/root "/var/home/ramblurr/src/ol-system/lib/ol.app.dev"}
+         ;ol/app.dev                           {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.app.dev"}
+         ol/system                            {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.system"}
+         ol/http-kit.ig                       {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.http-kit.ig"}
+         ;ol/jobs                              {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.jobs"}
+         ol/jobs                              {:local/root "/var/home/ramblurr/src/ol-system/lib/ol.jobs"}}
  :aliases
  {:dev     {:extra-paths ["env/dev/clj"
                           "env/dev/resources"

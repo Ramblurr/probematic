@@ -12,14 +12,18 @@
     [:span {:class "bg-white px-3 text-lg font-medium text-gray-900"}
      title]]])
 
-(defn divider-left [title]
+(defn divider-left
+  ([title] (divider-left title nil))
+  ([title button]
 
-  [:div {:class "relative"}
-   [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
-    [:div {:class "w-full border-t border-gray-300"}]]
-   [:div {:class "relative flex justify-start"}
-    [:span {:class "bg-white pr-3 text-lg font-medium text-gray-900"}
-     title]]])
+   [:div {:class "relative"}
+    [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
+     [:div {:class "w-full border-t border-gray-300"}]]
+    [:div {:class "relative flex items-center justify-between"}
+     [:span {:class "bg-white pr-3 text-lg font-medium text-gray-900 bg-white pr-3 text-lg font-medium text-gray-900"}
+      title]
+     (when button
+       button)]]))
 
 (defn bool-bubble
   ([is-active]

@@ -1,8 +1,9 @@
 (ns app.routes
   (:require
    [app.routes.home :refer [home-routes]]
-   [app.routes.songs :refer [songs-routes]]
-   [app.routes.events :refer [events-routes]]
+   [app.songs.routes :refer [songs-routes]]
+   [app.insurance.routes :refer [insurance-routes insurance-interceptors]]
+   [app.gigs.routes :refer [events-routes]]
    [app.routes.login :refer [login-routes]]
    [app.routes.pedestal-reitit]
    [app.auth.auth-endpoint :as auth.endpoint]
@@ -19,12 +20,15 @@
     ["" {:coercion     route.helpers/default-coercion
          :muuntaja     route.helpers/formats-instance
          :interceptors (conj  route.helpers/default-interceptors
-                              (route.helpers/system-interceptor system))}
+                              (route.helpers/system-interceptor system)
+                              (route.helpers/datomic-interceptor system))}
 
      (home-routes)
      (songs-routes)
      (events-routes)
      (login-routes)
+     ["" {:interceptors insurance-interceptors}
+      (insurance-routes)]
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
      ["/login-backend"
       {:get {:handler (partial #'auth.endpoint/login-page system)}}]

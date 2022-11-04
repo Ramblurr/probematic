@@ -1,17 +1,75 @@
-(ns app.controllers.events
+(ns app.gigs.controller
   (:require
+   [app.datomic :as d]
+   [tick.core :as t]
+   [com.yetanalytics.squuid :as sq]
+   [app.util :as util]
    [medley.core :as m]
    [clojure.walk :as walk]
-   [app.controllers.common :refer [unwrap-params get-conn save-log-play!]]
-   [ctmx.form :as form]
-   [app.db :as db]))
+   [ctmx.form :as form]))
+
+(def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
+
+(def play-pattern [{:played/gig gig-pattern}
+                   :played/song [:song/song-id :song/title]
+                   :played/rating
+                   :played/play-id
+                   :played/emphasis])
+
+(defn ->gig [gig]
+  (-> gig
+      (update :gig/date t/zoned-date-time)))
+
+(defn query-result->gig [[{:gig/keys [title] :as gig}]]
+  (->gig gig))
+
+(defn find-all-gigs [db]
+  (sort-by :gig/date
+           (mapv query-result->gig
+                 (d/find-all db :gig/gig-id gig-pattern))))
+
+(defn retrieve-gig [db gig-id]
+  (->gig
+   (d/find-by db :gig/gig-id gig-id gig-pattern)))
+
+(defn gigs-before [db time]
+  (mapv query-result->gig
+        (d/q '[:find (pull ?e pattern)
+               :in $ ?time pattern
+               :where
+               [?e :gig/gig-id _]
+               [?e :gig/date ?date]
+               [(< ?date ?time)]] db time gig-pattern)))
+
+(defn gigs-after [db time]
+  (mapv query-result->gig
+        (d/q '[:find (pull ?e pattern)
+               :in $ ?time pattern
+               :where
+               [?e :gig/gig-id _]
+               [?e :gig/date ?date]
+               [(>= ?date ?time)]] db time gig-pattern)))
+
+(defn gigs-future [db]
+  (gigs-after db (t/inst)))
+
+(defn gigs-past [db]
+  (gigs-before db (t/inst)))
+
+(defn query-result->play
+  [[play]]
+  play)
+
+(defn plays-by-gig [db gig-id]
+  (query-result->play
+   (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)))
 
 (defn parse-log-params [params]
   (m/deep-merge
    (reduce (fn [m [k v]]
-             (assoc m k {:song/title v}))
+             (assoc m k {:song/song-id v}))
            {}
-           (-> params :event-log-play :song))
+           (-> params :event-log-play :song-id))
    (reduce (fn [m [k v]]
              (assoc m k {:played/rating (keyword v)}))
            {}
@@ -26,17 +84,27 @@
 
 (defn group-by-song [data]
   (reduce (fn [m [k v]]
-            (assoc m (:song/title v) v))
+            (assoc m (:song/song-id v) v))
           {}
           data))
 
-(defn log-play! [req gig-id]
-  (let [conn (get-conn req)
-        foo (->> :params req form/nest-params walk/keywordize-keys parse-log-params group-by-song)
+(defn create-log-play! [conn gig-id play]
+  (d/transact conn {:tx-data
+                    [{:played/song [:gig/gig-id gig-id]
+                      :played/gig  [:song/song-id (:played/song-id play)]
+                      :played/rating (:played/rating play)
+                      :played/play-id (sq/generate-squuid)
+                      :played/emphasis (:played/emphasis play)}]}))
+
+(defn log-play! [{:keys [db datomic-conn] :as req} gig-id]
+  (let [foo (->> :params req form/nest-params walk/keywordize-keys parse-log-params group-by-song)
+        _ (tap> foo)
         plays (filter (fn [m] (not= :play-rating/not-played (:played/rating m))) (vals foo))
-        results (map (fn [play]
-                       (save-log-play! conn gig-id (:song/title play) (:played/rating play) (:played/emphasis play))) plays)
-        errors (some #(contains? % :error) results)]
+        _ (tap> plays)
+        results (map
+                 (partial create-log-play! datomic-conn gig-id) plays)
+        errors (some #(d/db-error? %) results)]
+    (tap> results)
     (if errors
       {:error errors
        :params foo}
@@ -108,6 +176,16 @@
               (:song/title v))
             (vals
              (parse-log-params data)))
+
+  (do
+    (require '[integrant.repl.state :as state])
+    (require  '[datomic.client.api :as datomic])
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def req {:datomic-conn conn
+              :db (datomic/db conn)
+              :params {}}))
+
+  (d/find-all (datomic/db conn) :played/play-id play-pattern)
 
   ;; rich comment
   )

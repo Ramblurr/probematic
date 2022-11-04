@@ -8,9 +8,9 @@
   (-> req :system :conn))
 
 (defn unwrap-params
-  ([req] (-> req :params form/json-params-pruned))
+  ([req] (-> req :form-params form/json-params-pruned))
   ([req name]
-   (-> req :params form/json-params-pruned name)))
+   (-> req :form-params form/json-params-pruned name)))
 
 (defn unwrap-params2
   ([req] (-> req :params form/json-params))
@@ -23,5 +23,10 @@
         result (db/create-play! conn gig song rating emphasis)
         error (-> result :error)]
     (if error
-      error
+      result
       {:play result})))
+
+(defn ensure-uuid [v]
+  (if (string? v)
+    (parse-uuid v)
+    v))
