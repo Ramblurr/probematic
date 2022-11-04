@@ -52,3 +52,17 @@
   "Returns the map less any keys that have nil values"
   [m]
   (into {} (filter #(not (nil? (val %))) m)))
+
+(defn qp-bool
+  "Parse the query parameter specified by k as a boolean"
+  [req k]
+  (Boolean/valueOf (-> req :query-params k)))
+
+(defn post? [{:keys [request-method]}]
+  (= :post request-method))
+
+(defn put? [{:keys [request-method]}]
+  (= :put request-method))
+
+(defn delete? [{:keys [request-method]}]
+  (= :delete request-method))

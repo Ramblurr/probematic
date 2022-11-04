@@ -27,7 +27,7 @@
 
 (defn bool-bubble
   ([is-active]
-   (bool-bubble is-active {true "Active" false "Inactive"}))
+   (bool-bubble is-active {true "Aktiv" false "Inaktiv"}))
   ([is-active labels]
    [:span {:class
            (render/cs "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
