@@ -1,17 +1,23 @@
 (ns app.members.controller
   (:require [tick.core :as t]
             [app.datomic :as d]
-            [app.controllers.common :as common]))
+            [app.queries :as q]
+            [app.controllers.common :as common]
+            [datomic.client.api :as datomic]))
 
 (def member-pattern [:member/gigo-key :member/name :member/active? :member/phone :member/email
                      {:member/section [:section/name]}])
 
+(def member-detail-pattern [:member/gigo-key :member/name :member/active? :member/phone :member/email
+                            {:member/section [:section/name]}
+                            {:instrument/_owner [:instrument/name :instrument/instrument-id
+                                                 {:instrument/category [:instrument.category/name]}]}])
 (defn ->member [member]
   member)
 
 (defn retrieve-member [db gigo-key]
   (->member
-   (d/find-by db :member/gigo-key gigo-key member-pattern)))
+   (d/find-by db :member/gigo-key gigo-key member-detail-pattern)))
 
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
@@ -41,8 +47,6 @@
         member-ref (d/ref member :member/gigo-key)
         tx-data [[:db/add member-ref :member/section [:section/name (:section-name params)]]
                  [:db/add member-ref :member/active? (not (:member/active? member))]]]
-    (tap> params)
-    (tap> tx-data)
     (transact-member! datomic-conn gigo-key tx-data)))
 
 (defn update-member! [{:keys [datomic-conn] :as req}]
@@ -55,10 +59,12 @@
                   :member/email (:email params)
                   :member/active? (common/check->bool (:active? params))
                   :member/section [:section/name (:section-name params)]}]]
-
-    (tap> params)
-    (tap> tx-data)
     (transact-member! datomic-conn gigo-key tx-data)))
+
+(defn member-current-insurance-info [{:keys [db] :as req} member]
+  (let [policy (q/insurance-policy-effective-as-of db (t/inst) q/policy-pattern)
+        coverages (q/instruments-for-member-covered-by db  member policy q/instrument-coverage-detail-pattern)]
+    coverages))
 
 (comment
   (do
@@ -81,5 +87,16 @@
   (d/transact conn {:tx-data
                     (map (fn [n] {:section/name n}) section-defaults)})
 
+  (->>
+   (datomic/q '[:find ?e
+                :in $  ?now
+                :where [?e :insurance.policy/effective-until ?date]
+                [(>= ?date ?now)]]
+              db  (t/now))
+   (map #(datomic/entity db %)))
+  (map first)
+  (sort-by :insurance.policy/effective-until)
+  reverse
+  first
   ;;
   )

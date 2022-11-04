@@ -1,6 +1,7 @@
 (ns app.insurance.controller
   (:require
 
+   [app.queries :as q]
    [app.datomic :as d]
    [tick.core :as t]
    [datomic.client.api :as datomic]
@@ -18,50 +19,6 @@
        (map k)
        (reduce + 0)))
 
-(def instrument-coverage-detail-pattern
-  [:instrument.coverage/coverage-id
-   {:instrument.coverage/instrument
-    [:instrument/name
-     :instrument/instrument-id
-     {:instrument/owner [:member/name]}
-     {:instrument/category [:instrument.category/category-id
-                            :instrument.category/code
-                            :instrument.category/name]}]}
-   {:instrument.coverage/types
-    [:insurance.coverage.type/name
-     :insurance.coverage.type/type-id
-     :insurance.coverage.type/premium-factor]}
-   :instrument.coverage/private?
-   :instrument.coverage/value])
-(def policy-pattern [:insurance.policy/policy-id
-                     :insurance.policy/currency
-                     :insurance.policy/name
-                     :insurance.policy/effective-at
-                     :insurance.policy/effective-until
-                     :insurance.policy/premium-factor
-                     {:insurance.policy/covered-instruments
-                      [:instrument.coverage/coverage-id
-                       {:instrument.coverage/instrument
-                        [:instrument/name
-                         :instrument/instrument-id
-                         {:instrument/owner [:member/name]}
-                         {:instrument/category [:instrument.category/category-id
-                                                :instrument.category/code
-                                                :instrument.category/name]}]}
-                       {:instrument.coverage/types
-                        [:insurance.coverage.type/name
-                         :insurance.coverage.type/type-id
-                         :insurance.coverage.type/premium-factor]}
-                       :instrument.coverage/private?
-                       :instrument.coverage/value]}
-                     {:insurance.policy/coverage-types
-                      [:insurance.coverage.type/name :insurance.coverage.type/premium-factor :insurance.coverage.type/type-id]}
-                     {:insurance.policy/category-factors
-                      [{:insurance.category.factor/category
-                        [:instrument.category/name
-                         :instrument.category/category-id]}
-                       :insurance.category.factor/factor
-                       :insurance.category.factor/category-factor-id]}])
 (defn make-category-factor-lookup
   "Given a policy, create a map where the keys are the category ids and the values are the category factors"
   [policy]
@@ -189,7 +146,7 @@
        (d/find-by (datomic/db conn)
                   :insurance.policy/policy-id
                   (:insurance.policy/policy-id (last tx-data))
-                  policy-pattern)}
+                  q/policy-pattern)}
       result)))
 
 (defn datestr->inst
@@ -203,12 +160,12 @@
       (update :insurance.policy/effective-until t/zoned-date-time)))
 
 (defn policies [db]
-  (->> (d/find-all db :insurance.policy/policy-id policy-pattern)
+  (->> (d/find-all db :insurance.policy/policy-id q/policy-pattern)
        (mapv #(->policy (first %)))
        (sort-by (juxt :insurance.policy/effective-until :insurance.policy/name))))
 
 (defn retrieve-policy [db policy-id]
-  (->policy (d/find-by db :insurance.policy/policy-id policy-id policy-pattern)))
+  (->policy (d/find-by db :insurance.policy/policy-id policy-id q/policy-pattern)))
 
 (defn duplicate-policy [{:keys [db datomic-conn] :as req}]
   (let [params (common/unwrap-params req)
@@ -302,24 +259,6 @@
       {:policy (retrieve-policy (:db-after result) policy-id)}
       result)))
 
-(def instrument-pattern [:instrument/name
-                         :instrument/instrument-id
-                         {:instrument/owner [:member/name :member/gigo-key]}
-                         {:instrument/category [:instrument.category/category-id
-                                                :instrument.category/code
-                                                :instrument.category/name]}])
-
-(def instrument-detail-pattern [:instrument/name
-                                :instrument/instrument-id
-                                :instrument/make
-                                :instrument/model
-                                :instrument/build-year
-                                :instrument/serial-number
-                                {:instrument/owner [:member/name :member/gigo-key]}
-                                {:instrument/category [:instrument.category/category-id
-                                                       :instrument.category/code
-                                                       :instrument.category/name]}])
-
 (defn upsert-instrument! [conn {:keys [owner-gigo-key category-id
                                        name make model build-year
                                        instrument-id
@@ -338,7 +277,7 @@
        (d/find-by (:db-after result)
                   :instrument/instrument-id
                   (:instrument/instrument-id (last tx-data))
-                  instrument-pattern)}
+                  q/instrument-pattern)}
       result)))
 
 (defn create-instrument! [{:keys [datomic-conn] :as req}]
@@ -384,7 +323,7 @@
       result)))
 
 (defn retrieve-coverage [db coverage-id]
-  (d/find-by db :instrument.coverage/coverage-id (common/ensure-uuid coverage-id) instrument-coverage-detail-pattern))
+  (d/find-by db :instrument.coverage/coverage-id (common/ensure-uuid coverage-id) q/instrument-coverage-detail-pattern))
 
 (defn get-coverage-type-from-coverage [instrument-coverage type-id]
   (m/find-first #(= type-id (:insurance.coverage.type/type-id %))
@@ -405,12 +344,12 @@
   query-result)
 
 (defn instruments [db]
-  (->> (d/find-all db :instrument/instrument-id instrument-pattern)
+  (->> (d/find-all db :instrument/instrument-id q/instrument-pattern)
        (mapv #(->instrument (first %)))
        (sort-by (juxt #(get-in % [:instrument/owner :member/name]) :instrument/name))))
 
 (defn retrieve-instrument [db instrument-id]
-  (->instrument (d/find-by db :instrument/instrument-id instrument-id instrument-detail-pattern)))
+  (->instrument (d/find-by db :instrument/instrument-id instrument-id q/instrument-detail-pattern)))
 
 (defn members [db]
   (mapv first
@@ -573,7 +512,7 @@
 
   (def policy
     (d/find-by (datomic/db conn) :insurance.policy/name "2022-2023"
-               policy-pattern))
+               q/policy-pattern))
 
   (sum-by
    (-> policy
