@@ -69,18 +69,32 @@
        [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
         (if edit?
           (list
-           (render/button :label "Cancel"
-                          :priority :white
-                          :centered? true
+           (render/button :label "Cancel" :priority :white :centered? true
                           :attr {:hx-get (comp-name "?edit=false") :hx-target (hash ".")})
-
-           (render/button :label "Save"
-                          :priority :primary
-                          :centered? true))
-          (render/button :label "Edit"
-                         :priority :white
-                         :centered? true
-                         :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]]]))
+           (render/button :label "Save" :priority :primary :centered? true))
+          (render/button :label "Edit" :priority :white :centered? true
+                         :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]
+      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
+       [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}]
+       [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+        [:div {:class "sm:col-span-1"}
+         [:dt {:class "text-sm font-medium text-gray-500"} "E-Mail"]
+         [:dd {:class "mt-1 text-sm text-gray-900"}
+          (if edit?
+            (render/input :name (path "email") :label "" :value email :type :email)
+            email)]]
+        [:div {:class "sm:col-span-1"}
+         [:dt {:class "text-sm font-medium text-gray-500"} "Phone"]
+         [:dd {:class "mt-1 text-sm text-gray-900"}
+          (if edit?
+            (render/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
+            phone)]]
+        [:div {:class "sm:col-span-1"}
+         [:dt {:class "text-sm font-medium text-gray-500"} "Aktiv?"]
+         [:dd {:class "mt-1 text-sm text-gray-900"}
+          (if edit?
+            (render/toggle-checkbox  :checked? active? :name (path "active?"))
+            (ui/bool-bubble active?))]]]]]]))
 
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
   (let [td-class "px-3 py-4"

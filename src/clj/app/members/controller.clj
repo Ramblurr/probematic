@@ -43,8 +43,13 @@
   (let [gigo-key (-> req :path-params :gigo-key)
         params (common/unwrap-params req)
         member-ref [:member/gigo-key gigo-key]
-        tx-data [[:db/add member-ref :member/name (:name params)]
-                 [:db/add member-ref :member/section [:section/name (:section-name params)]]]]
+        tx-data [{:db/id member-ref
+                  :member/name (:name params)
+                  :member/phone (:phone params)
+                  :member/email (:email params)
+                  :member/active? (common/check->bool (:active? params))
+                  :member/section [:section/name (:section-name params)]}]]
+
     (tap> params)
     (tap> tx-data)
     (transact-member! datomic-conn gigo-key tx-data)))

@@ -94,12 +94,13 @@ generate output the way we want -- formatted and without sending warnings.
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
 
-(defn select [& {:keys [id label options]}]
-  [:div
-   [:label {:for id :class "block text-sm font-medium text-gray-700"} label]
-   [:select {:name id :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
-    (for [{:keys [value label selected?]} options]
-      [:option {:selected selected? :value value} label])]])
+(defn select [& {:keys [id label options value]}]
+  (let [selected-value value]
+    [:div
+     [:label {:for id :class "block text-sm font-medium text-gray-700"} label]
+     [:select {:name id :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
+      (for [{:keys [value label selected?]} options]
+        [:option {:selected (if (not (nil? selected?)) selected? (= value selected-value)) :value value} label])]]))
 
 (defn required-label [required?]
   (when required?
@@ -183,13 +184,15 @@ generate output the way we want -- formatted and without sending warnings.
      [:p {:class "mt-2 text-sm text-gray-500"}
       hint])])
 
-(defn input [& {:keys [type label name placeholder value extra-attrs class]}]
+(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title]}]
   [:div {:class (cs class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600")}
    [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
     label]
    [:input (util/remove-nils (merge (or extra-attrs {})
                                     {:class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
                                      :type type
+                                     :pattern pattern
+                                     :title title
                                      :name name
                                      :value value
                                      :required true
@@ -260,8 +263,7 @@ generate output the way we want -- formatted and without sending warnings.
   (let [options
         (map (fn [m]
                {:value (:member/gigo-key m)
-                :label (:member/name m)
-                :selected? false}) members)]
+                :label (:member/name m)}) members)]
     (condp = variant
       :inline (select :id id
                       :label label
@@ -279,7 +281,7 @@ generate output the way we want -- formatted and without sending warnings.
 
 (defn section-select [& {:keys [id value label sections]}]
   (let [options (map (fn [{:section/keys [name]}]
-                       {:value name :label name :selected? false}) sections)]
+                       {:value name :label name}) sections)]
     (select :id id :label label :value value :options options)))
 
 (defn instrument-select [& {:keys [id value label instruments :variant]
@@ -288,8 +290,8 @@ generate output the way we want -- formatted and without sending warnings.
   (let [options
         (map (fn [m]
                {:value (:instrument/instrument-id m)
-                :label (str (-> m :instrument/owner :member/name) " " (:instrument/name m))
-                :selected? false}) instruments)]
+                :label (str (-> m :instrument/owner :member/name) " " (:instrument/name m))})
+             instruments)]
     (condp = variant
       :inline (select :id id
                       :label label
@@ -311,8 +313,8 @@ generate output the way we want -- formatted and without sending warnings.
   (let [options
         (map (fn [c]
                {:value (:instrument.category/category-id c)
-                :label (:instrument.category/name c)
-                :selected? false}) categories)]
+                :label (:instrument.category/name c)})
+             categories)]
     (condp = variant
       :inline
       (select :id id
@@ -472,3 +474,13 @@ generate output the way we want -- formatted and without sending warnings.
             :class (cs (if active? "translate-x-5" "translate-x-0") "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out")}]]
    [:span {:class "ml-3"}
     [:span {:class "text-sm font-medium text-gray-900"} label]]])
+
+(defn toggle-checkbox [& {:keys [label checked? name]}]
+  [:label {:for name :class "inline-flex relative items-center cursor-pointer"}
+   [:input {:type "checkbox" :checked checked? :class "sr-only peer" :name name :id name}]
+   [:div {:class  (cs
+                   "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer"
+                   "dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]"
+                   "after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
+                   "dark:border-gray-600 peer-checked:bg-indigo-600")}]
+   [:span {:class "ml-3 text-sm font-medium text-gray-900 dark:text-gray-300"} label]])
