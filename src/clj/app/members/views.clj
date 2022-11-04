@@ -129,17 +129,19 @@
             [:div {:class "sm:col-span-3"}
              [:dt {:class "text-sm font-medium text-gray-500"} "Instruments"]
              [:dd {:class "mt-1 text-sm text-gray-900"}
-              [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
-               (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
-                      [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
-                       [:div {:class "flex w-0 flex-1 items-center"}
-                        (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
-                        [:span {:class "ml-2 w-0 flex-1 truncate"} name]
-                        [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
-                        [:span {:class "ml-2 w-0 flex-1 truncate"} (render/money value :EUR)]
-                        [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
-                       [:div {:class "ml-4 flex-shrink-0"}
-                        [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]]) coverages)]]]]]]]
+              (if (empty? coverages)
+                "None"
+                [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
+                 (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
+                        [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
+                         [:div {:class "flex w-0 flex-1 items-center"}
+                          (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
+                          [:span {:class "ml-2 w-0 flex-1 truncate"} name]
+                          [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
+                          [:span {:class "ml-2 w-0 flex-1 truncate"} (render/money value :EUR)]
+                          [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
+                         [:div {:class "ml-4 flex-shrink-0"}
+                          [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]]) coverages)])]]]]]]
         [:section
          [:div {:class "bg-white shadow sm:rounded-lg"}
           [:div {:class "px-4 py-5 sm:px-6"}
