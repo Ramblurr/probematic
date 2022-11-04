@@ -139,7 +139,22 @@
                         [:span {:class "ml-2 w-0 flex-1 truncate"} (render/money value :EUR)]
                         [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
                        [:div {:class "ml-4 flex-shrink-0"}
-                        [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]]) coverages)]]]]]]]]]]]))
+                        [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]]) coverages)]]]]]]]
+        [:section
+         [:div {:class "bg-white shadow sm:rounded-lg"}
+          [:div {:class "px-4 py-5 sm:px-6"}
+           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
+            "Gigs & Probes"]
+           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"} "Fun stats!"]]
+          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
+           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} "Gigs Attended"]
+             [:dd {:class "mt-1 text-sm text-gray-900"} "coming soon"]]
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} "Probes Attended"]
+             [:dd {:class "mt-1 text-sm text-gray-900"} "coming soon"]]]]]]]]]]))
 
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
   (let [td-class "px-3 py-4"
