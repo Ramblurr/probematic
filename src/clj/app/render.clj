@@ -94,11 +94,13 @@ generate output the way we want -- formatted and without sending warnings.
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
 
-(defn select [& {:keys [id label options value]}]
+(defn select [& {:keys [id label options value extra-attrs]
+                 :or {extra-attrs {}}}]
   (let [selected-value value]
     [:div
      [:label {:for id :class "block text-sm font-medium text-gray-700"} label]
-     [:select {:name id :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
+     [:select (merge {:name id :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
+                     extra-attrs)
       (for [{:keys [value label selected?]} options]
         [:option {:selected (if (not (nil? selected?)) selected? (= value selected-value)) :value value} label])]]))
 
@@ -279,10 +281,10 @@ generate output the way we want -- formatted and without sending warnings.
                          :value value
                          :options options))))
 
-(defn section-select [& {:keys [id value label sections]}]
+(defn section-select [& {:keys [id value label sections extra-attrs]}]
   (let [options (map (fn [{:section/keys [name]}]
                        {:value name :label name}) sections)]
-    (select :id id :label label :value value :options options)))
+    (select :id id :label label :value value :options options :extra-attrs extra-attrs)))
 
 (defn instrument-select [& {:keys [id value label instruments :variant]
                             :or {label "Instrument"

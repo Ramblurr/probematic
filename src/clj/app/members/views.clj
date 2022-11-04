@@ -26,6 +26,7 @@
 
    {:label "Email" :priority :medium :key :owner}
    {:label "Phone" :priority :medium :key :value}
+   {:label "Section" :priority :medium :key :value}
    {:label "Active?" :priority :medium :key :value}
    ;;
    ])
@@ -99,17 +100,21 @@
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
   (let [td-class "px-3 py-4"
         comp-name  (util/comp-namer #'member-row-rw)
-        post? (util/post? req)
-        {:member/keys [name email active? phone]} (cond
-                                                    post? (:member (controller/toggle-active-state! req gigo-key))
-                                                    :else (member-by-id req gigo-key))]
-    [:tr {:id id}
+        member (cond
+                 (util/post? req) (:member (controller/update-active-and-section! req))
+                 :else (member-by-id req gigo-key))
+        {:member/keys [name email active? phone section]} member
+        sections (controller/sections db)
+        section-name (:section/name section)]
+    [:tr {:id id :hx-include (str "#" id " input, #"  id " select")}
      (list
       [:td {:class (render/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
        name]
       [:td {:class td-class} email]
       [:td {:class td-class} phone]
-      [:td {:class td-class :hx-include (str "#member" idx " input") :id (str "member" idx)}
+      [:td {:class td-class}
+       (render/section-select :label "" :id "section-name" :value section-name :class "mt-4" :sections sections :extra-attrs {:hx-post (comp-name) :hx-target (hash ".")})]
+      [:td {:class td-class :_hx-include (str "#member" idx " input") :id (str "member" idx)}
        [:input {:type "hidden" :name "idx" :value idx}]
        [:input {:type "hidden" :name "gigo-key" :value gigo-key}]
        (let [icon (if active? icon/xmark icon/plus)
@@ -121,15 +126,17 @@
       )]))
 
 (ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db] :as req} idx gigo-key]
-  (let [{:member/keys [name email active? phone] :as member} (member-by-id req gigo-key)
+  (let [{:member/keys [name email active? phone section] :as member} (member-by-id req gigo-key)
+        section-name (:section/name section)
         td-class "px-3 py-4"]
     [:tr {:id id :hx-boost true}
      (list
       [:td {:class (render/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
-       [:a {:href (link-member member)}
+       [:a {:href (link-member member) :class "font-medium text-blue-600 hover:text-blue-500"}
         name]]
       [:td {:class td-class} email]
       [:td {:class td-class} phone]
+      [:td {:class td-class} section-name]
       [:td {:class td-class} (ui/bool-bubble active?)]
       ;;
       )]))

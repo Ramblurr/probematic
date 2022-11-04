@@ -34,9 +34,15 @@
                   member-pattern)}
       result)))
 
-(defn toggle-active-state! [{:keys [datomic-conn db] :as req} gigo-key]
-  (let [member (retrieve-member db gigo-key)
-        tx-data [[:db/add [:member/gigo-key gigo-key] :member/active? (not (:member/active? member))]]]
+(defn update-active-and-section! [{:keys [datomic-conn db] :as req}]
+  (let [params (common/unwrap-params req)
+        gigo-key (:gigo-key params)
+        member (retrieve-member db gigo-key)
+        member-ref (d/ref member :member/gigo-key)
+        tx-data [[:db/add member-ref :member/section [:section/name (:section-name params)]]
+                 [:db/add member-ref :member/active? (not (:member/active? member))]]]
+    (tap> params)
+    (tap> tx-data)
     (transact-member! datomic-conn gigo-key tx-data)))
 
 (defn update-member! [{:keys [datomic-conn] :as req}]

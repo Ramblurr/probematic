@@ -15,3 +15,14 @@ document.body.addEventListener("htmx:afterSettle", function(evt) {
   NProgress.done();
   setTimeout(() => NProgress.remove(), 1000)
 });
+
+
+document.body.addEventListener("htmx:responseError", function(evt) {
+  NProgress.done();
+  NProgress.remove();
+});
+
+document.body.addEventListener("htmx:sendError", function(evt) {
+  NProgress.done();
+  NProgress.remove();
+});
