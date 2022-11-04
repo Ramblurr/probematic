@@ -84,18 +84,7 @@
        {:post {:summary "Logs out a user" :handler (partial #'auth.endpoint/logout-handler! system)}
         :get {:summary "Logs out a user" :handler (partial #'auth.endpoint/logout-handler! system)}}]]]))
 
-(defn wrap-swagger-ui [api-path swagger-url]
-  (let [handler (swagger-ui/create-swagger-ui-handler
-                 {:path   api-path
-                  :url    swagger-url
-                  :config {:validatorUrl     nil
-                           :operationsSorter "alpha"}})]
-    (fn [req]
-      (when-let [resp (handler req)]
-        (assoc-in resp [:headers "Content-Security-Policy"] route.helpers/relaxed-csp-header-value)))))
-
 (defn default-handler [{:keys [] :as system}]
   (ring/routes
-   (wrap-swagger-ui "/api" "/api/swagger.json")
    (ring/create-resource-handler {:path "/"})
    (ring/create-default-handler)))

@@ -1,5 +1,6 @@
 (ns app.members.views
   (:require
+   [app.util :as util]
    [app.views.shared :as ui]
    [app.members.controller :as controller]
    [ctmx.response :as response]
@@ -10,8 +11,9 @@
    [app.debug :as debug]
    [clojure.string :as str]
    [ctmx.rt :as rt]
-   [medley.core :as m]
-   [app.util :as util]))
+   [medley.core :as m]))
+
+(def link-member (partial util/link-helper "/member/" :member/gigo-key))
 
 (defn member-table-headers [members]
   [{:label "Name" :priority :normal :key :name
@@ -25,15 +27,64 @@
    {:label "Email" :priority :medium :key :owner}
    {:label "Phone" :priority :medium :key :value}
    {:label "Active?" :priority :medium :key :value}
-    ;;
+   ;;
    ])
 
 (defn member-by-id [req gigo-key]
   (m/find-first #(= gigo-key (:member/gigo-key %)) (:members req)))
 
+(ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}]
+  (let [comp-name (util/comp-namer #'members-detail-page)
+        post? (util/post? req)
+        edit? (util/qp-bool req :edit)
+        member (cond post?
+                     (:member (controller/update-member! req))
+                     :else
+                     (:member req))
+        {:member/keys [name email phone active? section]} member
+        sections (controller/sections db)
+        section-name (:section/name section)]
+
+    [(if edit? :form :div)
+     (if edit?
+       {:id id :hx-post (comp-name)}
+       {:id id})
+     [:div {:class "mt-8"}
+      [:div {:class "mx-auto max-w-3xl px-4 sm:px-6 md:flex md:items-center md:justify-between md:space-x-5 lg:max-w-7xl lg:px-8"}
+       [:div {:class "flex items-center space-x-5"}
+        [:div {:class "flex-shrink-0"}
+         [:div {:class "relative"}
+          [:img {:class "h-16 w-16 rounded-full" :src "https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=1024&h=1024&q=80"}]
+          [:span {:class "absolute inset-0 rounded-full shadow-inner" :aria-hidden "true"}]]]
+        [:div
+         [:h1 {:class "text-2xl font-bold text-gray-900"}
+          (if edit?
+            (render/text :label "Name" :name (path "name") :value name)
+            [:h1 {:class "text-2xl font-bold text-gray-900"}
+             name])]
+         [:p {:class "text-sm font-medium text-gray-500"}
+          (if edit?
+            (render/section-select :label "Section" :id (path "section-name") :value section-name :class "mt-4" :sections sections)
+            (if section-name section-name "No Section"))]]]
+       [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
+        (if edit?
+          (list
+           (render/button :label "Cancel"
+                          :priority :white
+                          :centered? true
+                          :attr {:hx-get (comp-name "?edit=false") :hx-target (hash ".")})
+
+           (render/button :label "Save"
+                          :priority :primary
+                          :centered? true))
+          (render/button :label "Edit"
+                         :priority :white
+                         :centered? true
+                         :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]]]))
+
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
   (let [td-class "px-3 py-4"
-        comp-name  (-> #'member-row-rw meta :name str)
+        comp-name  (util/comp-namer #'member-row-rw)
         post? (util/post? req)
         {:member/keys [name email active? phone]} (cond
                                                     post? (:member (controller/toggle-active-state! req gigo-key))
@@ -51,17 +102,18 @@
              class (if active? "text-red-500" "text-green-500")]
          (render/button :icon icon :size :small
                         :class class
-                        :attr {:hx-post comp-name :hx-target (hash ".")}))]
+                        :attr {:hx-post (comp-name) :hx-target (hash ".")}))]
       ;;
       )]))
 
 (ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db] :as req} idx gigo-key]
-  (let [{:member/keys [name email active? phone]} (member-by-id req gigo-key)
+  (let [{:member/keys [name email active? phone] :as member} (member-by-id req gigo-key)
         td-class "px-3 py-4"]
-    [:tr {:id id}
+    [:tr {:id id :hx-boost true}
      (list
       [:td {:class (render/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
-       name]
+       [:a {:href (link-member member)}
+        name]]
       [:td {:class td-class} email]
       [:td {:class td-class} phone]
       [:td {:class td-class} (ui/bool-bubble active?)]
@@ -90,7 +142,7 @@
   (ctmx/with-req req
     (let [edit? (util/qp-bool req :edit)
           add? (util/qp-bool req :add)
-          comp-name (fn [s] (str (-> #'members-index-page meta :name) s))]
+          comp-name (util/comp-namer #'members-index-page)]
       [:div {:id id}
        (render/page-header :title "Member Admin")
 

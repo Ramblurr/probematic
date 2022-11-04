@@ -66,3 +66,18 @@
 
 (defn delete? [{:keys [request-method]}]
   (= :delete request-method))
+
+(defn link-helper
+  ([prefix id-key maybe-id]
+   (link-helper prefix id-key maybe-id "/"))
+  ([prefix id-key maybe-id suffix]
+   (let [maybe-id-id (if (map? maybe-id) (id-key maybe-id)
+                         maybe-id)]
+     (str prefix maybe-id-id suffix))))
+
+(defn comp-namer [var]
+  (fn
+    ([]
+     (-> var meta :name str))
+    ([s]
+     (str (-> var meta :name) s))))

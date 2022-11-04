@@ -13,16 +13,8 @@
    [ctmx.rt :as rt]
    [medley.core :as m]))
 
-(defn link-helper
-  ([prefix id-key maybe-id]
-   (link-helper prefix id-key maybe-id "/"))
-  ([prefix id-key maybe-id suffix]
-   (let [maybe-id-id (if (map? maybe-id) (id-key maybe-id)
-                         maybe-id)]
-     (str prefix maybe-id-id suffix))))
-
-(def link-policy (partial link-helper "/insurance/" :insurance.policy/policy-id))
-(def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
+(def link-policy (partial util/link-helper "/insurance/" :insurance.policy/policy-id))
+(def link-instrument (partial util/link-helper "/instrument/" :instrument/instrument-id))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]

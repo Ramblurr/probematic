@@ -33,7 +33,7 @@
                                                                 :io.pedestal.http/host #or [#env HTTP_BIND_HOST "localhost"]
                                         ;:io.pedestal.http/resource-path "/static"
                                                                 :io.pedestal.http/join?  false
-                                                                :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src "'self' data:;"
+                                                                :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src "https://images.unsplash.com 'self' data:;"
                                                                                                                                      :object-src "'none';"
                                                                                                                                      :default-src "'self';"
                                                                                                                                      :font-src "'self' https://rsms.me;"

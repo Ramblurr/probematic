@@ -17,8 +17,6 @@
    [reitit.swagger :as swagger]
    [datomic.client.api :as d]))
 
-(def ^:private relaxed-csp "img-src 'self' data:; object-src 'none'; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://rsms.me; connect-src 'self'")
-
 (derive ::error ::exception)
 (derive ::failure ::exception)
 (derive ::horror ::exception)
@@ -152,8 +150,6 @@
                  {:encode-key-fn name})
        (assoc-in [:formats "application/json" :decoder-opts]
                  {:decode-key-fn keyword}))))
-
-(def relaxed-csp-header-value (secure-headers/content-security-policy-header relaxed-csp))
 
 (defn prone-exception-interceptor
   "Pretty prints exceptions in the browser"

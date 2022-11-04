@@ -13,6 +13,11 @@
   (->member
    (d/find-by db :member/gigo-key gigo-key member-pattern)))
 
+(defn sections [db]
+  (->> (d/find-all db :section/name [:section/name])
+       (mapv first)
+       (sort-by :section/name)))
+
 (defn members [db]
   (->> (d/find-all db :member/gigo-key member-pattern)
        (mapv #(->member (first %)))
@@ -33,3 +38,37 @@
   (let [member (retrieve-member db gigo-key)
         tx-data [[:db/add [:member/gigo-key gigo-key] :member/active? (not (:member/active? member))]]]
     (transact-member! datomic-conn gigo-key tx-data)))
+
+(defn update-member! [{:keys [datomic-conn] :as req}]
+  (let [gigo-key (-> req :path-params :gigo-key)
+        params (common/unwrap-params req)
+        member-ref [:member/gigo-key gigo-key]
+        tx-data [[:db/add member-ref :member/name (:name params)]
+                 [:db/add member-ref :member/section [:section/name (:section-name params)]]]]
+    (tap> params)
+    (tap> tx-data)
+    (transact-member! datomic-conn gigo-key tx-data)))
+
+(comment
+  (do
+    (require '[integrant.repl.state :as state])
+    (require  '[datomic.client.api :as datomic])
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db (datomic/db conn))) ;; rcf
+  (sections db)
+  (def section-defaults ["percussion"
+                         "bass"
+                         "trombone/bombardino"
+                         "sax tenor"
+                         "sax alto"
+                         "trumpet"
+                         "sax soprano/clarinet"
+                         "flute"
+                         "No Section"])
+
+  (sections (datomic/db conn))
+  (d/transact conn {:tx-data
+                    (map (fn [n] {:section/name n}) section-defaults)})
+
+  ;;
+  )
