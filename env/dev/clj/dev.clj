@@ -10,8 +10,12 @@
    [integrant.repl.state :as state]
    [malli.dev :as md]
    [datomic.client.api :as d]
-   [ol.app.dev.dev-extras :refer :all]
-   [ol.system :as system]))
+   [ol.app.dev.dev-extras :as dev-extra]
+   [clojure.tools.namespace.repl :as repl]
+   [ol.system :as system]
+   [browser :as browser]))
+
+(repl/disable-reload! (find-ns 'browser))
 
 (set! *print-namespace-maps* false)
 
@@ -20,10 +24,27 @@
 (def conn (:conn datomic))
 (def app (-> state/system :app.ig.router/routes))
 
+(defn go []
+  (dev-extra/go)
+  (browser/open-browser "http://localhost:6161/"))
+
+(defn reset []
+  (dev-extra/reset)
+  (browser/refresh))
+
+(defn halt []
+  (dev-extra/halt))
+
 (comment
   (go)
-  (halt)
-  (reset)
+  (eta/chrome {:path-driver "/usr/bin/chromedriver"
+               :path-browser "/usr/bin/chromium-freeworld"})
+
+  @browser
+
+  (dev-extra/go)
+  (dev-extra/halt)
+  (dev-extra/reset)
 
 ;;;  SEEDS
 
@@ -38,7 +59,7 @@
     (sync-gigs/update-gigs-db! (:conn _opts) @gigo/gigs-cache)
     (sync-members/update-member-data! (:conn _opts) (sync-members/fetch-people-data! (-> _opts :env :airtable))))
 
-;; END SEEDS
+  ;; END SEEDS
 
   (md/start! schemas/malli-opts)
   (md/stop!)

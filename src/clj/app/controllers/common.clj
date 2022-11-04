@@ -30,3 +30,6 @@
   (if (string? v)
     (parse-uuid v)
     v))
+
+(defn check->bool [v]
+  (= "on" v))

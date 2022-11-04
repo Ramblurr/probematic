@@ -13,6 +13,8 @@
                     [:div {:class "content"}
                      [:ul
                       [:li
+                       [:a {:href "/members"} "Members"]]
+                      [:li
                        [:a {:href "/songs"} "Songs"]]
                       [:li
                        [:a {:href "/events"} "Gigs/Probes"]]

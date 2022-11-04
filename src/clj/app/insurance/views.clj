@@ -61,7 +61,16 @@
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
                                         ;(icon/calendar {:class style-icon})
                                         ;[:p "Last Played "]
-        ]]]]))
+        ]
+       [:div {:class "ml-2 flex flex-shrink-0"}
+        [:form {:hx-post "/insurance-policy-duplicate/insurance-policy-duplicate"}
+         [:input {:type :hidden :name "policy-id" :value policy-id}]
+         (render/button :attr {:href "#"} :label "Duplicate" :priority :white-rounded :size :small)]]]]]))
+
+(ctmx/defcomponent ^:endpoint insurance-policy-duplicate [{:keys [db] :as req}]
+  (let [new-policy-id (controller/duplicate-policy req)]
+    ;; (response/hx-redirect (link-policy new-policy-id))
+    nil))
 
 (ctmx/defcomponent ^:endpoint policy-edit [{:keys [db] :as req}]
   (let [policy-id (-> req :path-params :policy-id parse-uuid)
@@ -359,18 +368,20 @@
                     [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
 
     {:label "Owner" :priority :medium :key :owner}
-    {:label "Value" :priority :medium :key :value}
     {:label "Make" :priority :medium :key :value}
     {:label "Model" :priority :medium :key :value}
     {:label "Build Year" :priority :medium :key :value}
     {:label "Serial Number" :priority :medium :key :value}
     {:label "Band/Private" :priority :medium :key :value}
+    {:label "Value" :priority :medium :key :value :variant :number}
     ;;
     ]
    (map (fn [ct]
           {:label (:insurance.coverage.type/name ct)
+           :variant :number
            :key (:insurance.coverage.type/name ct)
            :priority :normal}) coverage-types)
+   [{:label "Total Cost" :priority :medium :key :value :variant :number}]
    [{:label "Edit" :variant :action :key :action}]))
 
 (defn get-coverage [policy coverage-id]
@@ -385,8 +396,6 @@
       name]
      [:td {:class "px-3 py-4"}
       (-> owner :member/name)]
-     [:td {:class "px-3 py-4"}
-      (render/money (:instrument.coverage/value coverage) :EUR)]
      [:td {:class "px-3 py-4"} make]
      [:td {:class "px-3 py-4"} model]
      [:td {:class "px-3 py-4"} build-year]
@@ -395,6 +404,16 @@
       (if (:instrument.coverage/private? coverage)
         "private"
         "band")]
+     [:td {:class "px-3 py-4 text-right"}
+      (render/money (:instrument.coverage/value coverage) :EUR)]
+      ;;
+     )))
+
+(defn shared-static-columns-end [coverage]
+  (let [{:instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
+    (list
+     [:td {:class "px-3 py-4 text-right"}
+      (render/money (:instrument.coverage/cost coverage) :EUR)]
       ;;
      )))
 
@@ -426,6 +445,7 @@
                                                     :class class
                                                     :attr {:hx-post "coverage-table-row-rw" :hx-target (hash ".")}))])
                                 coverage-types)
+                  (shared-static-columns-end coverage)
                   (list
                    [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
                     [:form {:hx-delete "coverage-table-row-rw" :hx-target (hash ".") :hx-confirm "Are you sure?"}
@@ -443,13 +463,15 @@
       (into [] (concat
                 [:tr {:id id}
                  (shared-static-columns coverage)]
-                (mapv  (fn [{:insurance.coverage.type/keys [type-id]}]
-                         [:td {:class "px-3 py-4"}
-                          (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
-                            [:div (render/money (:insurance.coverage.type/cost coverage-type) :EUR)]
-                            (icon/xmark {:class "w-5 h-5"}))])
+                (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                        [:td {:class "px-3 py-4 text-right"}
+                         (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
+                           [:div (render/money (:insurance.coverage.type/cost coverage-type) :EUR)]
+                           (icon/xmark {:class "w-5 h-5 inline"}))])
 
-                       coverage-types)
+                      coverage-types)
+
+                (shared-static-columns-end coverage)
                 (list
                  [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
                   [:span {:class "flex flex-row space-x-2"}

@@ -43,6 +43,10 @@
 
 (defn insurance-routes []
   [""
+   (ctmx/make-routes
+    "/insurance-policy-duplicate/"
+    (fn [req]
+      (view/insurance-policy-duplicate req)))
    (insurance-index)
    (insurance-create)
    (insurance-detail)

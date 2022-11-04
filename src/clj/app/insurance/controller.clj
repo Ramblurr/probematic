@@ -133,6 +133,55 @@
                      :insurance.policy/category-factors category-factor-tx-ids}]]
     (concat category-factor-txs policy-txs)))
 
+(defn duplicate-policy-tx [{:insurance.policy/keys [name effective-at effective-until premium-factor category-factors coverage-types covered-instruments currency] :as old-policy}]
+  (let [cat-factor-txs (map-indexed (fn [idx {:insurance.category.factor/keys [category factor]}]
+                                      {:db/id (str "cat_fact_" idx)
+                                       :insurance.category.factor/category-factor-id (sq/generate-squuid)
+                                       :insurance.category.factor/category [:instrument.category/category-id (:instrument.category/category-id category)]
+                                       :insurance.category.factor/factor (bigdec factor)})
+                                    category-factors)
+        cat-factor-ids (map :db/id cat-factor-txs)
+        coverage-type-txs (map-indexed (fn [idx {:insurance.coverage.type/keys [type-id name description premium-factor]}]
+                                         {:db/id (str "cat_type_" idx)
+                                          :insurance.coverage.type/name name
+                                          :insurance.coverage.type/type-id (sq/generate-squuid)
+                                          :old-type-id type-id
+                                          :insurance.coverage.type/description description
+                                          :insurance.coverage.type/premium-factor premium-factor})
+                                       coverage-types)
+
+        coverage-type-ids (map :db/id coverage-type-txs)
+        coverage-type-old-to-new (reduce (fn [m tx]
+                                           (assoc m (:old-type-id tx) (:db/id tx))) {} coverage-type-txs)
+        coverage-type-txs (map #(dissoc % :old-type-id) coverage-type-txs)
+
+        covered-instruments-txs (map-indexed (fn [idx {:instrument.coverage/keys [instrument types private? value]}]
+                                               {:db/id (str "coverage_" idx)
+                                                :instrument.coverage/coverage-id (sq/generate-squuid)
+                                                :instrument.coverage/instrument (d/ref instrument :instrument/instrument-id)
+                                                :instrument.coverage/types (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                                                                                   (get coverage-type-old-to-new type-id)) types)
+                                                :instrument.coverage/private? private?
+                                                :instrument.coverage/value value})
+                                             covered-instruments)
+
+        covered-instruments-ids (map :db/id covered-instruments-txs)]
+
+    (map util/remove-nils
+         (concat
+          cat-factor-txs
+          coverage-type-txs
+          covered-instruments-txs
+          [{:insurance.policy/policy-id (sq/generate-squuid)
+            :insurance.policy/name (str "Copy of " name)
+            :insurance.policy/effective-at (t/inst effective-at)
+            :insurance.policy/effective-until (t/inst effective-until)
+            :insurance.policy/currency currency
+            :insurance.policy/premium-factor premium-factor
+            :insurance.policy/coverage-types coverage-type-ids
+            :insurance.policy/category-factors  cat-factor-ids
+            :insurance.policy/covered-instruments covered-instruments-ids}]))))
+
 (defn transact-policy! [conn tx-data]
   (let [result (d/transact conn {:tx-data tx-data})]
     (if  (d/db-ok? result)
@@ -154,11 +203,19 @@
       (update :insurance.policy/effective-until t/zoned-date-time)))
 
 (defn policies [db]
-  (mapv #(->policy (first %))
-        (d/find-all db :insurance.policy/policy-id policy-pattern)))
+  (->> (d/find-all db :insurance.policy/policy-id policy-pattern)
+       (mapv #(->policy (first %)))
+       (sort-by (juxt :insurance.policy/effective-until :insurance.policy/name))))
 
 (defn retrieve-policy [db policy-id]
   (->policy (d/find-by db :insurance.policy/policy-id policy-id policy-pattern)))
+
+(defn duplicate-policy [{:keys [db datomic-conn] :as req}]
+  (let [params (common/unwrap-params req)
+        old-pol-id (common/ensure-uuid (:policy-id params))
+        old-policy (retrieve-policy db old-pol-id)
+        new-policy-tx (duplicate-policy-tx old-policy)]
+    (transact-policy! datomic-conn new-policy-tx)))
 
 (defn create-policy! [{:keys [db datomic-conn] :as req}]
   (let [params (common/unwrap-params req)
@@ -171,7 +228,6 @@
                   :insurance.policy/effective-at effective-at
                   :insurance.policy/effective-until effective-until
                   :insurance.policy/premium-factor base-factor}]]
-    (tap> tx-data)
     (transact-policy! datomic-conn tx-data)))
 
 (defn update-policy! [{:keys [db datomic-conn] :as req} policy-id]
@@ -235,7 +291,6 @@
 
 (defn create-coverage-type! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (common/unwrap-params req)
-        _ (tap> params)
         tx-data [{:insurance.coverage.type/type-id (sq/generate-squuid)
                   :insurance.coverage.type/name (:coverage-name params)
                   :insurance.coverage.type/description ""
@@ -313,21 +368,16 @@
       {:policy (retrieve-policy (:db-after result) (-> req :policy :insurance.policy/policy-id))}
       result)))
 
-(defn check->bool [v]
-  (= "on" v))
-
 (defn create-instrument-coverage! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (-> (common/unwrap-params req))
-        _ (tap> params)
         policy-id (common/ensure-uuid policy-id)
         instrument-id (parse-uuid (:instrument-id params))
         tx-data [{:instrument.coverage/coverage-id (sq/generate-squuid)
                   :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
                   :instrument.coverage/value (bigdec (:value params))
-                  :instrument.coverage/private? (check->bool (:private? params))
+                  :instrument.coverage/private? (common/check->bool (:private? params))
                   :db/id "covered_instrument"}
                  [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]]
-        _ (tap> tx-data)
         result (d/transact datomic-conn {:tx-data tx-data})]
     (if (d/db-ok? result)
       {:policy (retrieve-policy (:db-after result) policy-id)}
@@ -355,8 +405,9 @@
   query-result)
 
 (defn instruments [db]
-  (mapv #(->instrument (first %))
-        (d/find-all db :instrument/instrument-id instrument-pattern)))
+  (->> (d/find-all db :instrument/instrument-id instrument-pattern)
+       (mapv #(->instrument (first %)))
+       (sort-by (juxt #(get-in % [:instrument/owner :member/name]) :instrument/name))))
 
 (defn retrieve-instrument [db instrument-id]
   (->instrument (d/find-by db :instrument/instrument-id instrument-id instrument-detail-pattern)))

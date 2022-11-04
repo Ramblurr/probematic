@@ -2,6 +2,7 @@
   (:require
    [app.routes.home :refer [home-routes]]
    [app.songs.routes :refer [songs-routes]]
+   [app.members.routes :refer [members-routes]]
    [app.insurance.routes :refer [insurance-routes insurance-interceptors]]
    [app.gigs.routes :refer [events-routes]]
    [app.routes.login :refer [login-routes]]
@@ -23,6 +24,7 @@
                               (route.helpers/system-interceptor system)
                               (route.helpers/datomic-interceptor system))}
 
+     (members-routes)
      (home-routes)
      (songs-routes)
      (events-routes)

@@ -47,7 +47,7 @@
   (let [port (-> service :io.pedestal.http/port)
         host (-> service :io.pedestal.http/host)
         start-msg (format "Starting %s on %s:%d" (str (:name env "app") (when (config/dev-mode? env) " [DEV]")) host port)]
-    ;; (tap> routes)
+    (tap> routes)
     (tap> start-msg)
     (log/info start-msg)
     (cond-> service

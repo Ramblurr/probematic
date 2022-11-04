@@ -9,10 +9,9 @@
    [hiccup.page :as hiccup.page]
    [hiccup2.core :refer [html]]
    [medley.core :as m]
-   [app.debug :as debug]
    [ctmx.render :as ctmx.render]
-
-   [ctmx.response :as response]))
+   [ctmx.response :as response]
+   [app.util :as util]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -93,11 +92,6 @@ generate output the way we want -- formatted and without sending warnings.
 
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
-
-(defn filter-vals
-  ([m]
-   (into {}
-         (for [[k v] m :when v] [k v]))))
 
 (defn select [& {:keys [id label options]}]
   [:div
@@ -192,13 +186,13 @@ generate output the way we want -- formatted and without sending warnings.
   [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
    [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
     label]
-   [:input (filter-vals (merge (or extra-attrs {})
-                               {:class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
-                                :type type
-                                :name name
-                                :value value
-                                :required true
-                                :placeholder placeholder}))]])
+   [:input (util/remove-nils (merge (or extra-attrs {})
+                                    {:class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+                                     :type type
+                                     :name name
+                                     :value value
+                                     :required true
+                                     :placeholder placeholder}))]])
 
 (defn text [& opts]
   (apply input (conj opts "text" :type)))
@@ -371,7 +365,8 @@ generate output the way we want -- formatted and without sending warnings.
    :low "hidden lg:table-cell"})
 
 (def table-row-variant
-  {:action "relative py-3.5 pl-3 pr-4 sm:pr-6"})
+  {:action "relative py-3.5 pl-3 pr-4 sm:pr-6"
+   :number "text-right"})
 
 (->>
  [{:label "Name" :priority :normal :key :name}
