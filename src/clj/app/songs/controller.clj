@@ -6,7 +6,7 @@
    [ctmx.form :as form]
    [app.db :as db]))
 
-(def song-pattern [:song/title])
+(def song-pattern [:song/title :song/song-id])
 
 (defn query-result->song [[{:song/keys [title] :as song}]]
   song)

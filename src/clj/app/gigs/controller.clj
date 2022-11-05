@@ -6,7 +6,8 @@
    [app.util :as util]
    [medley.core :as m]
    [clojure.walk :as walk]
-   [ctmx.form :as form]))
+   [ctmx.form :as form]
+   [app.controllers.common :as common]))
 
 (def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
 
@@ -88,27 +89,23 @@
           {}
           data))
 
-(defn create-log-play! [conn gig-id play]
-  (d/transact conn {:tx-data
-                    [{:played/song [:gig/gig-id gig-id]
-                      :played/gig  [:song/song-id (:played/song-id play)]
-                      :played/rating (:played/rating play)
-                      :played/play-id (sq/generate-squuid)
-                      :played/emphasis (:played/emphasis play)}]}))
+(defn create-log-play-tx [gig-id play]
+  {:played/song [:gig/gig-id gig-id]
+   :played/gig  [:song/song-id (common/ensure-uuid (:song/song-id play))]
+   :played/rating (:played/rating play)
+   :played/play-id (sq/generate-squuid)
+   :played/emphasis (:played/emphasis play)})
 
 (defn log-play! [{:keys [db datomic-conn] :as req} gig-id]
+  ;; (tap> (:params req))
   (let [foo (->> :params req form/nest-params walk/keywordize-keys parse-log-params group-by-song)
-        _ (tap> foo)
         plays (filter (fn [m] (not= :play-rating/not-played (:played/rating m))) (vals foo))
-        _ (tap> plays)
-        results (map
-                 (partial create-log-play! datomic-conn gig-id) plays)
-        errors (some #(d/db-error? %) results)]
-    (tap> results)
-    (if errors
-      {:error errors
-       :params foo}
-      {:plays results})))
+        tx-data (map #(create-log-play-tx gig-id %) plays)
+        ;; _ (tap> {:foo foo :plays plays :tx-data tx-data})
+        result (d/transact datomic-conn {:tx-data tx-data})]
+    (if (d/db-ok? result)
+      {:plays result}
+      result)))
 
 (comment
   (def data {:event-log-play {:intensive {:14 "play-emphasis/durch"
