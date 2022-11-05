@@ -106,7 +106,7 @@
                                   intensive?  (= :play-emphasis/intensiv (-> result :params (get song-id) :played/emphasis))
                                   toggler-class (get {"play-rating/not-played" "toggler--not-played"
                                                       "play-rating/good" "toggler--feeling-good"
-                                                      "play-rating/bad" "toggler--feeling-bad"
+                                                      "play-rating/bad" "toggler--feeling-sad"
                                                       "play-rating/ok" "toggler--feeling-meh"} feeling-value)]
                               [:li {:class (render/cs "toggler" toggler-class)}
                                [:input {:type "hidden" :value song-id :name (str (path "song-id") "_" idx)}]
@@ -122,7 +122,7 @@
                                                       :options [{:id (path "feeling/not-played") :value "play-rating/not-played" :icon icon/circle-xmark-outline :size :small :class "icon-not-played" :data "toggler--not-played"}
                                                                 {:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile" :data "toggler--feeling-good"}
                                                                 {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"  :data "toggler--feeling-meh"}
-                                                                {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"  :data "toggler--feeling-bad"}])]
+                                                                {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"  :data "toggler--feeling-sad"}])]
                                 [:div  {:class "border-l-4  border-gray-200 ml-2 pl-2 mt-1 flex items-center space-x-3"}
                                  [:label  {:for check-id :class (render/cs "icon-fist-punch cursor-pointer" (when intensive? "intensiv--checked"))}
                                   [:input {:type "hidden" :name check-id :value "play-emphasis/durch"}]

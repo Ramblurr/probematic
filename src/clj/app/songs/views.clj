@@ -163,12 +163,12 @@
   [:div
    (render/page-header :title "Songs"
                        :buttons (list
-                                 (render/button :label "Log Play"
+                                 (render/button :tag :a :label "Log Play"
                                                 :priority :primary
                                                 :centered? true
                                                 :attr {:href "/songs/log-play/"}
                                                 :icon icon/plus)
-                                 (render/button :label "New Song"
+                                 (render/button :tag :a :label "New Song"
                                                 :priority :white
                                                 :centered? true
                                                 :attr {:href "/songs/new"})))

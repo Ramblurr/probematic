@@ -168,24 +168,32 @@
       @apply ring-2 ring-offset-2 ring-green-500;
 }
 
-.toggler  .icon-bad:active {
+.toggler  .icon-sad:active {
       @apply ring-2 ring-offset-2 ring-red-500;
 }
 
-.toggler  .icon-meh:active {
+.toggler .icon-meh:active {
       @apply ring-2 ring-offset-2 ring-blue-500;
 }
+
+.toggler .icon-not-played:active {
+      @apply ring-2 ring-offset-2 ring-gray-500;
+}
+
+.toggler .icon-fist-punch:active {
+  @apply ring-2 ring-offset-2 ring-purple-500;
+}
+
 
 .toggler--feeling-good {
   @apply border-green-200 bg-green-100;
 }
-.toggler--feeling-bad {
+.toggler--feeling-sad {
   @apply border-red-200 bg-red-100;
 }
 .toggler--feeling-meh {
   @apply border-blue-200 bg-blue-100;
 }
-
 .toggler--not-played {
   @apply border-gray-200 bg-gray-100;
 }
@@ -211,6 +219,7 @@
 .icon-fist-punch {
   @apply text-purple-500;
 }
+
 .intensiv--checked.icon-fist-punch svg {
   padding-bottom: 1px;
   @apply border-solid border-b-2;
