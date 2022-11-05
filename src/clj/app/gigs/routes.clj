@@ -22,7 +22,7 @@
    "/event/{gig/gig-id}/log-play"
    (fn [req]
      (render/html5-response
-      (view/event-log-play req)))))
+      (view/event-log-plays req)))))
 
 (defn events-routes []
   [""

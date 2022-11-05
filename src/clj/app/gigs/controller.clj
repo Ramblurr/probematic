@@ -7,12 +7,15 @@
    [medley.core :as m]
    [clojure.walk :as walk]
    [ctmx.form :as form]
-   [app.controllers.common :as common]))
+   [app.controllers.common :as common]
+   [datomic.client.api :as datomic]
+   [app.queries :as q]))
 
 (def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
 
 (def play-pattern [{:played/gig gig-pattern}
-                   :played/song [:song/song-id :song/title]
+                   {:played/song [:song/song-id :song/title]}
+                   :played/gig+song
                    :played/rating
                    :played/play-id
                    :played/emphasis])
@@ -62,127 +65,92 @@
   play)
 
 (defn plays-by-gig [db gig-id]
-  (query-result->play
-   (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)))
+  (->> (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)
+       (map query-result->play)
+       (sort-by #(-> % :played/song :song/title))))
 
-(defn parse-log-params [params]
-  (m/deep-merge
-   (reduce (fn [m [k v]]
-             (assoc m k {:song/song-id v}))
-           {}
-           (-> params :event-log-play :song-id))
-   (reduce (fn [m [k v]]
-             (assoc m k {:played/rating (keyword v)}))
-           {}
-           (-> params :event-log-play :feeling))
-   (reduce (fn [m [k v]]
-             (assoc m k {:played/emphasis
-                         (keyword (if (string? v)
-                                    v
-                                    (second v)))}))
-           {}
-           (-> params :event-log-play :intensive))))
-
-(defn group-by-song [data]
-  (reduce (fn [m [k v]]
-            (assoc m (:song/song-id v) v))
-          {}
-          data))
-
-(defn create-log-play-tx [gig-id play]
-  {:played/song [:gig/gig-id gig-id]
-   :played/gig  [:song/song-id (common/ensure-uuid (:song/song-id play))]
-   :played/rating (:played/rating play)
-   :played/play-id (sq/generate-squuid)
-   :played/emphasis (:played/emphasis play)})
-
-(defn log-play! [{:keys [db datomic-conn] :as req} gig-id]
-  ;; (tap> (:params req))
-  (let [foo (->> :params req form/nest-params walk/keywordize-keys parse-log-params group-by-song)
-        plays (filter (fn [m] (not= :play-rating/not-played (:played/rating m))) (vals foo))
-        tx-data (map #(create-log-play-tx gig-id %) plays)
-        ;; _ (tap> {:foo foo :plays plays :tx-data tx-data})
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if (d/db-ok? result)
-      {:plays result}
-      result)))
+(defn songs-not-played [plays all-songs]
+  (->> all-songs
+       (remove (fn [song]
+                 (->> plays
+                      (map #(-> % :played/song :song/song-id))
+                      (some (fn [p] (= p (:song/song-id song)))))))))
 
 (comment
-  (def data {:event-log-play {:intensive {:14 "play-emphasis/durch"
-                                          :0 ["play-emphasis/durch" "play-emphasis/intensiv"]}
-                              :feeling {:14 "play-rating/not-played"
-                                        :18 "play-rating/not-played"
-                                        :12 "play-rating/not-played"
-                                        :11 "play-rating/not-played"
-                                        :24 "play-rating/not-played"
-                                        :10 "play-rating/not-played"
-                                        :21 "play-rating/not-played"
-                                        :23 "play-rating/not-played"
-                                        :13 "play-rating/not-played"
-                                        :0 "play-rating/not-played"
-                                        :4 "play-rating/not-played"
-                                        :26 "play-rating/not-played"
-                                        :16 "play-rating/not-played"
-                                        :7 "play-rating/not-played"
-                                        :1 "play-rating/not-played"
-                                        :8 "play-rating/not-played"
-                                        :22 "play-rating/not-played"
-                                        :25 "play-rating/not-played"
-                                        :9 "play-rating/not-played"
-                                        :20 "play-rating/not-played"
-                                        :17 "play-rating/not-played"
-                                        :19 "play-rating/not-played"
-                                        :2 "play-rating/not-played"
-                                        :5 "play-rating/not-played"
-                                        :15 "play-rating/not-played"
-                                        :3 "play-rating/not-played"
-                                        :6 "play-rating/not-played"}
-                              :song {:14 "Laisse Tomber Les Filles"
-                                     :18 "Montserrat Serrat"
-                                     :12 "Kingdom Come"
-                                     :11 "Kids Aren't Alright"
-                                     :24 "tralala"
-                                     :10 "Inner Babylon"
-                                     :21 "Surfin"
-                                     :23 "Trala!"
-                                     :13 "Klezma 34"
-                                     :0 "<script>alert(\"OMG\");</script>"
-                                     :4 "Bella Ciao"
-                                     :26 "You Move You Lose"
-                                     :16 "Metanioa"
-                                     :7 "foobar"
-                                     :1 "<script>alert(?XSS?);</script>"
-                                     :8 "FooBar!"
-                                     :22 "Tammurriata Nera"
-                                     :25 "Tschufittl Cocek"
-                                     :9 "Grenzrenner"
-                                     :20 "Rasta Funk"
-                                     :17 "Monkeys Rally"
-                                     :19 "Odessa Bulgar"
-                                     :2 "Asterix"
-                                     :5 "Cumbia Sobre el Mar"
-                                     :15 "L’estaca del pueblo"
-                                     :3 "Asterix2"
-                                     :6 "Der Zug um 7.40"}}})
+  (def gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
+  (def _plays (plays-by-gig db gig-id))
+  (def _songs (q/find-all-songs db))
 
-  (reduce (fn [m [k v]]
-            (assoc m (:song/title v) v))
-          {}
-          (parse-log-params data))
-  (group-by (fn [v]
-              (:song/title v))
-            (vals
-             (parse-log-params data)))
+  (map #(-> % :played/song :song/title) _plays)
 
+  (def asterix {:song/title "Asterix"
+                :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207"})
+  (def ymyl
+    {:song/title "You Move You Lose"
+     :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068217"})
+
+  ;;  played-songs
+  (def played-songs)
+  _songs
+
+  (def _not_played (songs-not-played _plays _songs))
+  (map (fn [s]
+         {:played/song s}) _not_played)
+
+  (->> _plays
+       (map #(-> % :played/song :song/song-id))
+       (filter #(= % (:song/song-id ymyl))))
+
+  (remove (fn [song]
+            (->> _plays
+                 (map #(-> % :played/song :song/song-id))
+                 (filter #(do (tap> {:play %}) (= % (:song/song-id song)))))) _songs)
+
+  (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)
+  (d/find-all-by db :played/gig + song "[\"ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMCc_fOfCQw\" #uuid \"01844740-3eed-856d-84c1-c26f0706820a\"]" play-pattern)
+  (datomic/transact conn {:tx-data
+                          (->>
+                           (d/find-all db :played/play-id play-pattern)
+                           (map first)
+                           (map :played/play-id)
+                           (map (fn [i] [:db/retractEntity [:played/play-id i]])))})
+  ;;
+  )
+(defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
+  (let [song-id (common/ensure-uuid song-id)
+        play-id (or (common/ensure-uuid play-id) (sq/generate-squuid))
+        rating (keyword feeling)
+        emphasis (keyword (if (string? intensive) intensive (second intensive)))]
+    {:played/gig [:gig/gig-id gig-id]
+     :played/song  [:song/song-id song-id]
+     :played/rating rating
+     :played/gig+song (pr-str [gig-id song-id])
+     :played/play-id play-id
+     :played/emphasis emphasis}))
+
+(defn log-play! [{:keys [datomic-conn] :as req} gig-id]
+  (let [play-params (->> (common/unwrap-params req)
+                         (map (fn [play]
+                                ;; songs that are not played should not be marked as intensive
+                                (if (= (:feeling play) "play-rating/not-played")
+                                  (assoc play :intensive "play-emphasis/durch")
+                                  play))))
+        tx-data (map #(upsert-log-play-tx gig-id %) play-params)
+        result (d/transact datomic-conn {:tx-data tx-data})]
+    (if (d/db-ok? result)
+      {:plays (plays-by-gig (:db-after result) gig-id)}
+      (do
+        (tap> result)
+        result))))
+
+(comment
   (do
     (require '[integrant.repl.state :as state])
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def req {:datomic-conn conn
-              :db (datomic/db conn)
-              :params {}}))
+    (def db (datomic/db conn))) ;;rcf
 
   (d/find-all (datomic/db conn) :played/play-id play-pattern)
 
-  ;; rich comment
+;;
   )

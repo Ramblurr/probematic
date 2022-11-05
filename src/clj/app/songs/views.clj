@@ -7,7 +7,8 @@
    [app.icons :as icon]
    [ctmx.core :as ctmx]
    [clojure.string :as clojure.string]
-   [ctmx.response :as response]))
+   [ctmx.response :as response]
+   [app.queries :as q]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -15,7 +16,7 @@
       (if (:play result)
         (response/hx-redirect "/songs/")
         (let [conn (-> req :system :conn)
-              songs (controller/find-all-songs db)
+              songs (q/find-all-songs db)
               gigs (gig.controller/find-all-gigs db)]
 
           [:form {:id id :hx-post (path ".")
@@ -153,7 +154,7 @@
             :hx-target (hash "../songs-list")}]])
 
 (ctmx/defcomponent ^:endpoint songs-list [{:keys [db] :as req} song]
-  (let [all-songs (controller/find-all-songs db)
+  (let [all-songs (q/find-all-songs db)
         filtered-songs (search-songs song all-songs)]
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
            :id id}

@@ -108,7 +108,7 @@
                 ;; :conn (:ol.datahike.ig/connection state/system)
                 :conn (-> state/system :app.ig/datomic-db :conn)
                 ;;
-                }))
+}))                     ;rcf
 
   (fetch-people-data! (-> _opts :env :airtable))
   (lookup-number (-> _opts :env :twilio) "+43600000" "AT")

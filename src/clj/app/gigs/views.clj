@@ -6,7 +6,10 @@
    [ctmx.response :as response]
    [app.render :as render]
    [app.icons :as icon]
-   [ctmx.core :as ctmx]))
+   [ctmx.core :as ctmx]
+   [medley.core :as m]
+   [ctmx.rt :as rt]
+   [app.queries :as q]))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
                           :or {size :normal
@@ -54,9 +57,10 @@
          (map-indexed radio-button))]])
 
 (defn kw->str [kw]
-  (str (namespace kw)
-       "/"
-       (name kw)))
+  (when kw
+    (str (namespace kw)
+         "/"
+         (name kw))))
 
 (defn log-play-legend []
   (let [shared-classes "h-8 w-8 border-solid border-b-2 pb-1"]
@@ -81,65 +85,74 @@
        (icon/fist-punch {:class (render/cs shared-classes "icon-fist-punch border-purple-500")})
        "Intensiv geprobt"]]]))
 
-(ctmx/defcomponent ^:endpoint event-log-play [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [gig-id (-> req :path-params :gig/gig-id)
-          result (and post? (controller/log-play! req gig-id))]
-      (if (:plays result)
-        (response/hx-redirect "/events/")
-        (let [songs (songs.controller/find-all-songs db)
-              gig (controller/retrieve-gig db gig-id)
-              plays (controller/plays-by-gig db gig-id)]
+(ctmx/defcomponent event-log-play [{:keys [db] :as req} idx play]
+  (let [was-played? (some? (:played/play-id play))
+        check-id (path "intensive")
+        radio-id (path "feeling")
+        song (:played/song play)
+        song-id (:song/song-id song)
+        feeling-value (kw->str (or (:played/rating play) :play-rating/not-played))
+        intensive?  (= :play-emphasis/intensiv (:played/emphasis play))
+        toggler-class (get {"play-rating/not-played" "toggler--not-played"
+                            "play-rating/good" "toggler--feeling-good"
+                            "play-rating/bad" "toggler--feeling-sad"
+                            "play-rating/ok" "toggler--feeling-meh"} feeling-value)]
+    [:li {:class (render/cs "toggler" toggler-class)}
+     [:input {:type "hidden" :value song-id :name (path "song-id")}]
+     (when was-played?
+       [:input {:type "hidden" :value (:played/play-id play) :name (path "play-id")}])
+     [:div {:class "inline-block"}
+      (:song/title song)]
 
-          [:div
-           (render/page-header :title (list  (:gig/title gig) " (" (ui/datetime (:gig/date gig)) ")") :subtitle "Here you can record what was played at this gig/probe.")
-           [:form {:id id :hx-post (path ".")
-                   :class "space-y-4"}
-            (log-play-legend)
-            [:ul {:class "toggler-container"}
-             (map-indexed (fn [idx song]
-                            (let [check-id (str (path "intensive") "_" idx)
-                                  radio-id (str (path "feeling") "_" idx)
-                                  song-id (:song/song-id song)
-                                  feeling-value  (kw->str (or (-> result :params (get song-id) :played/rating) :play-rating/not-played))
-
-                                  intensive?  (= :play-emphasis/intensiv (-> result :params (get song-id) :played/emphasis))
-                                  toggler-class (get {"play-rating/not-played" "toggler--not-played"
-                                                      "play-rating/good" "toggler--feeling-good"
-                                                      "play-rating/bad" "toggler--feeling-sad"
-                                                      "play-rating/ok" "toggler--feeling-meh"} feeling-value)]
-                              [:li {:class (render/cs "toggler" toggler-class)}
-                               [:input {:type "hidden" :value song-id :name (str (path "song-id") "_" idx)}]
-                               [:div {:class "inline-block"}
-                                (:song/title song)]
-
-                               [:div {:class "flex"}
-                                [:div
-                                 (radio-button-group  :id  radio-id :label ""
-                                                      :required? true
-                                                      :value feeling-value
-                                                      :class "emotion-radio"
-                                                      :options [{:id (path "feeling/not-played") :value "play-rating/not-played" :icon icon/circle-xmark-outline :size :small :class "icon-not-played" :data "toggler--not-played"}
-                                                                {:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile" :data "toggler--feeling-good"}
-                                                                {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"  :data "toggler--feeling-meh"}
-                                                                {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"  :data "toggler--feeling-sad"}])]
-                                [:div  {:class "border-l-4  border-gray-200 ml-2 pl-2 mt-1 flex items-center space-x-3"}
-                                 [:label  {:for check-id :class (render/cs "icon-fist-punch cursor-pointer" (when intensive? "intensiv--checked"))}
-                                  [:input {:type "hidden" :name check-id :value "play-emphasis/durch"}]
-                                  [:input {:type "checkbox" :class "sr-only" :name check-id :id check-id :value "play-emphasis/intensiv"
-                                           :_ "on change if I match <:checked/>
+     [:div {:class "flex"}
+      [:div
+       (radio-button-group  :id  radio-id :label ""
+                            :required? true
+                            :value feeling-value
+                            :class "emotion-radio"
+                            :options [{:id (path "feeling/not-played") :value "play-rating/not-played" :icon icon/circle-xmark-outline :size :small :class "icon-not-played" :data "toggler--not-played"}
+                                      {:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile" :data "toggler--feeling-good"}
+                                      {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"  :data "toggler--feeling-meh"}
+                                      {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"  :data "toggler--feeling-sad"}])]
+      [:div  {:class "border-l-4  border-gray-200 ml-2 pl-2 mt-1 flex items-center space-x-3"}
+       [:label  {:for check-id :class (render/cs "icon-fist-punch cursor-pointer" (when intensive? "intensiv--checked"))}
+        [:input {:type "hidden" :name check-id :value "play-emphasis/durch"}]
+        [:input {:type "checkbox" :class "sr-only" :name check-id :id check-id :value "play-emphasis/intensiv"
+                 :_ "on change if I match <:checked/>
                                                 add .intensiv--checked to the closest parent <label/>
                                                 else
                                                 remove .intensiv--checked from the closest parent <label/>
                                               end"
-                                           :checked intensive?}]
-                                  (icon/fist-punch {:class "h-8 w-8"})]]]]))
-                          songs)]
-            [:div
-             [:div {:class "flex justify-end"}
-              [:a {:href "/events", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-              [:button {:class "ml-3 btn btn-sm btn-indigo-high"
-                        :type "submit"} "Save"]]]]])))))
+                 :checked intensive?}]
+        (icon/fist-punch {:class "h-8 w-8"})]]]]))
+
+(ctmx/defcomponent ^:endpoint event-log-plays [{:keys [db] :as req}]
+  (ctmx/with-req req
+    (let [gig-id (-> req :path-params :gig/gig-id)
+          gig (controller/retrieve-gig db gig-id)
+          plays (cond post?
+                      (:plays (controller/log-play! req gig-id))
+                      :else
+                      (controller/plays-by-gig db gig-id))
+          songs-not-played (controller/songs-not-played plays (q/find-all-songs db))
+          ;; our log-play component wants to have "plays" for every song
+          ;; so we enrich the actual plays with stubs for the songs that were not played
+          plays (sort-by #(-> % :played/song :song/title) (concat plays
+                                                                  (map (fn [s] {:played/song s}) songs-not-played)))]
+
+      [:form {:id id :hx-post (path ".")
+              :class "space-y-4"}
+
+       (render/page-header :title (list  (:gig/title gig) " (" (ui/datetime (:gig/date gig)) ")") :subtitle "Here you can record what was played at this gig/probe.")
+
+       (log-play-legend)
+       [:ul {:class "toggler-container"}
+        (rt/map-indexed event-log-play req plays)]
+       [:div
+        [:div {:class "flex justify-end"}
+         [:a {:href "/events", :class "btn btn-sm btn-clear-normal"} "Cancel"]
+         [:button {:class "ml-3 btn btn-sm btn-indigo-high"
+                   :type "submit"} "Save"]]]])))
 
 (defn event-row [{:gig/keys [status title location date gig-id]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]

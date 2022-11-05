@@ -2,7 +2,10 @@
   (:require
    [datomic.client.api :as datomic]
    [app.datomic :as d]
+   [app.util :as util]
    [tick.core :as t]))
+
+(def song-pattern [:song/title :song/song-id])
 
 (def instrument-coverage-detail-pattern
   [:instrument.coverage/coverage-id
@@ -91,6 +94,11 @@
               (d/ref member :member/gigo-key)
               (d/ref policy :insurance.policy/policy-id))
    (map first)))
+
+(defn find-all-songs [db]
+  (util/isort-by :song/title
+                 (mapv first
+                       (d/find-all db :song/song-id song-pattern))))
 
 (comment
   (do

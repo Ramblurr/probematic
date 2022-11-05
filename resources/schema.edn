@@ -221,8 +221,7 @@
 
    {:db/ident :played/gig+song
     :db/unique :db.unique/value
-    :db/tupleAttrs [:played/gig :played/song]
-    :db/valueType :db.type/tuple
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
 ;;;; Attendance

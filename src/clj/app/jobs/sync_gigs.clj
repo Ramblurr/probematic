@@ -202,7 +202,7 @@
     (def _opts {:env        (:app.ig/env state/system)
                 :gigo       (:app.ig/gigo-client state/system)
                 :df-clients (:app.ig/dialogflow-session state/system)
-                :conn       (-> state/system :app.ig/datomic-db :conn)}))
+                :conn       (-> state/system :app.ig/datomic-db :conn)})) ; rcf
   (gigo/update-cache! (:gigo _opts))
 
   (update-gigs-db! (:conn _opts) @gigo/gigs-cache)

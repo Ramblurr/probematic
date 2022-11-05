@@ -4,17 +4,8 @@
    [com.yetanalytics.squuid :as sq]
    [app.util :as util]
    [ctmx.form :as form]
-   [app.db :as db]))
-
-(def song-pattern [:song/title :song/song-id])
-
-(defn query-result->song [[{:song/keys [title] :as song}]]
-  song)
-
-(defn find-all-songs [db]
-  (util/isort-by :song/title
-                 (mapv query-result->song
-                       (d/find-all db :song/song-id song-pattern))))
+   [app.db :as db]
+   [app.queries :as q]))
 
 (defn create-song! [req]
   (let [title (-> req util/unwrap-params :song)
@@ -51,7 +42,7 @@
       result)))
 
 (defn retrieve-song [db title]
-  (d/find-by db :song/title title song-pattern))
+  (d/find-by db :song/title title q/song-pattern))
 
 (comment
 
@@ -93,7 +84,7 @@
                              :song/song-id (sq/generate-squuid)
                              :song/play-count 0}) _titles)})
 
-  (find-all-songs (d/db conn))
+  (q/find-all-songs (d/db conn))
 
   (let [res
         (create-song! (assoc-in req [:params :song-new_song] "Asterix"))]
