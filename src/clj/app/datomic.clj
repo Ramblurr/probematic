@@ -1,11 +1,19 @@
 (ns app.datomic
   (:require [datomic.client.api :as d]
             [clojure.edn :as edn]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [com.yetanalytics.squuid :as sq]))
 
 (defn ident-has-attr?
   [db ident attr]
   (contains? (d/pull db {:eid ident :selector '[*]}) attr))
+
+(defn uuid-for-seed [tx]
+  (if-let [uuid-key (:uuid-key tx)]
+    (-> tx
+        (dissoc :uuid-key)
+        (assoc uuid-key (sq/generate-squuid)))
+    tx))
 
 (defn load-dataset
   [conn]
@@ -14,8 +22,8 @@
     (when-not (ident-has-attr? db :member/name :db/ident)
       (tap> "Loading db schema")
       (tx (-> (io/resource "schema.edn") slurp edn/read-string))
-      ;; (tx (-> (io/resource "seed.edn") slurp edn/read-string))
-      )
+      ;; (tx (map uuid-for-seed (-> (io/resource "seeds.edn") slurp edn/read-string)))
+      (tx (-> (io/resource "seeds.edn") slurp edn/read-string)))
     ;; (when-not (ident-has-attr? db :account/account-id :db.attr/preds)
     ;;   (tx validation/attr-pred))
     ;; (when-not (ident-has-attr? db :account/validate :db.entity/attrs)
@@ -73,6 +81,11 @@
 (def q d/q)
 
 (comment
-  (load-dataset conn)
+  (do
+    (require '[integrant.repl.state :as state])
+    (require  '[datomic.client.api :as datomic])
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db (datomic/db conn)))
+  (d/transact conn {:tx-data (-> (io/resource "seeds.edn") slurp edn/read-string)})
   ;;
   )

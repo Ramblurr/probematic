@@ -1,0 +1,84 @@
+[{:song/title "Asterix" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207"}
+ {:song/title "Bella Ciao" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068208"}
+ {:song/title "Cumbia Sobre el Mar" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068209"}
+ {:song/title "Der Zug um 7.40" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820a"}
+ {:song/title "Grenzrenner" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820b"}
+ {:song/title "Inner Babylon" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820c"}
+ {:song/title "Kids Aren't Alright" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820d"}
+ {:song/title "Kingdom Come" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068205"}
+ {:song/title "Klezma 34" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820e"}
+ {:song/title "Laisse Tomber Les Filles" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820f"}
+ {:song/title "L’estaca del pueblo" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068210"}
+ {:song/title "Metanioa" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068211"}
+ {:song/title "Monkeys Rally" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068212"}
+ {:song/title "Montserrat Serrat" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068213"}
+ {:song/title "Odessa Bulgar" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068218"}
+ {:song/title "Rasta Funk" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068214"}
+ {:song/title "Surfin" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068206"}
+ {:song/title "Tammurriata Nera" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068215"}
+ {:song/title "Tschufittl Cocek" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068216"}
+ {:song/title "You Move You Lose" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068217"}
+ {:section/name "bass" :section/default? false}
+ {:section/name "flute" :section/default? false}
+ {:section/name "percussion" :section/default? false}
+ {:section/name "sax alto" :section/default? false}
+ {:section/name "sax soprano/clarinet" :section/default? false}
+ {:section/name "sax tenor" :section/default? false}
+ {:section/name "trombone/bombardino" :section/default? false}
+ {:section/name "trumpet" :section/default? false}
+ {:section/name "No Section" :section/default? true}
+ {:db/id "blech" :instrument.category/name "Blech, Sax, Elektrisch" :instrument.category/code "1" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f07068219"}
+ {:db/id "holz" :instrument.category/name "Holz" :instrument.category/code "2" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f0706821a"}
+ {:db/id "schlag" :instrument.category/name "Schlag" :instrument.category/code "3" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f0706821b"}
+ {:db/id "etui" :instrument.category/name "Etui/Zubehör/Mundstück" :instrument.category/code "4" :instrument.category/category-id #uuid "01844740-3eee-8ccd-a19e-96ef6a45c61c"}
+ {:db/id "zupf" :instrument.category/name "Zupf und Bögen" :instrument.category/code "5" :instrument.category/category-id #uuid "01844740-3eee-8ccd-a19e-96ef6a45c61d"}
+ {:db/id "akkor" :instrument.category/name "Akkordeon" :instrument.category/code "6" :instrument.category/category-id #uuid "01844740-3eee-8ccd-a19e-96ef6a45c61e"}
+ {:db/id "streich" :instrument.category/name "Streich" :instrument.category/code "7" :instrument.category/category-id #uuid "01844740-3eee-8ccd-a19e-96ef6a45c61f"}
+ {:insurance.category.factor/category "blech"
+  :insurance.category.factor/factor 1.0M
+  :insurance.category.factor/category-factor-id #uuid "018441c1-01e1-859c-9dde-c11c705e58e8"
+  :db/id "cat_fact_blech"}
+ {:insurance.category.factor/category "holz"
+  :insurance.category.factor/factor 0.2M
+  :insurance.category.factor/category-factor-id #uuid "018441d6-679d-82f5-9d3f-16217970c262"
+  :db/id "cat_fact_holz"}
+ {:insurance.category.factor/category "schlag"
+  :insurance.category.factor/factor 0.2M
+  :insurance.category.factor/category-factor-id #uuid "018441d6-6c61-8313-b339-be42f028f56e"
+  :db/id "cat_fact_schlag"}
+ {:insurance.category.factor/category "etui"
+  :insurance.category.factor/factor 0.2M
+  :insurance.category.factor/category-factor-id #uuid "018441d6-712b-8a13-bd37-ba9365efd181"
+  :db/id "cat_fact_etu"}
+ {:insurance.category.factor/category "zupf"
+  :insurance.category.factor/factor 0.2M
+  :insurance.category.factor/category-factor-id #uuid "018441d6-761f-83c3-88c9-e2a2bae8a944"
+  :db/id "cat_fact_zupf"}
+ {:insurance.category.factor/category "akkor"
+  :insurance.category.factor/factor 0.2M
+  :insurance.category.factor/category-factor-id #uuid "018441d6-7b27-8dee-8842-f4f533d0c489"
+  :db/id "cat_fact_akkor"}
+ {:insurance.category.factor/category "streich"
+  :insurance.category.factor/factor 0.2M
+  :insurance.category.factor/category-factor-id #uuid "018441d6-8076-833c-b87b-be2c9c062bbc"
+  :db/id "cat_fact_streich"}
+ {:insurance.coverage.type/name "Basic"
+  :insurance.coverage.type/premium-factor 1.5M
+  :insurance.coverage.type/type-id #uuid "01843929-df6e-88f4-8bfd-e141a447737d"
+  :db/id "basic"}
+ {:insurance.coverage.type/name "Over Night"
+  :insurance.coverage.type/premium-factor 0.2M
+  :insurance.coverage.type/type-id #uuid "01843d06-9490-8661-bc57-0ff39b8e6b69"
+  :db/id "overnight"}
+ {:insurance.coverage.type/name "Proberaum"
+  :insurance.coverage.type/premium-factor 0.2M
+  :insurance.coverage.type/type-id #uuid "01843d06-a84d-8723-ab44-e2476319733f"
+  :db/id "proberaum"}
+ {:insurance.policy/name "Band Instruments 2022 - 2023"
+  :insurance.policy/effective-at #inst "2022-04-30T22:00:00.000-00:00"
+  :insurance.policy/category-factors ["cat_fact_blech" "cat_fact_holz" "cat_fact_schlag" "cat_fact_zupf" "cat_fact_akkor" "cat_fact_streich"]
+  :insurance.policy/policy-id #uuid "01843929-c116-80f5-9983-8ba691e77d3d"
+  :insurance.policy/currency :currency/EUR
+  :insurance.policy/premium-factor 0.0047829M
+  :insurance.policy/coverage-types ["basic" "overnight" "proberaum"]
+  :insurance.policy/effective-until #inst "2023-05-01T22:00:00.000-00:00"}]

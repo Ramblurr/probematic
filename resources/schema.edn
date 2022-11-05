@@ -42,6 +42,10 @@
     :db/valueType :db.type/string
     :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one}
+   {:db/ident :section/default?
+    :db/doc "If this section is the default section"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
 
 ;;;; Gigs
    {:db/ident :gig/gig-id
