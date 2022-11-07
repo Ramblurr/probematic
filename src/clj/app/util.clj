@@ -53,6 +53,15 @@
   [m]
   (into {} (filter #(not (nil? (val %))) m)))
 
+(defn remove-empty-strings
+  "Returns the map less any keys that have empty-strings as values values"
+  [m]
+  (into {} (filter (fn [e]
+                     (if (string? (val e))
+                       (not (str/blank? (val e)))
+                       true))
+                   m)))
+
 (defn qp-bool
   "Parse the query parameter specified by k as a boolean"
   [req k]

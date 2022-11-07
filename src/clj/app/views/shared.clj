@@ -2,7 +2,8 @@
   (:require
    [tick.core :as t]
    [app.icons :as icon]
-   [app.render :as render]))
+   [app.render :as render]
+   [app.humanize :as humanize]))
 
 (defn divider-center [title]
   [:div {:class "relative"}
@@ -74,3 +75,12 @@
     [:time {:dateetime (str dt)}
      (format-dt dt)]
     "never"))
+
+(defn time [t]
+  (when t
+    (t/format (t/formatter "HH:mm") t)))
+
+(defn humanize-dt [dt]
+  (when dt
+    [:time {:datetime (str dt)}
+     (humanize/from dt)]))

@@ -89,6 +89,29 @@
              [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 320 512"}
               [:path {:fill "currentColor" :d "M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3l105.4 105.3c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256l105.3-105.4z"}]]))
 
+(def circle (deficon
+              [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 512 512"} "<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.-->"
+               [:path {:fill "currentColor" :d "M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0 0 114.6 0 256s114.6 256 256 256z"}]]))
+(def circle-outline (deficon
+                      [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 512 512"} "<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.-->"
+                       [:path {:fill "currentColor" :d "M512 256c0 141.4-114.6 256-256 256S0 397.4 0 256 114.6 0 256 0s256 114.6 256 256zM256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48z"}]]))
+
+(def square (deficon
+              [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 448 512"} "<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.-->"
+               [:path {:fill "currentColor" :d "M0 96c0-35.3 28.7-64 64-64h320c35.3 0 64 28.7 64 64v320c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z"}]]))
+
+(def square-outline (deficon
+                      [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 448 512"} "<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.-->"
+                       [:path {:fill "currentColor" :d "M384 32c35.3 0 64 28.65 64 64v320c0 35.3-28.7 64-64 64H64c-35.35 0-64-28.7-64-64V96c0-35.35 28.65-64 64-64h320zm0 48H64c-8.84 0-16 7.16-16 16v320c0 8.8 7.16 16 16 16h320c8.8 0 16-7.2 16-16V96c0-8.84-7.2-16-16-16z"}]]))
+
+(def question (deficon
+                [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 320 512"} "<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.-->"
+                 [:path {:fill "currentColor" :d "M96 96c-17.7 0-32 14.3-32 32s-14.3 32-32 32-32-14.3-32-32c0-53 43-96 96-96h97c70.1 0 127 56.9 127 127 0 52.4-32.2 99.4-81 118.4l-63 24.5V320c0 17.7-14.3 32-32 32s-32-14.3-32-32v-18.1c0-26.4 16.2-50.1 40.8-59.6l63-24.5C240 208.3 256 185 256 159c0-34.8-28.2-63-63-63H96zm48 384c-22.1 0-40-17.9-40-40s17.9-40 40-40 40 17.9 40 40-17.9 40-40 40z"}]]))
+(def chevron-down (deficon
+       ;; "<!-- Heroicon name: mini/chevron-down -->"
+                    [:svg {:class "", :xmlns "http://www.w3.org/2000/svg", :viewbox "0 0 20 20", :fill "currentColor", :aria-hidden "true"}
+                     [:path {:fill-rule "evenodd", :d "M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z", :clip-rule "evenodd"}]]))
+
 (def licenses [["meh by papergarden from "
                 [:a {:href "https://thenounproject.com/browse/icons/term/meh/", :target "_blank", :title "meh Icons"} "Noun Project"]]
                ["Trumpet by Anwar Hossain from "

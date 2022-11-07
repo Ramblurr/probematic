@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [com.yetanalytics.squuid :as sq]))
+            [com.yetanalytics.squuid :as sq]
+            [medley.core :as m]))
 
 (defn ident-has-attr?
   [db ident attr]
@@ -73,10 +74,27 @@
   [db attr attr-val pattern]
   (ffirst (find-all-by db attr attr-val pattern)))
 
+(def entity-ids [:gig/gig-id
+                 :song/song-id
+                 :insurance.policy/policy-id
+                 :played/play-id
+                 :instrument.category/category-id
+                 :instrument/instrument-id
+                 :insurance.coverage.type/type-id
+                 :instrument.coverage/coverage-id
+                 :insurance.category.factor/category-factor-id
+                 :comment/comment-id])
+
 (defn ref
   "Given a map and a key returns a tuple of [key value]. Useful for building datomic ref tuples from a pull result"
-  [m k]
-  [k (k m)])
+  ([m]
+   (if-let [k (m/find-first #(contains? m %) entity-ids)]
+     (ref m k)
+     (throw (ex-info "entity map does not contain a known id key" {:entity-map m
+                                                                   :possible-id-keys entity-ids}))))
+
+  ([m k]
+   [k (k m)]))
 
 (def q d/q)
 

@@ -25,8 +25,9 @@
          ;; html to hiccup
          taipei.404/html-to-hiccup {:mvn/version "0.1.8"}
 
-;; http-client based on java 11
+         ;; http-client based on java 11
          hato/hato                            {:mvn/version "0.8.2"}
+         com.github.oliyh/martian-hato {:mvn/version "0.1.21"}
 
          ;; Data
          metosin/malli                        {:mvn/version "0.8.0"}
@@ -69,10 +70,10 @@
          ;; Shared Outskirts Labs libs
          ol/datahike.ig                       {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.datahike.ig"}
          ol/app.dev                           {:local/root "/var/home/ramblurr/src/ol-system/lib/ol.app.dev"}
-         ;ol/app.dev                           {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.app.dev"}
+                                        ;ol/app.dev                           {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.app.dev"}
          ol/system                            {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.system"}
          ol/http-kit.ig                       {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.http-kit.ig"}
-         ;ol/jobs                              {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.jobs"}
+                                        ;ol/jobs                              {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "774eb939de56d23269c05e4a6f45fa618daf351e" :deps/root "lib/ol.jobs"}
          ol/jobs                              {:local/root "/var/home/ramblurr/src/ol-system/lib/ol.jobs"}}
  :aliases
  {:dev     {:extra-paths ["env/dev/clj"

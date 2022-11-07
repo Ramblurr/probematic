@@ -8,9 +8,14 @@
             [app.db :as db]
             [app.gigo :as gigo]
             [app.features :as f]
-            [integrant.repl.state :as state])
+            [integrant.repl.state :as state]
+            [app.util :as util])
 
   (:import (java.time DayOfWeek)))
+
+(defn at-midnight [d]
+  (when d
+    (t/inst (t/at d (t/midnight)))))
 
 ;; Since gigo can be pretty slow, and it is a free service
 ;; we cache the list of gigs and attendance to avoid hammering it too much
@@ -19,12 +24,26 @@
 ;; We also need to store some details about the gigs outside the cache
 ;; in order to manage the dialogflow Gig entity
 (defn- gig-tx [gig]
-  (doto
+  (->
    {:gig/gig-id    (:id gig)
     :gig/title (:title gig)
     :gig/location (:address gig)
     :gig/status (:status gig)
-    :gig/date  (t/inst (t/at (:date gig) (t/midnight)))} tap>))
+    :gig/date  (at-midnight (:date gig))
+    :gig/end-date (at-midnight (:enddate gig))
+    :gig/contact [:member/gigo-key (:contact gig)]
+    :gig/pay-deal (:paid gig)
+    :gig/call-time (str (:calltime gig))
+    :gig/set-time (str (:settime gig))
+    :gig/end-time (str (:enddtime gig))
+    :gig/description (:rss_description gig)
+    :gig/setlist (:setlist gig)
+    :gig/outfit (:dress gig)
+    :gig/leader (:leader gig)
+    :gig/post-gig-plans (:postgig gig)
+    :gig/more-details (:details gig)}
+   util/remove-nils
+   util/remove-empty-strings))
 
 (defn update-gigs-db! [conn gigs]
   (d/transact conn {:tx-data
@@ -214,5 +233,9 @@
                                         ;(update-dialogflow-gig-entities! (-> _opts :env) (-> _opts :conn) (-> _opts :df-clients :entity-types-client))
   (prune-gig-entities-before! (:env _opts) (:conn _opts) (-> _opts :df-clients :entity-types-client) (t/at (t/new-date 2022 8 1) (t/midnight)))
   (create-dialogflow-gig-entities! (:env _opts) (:conn _opts) (-> _opts :df-clients :entity-types-client))
+  (d/transact (:conn _opts) {:tx-data [{:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA6K70hwoM"
+                                        :member/name     "SNOrchestra"
+                                        :member/email    "strabanda@gmail.com"
+                                        :member/active?  true}]})
                                         ;
   )

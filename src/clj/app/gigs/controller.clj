@@ -12,6 +12,11 @@
    [app.queries :as q]))
 
 (def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
+(def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location
+                         :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
+                         :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans
+                         :gig/more-details :gig/comments
+                         {:gig/contact [:member/name :member/gigo-key]}])
 
 (def play-pattern [{:played/gig gig-pattern}
                    {:played/song [:song/song-id :song/title]}
@@ -21,8 +26,12 @@
                    :played/emphasis])
 
 (defn ->gig [gig]
+  (tap> gig)
   (-> gig
-      (update :gig/date t/zoned-date-time)))
+      (m/update-existing :gig/call-time t/time)
+      (m/update-existing :gig/end-time t/time)
+      (m/update-existing :gig/set-time t/time)
+      (m/update-existing :gig/date t/zoned-date-time)))
 
 (defn query-result->gig [[{:gig/keys [title] :as gig}]]
   (->gig gig))
@@ -34,7 +43,7 @@
 
 (defn retrieve-gig [db gig-id]
   (->gig
-   (d/find-by db :gig/gig-id gig-id gig-pattern)))
+   (d/find-by db :gig/gig-id gig-id gig-detail-pattern)))
 
 (defn gigs-before [db time]
   (mapv query-result->gig
@@ -148,7 +157,7 @@
     (require '[integrant.repl.state :as state])
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db (datomic/db conn))) ;;rcf
+    (def db (datomic/db conn))) ;; rcf
 
   (d/find-all (datomic/db conn) :played/play-id play-pattern)
 

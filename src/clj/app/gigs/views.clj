@@ -2,6 +2,7 @@
   (:require
    [app.views.shared :as ui]
    [app.gigs.controller :as controller]
+   [app.util :as util]
    [app.songs.controller :as songs.controller]
    [ctmx.response :as response]
    [app.render :as render]
@@ -9,7 +10,11 @@
    [ctmx.core :as ctmx]
    [medley.core :as m]
    [ctmx.rt :as rt]
-   [app.queries :as q]))
+   [app.queries :as q]
+   [clojure.string :as str]
+   [app.humanize :as humanize]))
+
+(def link-gig (partial util/link-helper "/event/" :gig/gig-id))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
                           :or {size :normal
@@ -85,7 +90,7 @@
        (icon/fist-punch {:class (render/cs shared-classes "icon-fist-punch border-purple-500")})
        "Intensiv geprobt"]]]))
 
-(ctmx/defcomponent event-log-play [{:keys [db] :as req} idx play]
+(ctmx/defcomponent gig-log-play [{:keys [db] :as req} idx play]
   (let [was-played? (some? (:played/play-id play))
         check-id (path "intensive")
         radio-id (path "feeling")
@@ -126,7 +131,7 @@
                  :checked intensive?}]
         (icon/fist-punch {:class "h-8 w-8"})]]]]))
 
-(ctmx/defcomponent ^:endpoint event-log-plays [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint gig-log-plays [{:keys [db] :as req}]
   (ctmx/with-req req
     (let [gig-id (-> req :path-params :gig/gig-id)
           gig (controller/retrieve-gig db gig-id)
@@ -147,23 +152,24 @@
 
        (log-play-legend)
        [:ul {:class "toggler-container"}
-        (rt/map-indexed event-log-play req plays)]
+        (rt/map-indexed gig-log-play req plays)]
        [:div
         [:div {:class "flex justify-end"}
          [:a {:href "/events", :class "btn btn-sm btn-clear-normal"} "Cancel"]
          [:button {:class "ml-3 btn btn-sm btn-indigo-high"
                    :type "submit"} "Save"]]]])))
 
-(defn event-row [{:gig/keys [status title location date gig-id]}]
+(defn gig-row [{:gig/keys [status title location date gig-id] :as gig}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href  (str "/event/" gig-id "/") , :class "block hover:bg-gray-50"}
+    [:a {:href (link-gig gig) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
         (ui/gig-status-icon status)
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (render/button :tag :a :attr {:href (str  "/event/" gig-id  "/log-play/")} :label "Log Plays" :priority :white-rounded :size :small)]]
+        (render/button :tag :a :attr {:href (link-gig gig "/log-play/")}
+                       :label "Log Plays" :priority :white-rounded :size :small)]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
@@ -180,7 +186,206 @@
                                         ;[:p "Last Played "]
         ]]]]))
 
-(ctmx/defcomponent ^:endpoint events-list-page [{:keys [db] :as req}]
+(defn dl-item
+  ([label value]
+   (dl-item label value "sm:col-span-1"))
+  ([label value class]
+   [:div {:class (render/cs class)}
+    [:dt {:class "text-sm font-medium text-gray-500"} label]
+    [:dd {:class "mt-1 text-sm text-gray-900"}
+     value]]))
+
+(def attendance-opts
+  (let [icon-class "mr-3 text-gray-400 w-5 h-5"
+        red-class "text-red-500 group-hover:text-red-500"
+        green-class "text-green-500 group-hover:text-green-500"]
+    [{:label "Definitely" :value "yes" :icon icon/circle :icon-class (render/cs icon-class green-class)}
+     {:label "Probably" :value "probably" :icon icon/circle-outline  :icon-class (render/cs icon-class green-class)}
+     {:label "Don't Know" :value "unknown" :icon icon/question :icon-class (render/cs icon-class "text-gray-500")}
+     {:label "Probably Not" :value "probably not" :icon icon/square-outline :icon-class (render/cs icon-class red-class)}
+     {:label "Can't Do It" :value "no" :icon icon/square :icon-class (render/cs icon-class red-class)}
+     {:label "Not Interested" :value "not interested" :icon icon/xmark :icon-class (render/cs icon-class "text-black")}]))
+
+(defn attendance-dropdown-opt [{:keys [label value icon icon-class]}]
+  [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
+   (icon {:class  icon-class}) label])
+
+(defn attendance-dropdown [& {:keys [name value]
+                              :or {value "unknown"}}]
+  (let [current-opt (m/find-first #(= value (:value %)) attendance-opts)
+        button-size-class-normal "px-4 py-2 text-sm "
+        button-size-class-small "px-2 py-1 text-xs "]
+    [:div {:class "dropdown relative inline-block text-left"}
+     [:div
+      [:button {:type "button" :class (render/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")  :aria-expanded "true", :aria-haspopup "true"}
+       [:input {:type "hidden" :name "plan" :value (:value current-opt) :class "item-input"}]
+       [:span {:class "item-icon"}
+        ((:icon current-opt) {:class (render/cs (:icon-class current-opt) "w-3 h-3")})]
+       (icon/chevron-down {:class (render/cs "-mr-1 ml-1 h-3 w-3")})]]
+     [:div {:class "dropdown-menu-container hidden"}
+      [:div {:class (render/cs
+                     "dropdown-choices"
+                     (when false "absolute right-0 ")
+                     "z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none")
+             :role "menu" :aria-orientation "vertical" :aria-labelledby "menu-button" :tabindex "-1"}
+       [:div {:class "py-1" :role "none"}
+        (map attendance-dropdown-opt  attendance-opts)]]]]))
+
+(ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx member]
+  [:div {:class "grid grid-cols grid-cols-5" :id id}
+   [:div {:class "col-span-2 align-middle"}
+    [:a {:href (str "/member/" (:member/gigo-key member) "/") :class "text-blue-500 align-middle"}
+     (:member/name member)]]
+   [:div {:class "col-span-1"} (attendance-dropdown)]
+   [:div {:class "col-span-1"} (render/motivation-select :motivations
+                                                         [{:motivation/label  "-"}
+                                                          {:motivation/label  "Sehr motiviert!"}
+                                                          {:motivation/label  "Motiviert"}
+                                                          {:motivation/label  "Ambivalent"}
+                                                          {:motivation/label  "Nicht Motiviert"}
+                                                          {:motivation/label  "Gar nicht Motiviert!"}])]
+
+   [:div {:class "col-span-1"} (render/text :size :small)]])
+
+(ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx section]
+  [:div {:id id :class (render/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
+                                  (when (= 0 (mod idx 2))
+                                    "bg-gray-100"))}
+
+   [:div {:class "col-span-1 font-bold"} (:section/name section)]
+   [:div {:class "col-span-2"}
+    (rt/map-indexed gig-attendance-person req (sort-by :member/name (:member/_section section)))]])
+
+(ctmx/defcomponent ^:endpoint gig-comment-li [{:keys [db] :as req} idx comment]
+  (let [{:comment/keys [comment-id body author created-at]} comment]
+    [:li
+     [:div {:class "flex space-x-3"}
+      [:div {:class "flex-shrink-0"}
+       [:img {:class "h-10 w-10 rounded-full" :src "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]
+      [:div
+       [:div {:class "text-sm"}
+        [:a {:href "#", :class "font-medium text-gray-900"}
+         (:member/name author)]]
+       [:div {:class "mt-1 text-sm text-gray-700"}
+        [:p body]]
+       [:div {:class "mt-2 space-x-2 text-sm"}
+        [:span {:class "font-medium text-gray-500"}
+         (ui/humanize-dt created-at)]
+        [:span {:class "font-medium text-gray-500"} "·"]
+        [:button {:type "button", :class "font-medium text-gray-900"} "Reply"]]]]]))
+
+(ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req}]
+  (let [{:gig/keys [gig-id title date end-date status
+                    contact pay-deal call-time set-time end-time
+                    outfit description location setlist leader post-gig-plans
+                    more-details comments] :as gig} (:gig req)
+        section-members  (filter #(seq (:member/_section %)) (q/active-members-by-section db))]
+    [:div
+     (render/page-header :title (list  title " " (ui/gig-status-icon status))
+
+                         :subtitle (ui/datetime date)
+                         :buttons (list  (render/button :label "Comment"
+                                                        :priority :white
+                                                        :centered? true
+                                                        :attr {:href "/songs/new"})
+                                         (render/button :label "Log Plays"
+                                                        :tag :a
+                                                        :priority :primary
+                                                        :centered? true
+                                                        :class "items-center justify-center "
+                                                        :attr {:href (link-gig gig "/log-play/")})))
+     [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
+      [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
+
+       ;;;; Gig Info Section
+       [:section
+        [:div {:class "bg-white shadow sm:rounded-lg"}
+         [:div {:class "px-4 py-5 sm:px-6"}
+          [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
+           "Info"]]
+         [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
+          [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+           (dl-item "Date"
+                    (ui/datetime date)
+                    (when end-date
+                      [:span " " (ui/datetime end-date)]))
+           (dl-item "Location" location)
+           (dl-item "Contact" (:member/name contact))
+           (dl-item "Call Time" (ui/time call-time))
+           (dl-item "Set Time" (ui/time set-time))
+           (dl-item "End Time" (ui/time end-time))
+           (when leader
+             (dl-item "Leader" leader))
+           (when pay-deal
+             (dl-item "Pay Deal" pay-deal))
+           (when outfit
+             (dl-item "What to wear" outfit))
+           (when more-details
+             (dl-item "Details" more-details "sm:col-span-3"))
+           (when setlist
+             (dl-item "Set List" (interpose [:br] (str/split-lines setlist)) "sm:col-span-3"))
+           (when post-gig-plans
+             (dl-item "Post Gig Plans" post-gig-plans "sm:col-span-3"))
+           ;;
+           ]]]]
+
+;;;; Attendance Section
+       [:section
+        [:div {:class "bg-white shadow sm:rounded-lg"}
+         [:div {:class "px-4 py-5 sm:px-6"}
+          [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
+           "Attendance"]]
+
+         [:div {:class "border-t border-gray-200"}
+          (rt/map-indexed gig-attendance req section-members)]]]
+;;;; Comments Section
+       [:section {:aria-labelledby "notes-title"}
+        [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg"}
+         [:div {:class "divide-y divide-gray-200"}
+          [:div {:class "px-4 py-5 sm:px-6"}
+           [:h2 {:id "notes-title", :class "text-lg font-medium text-gray-900"}
+            "Comments"]]
+          [:div {:class "px-4 py-6 sm:px-6"}
+           [:ul {:role "list", :class "space-y-8"}
+            (rt/map-indexed gig-comment-li req comments)
+
+            [:li
+             [:div {:class "flex space-x-3"}
+              [:div {:class "flex-shrink-0"}
+               [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]
+              [:div
+               [:div {:class "text-sm"}
+                [:a {:href "#", :class "font-medium text-gray-900"} "Michael Foster"]]
+               [:div {:class "mt-1 text-sm text-gray-700"}
+                [:p "Et ut autem. Voluptatem eum dolores sint necessitatibus quos. Quis eum qui dolorem accusantium voluptas voluptatem ipsum. Quo facere iusto quia accusamus veniam id explicabo et aut."]]
+               [:div {:class "mt-2 space-x-2 text-sm"}
+                [:span {:class "font-medium text-gray-500"} "4d ago"]
+                [:span {:class "font-medium text-gray-500"} "·"]
+                [:button {:type "button", :class "font-medium text-gray-900"} "Reply"]]]]]
+            [:li
+             [:div {:class "flex space-x-3"}
+              [:div {:class "flex-shrink-0"}
+               [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]
+              [:div
+               [:div {:class "text-sm"}
+                [:a {:href "#", :class "font-medium text-gray-900"} "Dries Vincent"]]
+               [:div {:class "mt-1 text-sm text-gray-700"}
+                [:p "Expedita consequatur sit ea voluptas quo ipsam recusandae. Ab sint et voluptatem repudiandae voluptatem et eveniet. Nihil quas consequatur autem. Perferendis rerum et."]]
+               [:div {:class "mt-2 space-x-2 text-sm"}
+                [:span {:class "font-medium text-gray-500"} "4d ago"]]]]]]]]
+         [:div {:class "bg-gray-50 px-4 py-6 sm:px-6"}
+          [:div {:class "flex space-x-3"}
+           [:div {:class "flex-shrink-0"}
+            [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80"}]]
+           [:div {:class "min-w-0 flex-1"}
+            [:form {:action "#"}
+             [:div
+              [:label {:for "comment", :class "sr-only"} "About"]
+              [:textarea {:id "comment", :name "comment", :rows "3", :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", :placeholder "Add a note"}]]
+             [:div {:class "mt-3 flex items-center justify-between"}
+
+              [:button {:type "submit", :class "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"} "Comment"]]]]]]]]]]]))
+(ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
   (let [events (controller/gigs-future db)]
     [:div
      (render/page-header :title "Gigs/Probes"
@@ -202,7 +407,7 @@
          [:ul {:role "list", :class "divide-y divide-gray-200"}
           (map (fn [event]
                  [:li
-                  (event-row event)]) events)])]
+                  (gig-row event)]) events)])]
       (ui/divider-left "Past")
       [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
              :id "songs-list"}]]]))

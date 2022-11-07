@@ -73,6 +73,8 @@ generate output the way we want -- formatted and without sending warnings.
      [:script {:src "/js/htmx.js"
                :integrity "sha384-mrsv860ohrJ5KkqRxwXXj6OIT6sONUxOd+1kvbqW351hQd7JlfFnM0tLetA76GU0"}]
      [:script {:src "/js/nprogress.js"}]
+     [:script {:src "/js/popperjs@2-dev.js"}]
+     [:script {:src "/js/tippy@6-dev.js"}]
      [:script {:src "/js/helpers.js"}]
      (when js [:script {:src (str "/js" js)}])))))
 
@@ -94,12 +96,20 @@ generate output the way we want -- formatted and without sending warnings.
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
 
-(defn select [& {:keys [id label options value extra-attrs]
-                 :or {extra-attrs {}}}]
+(def select-size {:normal "text-base  sm:text-sm py-2 pl-3 pr-10 mt-1"
+                  :small "text-xs py-1 pl-2 pr-5 "})
+
+(def select-label-size {:normal "text-base  sm:text-sm "
+                        :small "text-xs "})
+(defn select [& {:keys [id label options value extra-attrs size]
+                 :or {extra-attrs {}
+                      size :normal}}]
   (let [selected-value value]
     [:div
-     [:label {:for id :class "block text-sm font-medium text-gray-700"} label]
-     [:select (merge {:name id :class "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"}
+     [:label {:for id :class (cs (get select-label-size size) "block font-medium text-gray-700")} label]
+     [:select (merge {:name id :class
+                      (cs  (get select-size size)
+                           "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500")}
                      extra-attrs)
       (for [{:keys [value label selected?]} options]
         [:option {:selected (if (not (nil? selected?)) selected? (= value selected-value)) :value value} label])]]))
@@ -186,12 +196,22 @@ generate output the way we want -- formatted and without sending warnings.
      [:p {:class "mt-2 text-sm text-gray-500"}
       hint])])
 
-(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title]}]
-  [:div {:class (cs class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600")}
-   [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
+(def input-container-size {:normal "px-3 py-2 "
+                           :small "px-1 py-1  text-xs"})
+(def input-label-size {:normal "px-1 text-xs "
+                       :small "px-0 text-xs"})
+(def input-size {:normal "sm:text-sm"
+                 :small "text-xs"})
+
+(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size]
+                :or {size :normal}}]
+  [:div {:class (cs class (get input-label-size size)
+                    (get input-container-size size)
+                    "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600")}
+   [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white font-medium text-gray-900"}
     label]
    [:input (util/remove-nils (merge (or extra-attrs {})
-                                    {:class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+                                    {:class (cs (get input-size size) "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0")
                                      :type type
                                      :pattern pattern
                                      :title title
@@ -285,6 +305,11 @@ generate output the way we want -- formatted and without sending warnings.
   (let [options (map (fn [{:section/keys [name]}]
                        {:value name :label name}) sections)]
     (select :id id :label label :value value :options options :extra-attrs extra-attrs)))
+
+(defn motivation-select [& {:keys [id value label motivations extra-attrs]}]
+  (let [options (map (fn [{:motivation/keys [label]}]
+                       {:value label :label label}) motivations)]
+    (select :id id :label label :value value :options options :extra-attrs extra-attrs :size :small)))
 
 (defn instrument-select [& {:keys [id value label instruments :variant]
                             :or {label "Instrument"

@@ -2,30 +2,40 @@
   (:require
    [app.render :as render]
    [app.gigs.views :as view]
-   [ctmx.core :as ctmx]))
+   [datomic.client.api :as d]
+   [ctmx.core :as ctmx]
+   [app.gigs.controller :as controller]))
 
-(defn events-list-route []
+(defn gigs-list-route []
   (ctmx/make-routes
    "/events"
    (fn [req]
      (render/html5-response
-      (view/events-list-page req)))))
+      (view/gigs-list-page req)))))
 
-(defn event-detail-route []
+(defn gig-detail-route []
   (ctmx/make-routes
    "/event/{gig/gig-id}/"
    (fn [req]
-     (render/html5-response nil))))
+     (render/html5-response (view/gigs-detail-page req)))))
 
-(defn event-log-play-route []
+(defn gig-log-play-route []
   (ctmx/make-routes
    "/event/{gig/gig-id}/log-play"
    (fn [req]
      (render/html5-response
-      (view/event-log-plays req)))))
+      (view/gig-log-plays req)))))
+
+(def gigs-interceptors [{:name ::gigs--interceptor
+                         :enter (fn [ctx]
+                                  (let [conn (-> ctx :request :datomic-conn)
+                                        db (d/db conn)
+                                        gig-id (-> ctx :request :path-params :gig/gig-id)]
+                                    (cond-> ctx
+                                      gig-id (assoc-in [:request :gig] (controller/retrieve-gig db gig-id)))))}])
 
 (defn events-routes []
-  [""
-   (events-list-route)
-   (event-detail-route)
-   (event-log-play-route)])
+  ["" {:interceptors gigs-interceptors}
+   (gigs-list-route)
+   (gig-detail-route)
+   (gig-log-play-route)])
