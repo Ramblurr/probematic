@@ -7,6 +7,9 @@
  :discourse {:api-key #ref [:secrets :discourse :api-key]
              :username #ref [:secrets :discourse :username]}
 
+ :nextcloud {:password #ref [:secrets :nextcloud :password]
+             :username #ref [:secrets :nextcloud :username]}
+
  :airtable        {:token #ref [:secrets :airtable :token]
                    :base #ref [:secrets :airtable :base]
 
