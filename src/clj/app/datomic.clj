@@ -103,7 +103,29 @@
     (require '[integrant.repl.state :as state])
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db (datomic/db conn)))
+    (def db (datomic/db conn)))         ;; rcf
+
   (d/transact conn {:tx-data (-> (io/resource "seeds.edn") slurp edn/read-string)})
+
+  (d/transact conn {:tx-data  [{:db/ident :member/nick
+                                :db/doc "A member's nickname"
+                                :db/valueType :db.type/string
+                                :db/cardinality :db.cardinality/one}
+
+                               {:db/ident :member/discourse-id
+                                :db/doc "The member's id in discourse"
+                                :db/valueType :db.type/string
+                                :db/unique :db.unique/identity
+                                :db/cardinality :db.cardinality/one}
+
+                               {:db/ident :gig/gig-type
+                                :db/doc "The type of the gig"
+                                :db/valueType :db.type/keyword
+                                :db/cardinality :db.cardinality/one}
+
+                               {:db/ident :member/avatar-template
+                                :db/doc "The url to the member's avatar with a {size} parameter "
+                                :db/valueType :db.type/string
+                                :db/cardinality :db.cardinality/one}]})
   ;;
   )

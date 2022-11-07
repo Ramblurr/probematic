@@ -354,6 +354,10 @@
     (s/lower-case (:title g)) "probe")
    (= DayOfWeek/WEDNESDAY (-> g :date (t/date) (t/day-of-week)))))
 
+(defn meeting? [g]
+  (s/includes?
+   (s/lower-case (:title g)) "treffen"))
+
 (defn non-wednesday-probe? [g]
   (and
    (s/includes?

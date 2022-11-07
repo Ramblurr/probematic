@@ -11,20 +11,6 @@
    [datomic.client.api :as datomic]
    [app.queries :as q]))
 
-(def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
-(def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location
-                         :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
-                         :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans
-                         :gig/more-details :gig/comments
-                         {:gig/contact [:member/name :member/gigo-key]}])
-
-(def play-pattern [{:played/gig gig-pattern}
-                   {:played/song [:song/song-id :song/title]}
-                   :played/gig+song
-                   :played/rating
-                   :played/play-id
-                   :played/emphasis])
-
 (defn ->gig [gig]
   (tap> gig)
   (-> gig
@@ -39,11 +25,11 @@
 (defn find-all-gigs [db]
   (sort-by :gig/date
            (mapv query-result->gig
-                 (d/find-all db :gig/gig-id gig-pattern))))
+                 (d/find-all db :gig/gig-id q/gig-pattern))))
 
 (defn retrieve-gig [db gig-id]
   (->gig
-   (d/find-by db :gig/gig-id gig-id gig-detail-pattern)))
+   (d/find-by db :gig/gig-id gig-id q/gig-detail-pattern)))
 
 (defn gigs-before [db time]
   (mapv query-result->gig
@@ -52,7 +38,7 @@
                :where
                [?e :gig/gig-id _]
                [?e :gig/date ?date]
-               [(< ?date ?time)]] db time gig-pattern)))
+               [(< ?date ?time)]] db time q/gig-pattern)))
 
 (defn gigs-after [db time]
   (mapv query-result->gig
@@ -61,7 +47,7 @@
                :where
                [?e :gig/gig-id _]
                [?e :gig/date ?date]
-               [(>= ?date ?time)]] db time gig-pattern)))
+               [(>= ?date ?time)]] db time q/gig-pattern)))
 
 (defn gigs-future [db]
   (gigs-after db (t/inst)))
@@ -74,7 +60,7 @@
   play)
 
 (defn plays-by-gig [db gig-id]
-  (->> (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)
+  (->> (d/find-all-by db :played/gig [:gig/gig-id gig-id] q/play-pattern)
        (map query-result->play)
        (sort-by #(-> % :played/song :song/title))))
 
@@ -115,11 +101,12 @@
                  (map #(-> % :played/song :song/song-id))
                  (filter #(do (tap> {:play %}) (= % (:song/song-id song)))))) _songs)
 
-  (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)
-  (d/find-all-by db :played/gig + song "[\"ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMCc_fOfCQw\" #uuid \"01844740-3eed-856d-84c1-c26f0706820a\"]" play-pattern)
+  (d/find-all-by db :played/gig [:gig/gig-id gig-id] q/play-pattern)
+  (d/find-all-by db :played/gig + song "[\"ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMCc_fOfCQw\" #uuid \"01844740-3eed-856d-84c1-c26f0706820a\"]"
+                 q/play-pattern)
   (datomic/transact conn {:tx-data
                           (->>
-                           (d/find-all db :played/play-id play-pattern)
+                           (d/find-all db :played/play-id q/play-pattern)
                            (map first)
                            (map :played/play-id)
                            (map (fn [i] [:db/retractEntity [:played/play-id i]])))})
@@ -159,7 +146,7 @@
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
 
-  (d/find-all (datomic/db conn) :played/play-id play-pattern)
+  (d/find-all (datomic/db conn) :played/play-id q/play-pattern)
 
 ;;
   )

@@ -4,6 +4,9 @@
                         :test "test"}
  :secrets #include "../secrets.edn"
 
+ :discourse {:api-key #ref [:secrets :discourse :api-key]
+             :username #ref [:secrets :discourse :username]}
+
  :airtable        {:token #ref [:secrets :airtable :token]
                    :base #ref [:secrets :airtable :base]
 
@@ -33,7 +36,7 @@
                                                                 :io.pedestal.http/host #or [#env HTTP_BIND_HOST "localhost"]
                                         ;:io.pedestal.http/resource-path "/static"
                                                                 :io.pedestal.http/join?  false
-                                                                :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src "https://images.unsplash.com 'self' data:;"
+                                                                :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src "https://*.streetnoise.at 'self' data:;"
                                                                                                                                      :object-src "'none';"
                                                                                                                                      :default-src "'self';"
                                                                                                                                      :font-src "'self' https://rsms.me;"

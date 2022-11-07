@@ -11,7 +11,8 @@
    [medley.core :as m]
    [ctmx.render :as ctmx.render]
    [ctmx.response :as response]
-   [app.util :as util]))
+   [app.util :as util]
+   [clojure.string :as str]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -511,3 +512,13 @@ generate output the way we want -- formatted and without sending warnings.
                    "after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
                    "dark:border-gray-600 peer-checked:bg-indigo-600")}]
    [:span {:class "ml-3 text-sm font-medium text-gray-900 dark:text-gray-300"} label]])
+
+(defn avatar-img [member & {:keys [class]}]
+  [:img {:class class
+         :src (if-let [avatar-template (:member/avatar-template member)]
+                (str "https://forum.streetnoise.at"
+                     (str/replace avatar-template "{size}" "200"))
+                "/img/default-avatar.png")}])
+
+(defn member-nick [{:member/keys [name nick]}]
+  (or nick name))

@@ -16,4 +16,16 @@
   [config]
   (gigo/update-cache! config))
 
+(defn wednesday-probe? [g]
+  (gigo/wednesday-probe? g))
+
+(defn non-wednesday-probe? [g]
+  (gigo/non-wednesday-probe? g))
+
+(defn probe? [g]
+  (gigo/probe? g))
+
+(defn meeting? [g]
+  (gigo/meeting? g))
+
 (def gigs-cache gigo/gigs-cache)

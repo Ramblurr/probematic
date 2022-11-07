@@ -6,7 +6,30 @@
    [tick.core :as t]
    [medley.core :as m]))
 
+(def member-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
+                     {:member/section [:section/name]}])
+
+(def member-detail-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
+                            :member/discourse-id :member/avatar-template
+                            {:member/section [:section/name]}
+                            {:instrument/_owner [:instrument/name :instrument/instrument-id
+                                                 {:instrument/category [:instrument.category/name]}]}])
+
 (def song-pattern [:song/title :song/song-id])
+
+(def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
+(def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location
+                         :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
+                         :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans
+                         :gig/more-details :gig/comments
+                         {:gig/contact [:member/name :member/gigo-key :member/nick]}])
+
+(def play-pattern [{:played/gig gig-pattern}
+                   {:played/song [:song/song-id :song/title]}
+                   :played/gig+song
+                   :played/rating
+                   :played/play-id
+                   :played/emphasis])
 
 (def instrument-coverage-detail-pattern
   [:instrument.coverage/coverage-id
@@ -108,7 +131,7 @@
                 :where
                 [?section :section/name ?v]]
               db [:section/name
-                  {:member/_section [:member/name :member/gigo-key]}])
+                  {:member/_section [:member/name :member/gigo-key :member/nick]}])
    (map first)))
 
 (comment
@@ -125,5 +148,7 @@
                                      (insurance-policy-effective-as-of db (t/now) policy-pattern)
                                      instrument-coverage-detail-pattern)
 
-  ;;
+  (d/find-all db :gig/gig-type [:gig/gig-type :gig/title])
+
+;;
   )

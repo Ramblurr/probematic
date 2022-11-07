@@ -58,7 +58,7 @@
        [:div {:class "flex items-center space-x-5"}
         [:div {:class "flex-shrink-0"}
          [:div {:class "relative"}
-          [:img {:class "h-16 w-16 rounded-full" :src "https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=1024&h=1024&q=80"}]
+          (render/avatar-img member :class "h-16 w-16 rounded-full")
           [:span {:class "absolute inset-0 rounded-full shadow-inner" :aria-hidden "true"}]]]
         [:div
          [:h1 {:class "text-2xl font-bold text-gray-900"}

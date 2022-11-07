@@ -5,19 +5,12 @@
             [app.controllers.common :as common]
             [datomic.client.api :as datomic]))
 
-(def member-pattern [:member/gigo-key :member/name :member/active? :member/phone :member/email
-                     {:member/section [:section/name]}])
-
-(def member-detail-pattern [:member/gigo-key :member/name :member/active? :member/phone :member/email
-                            {:member/section [:section/name]}
-                            {:instrument/_owner [:instrument/name :instrument/instrument-id
-                                                 {:instrument/category [:instrument.category/name]}]}])
 (defn ->member [member]
   member)
 
 (defn retrieve-member [db gigo-key]
   (->member
-   (d/find-by db :member/gigo-key gigo-key member-detail-pattern)))
+   (d/find-by db :member/gigo-key gigo-key q/member-detail-pattern)))
 
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
@@ -25,7 +18,7 @@
        (sort-by :section/name)))
 
 (defn members [db]
-  (->> (d/find-all db :member/gigo-key member-pattern)
+  (->> (d/find-all db :member/gigo-key q/member-pattern)
        (mapv #(->member (first %)))
        (sort-by (juxt :member/name :member/active))))
 
@@ -37,7 +30,7 @@
        (d/find-by (:db-after result)
                   :member/gigo-key
                   gigo-key
-                  member-pattern)}
+                  q/member-pattern)}
       result)))
 
 (defn update-active-and-section! [{:keys [datomic-conn db] :as req}]

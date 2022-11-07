@@ -27,6 +27,9 @@
 
          ;; http-client based on java 11
          hato/hato                            {:mvn/version "0.8.2"}
+
+         ;; for Discourse integration
+         clj-commons/clj-yaml {:mvn/version "1.0.26"}
          com.github.oliyh/martian-hato {:mvn/version "0.1.21"}
 
          ;; Data

@@ -28,6 +28,11 @@
    {:gig/gig-id    (:id gig)
     :gig/title (:title gig)
     :gig/location (:address gig)
+    :gig/gig-type (cond
+                    (gigo/wednesday-probe? gig) :gig.type/probe
+                    (gigo/non-wednesday-probe? gig) :gig.type/extra-probe
+                    (gigo/meeting? gig) :gig.type/meeting
+                    :else :gig.type/gig)
     :gig/status (:status gig)
     :gig/date  (at-midnight (:date gig))
     :gig/end-date (at-midnight (:enddate gig))
@@ -221,7 +226,8 @@
     (def _opts {:env        (:app.ig/env state/system)
                 :gigo       (:app.ig/gigo-client state/system)
                 :df-clients (:app.ig/dialogflow-session state/system)
-                :conn       (-> state/system :app.ig/datomic-db :conn)})) ; rcf
+                :conn       (-> state/system :app.ig/datomic-db :conn)})) ;; rcf
+
   (gigo/update-cache! (:gigo _opts))
 
   (update-gigs-db! (:conn _opts) @gigo/gigs-cache)

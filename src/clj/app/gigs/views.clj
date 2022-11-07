@@ -235,7 +235,7 @@
   [:div {:class "grid grid-cols grid-cols-5" :id id}
    [:div {:class "col-span-2 align-middle"}
     [:a {:href (str "/member/" (:member/gigo-key member) "/") :class "text-blue-500 align-middle"}
-     (:member/name member)]]
+     (render/member-nick member)]]
    [:div {:class "col-span-1"} (attendance-dropdown)]
    [:div {:class "col-span-1"} (render/motivation-select :motivations
                                                          [{:motivation/label  "-"}
