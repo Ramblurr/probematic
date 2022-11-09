@@ -124,22 +124,3 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('newDropdown', function(evt) {
   Dropdown(document.querySelector(evt.detail.value))
 });
-
-
-artoo.scrape('#sectionlist .row > .col-9 > .row ', {
-
-  nick: {sel: '.col-md-5.col-sm-12',
-         method: function() { return $(this).find(".the_nickname").text(); }
-        },
-  name: {
-    sel: '.col-md-5.col-sm-12',
-    method: function() { const name =  $(this).find(".the_longname").text();
-                         if(name !== "") return name;
-                         return $(this).find("a").text()
-                       }
-  },
-  email: {sel: '.col-md-7 a'},
-  occ: {sel:'.col-md-5.col-sm-12 ', method: function() {  return /(occasional)/.test($(this).text())  }       },
-  section: {sel: '.col-md-5.col-sm-12 ', method: function() { return $(this).closest('.row').parent().closest('.row').find('.gomlabel').text().trim() }},
-  gigo_key: {sel: '.col-md-5.col-sm-12 a', method: function() {return $(this).attr('href') )}}
-})

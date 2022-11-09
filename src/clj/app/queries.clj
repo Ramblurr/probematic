@@ -176,7 +176,7 @@
             (map (fn [member]
                    {:attendance/section (:member/section member)
                     :attendance/member  member
-                    :attendance/plan :attendance/unknown}) no-plan))))
+                    :attendance/plan :plan/unknown}) no-plan))))
 
 (defn member-nick-or-name [member]
   (if (:member/nick member)
@@ -224,7 +224,7 @@
                                :attendance/gig+member (pr-str ["ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww" "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"])
                                :attendance/section [:section/name "flute"]
                                :attendance/updated (t/inst)
-                               :attendance/plan :attendance/definitely-not}]})
+                               :attendance/plan :plan/definitely-not}]})
 
   (def plans)
 
@@ -263,7 +263,7 @@
             (map (fn [member]
                    {:attendance/section (:member/section member)
                     :attendance/member  member
-                    :attendance/plan :attendance/unknown}) no-plan)))
+                    :attendance/plan :plan/unknown}) no-plan)))
   (active-members-by-section db)
   (->>
    (attendance-for-gig-with-all-active-members db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"))

@@ -184,24 +184,26 @@
                                         ;(icon/calendar {:class style-icon})
                                         ;[:p "Last Played "]
         ]]]]))
-(def attendance-opts
+
+(defn attendance-opts [tr]
   (let [icon-class "mr-3 text-gray-400 w-5 h-5"
         red-class "text-red-500 group-hover:text-red-500"
         green-class "text-green-500 group-hover:text-green-500"]
-    [{:label "Definitely" :value "yes" :icon icon/circle :icon-class (render/cs icon-class green-class)}
-     {:label "Probably" :value "probably" :icon icon/circle-outline  :icon-class (render/cs icon-class green-class)}
-     {:label "Don't Know" :value "unknown" :icon icon/question :icon-class (render/cs icon-class "text-gray-500")}
-     {:label "Probably Not" :value "probably-not" :icon icon/square-outline :icon-class (render/cs icon-class red-class)}
-     {:label "Can't Do It" :value "no" :icon icon/square :icon-class (render/cs icon-class red-class)}
-     {:label "Not Interested" :value "notinterested" :icon icon/xmark :icon-class (render/cs icon-class "text-black")}]))
+    [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (render/cs icon-class green-class)}
+     {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (render/cs icon-class green-class)}
+     {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (render/cs icon-class "text-gray-500")}
+     {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (render/cs icon-class red-class)}
+     {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (render/cs icon-class red-class)}
+     {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (render/cs icon-class "text-black")}]))
 
 (defn attendance-dropdown-opt [{:keys [label value icon icon-class]}]
   [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
    (icon {:class  icon-class}) label])
 
-(defn attendance-dropdown [& {:keys [path gigo-key value]
+(defn attendance-dropdown [& {:keys [gigo-key value tr]
                               :or {value "unknown"}}]
-  (let [current-opt (m/find-first #(= value (:value %)) attendance-opts)
+  (let [opts (attendance-opts tr)
+        current-opt (m/find-first #(= value (:value %)) opts)
         button-size-class-normal "px-4 py-2 text-sm "
         button-size-class-small "px-2 py-1 text-xs "]
     [:div {:class "dropdown relative inline-block text-left"}
@@ -219,18 +221,19 @@
                      "z-10 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none")
              :role "menu" :aria-orientation "vertical" :aria-labelledby "menu-button" :tabindex "-1"}
        [:div {:class "py-1" :role "none"}
-        (map attendance-dropdown-opt  attendance-opts)]]]]))
+        (map attendance-dropdown-opt  opts)]]]]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
   (ctmx/with-req req
     (let [comp-name (util/comp-namer #'gig-attendance-person-plan)
+          tr (i18n/tr-from-req req)
           plan-kw (or
                    (if post?
                      (-> (controller/update-attendance-plan! req) :attendance :attendance/plan)
                      plan)
-                   :attendance/unknown)
+                   :plan/unknown)
           body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
-                       (attendance-dropdown :gigo-key gigo-key :value (name plan-kw))]]
+                       (attendance-dropdown :tr tr :gigo-key gigo-key :value (name plan-kw))]]
       (if post?
         (render/trigger-response "newDropdown" body-result
                                  {:trigger-type :hx-trigger-after-settle
@@ -270,7 +273,7 @@
   (ctmx/with-req req
     (let [comp-name (util/comp-namer #'gig-attendance-person-motivation)
           gigo-key (or gigo-key (value "gigo-key"))
-          ;; _ (tap> {:gigo-key gigo-key :gkv (value "gigo-key") :p (:params req)})
+          _ (tap> {:gigo-key gigo-key :gkv (value "gigo-key") :p (:params req)})
           tr (i18n/tr-from-req req)
           motivation (if post?
                        (-> (controller/update-attendance-motivation! req) :attendance :attendance/motivation)
@@ -278,7 +281,7 @@
       [:form {:id id :hx-target (hash ".")}
        (render/select
         :id (path "motivation")
-        :value (when motivation motivation)
+        :value (when motivation (name motivation))
         :size :small
         :extra-attrs {:hx-trigger "change"  :hx-post (comp-name) :hx-vals (render/hx-vals {(path "gigo-key") gigo-key})}
         :options (map (fn [m] {:label (tr [m]) :value (name m)}) controller/motivations))])))

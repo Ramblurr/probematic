@@ -14,12 +14,12 @@
    [clojure.set :as set]
    [clojure.string :as str]))
 
-(def plans [:attendance/definitely
-            :attendance/probably
-            :attendance/unknown
-            :attendance/probably-not
-            :attendance/definitely-not
-            :attendance/not-interested])
+(def plans [:plan/definitely
+            :plan/probably
+            :plan/unknown
+            :plan/probably-not
+            :plan/definitely-not
+            :plan/not-interested])
 
 (def str->plan (zipmap (map name plans) plans))
 
@@ -186,6 +186,7 @@
                           [(update-attendance-motivation-tx attendance motivation-kw)
                            (touch-attendance-tx attendance)]
                           [(create-attendance-motivation-tx db gig-id gigo-key motivation-kw)])]
+    (tap> {:tx attendance-txs :m motivation :mkw motivation-kw})
     (assert motivation-kw (format  "unknown motivation value: %s" motivation))
     (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
 

@@ -142,25 +142,16 @@
       401 (handle-401)
       nil)))
 
-(def plan->attendance-kw {0 :attendance/no-response
-                          1 :attendance/definitely          ; green
-                          2 :attendance/probably            ; green circle
-                          3 :attendance/dont-know           ; question mark
-                          4 :attendance/probably-not        ; red square
-                          5 :attendance/definitely-not      ; red
-                          6 :attendance/not-interested      ; x
+(def plan->attendance-kw {0 :plan/unknown
+                          1 :plan/definitely          ; green
+                          2 :plan/probably            ; green circle
+                          3 :plan/dont-know           ; question mark
+                          4 :plan/probably-not        ; red square
+                          5 :plan/definitely-not      ; red
+                          6 :plan/not-interested      ; x
                           })
 
 (def attendance-kw->plan (clojure.set/map-invert plan->attendance-kw))
-
-(def attendance-set (set (vals plan->attendance-kw)))
-(defn human-attendance [kw]
-  (kw {:attendance/not-interested "not interested"
-       :attendance/definitely     "coming"
-       :attendance/probably       "probably coming"
-       :attendance/probably-not   "probably not coming"
-       :attendance/definitely-not "not coming"
-       :attendance/dont-know      "question mark"}))
 
 (defn summarize-attendance
   "Given an attendance response from get-gig-attendance!, returns a list of tuples [member name, attendance-kw]"
@@ -252,7 +243,7 @@
   "Given a gig, returns a list of member names and keys that have not replied with an attendance value."
   [gig]
   (mapv #(select-keys % [:the_member_name :the_member_key])
-        (:attendance/no-response (group-by-attendance gig))))
+        (:plan/unknown (group-by-attendance gig))))
 
 (defn attendance-for-key
   "Given a list of attendances and a member key, returns the attendance map for the member"
@@ -280,13 +271,13 @@
 (defn first-gig-with-no-response-by-name
   "find the first gig that member has no response for. Assumes gigs is sorted by date ascending."
   [gigs member-name]
-  (m/find-first (fn [g] (= :attendance/no-response (attendance-response-for-by-name g member-name)))
+  (m/find-first (fn [g] (= :plan/unknown (attendance-response-for-by-name g member-name)))
                 gigs))
 
 (defn first-gig-with-no-response-by-key
   "find the first gig that member has no response for. Assumes gigs is sorted by date ascending."
   [gigs member-key]
-  (m/find-first (fn [g] (= :attendance/no-response (attendance-response-for-by-key g member-key)))
+  (m/find-first (fn [g] (= :plan/unknown (attendance-response-for-by-key g member-key)))
                 gigs))
 
 (defn need-reminding
@@ -327,8 +318,8 @@
   (let [gigs (get-all-gigs-with-attendance! conf)]
     (first-gig-with-no-response-by-key gigs member-key)))
 
-(def attendances-coming #{:attendance/probably :attendance/definitely})
-(def attendances-not-coming #{:attendance/definitely-not :attendance/probably-not})
+(def attendances-coming #{:plan/probably :plan/definitely})
+(def attendances-not-coming #{:plan/definitely-not :plan/probably-not})
 
 (defn- first-gig-with-attendances-for
   "Returns the first gig in the sorted list where the member's response state is contained in the supplied set"
@@ -450,8 +441,8 @@
   (def casey-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")
   (attendance-for (:attendance gig1) "Casey")
   (attendance-response (:attendance gig1) "Casey")
-  (set-gig-attendance! config "Casey" (:id gig1) :attendance/definitely-not)
-  (attendance-kw->plan :attendance/probably)
+  (set-gig-attendance! config "Casey" (:id gig1) :plan/definitely-not)
+  (attendance-kw->plan :plan/probably)
 
   (s/join "\n" (map first (summarize-attendance attendance)))
 
@@ -466,7 +457,7 @@
   all-gigs
   (def gig1 (first all-gigs))
 
-  (:attendance/no-response (group-by-attendance gig1))
+  (:plan/unknown (group-by-attendance gig1))
 
   (def gig-id->no-responses
     (reduce (fn [all g] (assoc all (:id g) (members-with-no-response g))) {} all-gigs))
@@ -474,7 +465,7 @@
   (attendance-value gig1 "Casey")
 
                                         ; find the first gig that member has no response for
-  (m/find-first (fn [g] (= :attendance/no-response (attendance-response g "Felix"))) all-gigs)
+  (m/find-first (fn [g] (= :plan/unknown (attendance-response g "Felix"))) all-gigs)
 
                                         ; name->gig id
   (need-reminding all-gigs (keys member-names->member-keys))
