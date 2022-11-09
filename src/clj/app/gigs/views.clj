@@ -1,4 +1,5 @@
 (ns app.gigs.views
+  (:refer-clojure :exclude [comment])
   (:require
    [app.views.shared :as ui]
    [app.gigs.controller :as controller]
@@ -12,7 +13,11 @@
    [ctmx.rt :as rt]
    [app.queries :as q]
    [clojure.string :as str]
-   [app.humanize :as humanize]))
+   [app.humanize :as humanize]
+   [clojure.set :as set]
+   [app.controllers.common :as common]
+   [app.debug :as debug]
+   [app.i18n :as i18n]))
 
 (def link-gig (partial util/link-helper "/event/" :gig/gig-id))
 
@@ -61,12 +66,6 @@
          (map #(merge {:name id :model value :required? required?} %))
          (map-indexed radio-button))]])
 
-(defn kw->str [kw]
-  (when kw
-    (str (namespace kw)
-         "/"
-         (name kw))))
-
 (defn log-play-legend []
   (let [shared-classes "h-8 w-8 border-solid border-b-2 pb-1"]
     [:div {:class ""}
@@ -96,7 +95,7 @@
         radio-id (path "feeling")
         song (:played/song play)
         song-id (:song/song-id song)
-        feeling-value (kw->str (or (:played/rating play) :play-rating/not-played))
+        feeling-value (util/kw->str (or (:played/rating play) :play-rating/not-played))
         intensive?  (= :play-emphasis/intensiv (:played/emphasis play))
         toggler-class (get {"play-rating/not-played" "toggler--not-played"
                             "play-rating/good" "toggler--feeling-good"
@@ -185,16 +184,6 @@
                                         ;(icon/calendar {:class style-icon})
                                         ;[:p "Last Played "]
         ]]]]))
-
-(defn dl-item
-  ([label value]
-   (dl-item label value "sm:col-span-1"))
-  ([label value class]
-   [:div {:class (render/cs class)}
-    [:dt {:class "text-sm font-medium text-gray-500"} label]
-    [:dd {:class "mt-1 text-sm text-gray-900"}
-     value]]))
-
 (def attendance-opts
   (let [icon-class "mr-3 text-gray-400 w-5 h-5"
         red-class "text-red-500 group-hover:text-red-500"
@@ -202,15 +191,15 @@
     [{:label "Definitely" :value "yes" :icon icon/circle :icon-class (render/cs icon-class green-class)}
      {:label "Probably" :value "probably" :icon icon/circle-outline  :icon-class (render/cs icon-class green-class)}
      {:label "Don't Know" :value "unknown" :icon icon/question :icon-class (render/cs icon-class "text-gray-500")}
-     {:label "Probably Not" :value "probably not" :icon icon/square-outline :icon-class (render/cs icon-class red-class)}
+     {:label "Probably Not" :value "probably-not" :icon icon/square-outline :icon-class (render/cs icon-class red-class)}
      {:label "Can't Do It" :value "no" :icon icon/square :icon-class (render/cs icon-class red-class)}
-     {:label "Not Interested" :value "not interested" :icon icon/xmark :icon-class (render/cs icon-class "text-black")}]))
+     {:label "Not Interested" :value "notinterested" :icon icon/xmark :icon-class (render/cs icon-class "text-black")}]))
 
 (defn attendance-dropdown-opt [{:keys [label value icon icon-class]}]
   [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
    (icon {:class  icon-class}) label])
 
-(defn attendance-dropdown [& {:keys [name value]
+(defn attendance-dropdown [& {:keys [path gigo-key value]
                               :or {value "unknown"}}]
   (let [current-opt (m/find-first #(= value (:value %)) attendance-opts)
         button-size-class-normal "px-4 py-2 text-sm "
@@ -218,6 +207,7 @@
     [:div {:class "dropdown relative inline-block text-left"}
      [:div
       [:button {:type "button" :class (render/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")  :aria-expanded "true", :aria-haspopup "true"}
+       [:input {:type "hidden" :name "gigo-key" :value gigo-key}]
        [:input {:type "hidden" :name "plan" :value (:value current-opt) :class "item-input"}]
        [:span {:class "item-icon"}
         ((:icon current-opt) {:class (render/cs (:icon-class current-opt) "w-3 h-3")})]
@@ -226,26 +216,82 @@
       [:div {:class (render/cs
                      "dropdown-choices"
                      (when false "absolute right-0 ")
-                     "z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none")
+                     "z-10 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none")
              :role "menu" :aria-orientation "vertical" :aria-labelledby "menu-button" :tabindex "-1"}
        [:div {:class "py-1" :role "none"}
         (map attendance-dropdown-opt  attendance-opts)]]]]))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx member]
-  [:div {:class "grid grid-cols grid-cols-5" :id id}
-   [:div {:class "col-span-2 align-middle"}
-    [:a {:href (str "/member/" (:member/gigo-key member) "/") :class "text-blue-500 align-middle"}
-     (render/member-nick member)]]
-   [:div {:class "col-span-1"} (attendance-dropdown)]
-   [:div {:class "col-span-1"} (render/motivation-select :motivations
-                                                         [{:motivation/label  "-"}
-                                                          {:motivation/label  "Sehr motiviert!"}
-                                                          {:motivation/label  "Motiviert"}
-                                                          {:motivation/label  "Ambivalent"}
-                                                          {:motivation/label  "Nicht Motiviert"}
-                                                          {:motivation/label  "Gar nicht Motiviert!"}])]
+(ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
+  (ctmx/with-req req
+    (let [comp-name (util/comp-namer #'gig-attendance-person-plan)
+          plan-kw (or
+                   (if post?
+                     (-> (controller/update-attendance-plan! req) :attendance :attendance/plan)
+                     plan)
+                   :attendance/unknown)
+          body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
+                       (attendance-dropdown :gigo-key gigo-key :value (name plan-kw))]]
+      (if post?
+        (render/trigger-response "newDropdown" body-result
+                                 {:trigger-type :hx-trigger-after-settle
+                                  :data (str (hash ".") " .dropdown")})
+        body-result))))
 
-   [:div {:class "col-span-1"} (render/text :size :small)]])
+;; TODO WTF is up with (value ..) here and in the motivation component, why do i have to reach into unwrap params?
+(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment]
+  (ctmx/with-req req
+    (let [comp-name (util/comp-namer #'gig-attendance-person-comment)
+          edit? (util/qp-bool req :edit)
+          gigo-key (or gigo-key (value "gigo-key"))
+          comment (if post?
+                    (-> (controller/update-attendance-comment! req) :attendance :attendance/comment)
+                    comment)]
+      [:div {:id id :class ""}
+       (if edit?
+         (render/text :name (path "comment") :value comment :required? false :size :small
+                      :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
+                                    :hx-vals (render/hx-vals {(path "gigo-key") gigo-key})
+                                    :_ "on focus or htmx:afterRequest or load
+                                          set :initial_value to my value
+                                        end
+                                        on keyup[key=='Escape']
+                                          set my value to the :initial_value then
+                                          blur() me
+                                        end"})
+
+         (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name "?edit=true") :hx-vals (render/hx-vals {:gigo-key gigo-key :comment comment})}]
+           (if comment
+             [:span (merge hx-attrs {:class "ml-2 cursor-pointer text-blue-500 hover:text-blue-600"})
+              comment]
+             [:button  hx-attrs
+              (icon/comment-outline {:class "ml-2 mb-2 w-5 h-5 cursor-pointer hover:text-blue-500 active:text-blue-300"})])))])))
+
+(ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [{:keys [db] :as req} gigo-key motivation]
+  (ctmx/with-req req
+    (let [comp-name (util/comp-namer #'gig-attendance-person-motivation)
+          gigo-key (or gigo-key (value "gigo-key"))
+          ;; _ (tap> {:gigo-key gigo-key :gkv (value "gigo-key") :p (:params req)})
+          tr (i18n/tr-from-req req)
+          motivation (if post?
+                       (-> (controller/update-attendance-motivation! req) :attendance :attendance/motivation)
+                       motivation)]
+      [:form {:id id :hx-target (hash ".")}
+       (render/select
+        :id (path "motivation")
+        :value (when motivation motivation)
+        :size :small
+        :extra-attrs {:hx-trigger "change"  :hx-post (comp-name) :hx-vals (render/hx-vals {(path "gigo-key") gigo-key})}
+        :options (map (fn [m] {:label (tr [m]) :value (name m)}) controller/motivations))])))
+
+(ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
+  (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
+    [:div {:class "grid grid-cols grid-cols-5" :id id}
+     [:div {:class "col-span-2 align-middle"}
+      [:a {:href (str "/member/" gigo-key "/") :class "text-blue-500 hover:text-blue-600 align-middle"}
+       (render/member-nick member)]]
+     [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
+     [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
+     [:div {:class "col-span-1 "} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance))]]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx section]
   [:div {:id id :class (render/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
@@ -254,7 +300,7 @@
 
    [:div {:class "col-span-1 font-bold"} (:section/name section)]
    [:div {:class "col-span-2"}
-    (rt/map-indexed gig-attendance-person req (sort-by :member/name (:member/_section section)))]])
+    (rt/map-indexed gig-attendance-person req (:members section))]])
 
 (ctmx/defcomponent ^:endpoint gig-comment-li [{:keys [db] :as req} idx comment]
   (let [{:comment/keys [comment-id body author created-at]} comment]
@@ -279,7 +325,8 @@
                     contact pay-deal call-time set-time end-time
                     outfit description location setlist leader post-gig-plans
                     more-details comments] :as gig} (:gig req)
-        section-members  (filter #(seq (:member/_section %)) (q/active-members-by-section db))]
+        attendances-by-section (q/attendance-plans-by-section-for-gig db gig-id)]
+
     [:div
      (render/page-header :title (list  title " " (ui/gig-status-icon status))
 
@@ -297,7 +344,7 @@
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
 
-       ;;;; Gig Info Section
+;;;; Gig Info Section
        [:section
         [:div {:class "bg-white shadow sm:rounded-lg"}
          [:div {:class "px-4 py-5 sm:px-6"}
@@ -305,27 +352,27 @@
            "Info"]]
          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-           (dl-item "Date"
-                    (ui/datetime date)
-                    (when end-date
-                      [:span " " (ui/datetime end-date)]))
-           (dl-item "Location" location)
-           (dl-item "Contact" (:member/name contact))
-           (dl-item "Call Time" (ui/time call-time))
-           (dl-item "Set Time" (ui/time set-time))
-           (dl-item "End Time" (ui/time end-time))
+           (render/dl-item "Date"
+                           (ui/datetime date)
+                           (when end-date
+                             [:span " " (ui/datetime end-date)]))
+           (render/dl-item "Location" location)
+           (render/dl-item "Contact" (:member/name contact))
+           (render/dl-item "Call Time" (ui/time call-time))
+           (render/dl-item "Set Time" (ui/time set-time))
+           (render/dl-item "End Time" (ui/time end-time))
            (when leader
-             (dl-item "Leader" leader))
+             (render/dl-item "Leader" leader))
            (when pay-deal
-             (dl-item "Pay Deal" pay-deal))
+             (render/dl-item "Pay Deal" pay-deal))
            (when outfit
-             (dl-item "What to wear" outfit))
+             (render/dl-item "What to wear" outfit))
            (when more-details
-             (dl-item "Details" more-details "sm:col-span-3"))
+             (render/dl-item "Details" more-details "sm:col-span-3"))
            (when setlist
-             (dl-item "Set List" (interpose [:br] (str/split-lines setlist)) "sm:col-span-3"))
+             (render/dl-item "Set List" (interpose [:br] (str/split-lines setlist)) "sm:col-span-3"))
            (when post-gig-plans
-             (dl-item "Post Gig Plans" post-gig-plans "sm:col-span-3"))
+             (render/dl-item "Post Gig Plans" post-gig-plans "sm:col-span-3"))
            ;;
            ]]]]
 
@@ -337,7 +384,7 @@
            "Attendance"]]
 
          [:div {:class "border-t border-gray-200"}
-          (rt/map-indexed gig-attendance req section-members)]]]
+          (rt/map-indexed gig-attendance req attendances-by-section)]]]
 ;;;; Comments Section
        [:section {:aria-labelledby "notes-title"}
         [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg"}

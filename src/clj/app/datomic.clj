@@ -83,7 +83,8 @@
                  :insurance.coverage.type/type-id
                  :instrument.coverage/coverage-id
                  :insurance.category.factor/category-factor-id
-                 :comment/comment-id])
+                 :comment/comment-id
+                 :attendance/gig+member])
 
 (defn ref
   "Given a map and a key returns a tuple of [key value]. Useful for building datomic ref tuples from a pull result"
@@ -107,25 +108,7 @@
 
   (d/transact conn {:tx-data (-> (io/resource "seeds.edn") slurp edn/read-string)})
 
-  (d/transact conn {:tx-data  [{:db/ident :member/nick
-                                :db/doc "A member's nickname"
-                                :db/valueType :db.type/string
-                                :db/cardinality :db.cardinality/one}
-
-                               {:db/ident :member/discourse-id
-                                :db/doc "The member's id in discourse"
-                                :db/valueType :db.type/string
-                                :db/unique :db.unique/identity
-                                :db/cardinality :db.cardinality/one}
-
-                               {:db/ident :gig/gig-type
-                                :db/doc "The type of the gig"
+  (d/transact conn {:tx-data  [{:db/ident :attendance/motivation
+                                :db/doc "The member-added motivation statement"
                                 :db/valueType :db.type/keyword
-                                :db/cardinality :db.cardinality/one}
-
-                               {:db/ident :member/avatar-template
-                                :db/doc "The url to the member's avatar with a {size} parameter "
-                                :db/valueType :db.type/string
-                                :db/cardinality :db.cardinality/one}]})
-  ;;
-  )
+                                :db/cardinality :db.cardinality/one}]}))

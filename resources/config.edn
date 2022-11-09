@@ -55,7 +55,7 @@
                   :app.ig/handler                    {:env                   #ig/ref :app.ig/env}
 
                   :app.ig.router/routes              {:routes #ig/refset :app.ig/routes
-                                                      ;; :conn #ig/ref :ol.datahike.ig/connection
+                                                      :i18n-langs #ig/ref :app.ig/i18n-langs
                                                       :datomic #ig/ref :app.ig/datomic-db
                                                       :env            #ig/ref :app.ig/env}
 
@@ -75,6 +75,7 @@
                                                   :system "dev"
                                                   :db-name "probematic"
                                                   :storage-dir #envf ["%s/datomic.data" PWD]}
+                  :app.ig/i18n-langs {}
                   :app.ig.jobs/definitions {:env #ig/ref :app.ig/env
                                             :gigo #ig/ref :app.ig/gigo-client
                                             ;; :conn  #ig/ref :app.ig/app-db

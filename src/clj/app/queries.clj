@@ -4,7 +4,16 @@
    [app.datomic :as d]
    [app.util :as util]
    [tick.core :as t]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [clojure.set :as set]))
+
+(def attendance-pattern [{:attendance/section [:section/name]}
+                         {:attendance/member [:member/name :member/gigo-key :member/nick]}
+                         :attendance/plan
+                         :attendance/gig+member
+                         :attendance/comment
+                         :attendance/motivation
+                         :attendance/updated])
 
 (def member-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
                      {:member/section [:section/name]}])
@@ -134,6 +143,68 @@
                   {:member/_section [:member/name :member/gigo-key :member/nick]}])
    (map first)))
 
+(defn active-members [db]
+  (->>
+   (datomic/q '[:find (pull ?member pattern)
+                :in $ pattern
+                :where
+                [?member :member/active? true]]
+              db [:member/name :member/gigo-key :member/nick {:member/section [:section/name]}])
+   (map first)
+   (map #(update % :member/section :section/name))))
+
+(defn attendance-for-gig [db gig-id]
+  (->>
+   (d/find-by db :gig/gig-id gig-id
+              [:gig/gig-type :gig/title {:attendance/_gig attendance-pattern}])
+   :attendance/_gig
+   (map #(update % :attendance/section :section/name))
+     ;; (group-by #(-> % :attendance/section :section/name))
+   ))
+
+(defn attendance-for-gig-with-all-active-members
+  "Returns a list of maps :attendance/ with attendance attributes for all active members.
+  If some member has a concrete plan response for the gig, that will be included, if not then the plan is set to unknown."
+  [db gig-id]
+  (let [plans (attendance-for-gig db gig-id)
+        members  (active-members db)
+        no-plan (remove (fn [member]
+                          (m/find-first (fn [p]
+                                          (= (:member/gigo-key member) (get-in p [:attendance/member :member/gigo-key]))) plans))
+                        members)]
+    (concat plans
+            (map (fn [member]
+                   {:attendance/section (:member/section member)
+                    :attendance/member  member
+                    :attendance/plan :attendance/unknown}) no-plan))))
+
+(defn member-nick-or-name [member]
+  (if (:member/nick member)
+    (:member/nick member)
+    (:member/name member)))
+
+(defn attendance-plans-by-section-for-gig
+  "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
+  [db gig-id]
+  (->> (attendance-for-gig-with-all-active-members db gig-id)
+       (group-by :attendance/section)
+       (reduce (fn [acc [k v]]
+                 (when k
+                   (conj acc {:section/name k
+                              :members (sort-by #(-> % :attendance/member member-nick-or-name) v)})))
+               [])))
+
+(defn section-for-member [db gigo-key]
+  (->
+   (datomic/q '[:find ?section-name
+                :in $ ?gigo-key
+                :where
+                [?member :member/gigo-key ?gigo-key]
+                [?member :member/section ?section]
+                [?section :section/name ?section-name]]
+              db gigo-key)
+   ffirst))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -148,7 +219,55 @@
                                      (insurance-policy-effective-as-of db (t/now) policy-pattern)
                                      instrument-coverage-detail-pattern)
 
-  (d/find-all db :gig/gig-type [:gig/gig-type :gig/title])
+  (d/transact conn {:tx-data [{:attendance/gig [:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"]
+                               :attendance/member [:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"]
+                               :attendance/gig+member (pr-str ["ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww" "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"])
+                               :attendance/section [:section/name "flute"]
+                               :attendance/updated (t/inst)
+                               :attendance/plan :attendance/definitely-not}]})
 
-;;
+  (def plans)
+
+  (def sections (active-members-by-section db))
+  (map (fn [section]
+         (update section :member/_section
+                 (fn [members]
+                   (map (fn [member]
+                          (assoc member :foo :bar)
+                          ;; (get plans (:section/name section))
+                          ;;
+                          )members)
+                   ;;
+                   )))sections)
+  plans
+
+  (def active-mem (active-members db))
+  active-mem
+
+  (let [plans (->>
+               (d/find-by db :gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"
+                          [:gig/gig-type :gig/title {:attendance/_gig [{:attendance/section [:section/name]}
+                                                                       {:attendance/member [:member/name :member/gigo-key :member/nick]}
+                                                                       :attendance/plan
+                                                                       :attendance/comment
+                                                                       :attendance/motivation
+                                                                       :attendance/updated]}])
+               :attendance/_gig
+               ;; (group-by #(-> % :attendance/section :section/name))
+               )
+        plans (attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
+        members (active-members db)
+        no-plan]
+
+    (concat plans
+            (map (fn [member]
+                   {:attendance/section (:member/section member)
+                    :attendance/member  member
+                    :attendance/plan :attendance/unknown}) no-plan)))
+  (active-members-by-section db)
+  (->>
+   (attendance-for-gig-with-all-active-members db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"))
+
+  (attendance-plans-by-section-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
+  ;;
   )

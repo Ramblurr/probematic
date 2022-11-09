@@ -12,7 +12,8 @@
    [ctmx.render :as ctmx.render]
    [ctmx.response :as response]
    [app.util :as util]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [jsonista.core :as j]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -85,9 +86,18 @@ generate output the way we want -- formatted and without sending warnings.
     (map? body) body
     :else (-> body ctmx.render/html response/html-response)))
 
-(defn trigger-response [trigger-name body]
+(def hx-trigger-types
+  {:hx-trigger "HX-Trigger"
+   :hx-trigger-after-settle "HX-Trigger-After-Settle"
+   :hx-trigger-after-swap "HX-Trigger-After-Swap"})
+
+(defn trigger-response [trigger-name body {:keys [trigger-type data]
+                                           :or {trigger-type :hx-trigger}}]
   {:status 200
-   :headers {"Content-Type" "text/html" "HX-Trigger" trigger-name}
+   :headers {"Content-Type" "text/html" (get hx-trigger-types trigger-type)
+             (if data
+               (j/write-value-as-string {trigger-name data})
+               trigger-name)}
    :body (ctmx.render/html body)})
 
 (defn partial-response [body]
@@ -204,8 +214,9 @@ generate output the way we want -- formatted and without sending warnings.
 (def input-size {:normal "sm:text-sm"
                  :small "text-xs"})
 
-(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size]
-                :or {size :normal}}]
+(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required?]
+                :or {size :normal
+                     required? true}}]
   [:div {:class (cs class (get input-label-size size)
                     (get input-container-size size)
                     "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600")}
@@ -218,7 +229,7 @@ generate output the way we want -- formatted and without sending warnings.
                                      :title title
                                      :name name
                                      :value value
-                                     :required true
+                                     :required required?
                                      :placeholder placeholder}))]])
 
 (defn text [& opts]
@@ -308,8 +319,8 @@ generate output the way we want -- formatted and without sending warnings.
     (select :id id :label label :value value :options options :extra-attrs extra-attrs)))
 
 (defn motivation-select [& {:keys [id value label motivations extra-attrs]}]
-  (let [options (map (fn [{:motivation/keys [label]}]
-                       {:value label :label label}) motivations)]
+  (let [options (map (fn [[k v]]
+                       {:value k :label v}) motivations)]
     (select :id id :label label :value value :options options :extra-attrs extra-attrs :size :small)))
 
 (defn instrument-select [& {:keys [id value label instruments :variant]
@@ -521,4 +532,22 @@ generate output the way we want -- formatted and without sending warnings.
                 "/img/default-avatar.png")}])
 
 (defn member-nick [{:member/keys [name nick]}]
-  (or nick name))
+  (if (str/blank? nick)
+    name
+    nick))
+
+(defn hx-vals
+  "Serializes the passed map as a json object, useful with :hx-vals. Omits nils"
+  [m]
+
+  (j/write-value-as-string
+   (util/remove-nils m)))
+
+(defn dl-item
+  ([label value]
+   (dl-item label value "sm:col-span-1"))
+  ([label value class]
+   [:div {:class (cs class)}
+    [:dt {:class "text-sm font-medium text-gray-500"} label]
+    [:dd {:class "mt-1 text-sm text-gray-900"}
+     value]]))

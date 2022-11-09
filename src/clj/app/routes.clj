@@ -22,7 +22,8 @@
          :muuntaja     route.helpers/formats-instance
          :interceptors (conj  route.helpers/default-interceptors
                               (route.helpers/system-interceptor system)
-                              (route.helpers/datomic-interceptor system))}
+                              (route.helpers/datomic-interceptor system)
+                              (route.helpers/i18n-interceptor system))}
 
      (members-routes)
      (home-routes)

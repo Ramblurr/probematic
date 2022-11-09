@@ -3,7 +3,7 @@
    [app.routes.pedestal-reitit]
    [app.ig]
    [app.routes.pedestal-reitit]
-   [app.gigo :as gigo]
+   [app.gigo.core :as gigo]
    [app.jobs.sync-gigs :as sync-gigs]
    [app.jobs.sync-members :as sync-members]
    [app.schemas :as schemas]
@@ -13,7 +13,8 @@
    [ol.app.dev.dev-extras :as dev-extra]
    [clojure.tools.namespace.repl :as repl]
    [ol.system :as system]
-   [browser :as browser]))
+   [browser :as browser]
+   [jsonista.core :as j]))
 
 (repl/disable-reload! (find-ns 'browser))
 
@@ -50,14 +51,37 @@
 
   (do
     (require '[integrant.repl.state :as state])
-    (def _opts {:env        (:app.ig/env state/system)
-                :gigo       (:app.ig/gigo-client state/system)
-                :conn       (-> state/system :app.ig/datomic-db :conn)}))
+    (def env (:app.ig/env state/system))
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def gigo (:app.ig/gigo-client state/system))
+    (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")) ;; rcf
 
   (do
-    (gigo/update-cache! (:gigo _opts))
-    (sync-gigs/update-gigs-db! (:conn _opts) @gigo/gigs-cache)
-    (sync-members/update-member-data! (:conn _opts) (sync-members/fetch-people-data! (-> _opts :env :airtable))))
+    (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic2/gigo-members.json") j/keyword-keys-object-mapper)
+          tx-data (map (fn [{:keys [gigo_key email nick name section occ]}]
+                         {:member/gigo-key gigo_key
+                          :member/email email
+                          :member/nick nick
+                          :member/name name
+                          :member/section [:section/name section]
+                          :member/active? (not occ)}) members)]
+      (d/transact conn {:tx-data tx-data}))
+    (sync-members/update-member-data! conn (sync-members/fetch-people-data! (:airtable env)))
+    (gigo/update-cache! gigo)
+    (sync-gigs/update-gigs-db! conn @gigo/gigs-cache)
+
+    (d/transact conn {:tx-data
+                      (map (fn [{:keys [id display_name]}]
+                             [:db/add [:member/gigo-key id] :member/nick display_name])
+                           (gigo/get-band-members! gigo sno))})
+    (halt)
+    (dev-extra/go)
+
+    (require '[datomic.dev-local :as dl])
+    (dl/release-db {:system "dev" :db-name "probematic"})
+
+  ;;
+    )
 
   ;; END SEEDS
 
@@ -73,29 +97,6 @@
   (system/config {:profile :dev})
 
   (system/system-config {:profile :dev})
-
-  (d/q '[:find ?e ?v
-         :where
-         [?e :member/name ?v]]
-       (d/db (:conn datomic)))
-
-  (d/q '[:find ?e ?v
-         :where
-         [?e :gig/title ?v]]
-       (d/db (:conn datomic)))
-  (def pattern [:gig/title :gig/id :gig/date])
-
-  (d/q '[:find (pull ?e pattern)
-         :in $ pattern
-         :where
-         [?e :gig/title ?v]]
-       (d/db (:conn datomic)) pattern)
-
-  (d/transact conn {:tx-data [{:db/ident :gig/gig-id
-                               :db/doc "The gig id from gig-o-matic."
-                               :db/valueType :db.type/string
-                               :db/unique :db.unique/identity
-                               :db/cardinality :db.cardinality/one}]})
 
   ;;
   )

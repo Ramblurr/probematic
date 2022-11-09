@@ -1,6 +1,7 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
+
    [app.config :as config]
    [app.jobs :as jobs]
    [app.routes :as routes]
@@ -14,12 +15,13 @@
    [ol.system :as system]
    [datomic.client.api :as d]
    [datomic.dev-local :as dl]
-
+   [taoensso.tempura :as tempura]
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]
    [ctmx.render :as ctmx.render]
    [hiccup2.core :as hiccup2]
-   [app.debug :as debug]))
+   [app.debug :as debug]
+   [app.i18n :as i18n]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -47,7 +49,7 @@
   (let [port (-> service :io.pedestal.http/port)
         host (-> service :io.pedestal.http/host)
         start-msg (format "Starting %s on %s:%d" (str (:name env "app") (when (config/dev-mode? env) " [DEV]")) host port)]
-    (tap> routes)
+    ;; (tap> routes)
     (tap> start-msg)
     (log/info start-msg)
     (cond-> service
@@ -88,3 +90,7 @@
   [_ config]
   (println "\nStopping Datomic DB")
   (dl/release-db (select-keys config [:system :db-name])))
+
+(defmethod ig/init-key ::i18n-langs
+  [_ _]
+  (i18n/read-langs))

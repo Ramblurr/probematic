@@ -1,6 +1,5 @@
   [{:db/ident :member/name
     :db/doc "A member's name"
-    :db/unique :db.unique/value
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
@@ -262,10 +261,9 @@
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
 
-   {:db/ident :played/gig+member
+   {:db/ident :attendance/gig+member
     :db/unique :db.unique/identity
-    :db/tupleAttrs [:attendance/gig :attendance/member]
-    :db/valueType :db.type/tuple
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :attendance/plan
@@ -285,7 +283,7 @@
 
    {:db/ident :attendance/motivation
     :db/doc "The member-added motivation statement"
-    :db/valueType :db.type/string
+    :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
 
 ;;;; Insurance - Item Category

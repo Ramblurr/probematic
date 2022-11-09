@@ -90,3 +90,9 @@
      (-> var meta :name str))
     ([s]
      (str (-> var meta :name) s))))
+
+(defn kw->str [kw]
+  (when kw
+    (str (namespace kw)
+         "/"
+         (name kw))))

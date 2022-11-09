@@ -11,7 +11,8 @@
    [app.debug :as debug]
    [clojure.string :as str]
    [ctmx.rt :as rt]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.i18n :as i18n]))
 
 (def link-member (partial util/link-helper "/member/" :member/gigo-key))
 
@@ -38,11 +39,12 @@
   (let [comp-name (util/comp-namer #'members-detail-page)
         post? (util/post? req)
         edit? (util/qp-bool req :edit)
+        tr (i18n/tr-from-req req)
         member (cond post?
                      (:member (controller/update-member! req))
                      :else
                      (:member req))
-        {:member/keys [name email phone active? section]} member
+        {:member/keys [name nick email phone active? section]} member
         coverages (controller/member-current-insurance-info req member)
         private-instruments (filter :instrument.coverage/private? coverages)
         band-instruments (filter #(not (:instrument.coverage/private? %)) coverages)
@@ -63,99 +65,90 @@
         [:div
          [:h1 {:class "text-2xl font-bold text-gray-900"}
           (if edit?
-            (render/text :label "Name" :name (path "name") :value name)
+            [:div {:class "flex flex-col sm:flex-row"}
+             (render/text :label (tr [:member/name])  :name (path "name") :value name :class "mb-2 sm:mb-0 sm:mr-2")
+             (render/text :label (tr [:member/nick])  :name (path "nick") :value nick)]
             [:h1 {:class "text-2xl font-bold text-gray-900"}
-             name])]
+             name
+             (when nick
+               [:sup {:class "text-gray-500 text-lg"}
+                (str " (" nick ")")])])]
          [:p {:class "text-sm font-medium text-gray-500"}
           (if edit?
-            (render/section-select :label "Section" :id (path "section-name") :value section-name :class "mt-4" :sections sections)
-            (if section-name section-name "No Section"))]]]
+            (render/section-select :label (tr [:section])  :id (path "section-name") :value section-name :class "mt-4" :sections sections)
+            (if section-name section-name
+                (tr [:section-none])))]]]
        [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
         (if edit?
           (list
-           (render/button :label "Cancel" :priority :white :centered? true
+           (render/button :label (tr [:action/cancel]) :priority :white :centered? true
                           :attr {:hx-get (comp-name "?edit=false") :hx-target (hash ".")})
-           (render/button :label "Save" :priority :primary :centered? true))
-          (render/button :label "Edit" :priority :white :centered? true
+           (render/button :label (tr [:action/save])  :priority :primary :centered? true))
+          (render/button :label (tr [:action/edit]) :priority :white :centered? true
                          :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]
       [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
-       [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
+       [:div {:class "space-y-6 md:col-span-2 md:col-start-1"}
         [:section
          [:div {:class "bg-white shadow sm:rounded-lg"}
           [:div {:class "px-4 py-5 sm:px-6"}
            [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-            "Contact Information"]]
+            (tr [:Contact-Information])]]
           [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
            [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "E-Mail"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if edit?
-                (render/input :name (path "email") :label "" :value email :type :email)
-                email)]]
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Phone"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if edit?
-                (render/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
-                phone)]]
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Aktiv?"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if edit?
-                (render/toggle-checkbox  :checked? active? :name (path "active?"))
-                (ui/bool-bubble active?))]]]]]]
+            (render/dl-item (tr [:Email]) (if edit?
+                                            (render/input :name (path "email") :label "" :value email :type :email)
+                                            email))
+            (render/dl-item (tr [:Phone]) (if edit?
+                                            (render/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
+                                            phone))
+            (render/dl-item (tr [:Active]) (if edit?
+                                             (render/toggle-checkbox  :checked? active? :name (path "active?"))
+                                             (ui/bool-bubble active?)))]]]]
         [:section
          [:div {:class "bg-white shadow sm:rounded-lg"}
           [:div {:class "px-4 py-5 sm:px-6"}
            [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-            "Insurance & Instruments"]
-           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"} "Instruments and other items registered with the band for insurance purposes."]]
+            (tr [:member/insurance-title])]
+           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}
+            (tr [:member/insurance-subtitle])]]
+          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
+           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+
+            (render/dl-item (tr [:band-instruments])  (count band-instruments))
+            (render/dl-item (tr [:private-instruments]) (count private-instruments))
+            (render/dl-item (tr [:outstanding-payments]) (render/money 0 :EUR))
+            (render/dl-item (tr [:instruments]) (if (empty? coverages)
+                                                  (tr [:none])
+                                                  [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
+                                                   (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
+                                                          [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
+                                                           [:div {:class "flex w-0 flex-1 items-center"}
+                                                            (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
+                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} name]
+                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
+                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} (render/money value :EUR)]
+                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
+                                                           [:div {:class "ml-4 flex-shrink-0"}
+                                                            [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]])
+                                                        coverages)]))]]]]
+
+        [:section
+         [:div {:class "bg-white shadow sm:rounded-lg"}
+          [:div {:class "px-4 py-5 sm:px-6"}
+           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
+            (tr ["Gigs & Probes"])]
+           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}
+            (tr ["Fun stats!"])]]
           [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
            [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
 
             [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Band Instruments"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (count band-instruments)]]
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Private Instruments"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (count private-instruments)]]
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Outstanding Payments"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (render/money 0 :EUR)]]
-            [:div {:class "sm:col-span-3"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Instruments"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if (empty? coverages)
-                "None"
-                [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
-                 (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
-                        [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
-                         [:div {:class "flex w-0 flex-1 items-center"}
-                          (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
-                          [:span {:class "ml-2 w-0 flex-1 truncate"} name]
-                          [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
-                          [:span {:class "ml-2 w-0 flex-1 truncate"} (render/money value :EUR)]
-                          [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
-                         [:div {:class "ml-4 flex-shrink-0"}
-                          [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]]) coverages)])]]]]]]
-        [:section
-         [:div {:class "bg-white shadow sm:rounded-lg"}
-          [:div {:class "px-4 py-5 sm:px-6"}
-           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-            "Gigs & Probes"]
-           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"} "Fun stats!"]]
-          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
-           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Gigs Attended"]
+             [:dt {:class "text-sm font-medium text-gray-500"}
+              (tr ["Gigs Attended"])]
              [:dd {:class "mt-1 text-sm text-gray-900"} "coming soon"]]
             [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Probes Attended"]
+             [:dt {:class "text-sm font-medium text-gray-500"}
+              (tr ["Probes Attended"])]
              [:dd {:class "mt-1 text-sm text-gray-900"} "coming soon"]]]]]]]]]]))
 
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]

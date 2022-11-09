@@ -1,6 +1,8 @@
 (ns app.gigs.controller
+  (:refer-clojure :exclude [comment])
   (:require
    [app.datomic :as d]
+   [app.queries :as q]
    [tick.core :as t]
    [com.yetanalytics.squuid :as sq]
    [app.util :as util]
@@ -9,10 +11,27 @@
    [ctmx.form :as form]
    [app.controllers.common :as common]
    [datomic.client.api :as datomic]
-   [app.queries :as q]))
+   [clojure.set :as set]
+   [clojure.string :as str]))
+
+(def plans [:attendance/definitely
+            :attendance/probably
+            :attendance/unknown
+            :attendance/probably-not
+            :attendance/definitely-not
+            :attendance/not-interested])
+
+(def str->plan (zipmap (map name plans) plans))
+
+(def motivations [:motivation/none
+                  :motivation/very-high
+                  :motivation/high
+                  :motivation/medium
+                  :motivation/low
+                  :motivation/very-low])
+(def str->motivation (zipmap (map name motivations) motivations))
 
 (defn ->gig [gig]
-  (tap> gig)
   (-> gig
       (m/update-existing :gig/call-time t/time)
       (m/update-existing :gig/end-time t/time)
@@ -71,47 +90,105 @@
                       (map #(-> % :played/song :song/song-id))
                       (some (fn [p] (= p (:song/song-id song)))))))))
 
-(comment
-  (def gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
-  (def _plays (plays-by-gig db gig-id))
-  (def _songs (q/find-all-songs db))
+(defn gig+member [gig-id gigo-key]
+  (pr-str [gig-id gigo-key]))
 
-  (map #(-> % :played/song :song/title) _plays)
+(defn get-attendance
+  ([db gig-id gigo-key]
+   (get-attendance db (gig+member gig-id gigo-key)))
+  ([db gig+member]
+   (assert (string? gig+member))
+   (d/find-by db :attendance/gig+member gig+member q/attendance-pattern)))
 
-  (def asterix {:song/title "Asterix"
-                :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207"})
-  (def ymyl
-    {:song/title "You Move You Lose"
-     :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068217"})
+(defn attendance-touch-ts [a]
+  (assoc a :attendance/updated (t/inst)))
 
-  ;;  played-songs
-  (def played-songs)
-  _songs
+(defn transact-attendance! [datomic-conn attendance-txs gig+member]
+  (let [result (d/transact datomic-conn {:tx-data attendance-txs})]
+    (if (d/db-ok? result)
+      {:attendance (get-attendance (:db-after result) gig+member)}
+      (do
+        (tap> result)
+        result))))
 
-  (def _not_played (songs-not-played _plays _songs))
-  (map (fn [s]
-         {:played/song s}) _not_played)
+(defn update-attendance-plan-tx [attendance plan]
+  [:db/add (d/ref attendance) :attendance/plan plan])
 
-  (->> _plays
-       (map #(-> % :played/song :song/song-id))
-       (filter #(= % (:song/song-id ymyl))))
+(defn touch-attendance-tx [attendance]
+  [:db/add (d/ref attendance) :attendance/updated (t/inst)])
 
-  (remove (fn [song]
-            (->> _plays
-                 (map #(-> % :played/song :song/song-id))
-                 (filter #(do (tap> {:play %}) (= % (:song/song-id song)))))) _songs)
+(defn create-attendance-tx [db gig-id gigo-key]
+  {:attendance/gig+member (gig+member gig-id gigo-key)
+   :attendance/gig        [:gig/gig-id gig-id]
+   :attendance/member     [:member/gigo-key gigo-key]
+   :attendance/updated    (t/inst)
+   :attendance/section    [:section/name (q/section-for-member db gigo-key)]})
 
-  (d/find-all-by db :played/gig [:gig/gig-id gig-id] q/play-pattern)
-  (d/find-all-by db :played/gig + song "[\"ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMCc_fOfCQw\" #uuid \"01844740-3eed-856d-84c1-c26f0706820a\"]"
-                 q/play-pattern)
-  (datomic/transact conn {:tx-data
-                          (->>
-                           (d/find-all db :played/play-id q/play-pattern)
-                           (map first)
-                           (map :played/play-id)
-                           (map (fn [i] [:db/retractEntity [:played/play-id i]])))})
-  ;;
-  )
+(defn create-attendance-plan-tx [db gig-id gigo-key plan]
+  (assoc (create-attendance-tx db gig-id gigo-key) :attendance/plan plan))
+
+(defn update-attendance-plan! [{:keys [datomic-conn db] :as req}]
+  (let [{:keys [gigo-key plan] :as params} (common/unwrap-params req)
+        gig-id (-> req :path-params :gig/gig-id)
+        attendance (get-attendance db gig-id gigo-key)
+        plan-kw (str->plan plan)
+        attendance-txs (if attendance
+                         [(update-attendance-plan-tx attendance plan-kw)
+                          (touch-attendance-tx attendance)]
+                         [(create-attendance-plan-tx db gig-id gigo-key plan-kw)])]
+
+    (assert plan-kw (format  "unknown plan value: '%s'" plan))
+    (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
+
+(defn create-attendance-comment-tx [db gig-id gigo-key comment]
+  (assoc (create-attendance-tx db gig-id gigo-key) :attendance/comment comment))
+
+(defn update-attendance-comment-tx [attendance comment]
+  [:db/add (d/ref attendance) :attendance/comment comment])
+
+(defn retract-attendance-comment-tx [attendance]
+  [:db/retract (d/ref attendance) :attendance/comment])
+
+(defn update-attendance-comment! [{:keys [datomic-conn db] :as req}]
+  (let [{:keys [gigo-key comment] :as params} (common/unwrap-params req)
+        gig-id (-> req :path-params :gig/gig-id)
+        attendance (get-attendance db gig-id gigo-key)
+        attendance-txs (if attendance
+                         (if (str/blank? comment)
+                           (if (:attendance/comment attendance)
+                             [(retract-attendance-comment-tx attendance)
+                              (touch-attendance-tx attendance)]
+                             :nop)
+                           [(update-attendance-comment-tx attendance comment)
+                            (touch-attendance-tx attendance)])
+                         (if (str/blank? comment)
+                           :nop
+                           [(create-attendance-comment-tx db gig-id gigo-key comment)]))]
+
+    (if (= :nop attendance-txs)
+      {:attendance attendance}
+      (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key)))))
+
+(defn create-attendance-motivation-tx [db gig-id gigo-key motivation]
+  (assoc (create-attendance-tx db gig-id gigo-key) :attendance/motivation motivation))
+
+(defn update-attendance-motivation-tx [attendance motivation]
+  [:db/add (d/ref attendance) :attendance/motivation motivation])
+
+(defn update-attendance-motivation! [{:keys [datomic-conn db] :as req}]
+  (let [{:keys [gigo-key motivation] :as params} (common/unwrap-params req)
+        gig-id (-> req :path-params :gig/gig-id)
+        _ (assert gig-id)
+        _ (assert gigo-key)
+        attendance (get-attendance db gig-id gigo-key)
+        motivation-kw (str->motivation motivation)
+        attendance-txs  (if attendance
+                          [(update-attendance-motivation-tx attendance motivation-kw)
+                           (touch-attendance-tx attendance)]
+                          [(create-attendance-motivation-tx db gig-id gigo-key motivation-kw)])]
+    (assert motivation-kw (format  "unknown motivation value: %s" motivation))
+    (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
+
 (defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
   (let [song-id (common/ensure-uuid song-id)
         play-id (or (common/ensure-uuid play-id) (sq/generate-squuid))
@@ -135,18 +212,4 @@
         result (d/transact datomic-conn {:tx-data tx-data})]
     (if (d/db-ok? result)
       {:plays (plays-by-gig (:db-after result) gig-id)}
-      (do
-        (tap> result)
-        result))))
-
-(comment
-  (do
-    (require '[integrant.repl.state :as state])
-    (require  '[datomic.client.api :as datomic])
-    (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db (datomic/db conn))) ;; rcf
-
-  (d/find-all (datomic/db conn) :played/play-id q/play-pattern)
-
-;;
-  )
+      result)))

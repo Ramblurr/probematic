@@ -26,3 +26,4 @@ node_modules
 resources/public/css/compiled/*
 *.db
 *.data
+gigo-members.json

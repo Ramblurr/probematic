@@ -19,7 +19,7 @@
 
          ;; CTMX
          hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
-         ctmx/ctmx {:mvn/version "1.4.5"}
+         ctmx/ctmx {:mvn/version "1.4.7"}
          com.github.jtidy/jtidy {:mvn/version "1.0.2"}
 
          ;; html to hiccup

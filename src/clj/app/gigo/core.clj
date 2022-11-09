@@ -11,7 +11,8 @@
    [tick.core :as t]
    [tick.alpha.interval :as t.i]
    [clojure.string :as clojure.string]
-   [integrant.repl.state :as state])
+   [integrant.repl.state :as state]
+   [clojure.set :as set])
   (:import (java.time.format DateTimeParseException)
            (java.time DayOfWeek)))
 
@@ -86,6 +87,18 @@
 (defn handle-401 []
   (throw (RuntimeException. "Authentication required.")))
 
+(defn get-band-info! [config band-id]
+  (let [resp (parse-body (request! {:url (str "band/" band-id)} config))]
+    (case (:status resp)
+      200 (:body resp)
+      401 (handle-401)
+      nil)))
+
+(defn get-sections! [config band-id]
+  (let [band (get-band-info! config band-id)]
+    (tap> band)
+    (map #(set/rename-keys % {:name :section/name :id :section/gigo-id}) (:sections band))))
+
 (defn get-gig! [config id]
   (let [resp (parse-body (request! {:url (str "gig/" id)} config))]
     (case (:status resp)
@@ -109,6 +122,13 @@
 
 (defn get-band-members! [config band-id]
   (let [resp (parse-body (request! {:url (str "band/members/" band-id)} config))]
+    (case (:status resp)
+      200 (:body resp)
+      401 (handle-401)
+      nil)))
+
+(defn get-band-member! [config member-id]
+  (let [resp (parse-body (request! {:url (str "member/" member-id)} config))]
     (case (:status resp)
       200 (:body resp)
       401 (handle-401)
@@ -406,7 +426,7 @@
     (require '[integrant.repl.state :as state])
     (require '[tick.core :as t])
     (def env (:app.ig/env state/system))
-    (def _config (:app.ig/gigo-client state/system)))
+    (def _config (:app.ig/gigo-client state/system))) ;; rcf
   (find-gig-closest-to @gigs-cache (t/zoned-date-time "2022-03-12T12:00:00+01:00"))
   @gigs-cache
   (filter wednesday-probe? @gigs-cache)
@@ -453,10 +473,10 @@
 
   (attendance-value gig1 "Casey")
 
-  ; find the first gig that member has no response for
+                                        ; find the first gig that member has no response for
   (m/find-first (fn [g] (= :attendance/no-response (attendance-response g "Felix"))) all-gigs)
 
-  ; name->gig id
+                                        ; name->gig id
   (need-reminding all-gigs (keys member-names->member-keys))
 
   (def gigs (get-all-gigs-with-attendance! config))
@@ -470,5 +490,15 @@
   (first-gig-with-no-response-by-key gigs casey-key)
   (attendance-response-for-by-key (first gigs) casey-key)
 
-  ;
+  (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
+  (get-band-info! _config sno)
+
+  (get-sections! _config sno)
+  (map (fn [{:keys [id display_name]}]
+         [:db/add [:member/gigo-key id] :member/nick display_name])
+       (get-band-members! _config sno))
+
+  (get-band-member! _config "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICAwITUhAoM")
+
+                                        ;
   )

@@ -2,6 +2,7 @@
   (:require
    [app.schemas :as schemas]
    [app.routes.pedestal-prone :as pedestal-prone]
+   [app.i18n :as i18n]
    [io.pedestal.http.body-params :as body-params]
    [io.pedestal.http.secure-headers :as secure-headers]
    [io.pedestal.interceptor.error :as error-int]
@@ -14,6 +15,7 @@
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
    [ring.middleware.keyword-params :as keyword-params]
+   [io.pedestal.http.ring-middlewares :as middlewares]
    [reitit.swagger :as swagger]
    [datomic.client.api :as d]))
 
@@ -108,7 +110,58 @@
             (tap> (-> req :request :form-params))
             req)})
 
+(defn query-string-lang [query-string]
+  (when query-string
+    (last (re-find #"lang=([^&]+)" query-string))))
+
+(defn cookie-lang [cookies]
+  (get-in cookies ["lang" :value]))
+
+(defn i18n-interceptor [system]
+  (let [lang-dicts (:i18n-langs system)]
+    (assert lang-dicts "Translations not available")
+    {:name ::i18n-interceptor
+     :enter (fn [ctx]
+              (let [request (:request ctx)
+                    headers (:headers request)
+                    query-string (:query-string request)
+                    lang-qr (query-string-lang query-string)
+                    lang-cookie (cookie-lang (:cookies request))
+                    lang (or lang-qr lang-cookie (name i18n/default-locale))
+                    both-set (and lang-qr lang-cookie)
+
+                    change-lang (or
+                                 (and both-set (not (= lang-qr lang-cookie)))
+                                 (and (not both-set) lang-qr))
+                    tempura-accepted (if (:tempura/accept-langs request)
+                                       (:tempura/accept-langs request)
+                                       [])
+                    accepted (if lang (into [lang] tempura-accepted) tempura-accepted)
+                    current-locale (i18n/supported-lang lang-dicts accepted)
+                    tr (i18n/tr-with lang-dicts accepted)
+                    req (if tr
+                          (assoc request
+                                 :will-change-lang change-lang
+                                 :tempura/tr tr
+                                 :tempura/accept-langs accepted
+                                 :current-locale (keyword current-locale))
+                          (assoc request
+                                 :will-change-lang change-lang
+                                 :current-locale (keyword current-locale)))
+                    ;;
+                    ]
+                (assoc ctx :request req)))
+     :leave (fn [ctx]
+              (if (get-in ctx [:request :will-change-lang])
+                (-> ctx
+
+                    (assoc-in [:response :cookies "lang" :value] (name (get-in ctx [:request :current-locale])))
+                    (assoc-in [:response :cookies "lang" :path] "/")
+                    (assoc-in [:response :cookies "lang" :max-age] (* 3600 30)))
+                ctx))}))
+
 (def default-interceptors [swagger/swagger-feature
+                           middlewares/cookies
                            ;; query-params & form-params
                            (parameters/parameters-interceptor)
                            ;; content-negotiation
@@ -127,10 +180,7 @@
                            ;; htmx reequires all params (query, form etc) to be keywordized
                            keyword-params-interceptor
                            ;; multipart
-                           (multipart/multipart-interceptor)
-
-                           ;; service-error-handler
-                           ])
+                           (multipart/multipart-interceptor)])
 
 (def default-coercion
   (-> rcm/default-options
