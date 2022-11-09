@@ -37,16 +37,15 @@
       (m/update-existing :comment/created-at t/date-time)))
 
 (defn ->gig [gig]
-  (debug/xxx
-   (-> gig
-       (m/update-existing :gig/call-time t/time)
-       (m/update-existing :gig/end-time t/time)
-       (m/update-existing :gig/set-time t/time)
-       (m/update-existing :gig/date t/date-time)
-       (m/update-existing :gig/end-date t/date-time)
-       (m/update-existing :gig/comments #(->> %
-                                              (map ->comment)
-                                              (sort-by :comment/created-at))))))
+  (-> gig
+      (m/update-existing :gig/call-time t/time)
+      (m/update-existing :gig/end-time t/time)
+      (m/update-existing :gig/set-time t/time)
+      (m/update-existing :gig/date t/date-time)
+      (m/update-existing :gig/end-date t/date-time)
+      (m/update-existing :gig/comments #(->> %
+                                             (map ->comment)
+                                             (sort-by :comment/created-at)))))
 
 (defn query-result->gig [[{:gig/keys [title] :as gig}]]
   (->gig gig))
@@ -72,17 +71,32 @@
 (defn gigs-after [db time]
   (mapv query-result->gig
         (d/q '[:find (pull ?e pattern)
-               :in $ ?time pattern
+               :in $ ?reference-time pattern
                :where
                [?e :gig/gig-id _]
                [?e :gig/date ?date]
-               [(>= ?date ?time)]] db time q/gig-pattern)))
+               [(>= ?date ?reference-time)]] db time q/gig-pattern)))
+
+(defn gigs-between [db start end]
+  (mapv query-result->gig
+        (d/q '[:find (pull ?e pattern)
+               :in $ ?ref-start ?ref-end pattern
+               :where
+               [?e :gig/gig-id _]
+               [?e :gig/date ?date]
+               [(>= ?date ?ref-start)]
+               [(<= ?date ?ref-end)]] db start end q/gig-pattern)))
 
 (defn gigs-future [db]
-  (gigs-after db (t/inst)))
+  (gigs-after db (t/at (t/date) (t/midnight))))
 
 (defn gigs-past [db]
-  (gigs-before db (t/inst)))
+  (gigs-before db (t/at (t/date) (t/midnight))))
+
+(defn gigs-past-two-weeks [db]
+  (let [now (t/at (t/date) (t/midnight))
+        then (t/<< now (t/new-duration 14 :days))]
+    (gigs-between db then now)))
 
 (defn query-result->play
   [[play]]

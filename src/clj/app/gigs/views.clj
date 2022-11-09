@@ -12,7 +12,8 @@
    [ctmx.rt :as rt]
    [app.queries :as q]
    [clojure.string :as str]
-   [app.i18n :as i18n]))
+   [app.i18n :as i18n]
+   [tick.core :as t]))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
                           :or {size :normal
@@ -160,8 +161,9 @@
         (ui/gig-status-icon status)
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (render/button :tag :a :attr {:href (url/link-gig gig "/log-play/")}
-                       :label "Log Plays" :priority :white-rounded :size :small)]]
+        (when (t/>= (t/now) date)
+          (render/button :tag :a :attr {:href (url/link-gig gig "/log-play/")}
+                         :label "Log Plays" :priority :white-rounded :size :small))]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
@@ -367,12 +369,13 @@
                                                         :priority :white
                                                         :centered? true
                                                         :attr {:href "/songs/new"})
-                                         (render/button :label "Log Plays"
-                                                        :tag :a
-                                                        :priority :primary
-                                                        :centered? true
-                                                        :class "items-center justify-center "
-                                                        :attr {:href (url/link-gig gig "/log-play/")})))
+                                         (when (t/>= (t/now) date)
+                                           (render/button :label "Log Plays"
+                                                          :tag :a
+                                                          :priority :primary
+                                                          :centered? true
+                                                          :class "items-center justify-center "
+                                                          :attr {:href (url/link-gig gig "/log-play/")}))))
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
 
@@ -422,28 +425,33 @@
          (gigs-detail-page-comment req gig)]]]]]))
 
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
-  (let [events (controller/gigs-future db)]
+  (let [future-gigs (controller/gigs-future db)
+        past-gigs (controller/gigs-past-two-weeks db)
+        tr (i18n/tr-from-req req)]
     [:div
-     (render/page-header :title "Gigs/Probes"
-                         :buttons  (list (render/button :label "Share2"
-                                                        :priority :white
-                                                        :centered? true
-                                                        :attr {:href "/events/new"})
-                                         (render/button :label "Gig/Probe"
-                                                        :priority :primary
-                                                        :centered? true
-                                                        :attr {:href "/events/new"} :icon icon/plus)))
+     (render/page-header :title (tr [:gigs/title])
+                         :buttons  (list
+                                    (render/button :label (tr [:action/create])
+                                                   :priority :primary
+                                                   :centered? true
+                                                   :attr {:href "/events/new"} :icon icon/plus)))
 
      [:div {:class "mt-6 px-4 sm:px-6 lg:px-8"}
-      (ui/divider-left "Upcoming")
+      (ui/divider-left (tr [:gigs/upcoming]))
       [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"
              :id "songs-list"}
-       (if (empty? events)
-         "No events"
+       (if (empty? future-gigs)
+         (tr [:gigs/no-future])
          [:ul {:role "list", :class "divide-y divide-gray-200"}
-          (map (fn [event]
+          (map (fn [gig]
                  [:li
-                  (gig-row event)]) events)])]
-      (ui/divider-left "Past")
+                  (gig-row gig)]) future-gigs)])]
+      (ui/divider-left (tr [:gigs/past]))
       [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
-             :id "songs-list"}]]]))
+             :id "songs-list"}
+       (if (empty? past-gigs)
+         (tr [:gigs/no-past])
+         [:ul {:role "list", :class "divide-y divide-gray-200"}
+          (map (fn [gig]
+                 [:li
+                  (gig-row gig)]) past-gigs)])]]]))

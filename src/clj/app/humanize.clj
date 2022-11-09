@@ -92,5 +92,7 @@
   ;; doesnt work
   (from (t/zoned-date-time))
 
+  (t/>= (t/now) (t/>> (t/date-time) (t/new-duration 1 :minutes)))
+
   ;;
   )

@@ -9,6 +9,11 @@
           :name "Name"
           :nick "Nickname"}
  :gig {:comment-placeholder "Say your piece!"}
+ :gigs {:title "Gigs & Probes"
+        :upcoming "Upcoming"
+        :past "Past"
+        :no-past "No gigs/probes in the past 2 weeks"
+        :no-future "No upcoming gigs/probes"}
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
@@ -19,7 +24,9 @@
  :action {:edit "Edit"
           :save "Save"
           :cancel "Cancel"
-          :comment "Comment"}
+          :comment "Comment"
+          :add "Add"
+          :create "Create"}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"
               :high "Motiviert"
