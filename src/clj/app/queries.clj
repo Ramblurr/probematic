@@ -30,7 +30,9 @@
 (def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location
                          :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
                          :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans
-                         :gig/more-details :gig/comments
+                         :gig/more-details
+                         {:gig/comments [{:comment/author [:member/name :member/nick :member/gigo-key :member/avatar-template]}
+                                         :comment/body :comment/comment-id :comment/created-at]}
                          {:gig/contact [:member/name :member/gigo-key :member/nick]}])
 
 (def play-pattern [{:played/gig gig-pattern}

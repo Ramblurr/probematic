@@ -89,5 +89,8 @@
   (from (t/date-time) :now-t (t/date-time))
   (from (t/date))
 
-;;
+  ;; doesnt work
+  (from (t/zoned-date-time))
+
+  ;;
   )

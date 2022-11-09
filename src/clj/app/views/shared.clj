@@ -82,5 +82,7 @@
 
 (defn humanize-dt [dt]
   (when dt
-    [:time {:datetime (str dt)}
-     (humanize/from dt)]))
+    (let [local-dt (cond (inst? dt) (t/date-time dt)
+                         :else dt)]
+      [:time {:datetime (str local-dt)}
+       (humanize/from local-dt)])))

@@ -1,6 +1,7 @@
 (ns app.members.views
   (:require
    [app.util :as util]
+   [app.urls :as url]
    [app.views.shared :as ui]
    [app.members.controller :as controller]
    [ctmx.response :as response]
@@ -13,8 +14,6 @@
    [ctmx.rt :as rt]
    [medley.core :as m]
    [app.i18n :as i18n]))
-
-(def link-member (partial util/link-helper "/member/" :member/gigo-key))
 
 (defn member-table-headers [members]
   [{:label "Name" :priority :normal :key :name
@@ -186,7 +185,7 @@
     [:tr {:id id :hx-boost true}
      (list
       [:td {:class (render/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
-       [:a {:href (link-member member) :class "font-medium text-blue-600 hover:text-blue-500"}
+       [:a {:href (url/link-member member) :class "font-medium text-blue-600 hover:text-blue-500"}
         name]]
       [:td {:class td-class} email]
       [:td {:class td-class} phone]

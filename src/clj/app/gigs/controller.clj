@@ -12,7 +12,8 @@
    [app.controllers.common :as common]
    [datomic.client.api :as datomic]
    [clojure.set :as set]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [app.debug :as debug]))
 
 (def plans [:plan/definitely
             :plan/probably
@@ -31,12 +32,21 @@
                   :motivation/very-low])
 (def str->motivation (zipmap (map name motivations) motivations))
 
+(defn ->comment [comment]
+  (-> comment
+      (m/update-existing :comment/created-at t/date-time)))
+
 (defn ->gig [gig]
-  (-> gig
-      (m/update-existing :gig/call-time t/time)
-      (m/update-existing :gig/end-time t/time)
-      (m/update-existing :gig/set-time t/time)
-      (m/update-existing :gig/date t/zoned-date-time)))
+  (debug/xxx
+   (-> gig
+       (m/update-existing :gig/call-time t/time)
+       (m/update-existing :gig/end-time t/time)
+       (m/update-existing :gig/set-time t/time)
+       (m/update-existing :gig/date t/date-time)
+       (m/update-existing :gig/end-date t/date-time)
+       (m/update-existing :gig/comments #(->> %
+                                              (map ->comment)
+                                              (sort-by :comment/created-at))))))
 
 (defn query-result->gig [[{:gig/keys [title] :as gig}]]
   (->gig gig))
@@ -186,9 +196,29 @@
                           [(update-attendance-motivation-tx attendance motivation-kw)
                            (touch-attendance-tx attendance)]
                           [(create-attendance-motivation-tx db gig-id gigo-key motivation-kw)])]
-    (tap> {:tx attendance-txs :m motivation :mkw motivation-kw})
     (assert motivation-kw (format  "unknown motivation value: %s" motivation))
     (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
+
+(defn transact-gig! [datomic-conn gig-txs gig-id]
+  (let [result (d/transact datomic-conn {:tx-data gig-txs})]
+    (if (d/db-ok? result)
+      {:gig (retrieve-gig (:db-after result) gig-id)}
+      (do
+        (tap> result)
+        result))))
+
+(defn post-comment! [{:keys [datomic-conn] :as req}]
+  (let [{:keys [body]} (common/unwrap-params req)
+        author [:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"]
+        gig-id (-> req :path-params :gig/gig-id)
+        gig-txs [{:db/id "new_comment"
+                  :comment/comment-id (sq/generate-squuid)
+                  :comment/body body
+                  :comment/author author
+                  :comment/created-at (t/inst)}
+                 [:db/add [:gig/gig-id gig-id] :gig/comments "new_comment"]]]
+    (:gig
+     (transact-gig! datomic-conn gig-txs gig-id))))
 
 (defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
   (let [song-id (common/ensure-uuid song-id)

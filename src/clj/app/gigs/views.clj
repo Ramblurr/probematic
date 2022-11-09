@@ -2,10 +2,9 @@
   (:refer-clojure :exclude [comment])
   (:require
    [app.views.shared :as ui]
+   [app.urls :as url]
    [app.gigs.controller :as controller]
    [app.util :as util]
-   [app.songs.controller :as songs.controller]
-   [ctmx.response :as response]
    [app.render :as render]
    [app.icons :as icon]
    [ctmx.core :as ctmx]
@@ -13,13 +12,7 @@
    [ctmx.rt :as rt]
    [app.queries :as q]
    [clojure.string :as str]
-   [app.humanize :as humanize]
-   [clojure.set :as set]
-   [app.controllers.common :as common]
-   [app.debug :as debug]
    [app.i18n :as i18n]))
-
-(def link-gig (partial util/link-helper "/event/" :gig/gig-id))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
                           :or {size :normal
@@ -160,14 +153,14 @@
 
 (defn gig-row [{:gig/keys [status title location date gig-id] :as gig}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href (link-gig gig) :class "block hover:bg-gray-50"}
+    [:a {:href (url/link-gig gig) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
         (ui/gig-status-icon status)
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (render/button :tag :a :attr {:href (link-gig gig "/log-play/")}
+        (render/button :tag :a :attr {:href (url/link-gig gig "/log-play/")}
                        :label "Log Plays" :priority :white-rounded :size :small)]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
@@ -273,7 +266,6 @@
   (ctmx/with-req req
     (let [comp-name (util/comp-namer #'gig-attendance-person-motivation)
           gigo-key (or gigo-key (value "gigo-key"))
-          _ (tap> {:gigo-key gigo-key :gkv (value "gigo-key") :p (:params req)})
           tr (i18n/tr-from-req req)
           motivation (if post?
                        (-> (controller/update-attendance-motivation! req) :attendance :attendance/motivation)
@@ -290,7 +282,7 @@
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
     [:div {:class "grid grid-cols grid-cols-5" :id id}
      [:div {:class "col-span-2 align-middle"}
-      [:a {:href (str "/member/" gigo-key "/") :class "text-blue-500 hover:text-blue-600 align-middle"}
+      [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
        (render/member-nick member)]]
      [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
      [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
@@ -305,29 +297,67 @@
    [:div {:class "col-span-2"}
     (rt/map-indexed gig-attendance-person req (:members section))]])
 
-(ctmx/defcomponent ^:endpoint gig-comment-li [{:keys [db] :as req} idx comment]
-  (let [{:comment/keys [comment-id body author created-at]} comment]
+(defn gig-comment-li [comment]
+  (let [{:comment/keys [body author created-at]} comment]
     [:li
      [:div {:class "flex space-x-3"}
       [:div {:class "flex-shrink-0"}
-       [:img {:class "h-10 w-10 rounded-full" :src "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]
+       [:a {:href (url/link-member author)}
+        (render/avatar-img author :class "h-10 w-10 rounded-full")]]
       [:div
        [:div {:class "text-sm"}
-        [:a {:href "#", :class "font-medium text-gray-900"}
-         (:member/name author)]]
+        [:a {:href (url/link-member author) :class "font-medium text-gray-900"}
+         (render/member-nick author)]]
        [:div {:class "mt-1 text-sm text-gray-700"}
         [:p body]]
        [:div {:class "mt-2 space-x-2 text-sm"}
         [:span {:class "font-medium text-gray-500"}
-         (ui/humanize-dt created-at)]
-        [:span {:class "font-medium text-gray-500"} "·"]
-        [:button {:type "button", :class "font-medium text-gray-900"} "Reply"]]]]]))
+         (ui/humanize-dt created-at)]]]]]))
+
+(defn comment-list [tr comments]
+  [:div {:class "px-4 py-6 sm:px-6"}
+   [:ul {:role "list", :class "space-y-8"}
+    (map gig-comment-li comments)]])
+
+(defn comment-header [tr]
+  [:div {:class "px-4 py-5 sm:px-6"}
+   [:h2 {:id "notes-title", :class "text-lg font-medium text-gray-900"}
+    "Comments"]])
+
+(defn comment-input [target endpoint tr]
+  [:div {:class "bg-gray-50 px-4 py-6 sm:px-6"}
+   [:div {:class "flex space-x-3"}
+    [:div {:class "flex-shrink-0"}
+     [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80"}]]
+    [:div {:class "min-w-0 flex-1"}
+     [:form {:hx-target target :hx-post endpoint}
+      [:div
+       [:label {:for "comment-body", :class "sr-only"} "Comment"]
+       [:textarea {:id "comment-body", :name "body", :rows "3", :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                   :placeholder (tr [:gig/comment-placeholder])}]]
+      [:div {:class "mt-3 flex items-center justify-between"}
+       [:button {:type "submit", :class "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}
+        (tr [:action/comment])]]]]]])
+
+(defn comment-section [id endpoint tr comments]
+  [:div {:id id :class "divide-y divide-gray-200"}
+   (comment-header tr)
+   (comment-list tr comments)
+   (comment-input (str "#" id) tr endpoint)])
+
+(ctmx/defcomponent ^:endpoint gigs-detail-page-comment [{:keys [db] :as req} gig]
+  (let [comp-name (util/comp-namer #'gigs-detail-page-comment)
+        tr (i18n/tr-from-req req)
+        {:gig/keys [comments]} (cond (util/post? req)  (controller/post-comment! req)
+                                     :else gig)]
+
+    (comment-section id tr (comp-name) comments)))
 
 (ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req}]
   (let [{:gig/keys [gig-id title date end-date status
                     contact pay-deal call-time set-time end-time
                     outfit description location setlist leader post-gig-plans
-                    more-details comments] :as gig} (:gig req)
+                    more-details] :as gig} (:gig req)
         attendances-by-section (q/attendance-plans-by-section-for-gig db gig-id)]
 
     [:div
@@ -343,7 +373,7 @@
                                                         :priority :primary
                                                         :centered? true
                                                         :class "items-center justify-center "
-                                                        :attr {:href (link-gig gig "/log-play/")})))
+                                                        :attr {:href (url/link-gig gig "/log-play/")})))
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
 
@@ -385,56 +415,13 @@
          [:div {:class "px-4 py-5 sm:px-6"}
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
            "Attendance"]]
-
          [:div {:class "border-t border-gray-200"}
           (rt/map-indexed gig-attendance req attendances-by-section)]]]
 ;;;; Comments Section
        [:section {:aria-labelledby "notes-title"}
         [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg"}
-         [:div {:class "divide-y divide-gray-200"}
-          [:div {:class "px-4 py-5 sm:px-6"}
-           [:h2 {:id "notes-title", :class "text-lg font-medium text-gray-900"}
-            "Comments"]]
-          [:div {:class "px-4 py-6 sm:px-6"}
-           [:ul {:role "list", :class "space-y-8"}
-            (rt/map-indexed gig-comment-li req comments)
+         (gigs-detail-page-comment req gig)]]]]]))
 
-            [:li
-             [:div {:class "flex space-x-3"}
-              [:div {:class "flex-shrink-0"}
-               [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]
-              [:div
-               [:div {:class "text-sm"}
-                [:a {:href "#", :class "font-medium text-gray-900"} "Michael Foster"]]
-               [:div {:class "mt-1 text-sm text-gray-700"}
-                [:p "Et ut autem. Voluptatem eum dolores sint necessitatibus quos. Quis eum qui dolorem accusantium voluptas voluptatem ipsum. Quo facere iusto quia accusamus veniam id explicabo et aut."]]
-               [:div {:class "mt-2 space-x-2 text-sm"}
-                [:span {:class "font-medium text-gray-500"} "4d ago"]
-                [:span {:class "font-medium text-gray-500"} "·"]
-                [:button {:type "button", :class "font-medium text-gray-900"} "Reply"]]]]]
-            [:li
-             [:div {:class "flex space-x-3"}
-              [:div {:class "flex-shrink-0"}
-               [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]
-              [:div
-               [:div {:class "text-sm"}
-                [:a {:href "#", :class "font-medium text-gray-900"} "Dries Vincent"]]
-               [:div {:class "mt-1 text-sm text-gray-700"}
-                [:p "Expedita consequatur sit ea voluptas quo ipsam recusandae. Ab sint et voluptatem repudiandae voluptatem et eveniet. Nihil quas consequatur autem. Perferendis rerum et."]]
-               [:div {:class "mt-2 space-x-2 text-sm"}
-                [:span {:class "font-medium text-gray-500"} "4d ago"]]]]]]]]
-         [:div {:class "bg-gray-50 px-4 py-6 sm:px-6"}
-          [:div {:class "flex space-x-3"}
-           [:div {:class "flex-shrink-0"}
-            [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80"}]]
-           [:div {:class "min-w-0 flex-1"}
-            [:form {:action "#"}
-             [:div
-              [:label {:for "comment", :class "sr-only"} "About"]
-              [:textarea {:id "comment", :name "comment", :rows "3", :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", :placeholder "Add a note"}]]
-             [:div {:class "mt-3 flex items-center justify-between"}
-
-              [:button {:type "submit", :class "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"} "Comment"]]]]]]]]]]]))
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
   (let [events (controller/gigs-future db)]
     [:div

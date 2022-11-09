@@ -8,6 +8,7 @@
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
           :nick "Nickname"}
+ :gig {:comment-placeholder "Say your piece!"}
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
@@ -17,7 +18,8 @@
  :section-none "No Section"
  :action {:edit "Edit"
           :save "Save"
-          :cancel "Cancel"}
+          :cancel "Cancel"
+          :comment "Comment"}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"
               :high "Motiviert"

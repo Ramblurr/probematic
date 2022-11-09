@@ -1,6 +1,7 @@
 (ns app.insurance.views
   (:require
    [app.util :as util]
+   [app.urls :as url]
    [app.views.shared :as ui]
    [app.insurance.controller :as controller]
    [ctmx.response :as response]
@@ -13,12 +14,9 @@
    [ctmx.rt :as rt]
    [medley.core :as m]))
 
-(def link-policy (partial util/link-helper "/insurance/" :insurance.policy/policy-id))
-(def link-instrument (partial util/link-helper "/instrument/" :instrument/instrument-id))
-
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href  (link-instrument instrument-id) , :class "block hover:bg-gray-50"}
+    [:a {:href  (url/link-instrument instrument-id) , :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
@@ -39,7 +37,7 @@
         ]]]]))
 (defn policy-row [{:insurance.policy/keys [policy-id name effective-at effective-until]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href  (link-policy policy-id) , :class "block hover:bg-gray-50"}
+    [:a {:href  (url/link-policy policy-id) , :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
@@ -62,14 +60,14 @@
 
 (ctmx/defcomponent ^:endpoint insurance-policy-duplicate [{:keys [db] :as req}]
   (let [new-policy-id (controller/duplicate-policy req)]
-    ;; (response/hx-redirect (link-policy new-policy-id))
+    ;; (response/hx-redirect (url/link-policy new-policy-id))
     nil))
 
 (ctmx/defcomponent ^:endpoint policy-edit [{:keys [db] :as req}]
   (let [policy-id (-> req :path-params :policy-id parse-uuid)
         {:insurance.policy/keys [name policy-id]} (controller/retrieve-policy db policy-id)]
 
-    [:div {:hx-get (str (link-policy policy-id "/policy-name")) :hx-target "this" :class "cursor-pointer"}
+    [:div {:hx-get (str (url/link-policy policy-id "/policy-name")) :hx-target "this" :class "cursor-pointer"}
      [:h1 {:class "text-2xl font-bold text-gray-900"}]]))
 
 (defn coverage-type-row [{:insurance.coverage.type/keys [name type-id premium-factor]}]
@@ -92,7 +90,7 @@
           {:insurance.policy/keys [name effective-at effective-until premium-factor] :as policy} (controller/retrieve-policy db (parse-uuid policy-id))
           result (and post? (controller/update-policy! req (parse-uuid policy-id)))]
       (if (:policy result)
-        (response/hx-redirect (link-policy policy-id))
+        (response/hx-redirect (url/link-policy policy-id))
         [(if edit? :form :div)
          (if edit?
            {:id id :hx-post "insurance-detail-page-header"}
@@ -560,7 +558,7 @@
           next-year (t/year (t/>> (t/now) (t/new-duration 365 :days)))
           result (and post? (controller/create-policy! req))]
       (if (:policy result)
-        (response/hx-redirect (link-policy (:policy result)))
+        (response/hx-redirect (url/link-policy (:policy result)))
         [:div {:class "px-4 py-4"}
          [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
           [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
@@ -610,7 +608,7 @@
   (ctmx/with-req req
     (let [result (and post? (controller/create-instrument! req))]
       (if-let [instrument  (:instrument result)]
-        (response/hx-redirect (link-instrument instrument))
+        (response/hx-redirect (url/link-instrument instrument))
         [:div {:class "px-4 py-4"}
          [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
           [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
@@ -644,7 +642,7 @@
           {:instrument/keys [name make build-year model serial-number] :as instrument} (controller/retrieve-instrument db instrument-id)
           result (and post? (controller/update-instrument! req instrument-id))]
       (if (:instrument result)
-        (response/hx-redirect (link-instrument instrument-id))
+        (response/hx-redirect (url/link-instrument instrument-id))
         [(if edit? :form :div)
          (if edit?
            {:hx-post (path ".") :hx-target "this"}
@@ -661,7 +659,7 @@
               (render/button :label "Cancel"
                              :priority :white
                              :centered? true
-                             :attr {:hx-get (link-instrument instrument-id "/?edit=false")})
+                             :attr {:hx-get (url/link-instrument instrument-id "/?edit=false")})
 
               (render/button :label "Save"
                              :priority :primary
@@ -669,7 +667,7 @@
              (render/button :label "Edit"
                             :priority :white
                             :centered? true
-                            :attr {:hx-get (link-instrument instrument-id "/?edit=true")}))]]
+                            :attr {:hx-get (url/link-instrument instrument-id "/?edit=true")}))]]
          [:div
           [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
            [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
