@@ -5,7 +5,8 @@
    [app.util :as util]
    [tick.core :as t]
    [medley.core :as m]
-   [clojure.set :as set]))
+   [clojure.set :as set]
+   [app.debug :as debug]))
 
 (def attendance-pattern [{:attendance/section [:section/name]}
                          {:attendance/member [:member/name :member/gigo-key :member/nick]}
@@ -181,9 +182,10 @@
                     :attendance/plan :plan/unknown}) no-plan))))
 
 (defn member-nick-or-name [member]
-  (if (:member/nick member)
-    (:member/nick member)
-    (:member/name member)))
+  (debug/xxx
+   (if (:member/nick member)
+     (:member/nick member)
+     (:member/name member))))
 
 (defn attendance-plans-by-section-for-gig
   "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
@@ -193,7 +195,7 @@
        (reduce (fn [acc [k v]]
                  (when k
                    (conj acc {:section/name k
-                              :members (sort-by #(-> % :attendance/member member-nick-or-name) v)})))
+                              :members (util/isort-by #(-> % :attendance/member member-nick-or-name) v)})))
                [])))
 
 (defn section-for-member [db gigo-key]

@@ -359,7 +359,6 @@
                     outfit description location setlist leader post-gig-plans
                     more-details] :as gig} (:gig req)
         attendances-by-section (q/attendance-plans-by-section-for-gig db gig-id)]
-
     [:div
      (render/page-header :title (list  title " " (ui/gig-status-icon status))
 
