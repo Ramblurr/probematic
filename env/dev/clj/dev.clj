@@ -14,7 +14,10 @@
    [clojure.tools.namespace.repl :as repl]
    [ol.system :as system]
    [browser :as browser]
-   [jsonista.core :as j]))
+   [jsonista.core :as j]
+   [clojure.string :as str]
+   [tick.core :as t]
+   [medley.core :as m]))
 
 (repl/disable-reload! (find-ns 'browser))
 
@@ -73,18 +76,70 @@
     (d/transact conn {:tx-data
                       (map (fn [{:keys [id display_name]}]
                              [:db/add [:member/gigo-key id] :member/nick display_name])
-                           (gigo/get-band-members! gigo sno))})
-    (halt)
-    (dev-extra/go)
+                           (gigo/get-band-members! gigo sno))})) ;; END SEEDS
 
-    (require '[datomic.dev-local :as dl])
-    (dl/release-db {:system "dev" :db-name "probematic"})
+  (require '[tick.core :as t])
+  (require '[clojure.string :as str])
+  (defn try-parse-date [date]
+    (try
+      (t/at (t/parse-date date (t/formatter "M/d/yyyy")) (t/midnight))
+      (catch Throwable e
+        nil)))
 
-  ;;
+  (defn gig-archive-tx [{:keys [date plans title gig_id details setlist leader paydeal outfit location]}]
+    (let [date-real (try-parse-date date)]
+      {:gig/gig-id gig_id
+       :gig/title title
+       :gig/location location
+       :gig/more-details details
+       :gig/leader leader
+       :gig/setlist setlist
+       :gig/outfit outfit
+       :gig/date date-real
+       :gig/pay-deal paydeal
+       :plans plans}))
+
+  (def plan "\ndrums\n\tFelix Hofer (Felix drum) - No Plan \n\tLukas - No Plan \n\tSebastian  (Sebastian ) - Definitely \n\tSebliz - No Plan \n\tTeresa (Teresa) - Definitely - gehen wir danach frühstücken? ;)\n\nbasses\n\tFabio Schafferer (Fabio) - Definitely - ich würd gern die tuba nicht mit auf die uni nehmen müssen.. \n\tFelix Rauch (Felix sax) - Definitely - obwohls schon saufrüh is freu ich mich, dasswir wieder draussn sind, und 2 leut mehr als vor 1 jahr.\n\nsax alto\n\tKlaus Falkensammer (Klausi) - Definitely - (: Juhu!\n\tAndrina - Definitely \n\ttanjae - Can't Do It \n\nsax tenor\n\tAndrea Christmann (Andrea) - Probably Not - Leider zu kurzfristig, muss früh im Büro sein, Besprechungstermin \n\tleo - Definitely - i müsst mir an sitz mitnehmen und kann nur statoinär spielen\n\ntrumpets\n\tChristian - Definitely \n\tandreaslageder - No Plan \n\tauercat - No Plan \n\tBenedikt (Benedikt) - Definitely \n\tmar_ry - Definitely - wenn mich wer aus dem bett klingelt...\n\nclarinet\n\tLau - No Plan \n\tJulia (Julia) - No Plan \n\nflute\n\tandrea - Definitely \n\th.krismer - No Plan \n")
+  (defn parse-plan [plan]
+    (if (or (not plan) (str/includes? plan "The gig was cancelled"))
+      nil
+      (map (fn [s]
+             (if (str/starts-with? s "\t")
+               (if-let [m (re-matches (re-pattern "\t(.*) \\((.*)\\) - (.*) - (.*)$")  s)]
+                 {:name (nth m 1) :nick (nth m 2) :plan (nth m 3) :comment (nth m 4)}
+                 (if-let [m (re-matches (re-pattern "\t(.*) \\((.*)\\) - (.*)$")  s)]
+                   {:name (nth m 1) :nick (nth m 2) :plan (nth m 3)}
+                   (if-let [m (re-matches (re-pattern "\t(.*) - (.*) - (.*)$")  s)]
+                     {:name (nth m 1) :plan (nth m 2) :comment (nth m 3)}
+                     (if-let [m (re-matches (re-pattern "\t(.*) - (.*)$")  s)]
+                       {:name (nth m 1) :plan (nth m 2)}
+                       :not-parsed))))
+               :not-person))
+           (str/split-lines plan))))
+  (parse-plan plan)
+  (defn gig-plans [{:keys [plans] :as gig}]
+    (assoc gig :plans
+           (->> (parse-plan plans)
+                (remove #(= :not-person %))
+                (map #(m/map-vals str/trim %)))))
+
+  (let [archive (map #(j/read-value % j/keyword-keys-object-mapper)
+                     (str/split-lines (slurp "/var/home/ramblurr/src/sno/gigoarchive/output.jsonl")))
+        tx (->> archive
+                (take 100)
+                (map gig-archive-tx)
+                (map gig-plans))]
+    (->> tx
+         ;; (map #(select-keys % [:gig/title :gig/date]) )
+         (remove #(nil? (:gig/date %))))
+    ;;
     )
 
-  ;; END SEEDS
+  (halt)
+  (dev-extra/go)
 
+  (require '[datomic.dev-local :as dl])
+  (dl/release-db {:system "dev" :db-name "probematic"})
   (md/start! schemas/malli-opts)
   (md/stop!)
 

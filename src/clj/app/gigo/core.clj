@@ -41,8 +41,8 @@
     (-> req
         (assoc-in [:headers "cookie"] cookie))))
 
-(defn add-url [req]
-  (update-in req [:url] (fn [url] (str base-url url))))
+(defn add-url [req config]
+  (update-in req [:url] (fn [url] (str (get config :base-url base-url) url))))
 
 (defn parse-body
   "Parse json in http response body"
@@ -57,7 +57,7 @@
 (defn- request- [req config]
   (-> req
       (add-auth config)
-      add-url
+      (add-url config)
       client/request))
 
 (defn update-cookie! [config new-cookie]
@@ -490,6 +490,5 @@
        (get-band-members! _config sno))
 
   (get-band-member! _config "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICAwITUhAoM")
-
                                         ;
   )
