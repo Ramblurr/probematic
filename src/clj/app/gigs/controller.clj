@@ -97,6 +97,29 @@
 (defn gigs-past [db]
   (gigs-before db (t/at (t/date) (t/midnight))))
 
+(defn page
+  ([offset limit coll]
+   (take limit (drop offset coll)))
+  ([limit coll]
+   (page coll 0 limit)))
+
+(defn gigs-past-page [db offset limit]
+  (let [now (t/inst (t/at (t/date) (t/midnight)))]
+    (->>
+     (d/q '[:find (pull ?e pattern)
+            :in $ ?time pattern
+            :where
+            [?e :gig/gig-id _]
+            [?e :gig/date ?date]
+            [(< ?date ?time)]] db now [:gig/gig-id :gig/date :db/id])
+     (map first)
+     (sort-by :gig/date)
+     (page offset limit)
+     (map :db/id)
+     (d/pull-many db q/gig-pattern)
+     (sort-by :gig/date)
+     (mapv ->gig))))
+
 (defn gigs-past-two-weeks [db]
   (let [now (t/at (t/date) (t/midnight))
         then (t/<< now (t/new-duration 14 :days))]
@@ -265,3 +288,14 @@
     (if (d/db-ok? result)
       {:plays (plays-by-gig (:db-after result) gig-id)}
       result)))
+
+(clojure.core/comment
+
+  (do
+    (require '[integrant.repl.state :as state])
+    (def env (:app.ig/env state/system))
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db  (datomic/db conn)))        ;; rcf
+
+  ;;
+  )

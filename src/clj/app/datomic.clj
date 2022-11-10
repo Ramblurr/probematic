@@ -52,6 +52,11 @@
           (tap> result)
           false))))
 
+(defn pull-many
+  "Warning: can result in many requests if the peer is remote"
+  [db pattern eids]
+  (map (partial d/pull db pattern) eids))
+
 (defn find-all
   "Returns a list of all entities having attr"
   [db attr pattern]
