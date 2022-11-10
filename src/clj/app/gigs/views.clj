@@ -360,7 +360,11 @@
                     contact pay-deal call-time set-time end-time
                     outfit description location setlist leader post-gig-plans
                     more-details] :as gig} (:gig req)
-        attendances-by-section (q/attendance-plans-by-section-for-gig db gig-id)]
+
+        attendances-by-section (if (controller/gig-archived? gig)
+                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig db gig-id))
+                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id)))]
+    (tap> attendances-by-section)
     [:div
      (render/page-header :title (list  title " " (ui/gig-status-icon status))
 
@@ -426,7 +430,8 @@
 
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
   (let [future-gigs (controller/gigs-future db)
-        past-gigs (controller/gigs-past-two-weeks db)
+        ;; past-gigs (controller/gigs-past-two-weeks db)
+        past-gigs (controller/gigs-past db)
         tr (i18n/tr-from-req req)]
     [:div
      (render/page-header :title (tr [:gigs/title])

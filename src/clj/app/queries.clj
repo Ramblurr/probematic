@@ -189,9 +189,11 @@
 
 (defn attendance-plans-by-section-for-gig
   "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
-  [db gig-id]
-  (->> (attendance-for-gig-with-all-active-members db gig-id)
+  [db gig-id attendance-for-gig]
+  (tap> attendance-for-gig)
+  (->> attendance-for-gig
        (group-by :attendance/section)
+       debug/xxx>>
        (reduce (fn [acc [k v]]
                  (when k
                    (conj acc {:section/name k

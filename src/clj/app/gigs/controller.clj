@@ -60,32 +60,36 @@
    (d/find-by db :gig/gig-id gig-id q/gig-detail-pattern)))
 
 (defn gigs-before [db time]
-  (mapv query-result->gig
-        (d/q '[:find (pull ?e pattern)
-               :in $ ?time pattern
-               :where
-               [?e :gig/gig-id _]
-               [?e :gig/date ?date]
-               [(< ?date ?time)]] db time q/gig-pattern)))
+  (sort-by :gig/date
+           (mapv query-result->gig
+                 (d/q '[:find (pull ?e pattern)
+                        :in $ ?time pattern
+                        :where
+                        [?e :gig/gig-id _]
+                        [?e :gig/date ?date]
+                        [(< ?date ?time)]] db (t/inst time) q/gig-pattern))))
 
 (defn gigs-after [db time]
-  (mapv query-result->gig
-        (d/q '[:find (pull ?e pattern)
-               :in $ ?reference-time pattern
-               :where
-               [?e :gig/gig-id _]
-               [?e :gig/date ?date]
-               [(>= ?date ?reference-time)]] db time q/gig-pattern)))
+  (sort-by :gig/date
+           (mapv query-result->gig
+                 (d/q '[:find (pull ?e pattern)
+                        :in $ ?reference-time pattern
+                        :where
+                        [?e :gig/gig-id _]
+                        [?e :gig/date ?date]
+                        [(>= ?date ?reference-time)]] db (t/inst time) q/gig-pattern))))
 
 (defn gigs-between [db start end]
-  (mapv query-result->gig
-        (d/q '[:find (pull ?e pattern)
-               :in $ ?ref-start ?ref-end pattern
-               :where
-               [?e :gig/gig-id _]
-               [?e :gig/date ?date]
-               [(>= ?date ?ref-start)]
-               [(<= ?date ?ref-end)]] db start end q/gig-pattern)))
+  (sort-by :gig/date
+           (mapv query-result->gig
+                 (d/q '[:find (pull ?e pattern)
+                        :in $ ?ref-start ?ref-end pattern
+                        :where
+                        [?e :gig/gig-id _]
+                        [?e :gig/date ?date]
+                        [(>= ?date ?ref-start)]
+                        [(<= ?date ?ref-end)]] db
+                      (t/inst start) (t/inst end) q/gig-pattern))))
 
 (defn gigs-future [db]
   (gigs-after db (t/at (t/date) (t/midnight))))
@@ -97,6 +101,9 @@
   (let [now (t/at (t/date) (t/midnight))
         then (t/<< now (t/new-duration 14 :days))]
     (gigs-between db then now)))
+
+(defn gig-archived? [gig]
+  (t/< (:gig/date gig) (t/<< (t/at (t/date) (t/midnight)) (t/new-duration 14 :days))))
 
 (defn query-result->play
   [[play]]

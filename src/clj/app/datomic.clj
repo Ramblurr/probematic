@@ -74,6 +74,19 @@
   [db attr attr-val pattern]
   (ffirst (find-all-by db attr attr-val pattern)))
 
+(defn match-by
+  "Returns the unique entity identified by attr and matching val-pattern"
+  [db attr val-pattern pattern]
+  (ffirst
+   (d/q '[:find (pull ?e pattern)
+          :in $ ?attr ?match pattern
+          :where
+          [(str "(?i)" ?match) ?matcher]
+          [(re-pattern ?matcher) ?regex]
+          [(re-find ?regex ?aname)]
+          [?e ?attr ?aname]]
+        db attr val-pattern pattern)))
+
 (def entity-ids [:gig/gig-id
                  :song/song-id
                  :insurance.policy/policy-id
@@ -104,11 +117,16 @@
     (require '[integrant.repl.state :as state])
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db (datomic/db conn)))         ;; rcf
+    (def db (datomic/db conn))) ;; rcf
 
   (d/transact conn {:tx-data (-> (io/resource "seeds.edn") slurp edn/read-string)})
 
   (d/transact conn {:tx-data  [{:db/ident :attendance/motivation
                                 :db/doc "The member-added motivation statement"
                                 :db/valueType :db.type/keyword
-                                :db/cardinality :db.cardinality/one}]}))
+                                :db/cardinality :db.cardinality/one}]})
+  (d/transact conn {:tx-data [{:section/name "dance" :section/default? false}
+                              {:section/name "melodica" :section/default? false}
+                              {:section/name "cabaret" :section/default? false}
+                              {:section/name "violin" :section/default? false}
+                              {:section/name "horn" :section/default? false}]}))
