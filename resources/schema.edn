@@ -160,6 +160,11 @@
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :gig/gigo-plan-archive
+    :db/doc "The textual representation of the plans from archived gigs imported from gigo"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
 ;;;; Comments
 
    {:db/ident :comment/comment-id

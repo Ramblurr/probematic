@@ -26,6 +26,11 @@
  {:section/name "sax tenor" :section/default? false}
  {:section/name "trombone/bombardino" :section/default? false}
  {:section/name "trumpet" :section/default? false}
+ {:section/name "dance" :section/default? false}
+ {:section/name "melodica" :section/default? false}
+ {:section/name "cabaret" :section/default? false}
+ {:section/name "violin" :section/default? false}
+ {:section/name "horn" :section/default? false}
  {:section/name "No Section" :section/default? true}
  {:db/id "blech" :instrument.category/name "Blech, Sax, Elektrisch" :instrument.category/code "1" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f07068219"}
  {:db/id "holz" :instrument.category/name "Holz" :instrument.category/code "2" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f0706821a"}
