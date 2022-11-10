@@ -26,7 +26,9 @@
                        args#))
      args#))
 
-(defmacro debug->> [& fns]
+(defmacro debug->>
+  "Insert into a ->> thread to tap the current value"
+  [& fns]
   `(->> ~@(interleave fns (repeat 'debug*))))
 
 (defn ttap>

@@ -290,6 +290,16 @@
      [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
      [:div {:class "col-span-1 "} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance))]]))
 
+(defn gig-attendance-person-archived [{:keys [db] :as req} idx attendance]
+  (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
+    [:div {:class "grid grid-cols grid-cols-5"}
+     [:div {:class "col-span-2 align-middle"}
+      [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
+       (render/member-nick member)]]
+     [:div {:class "col-span-1"} (:attendance/plan attendance)]
+     [:div {:class "col-span-1"} (:attendance/motivation attendance)]
+     [:div {:class "col-span-1 "} (:attendance/comment attendance)]]))
+
 (ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx section]
   [:div {:id id :class (render/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
                                   (when (= 0 (mod idx 2))
@@ -298,6 +308,15 @@
    [:div {:class "col-span-1 font-bold"} (:section/name section)]
    [:div {:class "col-span-2"}
     (rt/map-indexed gig-attendance-person req (:members section))]])
+
+(ctmx/defcomponent ^:endpoint gig-attendance-archived [{:keys [db] :as req} idx section]
+  [:div {:id id :class (render/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
+                                  (when (= 0 (mod idx 2))
+                                    "bg-gray-100"))}
+
+   [:div {:class "col-span-1 font-bold"} (:section/name section)]
+   [:div {:class "col-span-2"}
+    (rt/map-indexed gig-attendance-person-archived req (:members section))]])
 
 (defn gig-comment-li [comment]
   (let [{:comment/keys [body author created-at]} comment]
@@ -318,8 +337,10 @@
 
 (defn comment-list [tr comments]
   [:div {:class "px-4 py-6 sm:px-6"}
-   [:ul {:role "list", :class "space-y-8"}
-    (map gig-comment-li comments)]])
+   (if (empty? comments)
+     (tr [:gig/no-comments])
+     [:ul {:role "list", :class "space-y-8"}
+      (map gig-comment-li comments)])])
 
 (defn comment-header [tr]
   [:div {:class "px-4 py-5 sm:px-6"}
@@ -341,19 +362,21 @@
        [:button {:type "submit", :class "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}
         (tr [:action/comment])]]]]]])
 
-(defn comment-section [id endpoint tr comments]
+(defn comment-section [archived? id endpoint tr comments]
   [:div {:id id :class "divide-y divide-gray-200"}
    (comment-header tr)
    (comment-list tr comments)
-   (comment-input (str "#" id) tr endpoint)])
+   (when-not archived?
+     (comment-input (str "#" id) endpoint tr))])
 
 (ctmx/defcomponent ^:endpoint gigs-detail-page-comment [{:keys [db] :as req} gig]
   (let [comp-name (util/comp-namer #'gigs-detail-page-comment)
+        archived? (controller/gig-archived? gig)
         tr (i18n/tr-from-req req)
         {:gig/keys [comments]} (cond (util/post? req)  (controller/post-comment! req)
                                      :else gig)]
 
-    (comment-section id tr (comp-name) comments)))
+    (comment-section archived? id (comp-name) tr comments)))
 
 (ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req}]
   (let [{:gig/keys [gig-id title date end-date status
@@ -361,19 +384,15 @@
                     outfit description location setlist leader post-gig-plans
                     more-details] :as gig} (:gig req)
 
-        attendances-by-section (if (controller/gig-archived? gig)
+        archived? (controller/gig-archived? gig)
+        attendances-by-section (if archived?
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig db gig-id))
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id)))]
-    (tap> attendances-by-section)
     [:div
      (render/page-header :title (list  title " " (ui/gig-status-icon status))
 
                          :subtitle (ui/datetime date)
-                         :buttons (list  (render/button :label "Comment"
-                                                        :priority :white
-                                                        :centered? true
-                                                        :attr {:href "/songs/new"})
-                                         (when (t/>= (t/now) date)
+                         :buttons (list  (when-not archived?
                                            (render/button :label "Log Plays"
                                                           :tag :a
                                                           :priority :primary
@@ -422,7 +441,9 @@
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
            "Attendance"]]
          [:div {:class "border-t border-gray-200"}
-          (rt/map-indexed gig-attendance req attendances-by-section)]]]
+          (if archived?
+            (rt/map-indexed gig-attendance-archived req attendances-by-section)
+            (rt/map-indexed gig-attendance req attendances-by-section))]]]
 ;;;; Comments Section
        [:section {:aria-labelledby "notes-title"}
         [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg"}

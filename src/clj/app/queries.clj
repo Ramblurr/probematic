@@ -182,18 +182,15 @@
                     :attendance/plan :plan/unknown}) no-plan))))
 
 (defn member-nick-or-name [member]
-  (debug/xxx
-   (if (:member/nick member)
-     (:member/nick member)
-     (:member/name member))))
+  (if (:member/nick member)
+    (:member/nick member)
+    (:member/name member)))
 
 (defn attendance-plans-by-section-for-gig
   "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
   [db gig-id attendance-for-gig]
-  (tap> attendance-for-gig)
   (->> attendance-for-gig
        (group-by :attendance/section)
-       debug/xxx>>
        (reduce (fn [acc [k v]]
                  (when k
                    (conj acc {:section/name k

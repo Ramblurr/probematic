@@ -8,7 +8,8 @@
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
           :nick "Nickname"}
- :gig {:comment-placeholder "Say your piece!"}
+ :gig {:comment-placeholder "Say your piece!"
+       :no-comments "No comments."}
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"
         :past "Past"
