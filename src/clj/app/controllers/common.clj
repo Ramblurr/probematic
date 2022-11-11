@@ -1,8 +1,11 @@
 (ns app.controllers.common
   (:require
    [app.db :as db]
-
-   [ctmx.form :as form]))
+   [app.schemas :as s]
+   [ctmx.form :as form]
+   [app.util :as util]
+   [medley.core :as m]
+   [clojure.string :as str]))
 
 (defn get-conn [req]
   (-> req :system :conn))
@@ -11,6 +14,33 @@
   ([req] (-> req :form-params form/json-params-pruned))
   ([req name]
    (-> req :form-params form/json-params-pruned name)))
+
+(defn path-param [req k]
+  (-> req :path-params k))
+
+(defn no-blanks [m]
+  (m/map-vals #(if (and (string? %) (str/blank? %)) nil %) m))
+
+(defn ns-qualify-key
+  [m ns]
+  (m/map-keys #(keyword  (name ns) (name %)) m))
+
+(def excluded-request-keys
+  [:datomic-conn
+   :db
+   :system
+   :reitit.core/match
+   :muuntaja/response
+   :reitit.core/router])
+
+(defn remove-request-keys [req]
+  (apply dissoc req excluded-request-keys))
+
+(defn throw-validation-error [msg req schema value]
+  (ex-info msg {:req (remove-request-keys req)
+                :schema schema
+                :value value
+                :explain (s/explain-human schema value)}))
 
 (defn unwrap-params2
   ([req] (-> req :params form/json-params))

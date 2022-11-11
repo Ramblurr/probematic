@@ -1,95 +1,61 @@
 (ns app.gigs.controller
   (:refer-clojure :exclude [comment])
   (:require
-   [app.datomic :as d]
-   [app.queries :as q]
-   [tick.core :as t]
-   [com.yetanalytics.squuid :as sq]
-   [app.util :as util]
-   [medley.core :as m]
-   [clojure.walk :as walk]
-   [ctmx.form :as form]
    [app.controllers.common :as common]
-   [datomic.client.api :as datomic]
-   [clojure.set :as set]
+   [app.datomic :as d]
+   [app.debug :as debug]
+   [app.gigs.domain :as domain]
+   [app.queries :as q]
+   [app.schemas :as s]
+   [app.util :as util]
    [clojure.string :as str]
-   [app.debug :as debug]))
+   [com.yetanalytics.squuid :as sq]
+   [datomic.client.api :as datomic]
+   [tick.core :as t]))
 
-(def plans [:plan/definitely
-            :plan/probably
-            :plan/unknown
-            :plan/probably-not
-            :plan/definitely-not
-            :plan/not-interested])
+(def str->plan (zipmap (map name domain/plans) domain/plans))
+(def str->motivation (zipmap (map name domain/motivations) domain/motivations))
+(def str->status (zipmap (map name domain/statuses) domain/statuses))
+(def str->gig-type (zipmap (map name domain/gig-types) domain/gig-types))
 
-(def str->plan (zipmap (map name plans) plans))
-
-(def motivations [:motivation/none
-                  :motivation/very-high
-                  :motivation/high
-                  :motivation/medium
-                  :motivation/low
-                  :motivation/very-low])
-(def str->motivation (zipmap (map name motivations) motivations))
-
-(defn ->comment [comment]
-  (-> comment
-      (m/update-existing :comment/created-at t/date-time)))
-
-(defn ->gig [gig]
-  (-> gig
-      (m/update-existing :gig/call-time t/time)
-      (m/update-existing :gig/end-time t/time)
-      (m/update-existing :gig/set-time t/time)
-      (m/update-existing :gig/date t/date-time)
-      (m/update-existing :gig/end-date t/date-time)
-      (m/update-existing :gig/comments #(->> %
-                                             (map ->comment)
-                                             (sort-by :comment/created-at)))))
-
-(defn query-result->gig [[{:gig/keys [title] :as gig}]]
-  (->gig gig))
+(defn results->gigs [r]
+  (->> r
+       (mapv first)
+       (mapv domain/db->gig)
+       (sort-by :gig/date)))
 
 (defn find-all-gigs [db]
-  (sort-by :gig/date
-           (mapv query-result->gig
-                 (d/find-all db :gig/gig-id q/gig-pattern))))
+  (results->gigs (d/find-all db :gig/gig-id q/gig-pattern)))
 
 (defn retrieve-gig [db gig-id]
-  (->gig
+  (domain/db->gig
    (d/find-by db :gig/gig-id gig-id q/gig-detail-pattern)))
 
 (defn gigs-before [db time]
-  (sort-by :gig/date
-           (mapv query-result->gig
-                 (d/q '[:find (pull ?e pattern)
-                        :in $ ?time pattern
-                        :where
-                        [?e :gig/gig-id _]
-                        [?e :gig/date ?date]
-                        [(< ?date ?time)]] db (t/inst time) q/gig-pattern))))
+  (results->gigs  (d/q '[:find (pull ?e pattern)
+                         :in $ ?time pattern
+                         :where
+                         [?e :gig/gig-id _]
+                         [?e :gig/date ?date]
+                         [(< ?date ?time)]] db (t/inst time) q/gig-pattern)))
 
 (defn gigs-after [db time]
-  (sort-by :gig/date
-           (mapv query-result->gig
-                 (d/q '[:find (pull ?e pattern)
+  (results->gigs (d/q '[:find (pull ?e pattern)
                         :in $ ?reference-time pattern
                         :where
                         [?e :gig/gig-id _]
                         [?e :gig/date ?date]
-                        [(>= ?date ?reference-time)]] db (t/inst time) q/gig-pattern))))
+                        [(>= ?date ?reference-time)]] db (t/inst time) q/gig-pattern)))
 
 (defn gigs-between [db start end]
-  (sort-by :gig/date
-           (mapv query-result->gig
-                 (d/q '[:find (pull ?e pattern)
+  (results->gigs (d/q '[:find (pull ?e pattern)
                         :in $ ?ref-start ?ref-end pattern
                         :where
                         [?e :gig/gig-id _]
                         [?e :gig/date ?date]
                         [(>= ?date ?ref-start)]
                         [(<= ?date ?ref-end)]] db
-                      (t/inst start) (t/inst end) q/gig-pattern))))
+                      (t/inst start) (t/inst end) q/gig-pattern)))
 
 (defn gigs-future [db]
   (gigs-after db (t/at (t/date) (t/midnight))))
@@ -118,15 +84,12 @@
      (map :db/id)
      (d/pull-many db q/gig-pattern)
      (sort-by :gig/date)
-     (mapv ->gig))))
+     (mapv domain/db->gig))))
 
 (defn gigs-past-two-weeks [db]
   (let [now (t/at (t/date) (t/midnight))
         then (t/<< now (t/new-duration 14 :days))]
     (gigs-between db then now)))
-
-(defn gig-archived? [gig]
-  (t/< (:gig/date gig) (t/<< (t/at (t/date) (t/midnight)) (t/new-duration 14 :days))))
 
 (defn query-result->play
   [[play]]
@@ -244,12 +207,8 @@
     (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
 
 (defn transact-gig! [datomic-conn gig-txs gig-id]
-  (let [result (d/transact datomic-conn {:tx-data gig-txs})]
-    (if (d/db-ok? result)
-      {:gig (retrieve-gig (:db-after result) gig-id)}
-      (do
-        (tap> result)
-        result))))
+  (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
+    {:gig (retrieve-gig (:db-after result) gig-id)}))
 
 (defn post-comment! [{:keys [datomic-conn] :as req}]
   (let [{:keys [body]} (common/unwrap-params req)
@@ -263,6 +222,42 @@
                  [:db/add [:gig/gig-id gig-id] :gig/comments "new_comment"]]]
     (:gig
      (transact-gig! datomic-conn gig-txs gig-id))))
+
+(def UpdateGig
+  (s/schema
+   [:map
+    [:gig-id ::s/non-blank-string]
+    [:title ::s/non-blank-string]
+    [:date ::s/date]
+    [:end-date {:optional true} ::s/date]
+    [:location ::s/non-blank-string]
+    [:contact :string]
+    [:gig-type (domain/enum-from (map name domain/gig-types))]
+    [:status (domain/enum-from (map name domain/statuses))]
+    [:call-time ::s/time]
+    [:set-time {:optional true} ::s/time]
+    [:end-time {:optional true} ::s/time]
+    [:leader {:optional true} :string]
+    [:pay-deal {:optional true} :string]
+    [:outfit {:optional true} :string]
+    [:more-details {:optional true} :string]
+    [:setlist {:optional true} :string]
+    [:post-gig-plans {:optional true} :string]]))
+
+(defn update-gig! [{:keys [datomic-conn] :as req}]
+  (let [gig-id (common/path-param req :gig/gig-id)
+        params   (-> req common/unwrap-params common/no-blanks util/remove-nils (assoc :gig-id gig-id))
+        decoded  (s/decode UpdateGig params)]
+    (if (s/valid? UpdateGig decoded)
+      (let [tx (-> decoded
+                   (common/ns-qualify-key :gig)
+                   (update :gig/status str->status)
+                   (update :gig/gig-type str->gig-type)
+                   (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
+                   (domain/gig->db))]
+        (tap> {:params params :decoded decoded :tx tx :expl (s/explain-human UpdateGig decoded)})
+        (transact-gig! datomic-conn [tx] gig-id))
+      (common/throw-validation-error "Cannot update the gig. The gig data is invalid." req UpdateGig decoded))))
 
 (defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
   (let [song-id (common/ensure-uuid song-id)

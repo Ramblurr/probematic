@@ -18,7 +18,8 @@
    [clojure.string :as str]
    [tick.core :as t]
    [medley.core :as m]
-   [app.util :as util]))
+   [app.util :as util]
+   [app.insurance.controller :as controller]))
 
 (repl/disable-reload! (find-ns 'browser))
 
@@ -82,6 +83,9 @@
 
   (halt)
   (dev-extra/go)
+  (go)
+  (require '[clojure.tools.namespace.repl :refer [refresh]])
+  (refresh)
 
   (require '[datomic.dev-local :as dl])
   (dl/release-db {:system "dev" :db-name "probematic"})

@@ -195,7 +195,7 @@
       (update :calltime time-parse)
       (update :settime time-parse)
       (update :endtime time-parse)
-      (update :status {0 :status/unconfirmed 1 :status/confirmed 2 :status/cancelled})))
+      (update :status {0 :gig.status/unconfirmed 1 :gig.status/confirmed 2 :gig.status/cancelled})))
 
 (defn get-all-gigs!
   "Returns a list of gigs sorted by date ascending."

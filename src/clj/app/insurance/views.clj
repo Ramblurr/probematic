@@ -12,7 +12,8 @@
    [app.debug :as debug]
    [clojure.string :as str]
    [ctmx.rt :as rt]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.queries :as q]))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -414,7 +415,6 @@
           coverage-types (:insurance.policy/coverage-types policy)
           coverage (cond post?
                          (:coverage (controller/toggle-instrument-coverage-type! req coverage-id (-> req :params :type-id)))
-
                          delete?
                          (:policy (controller/remove-instrument-coverage! req coverage-id))
 
@@ -620,7 +620,7 @@
               "Enter details for the Instrument"]]
             [:div {:class "space-y-6 sm:space-y-5"}
 
-             (render/member-select :label "Owner" :id (path "owner-gigo-key") :members (controller/members db) :variant :left)
+             (render/member-select :label "Owner" :id (path "owner-gigo-key") :members (q/members-for-select db) :variant :left)
              (render/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
              (render/text-left :label "Instrument Name" :id (path "name"))
              (render/text-left :label "Make" :id (path "make"))
@@ -675,7 +675,7 @@
              [:dt {:class "text-sm font-medium text-gray-500"} "Owner"]
              [:dd {:class "mt-1 text-sm text-gray-900"}
               (if edit?
-                (render/member-select :variant :inline-no-label :id (path "owner-gigo-key") :members (controller/members db))
+                (render/member-select :variant :inline-no-label :id (path "owner-gigo-key") :members (q/members-for-select db))
                 (-> instrument :instrument/owner :member/name))]]
             [:div {:class "sm:col-span-1"}
              [:dt {:class "text-sm font-medium text-gray-500"} "Category"]

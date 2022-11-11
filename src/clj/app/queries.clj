@@ -106,6 +106,16 @@
                                                        :instrument.category/code
                                                        :instrument.category/name]}])
 
+(defn members-for-select
+  [db]
+  (mapv first
+        (d/find-all db :member/gigo-key  [:member/name :member/nick :member/gigo-key :member/active?])))
+
+(defn members-for-select-active
+  [db]
+  (filter :member/active?
+          (members-for-select db)))
+
 (defn insurance-policy-effective-as-of [db inst pattern]
   (->>
    (datomic/q '[:find (pull ?e pattern)

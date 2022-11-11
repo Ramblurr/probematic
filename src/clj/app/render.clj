@@ -4,16 +4,15 @@
            [java.util Locale]
            [java.io ByteArrayInputStream ByteArrayOutputStream])
   (:require
-   [clojure.string :as clojure.string]
+   [clojure.string :as str]
    [hiccup.core :as hiccup]
    [hiccup.page :as hiccup.page]
    [hiccup2.core :refer [html]]
    [medley.core :as m]
    [ctmx.render :as ctmx.render]
-   [ctmx.response :as response]
    [app.util :as util]
-   [clojure.string :as str]
-   [jsonista.core :as j]))
+   [jsonista.core :as j]
+   [tick.core :as t]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -68,7 +67,7 @@ generate output the way we want -- formatted and without sending warnings.
       ;; [:link {:rel "stylesheet" :href "https://rsms.me/inter/inter.css"}]
       [:link {:rel "stylesheet"
               :href "/css/compiled/main.css"}]]
-     [:body body]
+     [:body (ctmx.render/walk-attrs body)]
 
      [:script {:src "/js/hyperscript.org@0.9.7.js"
                :integrity "sha384-6GYN8BDHOJkkru6zcpGOUa//1mn+5iZ/MyT6mq34WFIpuOeLF52kSi721q0SsYF9"}]
@@ -80,25 +79,22 @@ generate output the way we want -- formatted and without sending warnings.
      [:script {:src "/js/helpers.js"}]
      (when js [:script {:src (str "/js" js)}])))))
 
-(defn snippet-response [body]
-  (cond
-    (not body) response/no-content
-    (map? body) body
-    :else (-> body ctmx.render/html response/html-response)))
-
 (def hx-trigger-types
   {:hx-trigger "HX-Trigger"
    :hx-trigger-after-settle "HX-Trigger-After-Settle"
    :hx-trigger-after-swap "HX-Trigger-After-Swap"})
 
-(defn trigger-response [trigger-name body {:keys [trigger-type data]
-                                           :or {trigger-type :hx-trigger}}]
-  {:status 200
-   :headers {"Content-Type" "text/html" (get hx-trigger-types trigger-type)
-             (if data
-               (j/write-value-as-string {trigger-name data})
-               trigger-name)}
-   :body (ctmx.render/html body)})
+(defn trigger-response
+  ([trigger-name body]
+   (trigger-response trigger-name body {}))
+  ([trigger-name body {:keys [trigger-type data]
+                       :or {trigger-type :hx-trigger}}]
+   {:status 200
+    :headers {"Content-Type" "text/html" (get hx-trigger-types trigger-type)
+              (if data
+                (j/write-value-as-string {trigger-name data})
+                trigger-name)}
+    :body (ctmx.render/html body)}))
 
 (defn partial-response [body]
   (html-response
@@ -196,12 +192,14 @@ generate output the way we want -- formatted and without sending warnings.
          (map #(merge {:name id :model value :required? required?} %))
          (map-indexed radio-button))]])
 
-(defn textarea [& {:keys [label value hint id name rows]
+(defn textarea [& {:keys [label value hint id name rows placeholder]
                    :or {rows 3}}]
   [:div {:class "sm:col-span-6"}
    [:label {:for name :class "block text-sm font-medium text-gray-700"} label]
    [:div {:class "mt-1"}
-    [:textarea {:id id :name name :rows rows :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}
+    [:textarea {:id id :name name :rows rows
+                :placeholder placeholder
+                :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}
      (when value value)]]
    (when hint
      [:p {:class "mt-2 text-sm text-gray-500"}
@@ -234,6 +232,24 @@ generate output the way we want -- formatted and without sending warnings.
 
 (defn text [& opts]
   (apply input (conj opts "text" :type)))
+
+(defn datetime [& {:keys [value name required?]}]
+  [:input {:type "datetime-local" :name name
+           :value (when value (t/date-time value))
+           :required required?
+           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
+
+(defn date [& {:keys [value name required?]}]
+  [:input {:type "date" :name name
+           :value (when value  (t/date value))
+           :required required?
+           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
+
+(defn time [& {:keys [value name required?]}]
+  [:input {:type "time" :name name
+           :value (when value (t/time value))
+           :required required?
+           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
 
 (def button-priority-classes {:secondary
                               "border-transparent bg-indigo-100 px-4 py-2  text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -284,20 +300,38 @@ generate output the way we want -- formatted and without sending warnings.
   [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
    [:div {:class "flex items-center space-x-5"}
     [:div
-     [:h1 {:class "text-2xl font-bold text-gray-900"} title]
+     [:h1 {:class "text-2xl font-bold text-gray-900 w-full"} title]
      (when subtitle
        [:p {:class "text-sm font-medium text-gray-500"}
         subtitle])]]
    [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
     buttons]])
 
-(defn member-select [& {:keys [id value label members :variant]
+(defn page-header-full [& {:keys [title subtitle buttons] :as args}]
+  [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
+   [:div {:class "flex items-center space-x-5 w-full sm:w-1/2"}
+    [:div {:class "w-full"}
+     [:h1 {:class "text-2xl font-bold text-gray-900 w-full"} title]
+     (when subtitle
+       [:p {:class "text-sm font-medium text-gray-500 w-full"}
+        subtitle])]]
+   [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
+    buttons]])
+
+(defn member-nick
+  "Renders the nickname of the member, if available, otherwise renders the name."
+  [{:member/keys [name nick]}]
+  (if (str/blank? nick)
+    name
+    nick))
+
+(defn member-select [& {:keys [id value label members variant]
                         :or {label "Member"
                              variant :inline}}]
   (let [options
-        (map (fn [m]
-               {:value (:member/gigo-key m)
-                :label (:member/name m)}) members)]
+        (->> members
+             (map (fn [m] {:value (:member/gigo-key m) :label (member-nick m)}))
+             (sort-by :label))]
     (condp = variant
       :inline (select :id id
                       :label label
@@ -530,11 +564,6 @@ generate output the way we want -- formatted and without sending warnings.
                 (str "https://forum.streetnoise.at"
                      (str/replace avatar-template "{size}" "200"))
                 "/img/default-avatar.png")}])
-
-(defn member-nick [{:member/keys [name nick]}]
-  (if (str/blank? nick)
-    name
-    nick))
 
 (defn hx-vals
   "Serializes the passed map as a json object, useful with :hx-vals. Omits nils"

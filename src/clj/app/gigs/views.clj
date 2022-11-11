@@ -1,18 +1,20 @@
 (ns app.gigs.views
   (:refer-clojure :exclude [comment])
   (:require
-   [app.views.shared :as ui]
-   [app.urls :as url]
+   [app.debug :as debug]
    [app.gigs.controller :as controller]
-   [app.util :as util]
-   [app.render :as render]
-   [app.icons :as icon]
-   [ctmx.core :as ctmx]
-   [medley.core :as m]
-   [ctmx.rt :as rt]
-   [app.queries :as q]
-   [clojure.string :as str]
+   [app.gigs.domain :as domain]
    [app.i18n :as i18n]
+   [app.icons :as icon]
+   [app.queries :as q]
+   [app.render :as render]
+   [app.urls :as url]
+   [app.util :as util]
+   [app.views.shared :as ui]
+   [clojure.string :as str]
+   [ctmx.core :as ctmx]
+   [ctmx.rt :as rt]
+   [medley.core :as m]
    [tick.core :as t]))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
@@ -87,6 +89,7 @@
   (let [was-played? (some? (:played/play-id play))
         check-id (path "intensive")
         radio-id (path "feeling")
+        _ (value "foo")
         song (:played/song play)
         song-id (:song/song-id song)
         feeling-value (util/kw->str (or (:played/rating play) :play-rating/not-played))
@@ -161,7 +164,7 @@
         (ui/gig-status-icon status)
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (when (t/>= (t/now) date)
+        (when (domain/in-future? gig)
           (render/button :tag :a :attr {:href (url/link-gig gig "/log-play/")}
                          :label "Log Plays" :priority :white-rounded :size :small))]]
 
@@ -278,7 +281,7 @@
         :value (when motivation (name motivation))
         :size :small
         :extra-attrs {:hx-trigger "change"  :hx-post (comp-name) :hx-vals (render/hx-vals {(path "gigo-key") gigo-key})}
-        :options (map (fn [m] {:label (tr [m]) :value (name m)}) controller/motivations))])))
+        :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/motivations))])))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
@@ -371,69 +374,137 @@
 
 (ctmx/defcomponent ^:endpoint gigs-detail-page-comment [{:keys [db] :as req} gig]
   (let [comp-name (util/comp-namer #'gigs-detail-page-comment)
-        archived? (controller/gig-archived? gig)
+        archived? (domain/gig-archived? gig)
         tr (i18n/tr-from-req req)
         {:gig/keys [comments]} (cond (util/post? req)  (controller/post-comment! req)
                                      :else gig)]
 
     (comment-section archived? id (comp-name) tr comments)))
 
+(ctmx/defcomponent ^:endpoint  gigs-detail-page-info [{:keys [db] :as req} gig ^:boolean edit?]
+  (let [comp-name (util/comp-namer #'gigs-detail-page-info)
+        tr (i18n/tr-from-req req)
+        archived? (domain/gig-archived? gig)
+        gig (cond (and (not archived?) (util/post? req)) (:gig (controller/update-gig! req))
+                  :else (:gig req))
+        {:gig/keys [gig-id title date end-date status gig-type
+                    contact pay-deal call-time set-time end-time
+                    outfit description location setlist leader post-gig-plans
+                    more-details]} gig]
+
+    [:form  {:id id :hx-post (comp-name)}
+     (if edit?
+       (render/page-header-full :title
+                                (render/text :label "Title" :name (path "title") :value title)
+                                :subtitle
+                                (list
+                                 (render/select
+                                  :label (tr [:gig/status])
+                                  :id (path "status")
+                                  :value (when status (name status))
+                                  :size :small
+                                  :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/statuses))
+                                 (render/select
+                                  :id (path "gig-type")
+                                  :label (tr [:gig/gig-type])
+                                  :value (when gig-type (name gig-type))
+                                  :size :small
+                                  :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
+                                 (render/checkbox :label (tr [:gig/email-about-change?]) :id (path "notify?")))
+
+                                :buttons (when-not archived?
+                                           (list
+                                            (render/button :label (tr [:action/cancel])
+                                                           :priority :white
+                                                           :centered? true
+                                                           :class "items-center justify-center"
+                                                           :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" false}})
+                                            (render/button :label (tr [:action/save])
+                                                           :priority :primary
+                                                           :centered? true
+                                                           :class "items-center justify-center"
+                                                           :attr {:hx-target (hash ".")}))))
+       (render/page-header :title (list  title " " (ui/gig-status-icon status))
+                           :subtitle (tr [gig-type])
+                           :buttons (when-not archived?
+                                      (list
+                                       (render/button :label (tr [:action/edit])
+                                                      :priority :white
+                                                      :centered? true
+                                                      :class "items-center justify-center"
+                                                      :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" true}})
+                                       (render/button :label "Log Plays"
+                                                      :tag :a
+                                                      :priority :primary
+                                                      :centered? true
+                                                      :class "items-center justify-center"
+                                                      :attr {:href (url/link-gig gig "/log-play/")})))))
+     [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
+      [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
+       [:section
+        [:div {:class "bg-white shadow sm:rounded-lg"}
+         [:div {:class "px-4 py-5 sm:px-6"}
+          [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
+           (tr [:gig/gig-info])]]
+         [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
+          [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+           (if (and (not archived?) edit?)
+             (list
+              (render/dl-item (tr [:gig/date]) (render/date :value date :name (path "date")))
+              (render/dl-item (tr [:gig/end-date]) (render/date :value date :name (path "end-date") :required? false))
+              (render/dl-item (tr [:gig/contact]) (render/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members (q/members-for-select-active db)))
+              (render/dl-item (tr [:gig/call-time]) (render/time :value call-time :name (path "call-time")))
+              (render/dl-item (tr [:gig/set-time]) (render/time :value set-time :name (path "set-time") :required? false))
+              (render/dl-item (tr [:gig/end-time]) (render/time :value end-time :name (path "end-time") :required? false))
+              (render/dl-item (tr [:gig/location]) (render/text :value location :name (path "location")))
+              (render/dl-item (tr [:gig/outfit]) (render/text :value outfit :name (path "outfit") :required? false))
+              (render/dl-item (tr [:gig/pay-deal]) (render/text :value pay-deal :name (path "pay-deal") :required? false))
+              (render/dl-item (tr [:gig/leader]) (render/text :label "" :value leader :name (path "leader") :required? false))
+              (render/dl-item (tr [:gig/post-gig-plans]) (render/text :value post-gig-plans :name (path "post-gig-plans") :required? false) "sm:col-span-2")
+              (render/dl-item (tr [:gig/more-details]) (render/textarea :value more-details :name (path "more-details") :required? false :placeholder (tr [:gig/more-details-placeholder])) "sm:col-span-3")
+              (render/dl-item (tr [:gig/setlist]) (render/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3")
+              (render/dl-item (tr [:gig/description]) (render/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
+              ;;
+              )
+             (list
+
+              (render/dl-item (tr [:gig/date])
+                              (ui/datetime date)
+                              (when end-date
+                                [:span " " (ui/datetime end-date)]))
+              (render/dl-item (tr [:gig/location]) location)
+              (render/dl-item (tr [:gig/contact]) (render/member-nick contact))
+              (render/dl-item (tr [:gig/call-time]) (ui/time call-time))
+              (render/dl-item (tr [:gig/set-time]) (ui/time set-time))
+              (render/dl-item (tr [:gig/end-time]) (ui/time end-time))
+              (when leader
+                (render/dl-item (tr [:gig/leader]) leader))
+              (when pay-deal
+                (render/dl-item (tr [:gig/pay-deal]) pay-deal))
+              (when outfit
+                (render/dl-item (tr [:gig/outfit]) outfit))
+              (when more-details
+                (render/dl-item (tr [:gig/more-details]) more-details "sm:col-span-3"))
+              (when setlist
+                (render/dl-item (tr [:gig/setlist]) (interpose [:br] (str/split-lines setlist)) "sm:col-span-3"))
+              (when post-gig-plans
+                (render/dl-item (tr [:gig/post-gig-plans]) post-gig-plans "sm:col-span-3"))))
+           ;;
+           ]]]]]]]))
 (ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req}]
   (let [{:gig/keys [gig-id title date end-date status
                     contact pay-deal call-time set-time end-time
                     outfit description location setlist leader post-gig-plans
                     more-details] :as gig} (:gig req)
 
-        archived? (controller/gig-archived? gig)
+        archived? (domain/gig-archived? gig)
         attendances-by-section (if archived?
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig db gig-id))
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id)))]
-    [:div
-     (render/page-header :title (list  title " " (ui/gig-status-icon status))
-
-                         :subtitle (ui/datetime date)
-                         :buttons (list  (when-not archived?
-                                           (render/button :label "Log Plays"
-                                                          :tag :a
-                                                          :priority :primary
-                                                          :centered? true
-                                                          :class "items-center justify-center "
-                                                          :attr {:href (url/link-gig gig "/log-play/")}))))
+    [:div {:id id}
+     (gigs-detail-page-info req gig false)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
-
-;;;; Gig Info Section
-       [:section
-        [:div {:class "bg-white shadow sm:rounded-lg"}
-         [:div {:class "px-4 py-5 sm:px-6"}
-          [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-           "Info"]]
-         [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
-          [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-           (render/dl-item "Date"
-                           (ui/datetime date)
-                           (when end-date
-                             [:span " " (ui/datetime end-date)]))
-           (render/dl-item "Location" location)
-           (render/dl-item "Contact" (:member/name contact))
-           (render/dl-item "Call Time" (ui/time call-time))
-           (render/dl-item "Set Time" (ui/time set-time))
-           (render/dl-item "End Time" (ui/time end-time))
-           (when leader
-             (render/dl-item "Leader" leader))
-           (when pay-deal
-             (render/dl-item "Pay Deal" pay-deal))
-           (when outfit
-             (render/dl-item "What to wear" outfit))
-           (when more-details
-             (render/dl-item "Details" more-details "sm:col-span-3"))
-           (when setlist
-             (render/dl-item "Set List" (interpose [:br] (str/split-lines setlist)) "sm:col-span-3"))
-           (when post-gig-plans
-             (render/dl-item "Post Gig Plans" post-gig-plans "sm:col-span-3"))
-           ;;
-           ]]]]
-
 ;;;; Attendance Section
        [:section
         [:div {:class "bg-white shadow sm:rounded-lg"}

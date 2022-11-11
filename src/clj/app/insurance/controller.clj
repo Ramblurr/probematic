@@ -351,10 +351,6 @@
 (defn retrieve-instrument [db instrument-id]
   (->instrument (d/find-by db :instrument/instrument-id instrument-id q/instrument-detail-pattern)))
 
-(defn members [db]
-  (mapv first
-        (d/find-all db :member/gigo-key  [:member/name :member/gigo-key])))
-
 (defn instrument-categories [db]
   (mapv first
         (d/find-all db :instrument.category/category-id  [:instrument.category/name :instrument.category/category-id])))

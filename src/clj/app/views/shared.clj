@@ -37,24 +37,24 @@
     (get labels is-active)]))
 
 (def gig-status-colors
-  {:status/confirmed {:text-color "text-green-800"
-                      :bg-color "bg-green-100"
-                      :label "Confirmed"}
-   :status/unconfirmed {:text-color "text-orange-800"
-                        :bg-color "bg-orange-100"
-                        :label "Unconfirmed"}
+  {:gig.status/confirmed {:text-color "text-green-800"
+                          :bg-color "bg-green-100"
+                          :label "Confirmed"}
+   :gig.status/unconfirmed {:text-color "text-orange-800"
+                            :bg-color "bg-orange-100"
+                            :label "Unconfirmed"}
 
-   :status/cancelled {:text-color "text-red-800"
-                      :bg-color "bg-red-100"
-                      :label "Cancelled"}})
+   :gig.status/cancelled {:text-color "text-red-800"
+                          :bg-color "bg-red-100"
+                          :label "Cancelled"}})
 
 (def gig-status-icons
-  {:status/confirmed {:icon icon/circle-check
-                      :color "text-green-500"}
-   :status/unconfirmed {:icon icon/circle-question
-                        :color "text-orange-500"}
-   :status/cancelled {:icon icon/circle-xmark
-                      :color "text-red-500"}})
+  {:gig.status/confirmed {:icon icon/circle-check
+                          :color "text-green-500"}
+   :gig.status/unconfirmed {:icon icon/circle-question
+                            :color "text-orange-500"}
+   :gig.status/cancelled {:icon icon/circle-xmark
+                          :color "text-red-500"}})
 
 (defn gig-status-bubble [status]
   (let [{:keys [text-color bg-color label]} (gig-status-colors status)]

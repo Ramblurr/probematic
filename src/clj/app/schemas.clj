@@ -8,8 +8,7 @@
             [malli.registry :as mr]
             [malli.transform :as mt]
             [app.schemas.domain :as domain]
-            [app.schemas.http-api :as http-api]
-            [medley.core :as medley]))
+            [app.schemas.http-api :as http-api]))
 
 (def registry
   (mr/composite-registry
@@ -31,6 +30,20 @@
 
 (defn encode [doc-type doc]
   (m/encode doc-type doc malli-opts mt/string-transformer))
+
+(defn decode [doc-type doc]
+  (m/decode doc-type doc malli-opts (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer)))
+
+(defn datomic-transformer []
+  (mt/transformer
+   {:name :datomic
+    :decoders (mt/-string-decoders)
+    :encoders (mt/-string-encoders)}))
+
+(defn decode-datomic [doc-type doc]
+  (m/decode doc-type doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
+(defn encode-datomic [doc-type doc]
+  (m/encode doc-type doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
 
 (defn schema
   ([s]

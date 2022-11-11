@@ -15,6 +15,17 @@ const isClosed = (tooltip) => tooltip.classList.contains("hidden");
 htmx.onLoad(function(content) {
   htmx.config.defaultSettleDelay = 0;
   htmx.config.defaultSwapStyle = 'outerHTML';
+
+  /*
+  htmx.on("htmx:responseError", function (event) {
+    console.log(event)
+    if(event.detail.target == "BODY") {
+      event.detail.target.innerHTML
+
+    }
+  });
+  */
+
 })
 
 

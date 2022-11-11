@@ -38,7 +38,7 @@
                                                         :json-schema/type   "string"
                                                         :json-schema/format "date-time"}}))
 
-(def InstSchema (m/-simple-schema {:type            :inst
+(def InstSchema (m/-simple-schema {:type            :app.schemas/inst
                                    :pred            inst?
                                    :type-properties {:error/message      "should be a valid inst"
                                                      :decode/string      #(some-> % t/inst)
@@ -48,7 +48,20 @@
                                                      :json-schema/type   "string"
                                                      :json-schema/format "date-time"}}))
 
-(def DateSchema (m/-simple-schema {:type            :date
+;; This is a date stored as an instant. So the time information should always be midnight and not used
+(def InstDateSchema (m/-simple-schema {:type            :app.schemas/instdate
+                                       :pred            t/date?
+                                       :type-properties {:error/message      "should be a valid inst with midnight as the time part"
+                                                         :decode/string      #(some-> % t/inst)
+                                                         :encode/string      str
+                                                         :decode/datomic     #(some-> % t/date)
+                                                         :encode/datomic     #(some-> % (t/at (t/midnight)) t/inst)
+                                                         :decode/json        #(some-> % t/date)
+                                                         :encode/json        str
+                                                         :json-schema/type   "string"
+                                                         :json-schema/format "date"}}))
+
+(def DateSchema (m/-simple-schema {:type            :app.schemas/date
                                    :pred            t/date?
                                    :type-properties {:error/message      "should be a valid date"
                                                      :decode/string      #(some-> % t/date)
@@ -57,6 +70,36 @@
                                                      :encode/json        str
                                                      :json-schema/type   "string"
                                                      :json-schema/format "date"}}))
+
+;; This schema can store time with sub-minute resolution
+(def TimeSchema (m/-simple-schema {:type            :app.schemas/time
+                                   :pred            t/time?
+                                   :type-properties {:error/message      "should be a valid time"
+                                                     :decode/string      #(some-> % t/time)
+                                                     :encode/string      str
+                                                     :decode/json        #(some-> % t/time)
+                                                     :encode/json        str
+                                                     :decode/datomic     #(some-> % t/time)
+                                                     :encode/datomic     str
+                                                     :json-schema/type   "string"
+                                                     :json-schema/format "time"}}))
+;; This schema stores time with only minute resolution
+(def MinuteTimeSchema (m/-simple-schema {:type            :app.schemas/minute-time
+                                         :pred            (fn [v]
+                                                            (and (t/time? v)
+                                                                 (= 0 (t/second v))
+                                                                 (= 0 (t/millisecond v))
+                                                                 (= 0 (t/microsecond v))
+                                                                 (= 0 (t/nanosecond v))))
+                                         :type-properties {:error/message      "should be a valid time with minute resolution"
+                                                           :decode/string      #(some-> % t/time)
+                                                           :encode/string      str
+                                                           :decode/json        #(some-> % t/time)
+                                                           :encode/json        str
+                                                           :decode/datomic     #(some-> % t/time)
+                                                           :encode/datomic     str
+                                                           :json-schema/type   "string"
+                                                           :json-schema/format "time"}}))
 (def NonBlankString
   (m/-simple-schema {:type :app.schemas/non-blank-string
                      :pred #(and (string? %) (not (string/blank? %)))
@@ -67,15 +110,35 @@
                                        :encode/json str
                                        :json-schema/type "string"
                                        :json-schema/format "string"}}))
+(def DatomicRef
+  (m/-simple-schema {:type :app.schemas/datomic-ref
+                     :pred (fn [v]
+                             (and (vector? v)
+                                  (= 2 (count v))
+                                  (keyword? (first v))
+                                  (some? (second v))))
+                     :type-properties {:error/message "should be a valid datomic ref, e.g., [:a/keyword value] "
+                                       :decode/string str
+                                       :encode/string str
+                                       :decode/datomic identity
+                                       :encode/datomic identity
+                                       :decode/json str
+                                       :encode/json str
+                                       :json-schema/type "string"
+                                       :json-schema/format "string"}}))
 
 (def common-registry
-  {:app.schemas/email-address EmailAddress
-   :app.schemas/duration      DurationSchema
-   :app.schemas/instant       InstantSchema
-   :app.schemas/inst          InstSchema
-   :app.schemas/date          DateSchema
+  {:app.schemas/email-address    EmailAddress
+   :app.schemas/duration         DurationSchema
+   :app.schemas/instant          InstantSchema
+   :app.schemas/inst             InstSchema
+   :app.schemas/instdate         InstDateSchema
+   :app.schemas/date             DateSchema
+   :app.schemas/time             TimeSchema
+   :app.schemas/minute-time      MinuteTimeSchema
    :app.schemas/non-blank-string NonBlankString
-   :app.schemas/country-alpha3 country/CountryAlpha3})
+   :app.schemas/datomic-ref      DatomicRef
+   :app.schemas/country-alpha3   country/CountryAlpha3})
 
 (def interval?
   "Represents an interval as a map with two properties,

@@ -1,4 +1,5 @@
 (ns app.datomic
+  (:refer-clojure :exclude [ref])
   (:require [datomic.client.api :as d]
             [clojure.edn :as edn]
             [clojure.java.io :as io]

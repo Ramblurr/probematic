@@ -8,8 +8,40 @@
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
           :nick "Nickname"}
+ :gig.status {:confirmed "Confirmed!"
+              :unconfirmed "Unconfirmed"
+              :cancelled "Cancelled"}
+ :gig.type {:probe "Probe"
+            :extra-probe "Extra Probe"
+            :meeting "Meeting"
+            :gig "Gig"}
+
  :gig {:comment-placeholder "Say your piece!"
-       :no-comments "No comments."}
+       :no-comments "No comments."
+       :title "Title"
+       :contact "Contact"
+       :location "Location"
+       :date "Date"
+       :status "Status"
+       :gig-type "Type"
+       :end-date "End Date"
+       :leader "Leader"
+       :call-time "Call Time"
+       :set-time "Set Time"
+       :end-time "End Time"
+       :end-day "End Day"
+       :outfit "What To Wear"
+       :pay-deal "Pay Deal"
+       :more-details "More Details"
+       :more-details-placeholder "who? what? where? when? why?"
+       :email-about-change? "Email members about change?"
+       :email-about-new? "Email members about this new gig?"
+       :setlist "Set List"
+       :description "Public Gig Description"
+       :post-gig-plans "Post Gig Plans"
+       :gig-info "Gig Info"
+       :probe-info "Probe Info"}
+
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"
         :past "Past"

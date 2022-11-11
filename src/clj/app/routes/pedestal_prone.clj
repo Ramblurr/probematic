@@ -13,6 +13,7 @@
 (def excluded-request-keys
   [:datomic-conn
    :db
+   :system
    :reitit.core/match
    :muuntaja/response
    :reitit.core/router])
@@ -44,6 +45,8 @@
       (when-not (and skip-prone? (skip-prone? request))
         (let [wrapped-e (-> e ex-data :exception)]
           (tap> {:ex wrapped-e})
-          (assoc ctx :response
-                 (prone/exceptions-response
-                  (remove-request-keys request) wrapped-e app-namespaces)))))}))
+          (-> ctx
+              (assoc :response
+                     (prone/exceptions-response
+                      (remove-request-keys request) wrapped-e app-namespaces))
+              (assoc-in [:response :headers "HX-Retarget"] "body")))))}))
