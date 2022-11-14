@@ -224,8 +224,9 @@
      (transact-gig! datomic-conn gig-txs gig-id))))
 
 (def UpdateGig
+  "This schema describes the http post we receive when updating a gig's info"
   (s/schema
-   [:map
+   [:map {:name ::UpdateGig}
     [:gig-id ::s/non-blank-string]
     [:title ::s/non-blank-string]
     [:date ::s/date]
@@ -247,6 +248,7 @@
 (defn update-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (common/path-param req :gig/gig-id)
         params   (-> req common/unwrap-params common/no-blanks util/remove-nils (assoc :gig-id gig-id))
+        params (assoc params :date "")
         decoded  (s/decode UpdateGig params)]
     (if (s/valid? UpdateGig decoded)
       (let [tx (-> decoded
@@ -257,7 +259,7 @@
                    (domain/gig->db))]
         (tap> {:params params :decoded decoded :tx tx :expl (s/explain-human UpdateGig decoded)})
         (transact-gig! datomic-conn [tx] gig-id))
-      (common/throw-validation-error "Cannot update the gig. The gig data is invalid." req UpdateGig decoded))))
+      (s/throw-error "Cannot update the gig. The gig data is invalid." req UpdateGig decoded))))
 
 (defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
   (let [song-id (common/ensure-uuid song-id)

@@ -71,4 +71,10 @@
         :unknown "Don't Know"
         :probably-not "Probably Not"
         :definitely-not "Can't Do It"
-        :not-interested "Not Interested"}}
+        :not-interested "Not Interested"}
+ :error {:unknown-title "Something went wrong"
+         :unknown-message "Sorry about this. It's not your fault. Please contact Casey and tell him this error code:"
+         :not-found-title "Not Found"
+         :not-found-message "The thing you were looking for wasn't found. If you think it should exist, please contact and tell him this error code:"
+         :go-home "Go Home"
+         :notify "Click to notify Casey"}}

@@ -12,7 +12,9 @@
    [ctmx.render :as ctmx.render]
    [app.util :as util]
    [jsonista.core :as j]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.debug :as debug]
+   [app.i18n :as i18n]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -54,30 +56,119 @@ generate output the way we want -- formatted and without sending warnings.
    ;:body (pretty-print-html body)
    :body  body})
 
+(defn html-status-response
+  ([status-code body]
+   (html-status-response status-code {} body))
+  ([status-code extra-headers body]
+   {:status status-code
+    :headers (merge  {"Content-Type" "text/html"} extra-headers)
+                                        ;:body (pretty-print-html body)
+    :body  body}))
+
+(defn head []
+  [:head
+   [:meta {:charset "utf-8"}]
+   [:meta {:name "viewport"
+           :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
+
+      ;; [:link {:rel "stylesheet" :href "https://rsms.me/inter/inter.css"}]
+   [:link {:rel "stylesheet" :href "/css/compiled/main.css"}]])
+
+(defn body-end []
+  (list
+   [:script {:src "/js/hyperscript.org@0.9.7.js"
+             :integrity "sha384-6GYN8BDHOJkkru6zcpGOUa//1mn+5iZ/MyT6mq34WFIpuOeLF52kSi721q0SsYF9"}]
+   [:script {:src "/js/htmx.js"
+             :integrity "sha384-mrsv860ohrJ5KkqRxwXXj6OIT6sONUxOd+1kvbqW351hQd7JlfFnM0tLetA76GU0"}]
+   [:script {:src "/js/nprogress.js"}]
+   [:script {:src "/js/popperjs@2-dev.js"}]
+   [:script {:src "/js/tippy@6-dev.js"}]
+   [:script {:src "/js/helpers.js"}]))
+
 (defn html5-response
   ([body] (html5-response nil body))
   ([js body]
    (html-response
     (html5-safe
-     [:head
-      [:meta {:charset "utf-8"}]
-      [:meta {:name "viewport"
-              :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
-
-      ;; [:link {:rel "stylesheet" :href "https://rsms.me/inter/inter.css"}]
-      [:link {:rel "stylesheet"
-              :href "/css/compiled/main.css"}]]
-     [:body (ctmx.render/walk-attrs body)]
-
-     [:script {:src "/js/hyperscript.org@0.9.7.js"
-               :integrity "sha384-6GYN8BDHOJkkru6zcpGOUa//1mn+5iZ/MyT6mq34WFIpuOeLF52kSi721q0SsYF9"}]
-     [:script {:src "/js/htmx.js"
-               :integrity "sha384-mrsv860ohrJ5KkqRxwXXj6OIT6sONUxOd+1kvbqW351hQd7JlfFnM0tLetA76GU0"}]
-     [:script {:src "/js/nprogress.js"}]
-     [:script {:src "/js/popperjs@2-dev.js"}]
-     [:script {:src "/js/tippy@6-dev.js"}]
-     [:script {:src "/js/helpers.js"}]
+     (head)
+     [:body (ctmx.render/walk-attrs body)
+      (body-end)]
      (when js [:script {:src (str "/js" js)}])))))
+
+(defn not-found-error-body [req]
+  (let [tr (i18n/tr-from-req req)
+        human-id (:human-id req)]
+    [:body {:class "h-full"}
+     [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
+      [:div {:class "mx-auto max-w-max"}
+       [:main {:class "sm:flex"}
+        [:p {:class "text-4xl font-bold tracking-tight text-indigo-600 sm:text-5xl"} "404"]
+        [:div {:class "sm:ml-6"}
+         [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
+          [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
+           (tr [:error/not-found-title])]
+          [:p {:class "mt-1 text-base text-gray-500"}
+           (tr [:error/not-found-message] [human-id])]]]]]
+      [:div {:class "flex items-center justify-center mt-10"}
+       [:img {:src "/img/tuba-robot-boat-1000.jpg" :class "rounded-md w-full sm:w-1/2"}]]
+      [:div {:class "mx-auto max-w-max"}
+       [:main {:class "sm:flex"}
+        [:div {:class "sm:ml-6"}
+         [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
+          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+           (tr [:error/go-home])]
+          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+           (tr [:error/notify])]]]]]]
+     (body-end)]))
+(defn unknown-error-body [req]
+  (let [tr (i18n/tr-from-req req)
+        human-id (:human-id req)]
+    [:body {:class "h-full"}
+     [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
+      [:div {:class "mx-auto max-w-max"}
+       [:main {:class "sm:flex"}
+
+        [:div {:class "sm:ml-6"}
+         [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
+          [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
+           (tr [:error/unknown-title])]
+          [:p {:class "mt-1 text-base text-gray-500"}
+           (tr [:error/unknown-message])]
+
+          [:p {:class "mt-1 text-base text-gray-500"}
+           "Error Code: "
+           [:span {:class "mt-1 text-base text-red-500 font-mono bg-red-100"}
+            human-id]]]]]]
+      [:div {:class "flex items-center justify-center mt-10"}
+       [:img {:src "/img/tuba-robot-boat-1000.jpg" :class "rounded-md w-full sm:w-1/2"}]]
+      [:div {:class "mx-auto max-w-max"}
+       [:main {:class "sm:flex"}
+        [:div {:class "sm:ml-6"}
+         [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
+          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+           (tr [:error/go-home])]
+          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+           (tr [:error/notify])]]]]]]
+     (body-end)]))
+
+(defn error-page-response-fragment [cause req status]
+  (html-status-response (or status 404)
+                        {"HX-Retarget" "body"}
+                        (str (html (unknown-error-body req)))))
+
+(defn error-page-response [cause req status]
+  (html-status-response (or status 404)
+                        (html5-safe
+                         [:head
+                          [:meta {:charset "utf-8"}]
+                          [:meta {:name "viewport"
+                                  :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
+                          [:link {:rel "stylesheet" :href "/css/compiled/main.css"}]]
+                         (ctmx.render/walk-attrs
+                          (condp = status
+                            404
+                            (not-found-error-body req)
+                            (unknown-error-body req))))))
 
 (def hx-trigger-types
   {:hx-trigger "HX-Trigger"
@@ -95,10 +186,6 @@ generate output the way we want -- formatted and without sending warnings.
                 (j/write-value-as-string {trigger-name data})
                 trigger-name)}
     :body (ctmx.render/html body)}))
-
-(defn partial-response [body]
-  (html-response
-   (hiccup/html body)))
 
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))

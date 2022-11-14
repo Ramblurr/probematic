@@ -25,23 +25,6 @@
   [m ns]
   (m/map-keys #(keyword  (name ns) (name %)) m))
 
-(def excluded-request-keys
-  [:datomic-conn
-   :db
-   :system
-   :reitit.core/match
-   :muuntaja/response
-   :reitit.core/router])
-
-(defn remove-request-keys [req]
-  (apply dissoc req excluded-request-keys))
-
-(defn throw-validation-error [msg req schema value]
-  (ex-info msg {:req (remove-request-keys req)
-                :schema schema
-                :value value
-                :explain (s/explain-human schema value)}))
-
 (defn unwrap-params2
   ([req] (-> req :params form/json-params))
   ([req name]

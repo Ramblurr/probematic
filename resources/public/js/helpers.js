@@ -15,18 +15,25 @@ const isClosed = (tooltip) => tooltip.classList.contains("hidden");
 htmx.onLoad(function(content) {
   htmx.config.defaultSettleDelay = 0;
   htmx.config.defaultSwapStyle = 'outerHTML';
-
-  /*
-  htmx.on("htmx:responseError", function (event) {
-    console.log(event)
-    if(event.detail.target == "BODY") {
-      event.detail.target.innerHTML
-
-    }
-  });
-  */
-
 })
+
+document.body.addEventListener('htmx:beforeSwap', function(evt) {
+    console.log(evt)
+    if(evt.detail.xhr.status === 404){
+        // alert the user when a 404 occurs (maybe use a nicer mechanism than alert())
+        alert("Error: Could Not Find Resource TODO make this nicer");
+    } else if(evt.detail.xhr.status === 400){
+      evt.detail.shouldSwap = true;
+    } else if(evt.detail.xhr.status === 422){
+        // allow 422 responses to swap as we are using this as a signal that
+        // a form was submitted with bad data and want to rerender with the
+        // errors
+        //
+        // set isError to false to avoid error logging in console
+        evt.detail.shouldSwap = true;
+        evt.detail.isError = false;
+    }
+});
 
 
 document.body.addEventListener("htmx:beforeRequest", function(evt) {

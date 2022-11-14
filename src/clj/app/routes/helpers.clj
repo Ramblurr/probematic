@@ -1,9 +1,15 @@
 (ns app.routes.helpers
   (:require
-   [app.schemas :as schemas]
-   [app.routes.pedestal-prone :as pedestal-prone]
+   [app.rand-human-id :as human-id]
+   [app.config :as config]
+   [app.routes.errors :as errors]
    [app.i18n :as i18n]
+   [app.render :as render]
+   [app.routes.pedestal-prone :as pedestal-prone]
+   [app.schemas :as schemas]
+   [datomic.client.api :as d]
    [io.pedestal.http.body-params :as body-params]
+   [io.pedestal.http.ring-middlewares :as middlewares]
    [io.pedestal.http.secure-headers :as secure-headers]
    [io.pedestal.interceptor.error :as error-int]
    [luminus-transit.time :as time]
@@ -14,10 +20,8 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [ring.middleware.keyword-params :as keyword-params]
-   [io.pedestal.http.ring-middlewares :as middlewares]
    [reitit.swagger :as swagger]
-   [datomic.client.api :as d]))
+   [ring.middleware.keyword-params :as keyword-params]))
 
 (derive ::error ::exception)
 (derive ::failure ::exception)
@@ -53,13 +57,13 @@
                             [{:exception-type :java.lang.ArithmeticException}]
                             (assoc ctx :response {:status 400 :body "A bad one"})
 
-                            [{:exception-type :java.lang.ArithmeticException}]
-                            (assoc ctx :response {:status 400 :body "A bad one"})
-
                             [{:exception-type :clojure.lang.ExceptionInfo :cognitect.anomalies/category :cognitect.anomalies/incorrect}]
-                            (assoc ctx :response {:status 404 :body "404 not found"})
+                            (assoc ctx :response (errors/datomic-not-found-error (:request ctx) ex))
+
+                            [{:exception-type :clojure.lang.ExceptionInfo :app/error-type :app.error.type/validation}]
+                            (assoc ctx :response (errors/validation-error (:request ctx) ex))
                             :else
-                            (assoc ctx :io.pedestal.interceptor.chain/error ex)))
+                            (assoc ctx :response (errors/unknown-error (:request ctx) ex))))
 
 (def htmx-interceptor
   {:name ::htmx
@@ -79,30 +83,25 @@
 (defn system-interceptor
   "Install the integrant system map into the request under the :system key"
   [system]
-  {:name ::system
+  {:name ::system-interceptor
    :enter (fn [ctx]
             (assoc-in ctx [:request :system] system))})
 
-(def exception-interceptor
-  (exception/exception-interceptor
-   (merge
-    exception/default-handlers
-    {;; ex-data with :type ::error
-     ::error             (partial handler "error")
+(defn dev-mode-interceptor
+  "Tell the request if we are in dev mode or not"
+  [system]
+  {:name ::dev-mode-interceptor
+   :enter (fn [ctx]
+            (assoc-in ctx [:request :dev?] (config/dev-mode? (-> system :env))))})
 
-     ;; ex-data with ::exception or ::failure
-     ::exception         (partial handler "exception")
-
-     ;; override the default handler
-     ::exception/default (partial handler "default")
-
-     ;; print stack-traces for all exceptions
-     ::exception/wrap    (fn [handler e request]
-                           (.printStackTrace e)
-                           (handler e request))})))
+(def human-id-interceptor
+  "Add a human readable id for the request"
+  {:name ::human-id-interceptor
+   :enter (fn [ctx]
+            (assoc-in ctx [:request :human-id] (human-id/human-id)))})
 
 (def tap-interceptor
-  {:name :tap-interceptr
+  {:name :tap-interceptor
    :enter (fn [req]
             (tap> (-> req :request))
             (tap> (-> req :request :params))
@@ -161,6 +160,9 @@
                 ctx))}))
 
 (def default-interceptors [swagger/swagger-feature
+                           human-id-interceptor
+                           dev-mode-interceptor
+                           service-error-handler
                            middlewares/cookies
                            ;; query-params & form-params
                            (parameters/parameters-interceptor)

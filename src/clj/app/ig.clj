@@ -1,27 +1,27 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
-
    [app.config :as config]
+   [app.datomic :as datomic]
+   [app.db :as db]
+   [app.debug :as debug]
+   [app.i18n :as i18n]
    [app.jobs :as jobs]
    [app.routes :as routes]
-   [app.db :as db]
-   [app.datomic :as datomic]
    [app.routes.helpers :as route.helpers]
    [clojure.tools.logging :as log]
+   [ctmx.render :as ctmx.render]
+   [datomic.client.api :as d]
+   [datomic.dev-local :as dl]
+   [hiccup2.core :as hiccup2]
    [integrant.core :as ig]
    [io.pedestal.http :as server]
    [ol.jobs.ig]
    [ol.system :as system]
-   [datomic.client.api :as d]
-   [datomic.dev-local :as dl]
-   [taoensso.tempura :as tempura]
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]
-   [ctmx.render :as ctmx.render]
-   [hiccup2.core :as hiccup2]
-   [app.debug :as debug]
-   [app.i18n :as i18n]))
+   [sentry-clj.core :as sentry]
+   [taoensso.tempura :as tempura]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -61,7 +61,7 @@
             (pedestal/routing-interceptor
              (http/router routes)
              handler))
-      (config/dev-mode? env) route.helpers/prone-exception-interceptor
+      ;; (config/dev-mode? env) route.helpers/prone-exception-interceptor
       (config/dev-mode? env) (server/dev-interceptors)
       true (server/create-server)
       true (server/start))))
@@ -94,3 +94,8 @@
 (defmethod ig/init-key ::i18n-langs
   [_ _]
   (i18n/read-langs))
+
+(defmethod ig/init-key ::sentry
+  [_ {:keys [env]}]
+  (sentry/init! (-> env :sentry :dsn)
+                {:environment (-> env :profile)}))

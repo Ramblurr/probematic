@@ -29,7 +29,7 @@
 
 (def GigEntity
   (s/schema
-   [:map
+   [:map {:name :app.entity/gig}
     [:gig/gig-id ::s/non-blank-string]
     [:gig/title {:max 4096} ::s/non-blank-string]
     [:gig/status (enum-from statuses)]

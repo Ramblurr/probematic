@@ -19,20 +19,47 @@
 
 (def malli-opts {:registry registry})
 
-(defn valid? [doc-type doc]
-  (m/validate doc-type doc malli-opts))
+(defn schema->map
+  "Converts a malli schema into a plain data map"
+  [s]
+  (m/walk
+   s
+   (fn [schema _ children _]
+     (-> (m/properties schema malli-opts)
+         (assoc :malli/type (m/type schema))
+         (cond-> (seq children) (assoc :malli/children children))))
+   malli-opts))
 
-(defn explain [doc-type doc]
-  (m/explain doc-type doc malli-opts))
+(defn schema-name [schema]
+  (get (schema->map schema) :name "unknown schema name. it is missing :name"))
 
-(defn explain-human [doc-type doc]
-  (me/humanize (m/explain doc-type doc malli-opts)))
+(defn valid? [schema value]
+  (m/validate schema value malli-opts))
 
-(defn encode [doc-type doc]
-  (m/encode doc-type doc malli-opts mt/string-transformer))
+(defn explain [schema value]
+  (m/explain schema value malli-opts))
 
-(defn decode [doc-type doc]
-  (m/decode doc-type doc malli-opts (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer)))
+(defn explain-human [schema value]
+  (me/humanize (m/explain schema value malli-opts)))
+
+(defn encode [schema value]
+  (m/encode schema value malli-opts mt/string-transformer))
+
+(defn throw-error [msg cause schema value]
+  (throw
+   (ex-info msg
+            {:app/error-type :app.error.type/validation
+             :schema (schema->map schema)
+             :schema-name (schema-name schema)
+             :value value
+             :explain (explain-human schema value)}
+            cause)))
+
+(defn decode [schema value]
+  (try
+    (m/decode schema value malli-opts (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer))
+    (catch Exception e
+      (throw-error "Decode failed" e schema value))))
 
 (defn datomic-transformer []
   (mt/transformer
@@ -40,10 +67,10 @@
     :decoders (mt/-string-decoders)
     :encoders (mt/-string-encoders)}))
 
-(defn decode-datomic [doc-type doc]
-  (m/decode doc-type doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
-(defn encode-datomic [doc-type doc]
-  (m/encode doc-type doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
+(defn decode-datomic [schema doc]
+  (m/decode schema doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
+(defn encode-datomic [schema doc]
+  (m/encode schema doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
 
 (defn schema
   ([s]

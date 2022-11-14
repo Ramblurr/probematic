@@ -1,5 +1,6 @@
 (ns app.util
   (:require
+   [clojure.walk :as walk]
    [medley.core :as m]
    [ctmx.form :as form]
    [clojure.string :as str]))
@@ -88,3 +89,30 @@
     (str (namespace kw)
          "/"
          (name kw))))
+
+(defn remove-deep
+  "Walk data and in every ecountered map, dissoc all key/values in key-set"
+  [key-set data]
+  (walk/prewalk (fn [node] (if (map? node)
+                             (apply dissoc node key-set)
+                             node))
+                data))
+
+(defn replace-values [m key-set new-value]
+  (m/map-kv (fn [k v]
+              (if (contains? key-set k)
+                [k new-value]
+                [k v])) m))
+
+(defn replace-deep
+  "Walk data and in every ecountered map, replace the value of all keys in key-set with redaction-value"
+  [key-set redaction-value data]
+  (walk/prewalk (fn [node] (if (map? node)
+                             (replace-values node key-set redaction-value)
+                             node))
+                data))
+(comment
+  (replace-values {:foo 1 :password "hunter2"} #{:password} "<REDACTED>")
+  (replace-deep #{:password} "<REDACTED>" [{:user {:name "alice" :password "hunter2"}}])
+  ;;
+  )
