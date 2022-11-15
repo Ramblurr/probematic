@@ -53,9 +53,10 @@
     (tap> start-msg)
     (log/info start-msg)
     (cond-> service
+      true (assoc :io.pedestal.http/container-options {:io.pedestal.http.jetty/http-configuration (route.helpers/http-configuration 8000)})
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
-      true server/default-interceptors
+      true (route.helpers/with-default-interceptors system)
                  ;; swap in the reitit router
       true (pedestal/replace-last-interceptor
             (pedestal/routing-interceptor

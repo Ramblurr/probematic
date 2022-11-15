@@ -20,10 +20,10 @@
   (let [session-interceptor (auth/session-interceptor system)]
     ["" {:coercion     route.helpers/default-coercion
          :muuntaja     route.helpers/formats-instance
-         :interceptors (conj  route.helpers/default-interceptors
+         :interceptors (conj  (route.helpers/default-interceptors system)
                               (route.helpers/system-interceptor system)
                               (route.helpers/datomic-interceptor system)
-                              (route.helpers/i18n-interceptor system))}
+                              (route.helpers/current-user-interceptor system))}
 
      (members-routes)
      (home-routes)
@@ -40,8 +40,8 @@
      ["/api" {:coercion     route.helpers/default-coercion
               :muuntaja     route.helpers/formats-instance
               :swagger      {:id ::api}
-              :interceptors (conj route.helpers/default-interceptors
-                                  auth/roles-authorization-interceptor)}
+              ;; :interceptors auth/roles-authorization-interceptor
+              }
       ["/swagger.json"
        {:get {:no-doc  true
               :swagger {:info {:title "app API"}}

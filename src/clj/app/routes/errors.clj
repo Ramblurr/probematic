@@ -13,11 +13,13 @@
     :db-after
     :system
     :env
+    :claims
+    :cookies
     :reitit.core/match
     :muuntaja/response
     :reitit.core/router})
 
-(def redact-keys #{:password :pass})
+(def redact-keys #{:password :pass "x-forwarded-access-token" "cookie"})
 
 (defn sanitize [v]
   (->> v
@@ -57,6 +59,12 @@
                        :extra {:human-id (:human-id req)}
                        :request (-> req sanitize format-req)
                        :throwable (unwrap-ex ex)})))
+
+(defn unauthorized-error [req ex]
+  (send-sentry! req ex)
+  (if (:htmx? req)
+    (render/error-page-response-fragment ex req 401)
+    (render/error-page-response ex req 401)))
 
 (defn validation-error [req ex]
   (send-sentry! req ex)

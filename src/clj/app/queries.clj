@@ -16,7 +16,7 @@
                          :attendance/motivation
                          :attendance/updated])
 
-(def member-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
+(def member-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email :member/avatar-template
                      {:member/section [:section/name]}])
 
 (def member-detail-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
@@ -217,6 +217,9 @@
                 [?section :section/name ?section-name]]
               db gigo-key)
    ffirst))
+
+(defn member-by-email [db email]
+  (d/find-by db :member/email email member-pattern))
 
 (comment
   (do
