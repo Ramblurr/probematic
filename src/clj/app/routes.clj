@@ -22,6 +22,7 @@
        :interceptors (conj  (route.helpers/default-interceptors system)
                             (route.helpers/system-interceptor system)
                             (route.helpers/datomic-interceptor system)
+                            auth/require-authenticated-user
                             (route.helpers/current-user-interceptor system))}
 
    (members-routes)

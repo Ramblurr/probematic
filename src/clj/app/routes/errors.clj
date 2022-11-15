@@ -54,11 +54,12 @@
   ([req ex]
    (send-sentry! (or (ex-message ex) "no message") req ex))
   ([msg req ex]
-   (tap> "Sentry!")
-   (sentry/send-event {:message msg
-                       :extra {:human-id (:human-id req)}
-                       :request (-> req sanitize format-req)
-                       :throwable (unwrap-ex ex)})))
+   (let [event-data {:message msg
+                     :extra {:human-id (:human-id req)}
+                     :request (-> req sanitize format-req)
+                     :throwable (unwrap-ex ex)}]
+     (tap> event-data)
+     (sentry/send-event event-data))))
 
 (defn unauthorized-error [req ex]
   (send-sentry! req ex)

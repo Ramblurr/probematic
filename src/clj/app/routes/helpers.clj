@@ -1,13 +1,13 @@
 (ns app.routes.helpers
   (:import (org.eclipse.jetty.server HttpConfiguration))
   (:require
-   [clojure.java.io :as io]
    [app.rand-human-id :as human-id]
    [app.config :as config]
    [app.routes.errors :as errors]
    [app.i18n :as i18n]
    [app.routes.pedestal-prone :as pedestal-prone]
    [app.schemas :as schemas]
+   [app.auth :as auth]
    [datomic.client.api :as d]
    [io.pedestal.http.ring-middlewares :as middlewares]
    [io.pedestal.interceptor.error :as error-int]
@@ -19,53 +19,13 @@
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
    [reitit.swagger :as swagger]
-   [buddy.sign.jwt :as jwt]
-   [buddy.core.keys :as buddy-keys]
    [ring.middleware.keyword-params :as keyword-params]
    [app.queries :as q]))
 
-(defn auth-interceptor
-  "This function returns an interceptor that will extract and verify the JWT in the
-  x-forwarded-access-token header. It will be verified with the certificate contained in the certificate-filename.
-
-  This function will add a :app.auth/session key to the request map containing:
-    :session/username - the preferred username of the authenticated user
-    :session/email - the email of the user
-    :session/groups - a set of groups in the claims (if included)
-    :session/roles - a set of roles that the user has, filtered to only include those in known-roles
-
-  Additionally the entire parsed JWT will be stored in the context under :app.auth/claims.
-
-  If the JWT is invalid or not present, then an exception will be thrown with
-  the key value :app/error-type :app.error.type/authentication-failure.
-  "
-  [certificate-filename known-roles]
-  (let [certificate (buddy-keys/str->public-key (-> (io/resource certificate-filename) slurp))]
-    {:name ::auth-interceptor
-     :enter (fn [ctx]
-              (let [headers (-> ctx :request :headers)
-                    user-email (get headers "x-forwarded-email")
-                    token (get headers "x-forwarded-access-token")]
-                (try
-                  (let [claims (jwt/unsign token certificate {:alg :rs256})
-                        session {:session/username (:preferred_username claims)
-                                 :session/email (:email claims)
-                                 :session/groups (set (:groups claims))
-                                 :session/roles (set (filter #(contains? known-roles %) (-> claims :realm_access :roles)))}]
-                    ;; (tap> {:headers headers :user-email user-email :token token :claims claims :session session})
-                    (-> ctx
-                        (assoc-in [:request :app.auth/session] session)
-                        (assoc :app.auth/claims claims)))
-                  (catch Exception e
-                    (throw
-                     (ex-info "Authentication Token Validation Failed"
-                              {:app/error-type :app.error.type/authentication-failure
-                               :user-email user-email
-                               :token token
-                               :buddy-cause (-> (ex-data e) :cause)}
-                              e))))))}))
-
-(defn current-user-interceptor [system]
+(defn current-user-interceptor
+  "Fetches the current user from the request (see app.auth/auth-interceptor),
+   looks up the member and attaches the member info to the request under :app.auth/session :session/member"
+  [system]
   {:name ::current-user-interceptor
    :enter (fn [ctx]
             (assoc-in ctx [:request :app.auth/session :session/member]
@@ -80,7 +40,9 @@
               (assoc ctx :request
                      (keyword-params/keyword-params-request request))))})
 
-(defn datomic-interceptor [system]
+(defn datomic-interceptor
+  "Attaches the datomic db and connection to the request map"
+  [system]
   {:name ::datomic--interceptor
    :enter (fn [ctx]
             (let [conn (-> system :datomic :conn)]
@@ -110,6 +72,7 @@
                             (assoc ctx :response (errors/unknown-error (:request ctx) ex))))
 
 (def htmx-interceptor
+  "Sets :htmx? to true if the request originates from htmx"
   {:name ::htmx
    :enter (fn [ctx]
             (let [request (:request ctx)
@@ -208,8 +171,8 @@
    human-id-interceptor
    (i18n-interceptor system)
    service-error-handler
-   (auth-interceptor (-> system :env :auth :cert-filename)
-                     (-> system :env :auth :known-roles))
+   (auth/auth-interceptor (-> system :env :auth :cert-filename)
+                          (-> system :env :auth :known-roles))
    dev-mode-interceptor
    middlewares/cookies
    ;; query-params & form-params

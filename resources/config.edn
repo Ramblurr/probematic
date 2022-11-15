@@ -19,7 +19,7 @@
                          :twilio-token   #ref [:secrets :twilio :twilio-token]}
  :sentry                {:dsn #ref [:secrets :sentry :dsn]}
  :auth                  {:cert-filename "keycloak-realm.crt"
-                         :known-roles   #{"admin" "Mitglieder"}}
+                         :known-roles   #{:admin :Mitglieder}}
  :ig/system             {:app.ig/profile          #profile {:prod :prod
                                                             :dev  :dev
                                                             :test :test}
