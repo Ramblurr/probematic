@@ -1,6 +1,6 @@
 import {$, listen} from "./utils.js"
 import {Dropdown, DropdownAll} from "./widgets/attendance-dropdown.js"
-import {ActionMenu} from "./widgets/action-menu.js"
+import {ActionMenu,Flyout} from "./widgets/action-menu.js"
 
 //// SETUP
 htmx.onLoad(function(content) {
@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   listen('click', '[data-action-menu-trigger]', ActionMenu);
+  listen('click', '[data-flyout-trigger]', Flyout);
 });
 
 document.addEventListener('newDropdown', function(evt) {

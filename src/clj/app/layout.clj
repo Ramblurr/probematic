@@ -6,35 +6,30 @@
    [app.auth :as auth]
    [clojure.string :as str]))
 
-(defn app-container [body]
+(defn app-container [req member body]
   [:div {:class "flex flex-col lg:pl-64"}
  ;; "<!-- Search header -->"
    [:div {:class "sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white lg:hidden"}
   ;; "<!-- Sidebar toggle, controls the 'sidebarOpen' sidebar state. -->"
-    [:button {:type "button" :class "border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"}
+    [:button {:type "button" :class "border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"
+              :data-flyout-trigger "#mobile-flyout-menu"}
      [:span {:class "sr-only"} "Open sidebar"]
    ;; "<!-- Heroicon name: outline/bars-3-center-left -->"
      [:svg {:class "h-6 w-6" :xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
       [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"}]]]
     [:div {:class "flex flex-1 justify-between px-4 sm:px-6 lg:px-8"}
-     [:div {:class "flex flex-1"}
-      [:form {:class "flex w-full md:ml-0" :action "#" :method "GET"}
-       [:label {:for "search-field" :class "sr-only"} "Search"]
-       [:div {:class "relative w-full text-gray-400 focus-within:text-gray-600"}
-        [:div {:class "pointer-events-none absolute inset-y-0 left-0 flex items-center"}
-       ;; "<!-- Heroicon name: mini/magnifying-glass -->"
-         [:svg {:class "h-5 w-5" :xmlns "http://www.w3.org/2000/svg" :viewbox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
-          [:path {:fill-rule "evenodd" :d "M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" :clip-rule "evenodd"}]]]
-        [:input {:id "search-field" :name "search-field" :class "block h-full w-full border-transparent py-2 pl-8 pr-3 text-gray-900 placeholder-gray-500 focus:border-transparent focus:placeholder-gray-400 focus:outline-none focus:ring-0 sm:text-sm" :placeholder "Search" :type "search"}]]]]
+     [:div {:class "flex flex-1"}]
      [:div {:class "flex items-center"}
     ;; "<!-- Profile dropdown -->"
       [:div {:class "relative ml-3"}
        [:div
-        [:button {:type "button" :class "flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2" :id "user-menu-button" :aria-expanded "false" :aria-haspopup "true"}
+        [:button {:type "button"
+                  :data-action-menu-trigger "#user-menu"
+                  :class "flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2" :id "user-menu-button" :aria-expanded "false" :aria-haspopup "true"}
          [:span {:class "sr-only"} "Open user menu"]
-         [:img {:class "h-8 w-8 rounded-full" :src "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}]]]
-     ;; "<!--\n              Dropdown menu, show/hide based on menu state.\n\n              Entering: \"transition ease-out duration-100\"From: \"transform opacity-0 scale-95\"To: \"transform opacity-100 scale-100\"Leaving: \"transition ease-in duration-75\"From: \"transform opacity-100 scale-100\"To: \"transform opacity-0 scale-95\"-->"
-       [:div {:class "absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
+         (ui/avatar-img member :class "h-8 w-8 rounded-full")]]
+       [:div {:id "user-menu" :data-action-menu true
+              :class "hidden absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
         [:div {:class "py-1" :role "none"}
        ;; "<!-- Active: \"bg-gray-100 text-gray-900\" Not Active: \"text-gray-700\" -->"
          [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-0"} "View profile"]
@@ -77,8 +72,20 @@
      [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-4"} "Support"]]
     [:div {:class "py-1" :role "none"}
      [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-5"} "Logout"]]]])
-
-(defn nav-item [req & {:keys [label icon href route-name]}]
+(defn secondary-navigation []
+  [:div {:class "mt-8"}
+   [:h3 {:class "px-3 text-sm font-medium text-gray-500" :id "mobile-teams-headline"} "Teams"]
+   [:div {:class "mt-1 space-y-1" :role "group" :aria-labelledby "mobile-teams-headline"}
+    [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+     [:span {:class "w-2.5 h-2.5 mr-4 bg-indigo-500 rounded-full" :aria-hidden "true"}]
+     [:span {:class "truncate"} "Engineering"]]
+    [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+     [:span {:class "w-2.5 h-2.5 mr-4 bg-green-500 rounded-full" :aria-hidden "true"}]
+     [:span {:class "truncate"} "Human Resources"]]
+    [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+     [:span {:class "w-2.5 h-2.5 mr-4 bg-yellow-500 rounded-full" :aria-hidden "true"}]
+     [:span {:class "truncate"} "Customer Success"]]]])
+(defn nav-item [req {:keys [label icon href route-name]}]
   (let [active? (= route-name (-> req :reitit.core/match :data  :app.route/name))]
     [:a {:href href
          :class
@@ -94,87 +101,46 @@
                      "text-gray-400 group-hover:text-gray-500"))})
      label]))
 
+(def navigation [{:label "Home" :icon icon/home :href "/" :route-name :app/home}
+                 {:label "Gigs/Probes" :icon icon/trumpet :href "/events" :route-name :app/gigs}
+                 {:label "Songs" :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
+                 {:label "Members" :icon icon/users-outline :href "/members" :route-name :app/members}
+                 {:label "Insurance" :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
+
 (defn sidebar-navigation [req]
   [:nav {:class "mt-6 px-3"}
    [:div {:class "space-y-1" :hx-boost "true"}
-    (nav-item req :label "Home" :icon icon/home :href "/" :route-name :app/home)
-    (nav-item req :label "Gigs/Probes" :icon icon/trumpet :href "/events" :route-name :app/gigs)
-    (nav-item req :label "Songs" :icon icon/music-note-outline :href "/songs" :route-name :app/songs)
-    (nav-item req :label "Members" :icon icon/users-outline :href "/members" :route-name :app/members)
-    (nav-item req :label "Insurance" :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance)]
+    (map (partial nav-item req) navigation)]
+   (secondary-navigation)])
 
-   [:div {:class "mt-8"}
-    ;; "<!-- Secondary navigation -->"
-    [:h3 {:class "px-3 text-sm font-medium text-gray-500" :id "desktop-teams-headline"} "Teams"]
-    [:div {:class "mt-1 space-y-1" :role "group" :aria-labelledby "desktop-teams-headline"}
-     [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"}
-      [:span {:class "w-2.5 h-2.5 mr-4 bg-indigo-500 rounded-full" :aria-hidden "true"}]
-      [:span {:class "truncate"} "Engineering"]]
-     [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"}
-      [:span {:class "w-2.5 h-2.5 mr-4 bg-green-500 rounded-full" :aria-hidden "true"}]
-      [:span {:class "truncate"} "Human Resources"]]
-     [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"}
-      [:span {:class "w-2.5 h-2.5 mr-4 bg-yellow-500 rounded-full" :aria-hidden "true"}]
-      [:span {:class "truncate"} "Customer Success"]]]]])
+(defn desktop-menu [req member]
+  [:div {:id "desktop-sidebar-menu" :class "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"}
+   [:div {:class "flex flex-shrink-0 items-center px-6"}
+    (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]
 
-(defn desktop-menu [req]
-  (let [member (auth/get-current-member req)]
-    [:div {:class "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"}
-     [:div {:class "flex flex-shrink-0 items-center px-6"}
-      (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]
+   [:div {:class "mt-5 flex h-0 flex-1 flex-col overflow-y-auto pt-1"}
+    (user-account-actions member)
+    (sidebar-navigation req)]])
 
-     [:div {:class "mt-5 flex h-0 flex-1 flex-col overflow-y-auto pt-1"}
-      (user-account-actions member)
-      (sidebar-navigation req)]]))
-
-(defn mobile-menu []
-  [:div {:class "relative z-40 lg:hidden" :role "dialog" :aria-modal "true"}
-   ;; "<!--\n      Off-canvas menu backdrop, show/hide based on off-canvas menu state.\n\n      Entering: \"transition-opacity ease-linear duration-300\"From: \"opacity-0\"To: \"opacity-100\"Leaving: \"transition-opacity ease-linear duration-300\"From: \"opacity-100\"To: \"opacity-0\"-->"
-
-   [:div {:class "fixed inset-0 bg-gray-600 bg-opacity-75"}]
+(defn mobile-menu [req]
+  [:div {:id "mobile-flyout-menu" :class "hidden relative z-40 lg:hidden" :role "dialog" :aria-modal "true"}
+   [:div {:class "fixed inset-0 bg-gray-600 bg-opacity-75" :data-flyout-backdrop true}]
    [:div {:class "fixed inset-0 z-40 flex"}
-    ;; "<!--\n        Off-canvas menu, show/hide based on off-canvas menu state.\n\n        Entering: \"transition ease-in-out duration-300 transform\"From: \"-translate-x-full\"To: \"translate-x-0\"Leaving: \"transition ease-in-out duration-300 transform\"From: \"translate-x-0\"To: \"-translate-x-full\"-->"
-    [:div {:class "relative flex w-full max-w-xs flex-1 flex-col bg-white pt-5 pb-4"}
-     ;; "<!--\n          Close button, show/hide based on off-canvas menu state.\n\n          Entering: \"ease-in-out duration-300\"From: \"opacity-0\"To: \"opacity-100\"Leaving: \"ease-in-out duration-300\"From: \"opacity-100\"To: \"opacity-0\"-->"
-     [:div {:class "absolute top-0 right-0 -mr-12 pt-2"}
-      [:button {:type "button" :class "ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"}
+    [:div {:data-flyout-menu true :class "relative flex w-full max-w-xs flex-1 flex-col bg-white pt-5 pb-4"}
+     [:div {:data-flyout-close-button true :class "absolute top-0 right-0 -mr-12 pt-2"}
+      [:button {:type "button"
+                :class "ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"}
        [:span {:class "sr-only"} "Close sidebar"]
-       ;; "<!-- Heroicon name: outline/x-mark -->"
-       [:svg {:class "h-6 w-6 text-white" :xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
-        [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M6 18L18 6M6 6l12 12"}]]]]
+       (icon/xmark {:class "h-6 w-6 text-white"})]]
      [:div {:class "flex flex-shrink-0 items-center px-4"}
-      [:img {:class "h-8 w-auto" :src "https://tailwindui.com/img/logos/mark.svg?color=purple&shade=500"}]]
+      (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]
      [:div {:class "mt-5 h-0 flex-1 overflow-y-auto"}
       [:nav {:class "px-2"}
        [:div {:class "space-y-1"}
-        ;; "<!-- Current: \"bg-gray-100 text-gray-900\" Default: \"text-gray-600 hover:text-gray-900 hover:bg-gray-50\" -->"
-        [:a {:href "#" :class "bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-base leading-5 font-medium rounded-md" :aria-current "page"}
-         ;; "<!--\n                  Heroicon name: outline/home\n\n                  Current: \"text-gray-500\" Default: \"text-gray-400 group-hover:text-gray-500\"-->"
-         [:svg {:class "text-gray-500 mr-3 flex-shrink-0 h-6 w-6" :xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
-          [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"}]]]
-        [:a {:href "#" :class "text-gray-600 hover:text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-base leading-5 font-medium rounded-md"}
-         ;; "<!-- Heroicon name: outline/bars-4 -->"
-         [:svg {:class "text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6" :xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
-          [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"}]] "My tasks"]
-        [:a {:href "#" :class "text-gray-600 hover:text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-base leading-5 font-medium rounded-md"}
-         ;; "<!-- Heroicon name: outline/clock -->"
-         [:svg {:class "text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6" :xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
-          [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"}]]]]
-       [:div {:class "mt-8"}
-        [:h3 {:class "px-3 text-sm font-medium text-gray-500" :id "mobile-teams-headline"} "Teams"]
-        [:div {:class "mt-1 space-y-1" :role "group" :aria-labelledby "mobile-teams-headline"}
-         [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-          [:span {:class "w-2.5 h-2.5 mr-4 bg-indigo-500 rounded-full" :aria-hidden "true"}]
-          [:span {:class "truncate"} "Engineering"]]
-         [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-          [:span {:class "w-2.5 h-2.5 mr-4 bg-green-500 rounded-full" :aria-hidden "true"}]
-          [:span {:class "truncate"} "Human Resources"]]
-         [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-          [:span {:class "w-2.5 h-2.5 mr-4 bg-yellow-500 rounded-full" :aria-hidden "true"}]
-          [:span {:class "truncate"} "Customer Success"]]]]]]]
-    [:div {:class "w-14 flex-shrink-0" :aria-hidden "true"}
-     ;; "<!-- Dummy element to force sidebar to shrink to fit close icon -->"
-     ]]])
+        (map (partial nav-item req) navigation)]
+       (secondary-navigation)]]]
+    ;; Dummy element to force sidebar to shrink to fit close icon
+    [:div {:class "w-14 flex-shrink-0" :aria-hidden "true"}]]])
 
 (defn from-tw-shell []
   [:div
@@ -258,11 +224,12 @@
        ]]]]])
 
 (defn app-shell [req body]
-  (render/html5-response
-   [:div {:class "min-h-full"}
-    ;; (layout/mobile-menu)
-    (desktop-menu req)
-    (app-container body)]))
+  (let [member (auth/get-current-member req)]
+    (render/html5-response
+     [:div {:class "min-h-full"}
+      (mobile-menu req)
+      (desktop-menu req member)
+      (app-container req member body)])))
 
 (defn sidebar-search []
       ;; "<!-- Sidebar Search -->"

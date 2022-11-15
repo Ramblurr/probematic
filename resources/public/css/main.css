@@ -24,6 +24,10 @@ body {
   @apply h-full;
 }
 
+.logotype-dark .logotype-text {
+  @apply text-orange-500;
+}
+
 .btn {@apply inline-flex items-center border border-transparent font-medium rounded transition ease-in-out duration-150;}
 .btn-xs { @apply px-2.5 py-1.5 text-xs leading-4; }
 .btn-sm  { @apply px-3 py-2 text-sm leading-4; }
@@ -261,6 +265,7 @@ body {
 }
 
 
+/* ANIMATION: fade in/out */
 .fade-enter {
   @apply transition ease-out duration-100;
 }
@@ -282,6 +287,62 @@ body {
   @apply transform opacity-0 scale-95;
 }
 
-.logotype-dark .logotype-text {
-  @apply text-orange-500;
+/* ANIMATION: flyout-backdrop */
+.flyout-backdrop-enter {
+  @apply transition-opacity ease-linear duration-300;
+}
+.flyout-backdrop-enter-start {
+  @apply opacity-0;
+}
+.flyout-backdrop-enter-end {
+  @apply opacity-100;
+}
+.flyout-backdrop-leave {
+  @apply transition-opacity ease-linear duration-300;
+}
+.flyout-backdrop-leave-start {
+  @apply opacity-100;
+}
+.flyout-backdrop-leave-end {
+  @apply opacity-0;
+}
+
+/* ANIMATION: flyout-menu */
+.flyout-menu-enter {
+  @apply transition ease-in-out duration-300 transform;
+}
+.flyout-menu-enter-start {
+  @apply -translate-x-full;
+}
+.flyout-menu-enter-end {
+  @apply translate-x-0;
+}
+.flyout-menu-leave {
+  @apply transition ease-in-out duration-300 transform;
+}
+.flyout-menu-leave-start {
+  @apply translate-x-0;
+}
+.flyout-menu-leave-end {
+  @apply -translate-x-full;
+}
+
+/* ANIMATION: flyout-closeButton */
+.flyout-closeButton-enter {
+  @apply ease-in-out duration-300;
+}
+.flyout-closeButton-enter-start {
+  @apply opacity-0;
+}
+.flyout-closeButton-enter-end {
+  @apply opacity-100;
+}
+.flyout-closeButton-leave {
+  @apply ease-in-out duration-300;
+}
+.flyout-closeButton-leave-start {
+  @apply opacity-100;
+}
+.flyout-closeButton-leave-end {
+  @apply opacity-0;
 }
