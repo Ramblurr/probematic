@@ -11,23 +11,6 @@
   (:import
    [java.security SecureRandom]))
 
-(def default-session-ttl-ms (* 1000 86400 14)) ;; 14 days
-
-(defn session-cookie-attrs [max-age dev-mode?]
-  {:path      "/"
-   :http-only true
-   :secure    (not dev-mode?)
-   :max-age   (or max-age default-session-ttl-ms)
-   :same-site :lax})
-
-(defn- random-bytes [size]
-  (let [seed (byte-array size)]
-    (.nextBytes (SecureRandom.) seed)
-    seed))
-
-(defn cookie-store [secret]
-  (cookie/cookie-store {:key (or secret (random-bytes 16))}))
-
 (def roles-authorization-interceptor
   "Reitit route interceptor that mounts itself if route has `:app.auth/roles` data. Expects `:app.auth/roles`
   to be a set of keyword and the context to have `[:session :app.auth/identity :app.auth/roles]` with user roles.
@@ -57,11 +40,6 @@
               (assoc ctx :response {:status 401
                                     :body "Authentication required"})
               ctx))})
-
-(defn session-interceptor
-  [{:keys [env]}]
-  (ring-middlewares/session {:store (cookie-store (config/cookie-secret env))
-                             :cookie-attrs (session-cookie-attrs (config/cookie-default-max-age env) (config/dev-mode? env))}))
 
 (defn user-info-interceptor
   []

@@ -18,8 +18,6 @@
                          :twilio-account #ref [:secrets :twilio :twilio-account]
                          :twilio-token   #ref [:secrets :twilio :twilio-token]}
  :sentry                {:dsn #ref [:secrets :sentry :dsn]}
- :cookie-session-config {:cookie-secret          #or [#env COOKIE_SECRET nil]
-                         :cookie-default-max-age 86400}
  :auth                  {:cert-filename "keycloak-realm.crt"
                          :known-roles   #{"admin" "Mitglieder"}}
  :ig/system             {:app.ig/profile          #profile {:prod :prod

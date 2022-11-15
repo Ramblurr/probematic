@@ -12,11 +12,5 @@
 (defn test-mode? [env]
   (= :test (profile env)))
 
-(defn cookie-default-max-age [env]
-  (-> env :cookie-session-config :cookie-default-max-age))
-
-(defn cookie-secret [env]
-  (-> env :cookie-session-config :cookie-secret))
-
 (defn non-prod? [env]
   (some?  (#{"qa" "dev" "test"} (-> env :environment))))
