@@ -1,9 +1,10 @@
 (ns app.discourse
-  (:require [martian.core :as martian]
-            [martian.hato :as martian-http]
-            [integrant.repl.state :as state]
+  (:require [clojure.set :as set]
             [clojure.string :as str]
-            [clojure.set :as set]))
+            [integrant.repl.state :as state]
+            [jsonista.core :as j]
+            [martian.core :as martian]
+            [martian.httpkit :as martian-http]))
 
 (defn add-authentication-header [api-key username]
   {:name ::add-authentication-header
@@ -16,9 +17,9 @@
 
 (defn list-users [m]
   (let [{:keys [status body] :as r}
-        (martian/response-for m :admin-list-users {:flag "active" :show_emails true})]
+        @(martian/response-for m :admin-list-users {:flag "active" :show_emails true})]
     (if (= 200 status)
-      body
+      (j/read-value body j/keyword-keys-object-mapper)
       {:error r})))
 
 (comment
@@ -39,7 +40,6 @@
     (def m (martian-http/bootstrap-openapi url-discourse-open-api {:server-url "https://forum.streetnoise.at"
                                                                    :interceptors (concat martian/default-interceptors
                                                                                          [(add-authentication-header api-key username)]
-                                                                                         martian-http/hato-interceptors
                                                                                          [martian-http/perform-request])}))
 
     (def user-list
