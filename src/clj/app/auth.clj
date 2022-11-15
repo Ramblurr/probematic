@@ -31,8 +31,15 @@
                             (throw-unauthorized "Current users lacks required roles" {:permitted-roles roles})
                             ctx))}))})
 
-(defn get-session [req]
+(defn get-session
+  "Fetch the user's session info from the request map"
+  [req]
   (:app.auth/session req))
+
+(defn get-current-member
+  "Fetch the user's member record from the request map"
+  [req]
+  (-> req :app.auth/session :session/member))
 
 (def require-authenticated-user
   "Throws an unauthorized exception if the request map does not contain session information for the current user"

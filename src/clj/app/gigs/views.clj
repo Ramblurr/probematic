@@ -15,7 +15,8 @@
    [ctmx.core :as ctmx]
    [ctmx.rt :as rt]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.auth :as auth]))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
                           :or {size :normal
@@ -350,11 +351,11 @@
    [:h2 {:id "notes-title", :class "text-lg font-medium text-gray-900"}
     "Comments"]])
 
-(defn comment-input [target endpoint tr]
+(defn comment-input [member target endpoint tr]
   [:div {:class "bg-gray-50 px-4 py-6 sm:px-6"}
    [:div {:class "flex space-x-3"}
     [:div {:class "flex-shrink-0"}
-     [:img {:class "h-10 w-10 rounded-full", :src "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80"}]]
+     (render/avatar-img member :class "h-10 w-10 rounded-full")]
     [:div {:class "min-w-0 flex-1"}
      [:form {:hx-target target :hx-post endpoint}
       [:div
@@ -365,21 +366,22 @@
        [:button {:type "submit", :class "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}
         (tr [:action/comment])]]]]]])
 
-(defn comment-section [archived? id endpoint tr comments]
+(defn comment-section [member archived? id endpoint tr comments]
   [:div {:id id :class "divide-y divide-gray-200"}
    (comment-header tr)
    (comment-list tr comments)
-   (when-not archived?
-     (comment-input (str "#" id) endpoint tr))])
+   (when (and member (not archived?))
+     (comment-input member (str "#" id) endpoint tr))])
 
 (ctmx/defcomponent ^:endpoint gigs-detail-page-comment [{:keys [db] :as req} gig]
   (let [comp-name (util/comp-namer #'gigs-detail-page-comment)
         archived? (domain/gig-archived? gig)
+        current-user (auth/get-current-member req)
         tr (i18n/tr-from-req req)
         {:gig/keys [comments]} (cond (util/post? req)  (controller/post-comment! req)
                                      :else gig)]
 
-    (comment-section archived? id (comp-name) tr comments)))
+    (comment-section current-user archived? id (comp-name) tr comments)))
 
 (ctmx/defcomponent ^:endpoint  gigs-detail-page-info [{:keys [db] :as req} gig ^:boolean edit?]
   (let [comp-name (util/comp-namer #'gigs-detail-page-info)
