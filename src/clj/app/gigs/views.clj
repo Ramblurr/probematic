@@ -224,37 +224,35 @@
         (map attendance-dropdown-opt  opts)]]]]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
-  (ctmx/with-req req
-    (let [comp-name (util/comp-namer #'gig-attendance-person-plan)
-          tr (i18n/tr-from-req req)
-          plan-kw (or
-                   (if post?
-                     (-> (controller/update-attendance-plan! req) :attendance :attendance/plan)
-                     plan)
-                   :plan/unknown)
-          body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
-                       (attendance-dropdown :tr tr :gigo-key gigo-key :value (name plan-kw))]]
-      (if post?
-        (ui/trigger-response "newDropdown" body-result
-                             {:trigger-type :hx-trigger-after-settle
-                              :data (str (hash ".") " .dropdown")})
-        body-result))))
+  (let [comp-name (util/comp-namer #'gig-attendance-person-plan)
+        post? (util/post? req)
+        tr (i18n/tr-from-req req)
+        plan-kw (or
+                 (if post?
+                   (-> (controller/update-attendance-plan! req) :attendance :attendance/plan)
+                   plan)
+                 :plan/unknown)
+        body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
+                     (attendance-dropdown :tr tr :gigo-key gigo-key :value (name plan-kw))]]
+    (if post?
+      (ui/trigger-response "newDropdown" body-result
+                           {:trigger-type :hx-trigger-after-settle
+                            :data (str (hash ".") " .dropdown")})
+      body-result)))
 
-;; TODO WTF is up with (value ..) here and in the motivation component, why do i have to reach into unwrap params?
-(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment]
-  (ctmx/with-req req
-    (let [comp-name (util/comp-namer #'gig-attendance-person-comment)
-          edit? (util/qp-bool req :edit)
-          gigo-key (or gigo-key (value "gigo-key"))
-          comment (if post?
-                    (-> (controller/update-attendance-comment! req) :attendance :attendance/comment)
-                    comment)]
-      [:div {:id id :class ""}
-       (if edit?
-         (ui/text :name (path "comment") :value comment :required? false :size :small
-                  :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
-                                :hx-vals (ui/hx-vals {(path "gigo-key") gigo-key})
-                                :_ "on focus or htmx:afterRequest or load
+(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment  ^:boolean edit?]
+  (let [comp-name (util/comp-namer #'gig-attendance-person-comment)
+        post? (util/post? req)
+        gigo-key (or gigo-key (value "gigo-key"))
+        comment (if post?
+                  (-> (controller/update-attendance-comment! req) :attendance :attendance/comment)
+                  comment)]
+    [:div {:id id :class ""}
+     (if edit?
+       (ui/text :name (path "comment") :value comment :required? false :size :small
+                :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
+                              :hx-vals (ui/hx-vals {(path "gigo-key") gigo-key})
+                              :_ "on focus or htmx:afterRequest or load
                                           set :initial_value to my value
                                         end
                                         on keyup[key=='Escape']
@@ -262,12 +260,12 @@
                                           blur() me
                                         end"})
 
-         (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name "?edit=true") :hx-vals (ui/hx-vals {:gigo-key gigo-key :comment comment})}]
-           (if comment
-             [:span (merge hx-attrs {:class "ml-2 cursor-pointer text-blue-500 hover:text-blue-600"})
-              comment]
-             [:button  hx-attrs
-              (icon/comment-outline {:class "ml-2 mb-2 w-5 h-5 cursor-pointer hover:text-blue-500 active:text-blue-300"})])))])))
+       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gigo-key gigo-key :comment comment :edit? true}}]
+         (if comment
+           [:span (merge hx-attrs {:class "ml-2 cursor-pointer text-blue-500 hover:text-blue-600"})
+            comment]
+           [:button  hx-attrs
+            (icon/comment-outline {:class "ml-2 mb-2 w-5 h-5 cursor-pointer hover:text-blue-500 active:text-blue-300"})])))]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [{:keys [db] :as req} gigo-key motivation]
   (ctmx/with-req req
@@ -293,7 +291,7 @@
        (ui/member-nick member)]]
      [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
      [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
-     [:div {:class "col-span-1 "} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance))]]))
+     [:div {:class "col-span-1 "} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)]]))
 
 (defn gig-attendance-person-archived [{:keys [db] :as req} idx attendance]
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]

@@ -271,7 +271,7 @@
                                      :pattern pattern
                                      :title title
                                      :name name
-                                     :value value
+                                     :value (if (= "null" value) nil value)
                                      :required required?
                                      :placeholder placeholder}))]])
 
