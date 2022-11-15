@@ -2,7 +2,7 @@
   (:require
    [app.util :as util]
    [app.urls :as url]
-   [app.views.shared :as ui]
+   [app.ui :as ui]
    [app.insurance.controller :as controller]
    [ctmx.response :as response]
    [app.render :as render]

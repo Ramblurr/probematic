@@ -1,6 +1,6 @@
 (ns app.songs.views
   (:require
-   [app.views.shared :as ui]
+   [app.ui :as ui]
    [app.render :as render]
    [app.songs.controller :as controller]
    [app.gigs.controller :as gig.controller]

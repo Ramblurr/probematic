@@ -10,7 +10,7 @@
    [app.render :as render]
    [app.urls :as url]
    [app.util :as util]
-   [app.views.shared :as ui]
+   [app.ui :as ui]
    [clojure.string :as str]
    [ctmx.core :as ctmx]
    [ctmx.rt :as rt]
