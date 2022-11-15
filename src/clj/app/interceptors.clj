@@ -1,13 +1,14 @@
-(ns app.routes.helpers
+(ns app.interceptors
   (:import (org.eclipse.jetty.server HttpConfiguration))
   (:require
-   [app.rand-human-id :as human-id]
+   [app.auth :as auth]
    [app.config :as config]
-   [app.routes.errors :as errors]
    [app.i18n :as i18n]
+   [app.queries :as q]
+   [app.rand-human-id :as human-id]
+   [app.routes.errors :as errors]
    [app.routes.pedestal-prone :as pedestal-prone]
    [app.schemas :as schemas]
-   [app.auth :as auth]
    [datomic.client.api :as d]
    [io.pedestal.http.ring-middlewares :as middlewares]
    [io.pedestal.interceptor.error :as error-int]
@@ -18,9 +19,7 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [reitit.swagger :as swagger]
-   [ring.middleware.keyword-params :as keyword-params]
-   [app.queries :as q]))
+   [ring.middleware.keyword-params :as keyword-params]))
 
 (defn current-user-interceptor
   "Fetches the current user from the request (see app.auth/auth-interceptor),
@@ -167,8 +166,7 @@
                 ctx))}))
 
 (defn default-interceptors [system]
-  [swagger/swagger-feature
-   human-id-interceptor
+  [human-id-interceptor
    (i18n-interceptor system)
    service-error-handler
    (auth/auth-interceptor (-> system :env :auth :cert-filename)

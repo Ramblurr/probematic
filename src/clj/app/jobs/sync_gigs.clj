@@ -1,17 +1,15 @@
 (ns app.jobs.sync-gigs
-  (:require [ol.jobs-util :as jobs]
-            [tick.core :as t]
-            [datomic.client.api :as d]
-                                        ;[dialogflow.core :as df-api]
-            [clojure.string :as s]
-            [clojure.set :as set]
-            [app.db :as db]
-            [app.gigo :as gigo]
+  (:require [app.debug :as debug]
             [app.features :as f]
-            [integrant.repl.state :as state]
-            [app.util :as util]
+            [app.gigo :as gigo]
             [app.gigs.domain :as domain]
-            [app.debug :as debug])
+            [app.util :as util]
+            [clojure.set :as set]
+            [clojure.string :as s]
+            [datomic.client.api :as d]
+            [integrant.repl.state :as state]
+            [ol.jobs-util :as jobs]
+            [tick.core :as t])
 
   (:import (java.time DayOfWeek)))
 

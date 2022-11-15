@@ -1,8 +1,8 @@
 (ns app.auth
   (:require
-   [clojure.java.io :as io]
-   [buddy.sign.jwt :as jwt]
    [buddy.core.keys :as buddy-keys]
+   [buddy.sign.jwt :as jwt]
+   [clojure.java.io :as io]
    [clojure.set :as set]))
 
 (defn throw-unauthorized

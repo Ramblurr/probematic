@@ -1,7 +1,6 @@
 (ns app.schema-helpers-test
   (:require
    [app.schema-helpers :refer :all]
-   [app.schemas.country :refer :all]
    [clojure.test :refer :all]
    [malli.core :as m]
    [malli.transform :as mt]
@@ -37,11 +36,3 @@
   (is  (not (m/validate NonBlankString "   \n")) "mixed whitespace is considered blank")
   (is (= (m/encode NonBlankString "foo" mt/string-transformer) "foo"))
   (is (= (m/decode NonBlankString "foo" mt/string-transformer) "foo")))
-
-(deftest country-schema-test
-  (is (m/validate CountryAlpha3 "AUT"))
-  (is (not (m/validate CountryAlpha3 "AT")))
-  (is (not (m/validate CountryAlpha3 "US")))
-  (is (m/validate CountryAlpha3 "USA"))
-  (is (= (m/encode CountryAlpha3 "USA" mt/string-transformer) "USA"))
-  (is (= (m/decode CountryAlpha3 "USA" mt/string-transformer) "USA")))

@@ -1,6 +1,5 @@
 (ns app.schema-helpers
   (:require
-   [app.schemas.country :as country]
    [clojure.string :as string]
    [malli.core :as m]
    [tick.core :as t])
@@ -137,8 +136,7 @@
    :app.schemas/time             TimeSchema
    :app.schemas/minute-time      MinuteTimeSchema
    :app.schemas/non-blank-string NonBlankString
-   :app.schemas/datomic-ref      DatomicRef
-   :app.schemas/country-alpha3   country/CountryAlpha3})
+   :app.schemas/datomic-ref      DatomicRef})
 
 (def interval?
   "Represents an interval as a map with two properties,

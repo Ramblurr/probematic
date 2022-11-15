@@ -1,18 +1,13 @@
 (ns app.insurance.controller
   (:require
-
-   [app.queries :as q]
-   [app.datomic :as d]
-   [tick.core :as t]
-   [datomic.client.api :as datomic]
-   [com.yetanalytics.squuid :as sq]
-   [app.util :as util]
    [app.controllers.common :as common]
-   [app.debug :as debug]
-   [ctmx.form :as form]
-   [ctmx.core :as ctmx]
-   [app.db :as db]
-   [medley.core :as m]))
+   [app.datomic :as d]
+   [app.queries :as q]
+   [app.util :as util]
+   [com.yetanalytics.squuid :as sq]
+   [datomic.client.api :as datomic]
+   [medley.core :as m]
+   [tick.core :as t]))
 
 (defn sum-by [ms k]
   (->> ms

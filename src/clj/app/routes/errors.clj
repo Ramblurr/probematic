@@ -1,9 +1,9 @@
 (ns app.routes.errors
   (:require
-   [sentry-clj.core :as sentry]
    [app.render :as render]
    [app.util :as util]
-   [clojure.set :as set]))
+   [clojure.set :as set]
+   [sentry-clj.core :as sentry]))
 
 (def dangerous-keys
   #{:datomic-conn

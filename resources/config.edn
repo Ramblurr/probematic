@@ -58,7 +58,6 @@
                          :app.ig/i18n-langs       {}
                          :app.ig.jobs/definitions {:env     #ig/ref :app.ig/env
                                                    :gigo    #ig/ref :app.ig/gigo-client
-                                                   ;; :conn  #ig/ref :app.ig/app-db
                                                    :datomic #ig/ref :app.ig/datomic-db}}
  :jobs                  {:job/sync-gigs       {:job/frequency     [10 :minutes]
                                                :job/initial-delay [2 :seconds]}

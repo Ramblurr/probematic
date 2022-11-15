@@ -1,20 +1,16 @@
 (ns app.render
   (:import [java.text NumberFormat DecimalFormat]
-           [org.w3c.tidy Tidy]
-           [java.util Locale]
-           [java.io ByteArrayInputStream ByteArrayOutputStream])
+           [java.util Locale])
   (:require
+   [app.i18n :as i18n]
+   [app.util :as util]
    [clojure.string :as str]
-   [hiccup.core :as hiccup]
+   [ctmx.render :as ctmx.render]
    [hiccup.page :as hiccup.page]
    [hiccup2.core :refer [html]]
-   [medley.core :as m]
-   [ctmx.render :as ctmx.render]
-   [app.util :as util]
    [jsonista.core :as j]
-   [tick.core :as t]
-   [app.debug :as debug]
-   [app.i18n :as i18n]))
+   [medley.core :as m]
+   [tick.core :as t]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -31,24 +27,6 @@
          (str (html {:mode :html}
                     (hiccup.page/doctype :html5)
                     [:html options# ~@contents]))))))
-
-(defn configure-pretty-printer
-  "Configure the pretty-printer (an instance of a JTidy Tidy class) to
-generate output the way we want -- formatted and without sending warnings.
- Return the configured pretty-printer."
-  []
-  (doto (new Tidy)
-    (.setSmartIndent true)
-                                        ;(.setTrimEmptyElements true)
-    (.setShowWarnings false)
-    (.setQuiet true)))
-
-(defn pretty-print-html
-  "Pretty-print the html and return it as a string."
-  [html]
-  (let [swrtr (ByteArrayOutputStream.)]
-    (.parse (configure-pretty-printer) (ByteArrayInputStream. (.getBytes (str html)))  swrtr)
-    (str swrtr)))
 
 (defn html-response [body]
   {:status 200

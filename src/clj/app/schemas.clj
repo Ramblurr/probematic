@@ -117,8 +117,4 @@
   (valid? :doc/user invalid-user)
   (explain-human :doc/user invalid-user)
   (valid? ::instant (t/now))
-  (explain-human ::email-address "foo@foo.com")
-  (explain-human ::country-alpha3 "AT")
-  (explain-human ::country-alpha3 "AUT")
-;
-  )
+  (explain-human ::email-address "foo@foo.com"))

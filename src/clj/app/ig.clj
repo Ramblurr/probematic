@@ -3,12 +3,10 @@
   (:require
    [app.config :as config]
    [app.datomic :as datomic]
-   [app.db :as db]
-   [app.debug :as debug]
    [app.i18n :as i18n]
+   [app.interceptors :as interceptors]
    [app.jobs :as jobs]
    [app.routes :as routes]
-   [app.routes.helpers :as route.helpers]
    [clojure.tools.logging :as log]
    [ctmx.render :as ctmx.render]
    [datomic.client.api :as d]
@@ -20,8 +18,7 @@
    [ol.system :as system]
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]
-   [sentry-clj.core :as sentry]
-   [taoensso.tempura :as tempura]))
+   [sentry-clj.core :as sentry]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -53,16 +50,16 @@
     (tap> start-msg)
     (log/info start-msg)
     (cond-> service
-      true (assoc :io.pedestal.http/container-options {:io.pedestal.http.jetty/http-configuration (route.helpers/http-configuration 8000)})
+      true (assoc :io.pedestal.http/container-options {:io.pedestal.http.jetty/http-configuration (interceptors/http-configuration 8000)})
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
-      true (route.helpers/with-default-interceptors system)
+      true (interceptors/with-default-interceptors system)
                  ;; swap in the reitit router
       true (pedestal/replace-last-interceptor
             (pedestal/routing-interceptor
              (http/router routes)
              handler))
-      ;; (config/dev-mode? env) route.helpers/prone-exception-interceptor
+      ;; (config/dev-mode? env) interceptors/prone-exception-interceptor
       (config/dev-mode? env) (server/dev-interceptors)
       true (server/create-server)
       true (server/start))))
