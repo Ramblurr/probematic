@@ -32,7 +32,7 @@
 
 (defn go []
   (dev-extra/go)
-  (browser/open-browser "http://localhost:6161/"))
+  (browser/open-browser "http://localhost:4180/"))
 
 (defn reset []
   (dev-extra/reset)

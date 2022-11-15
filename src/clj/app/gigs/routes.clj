@@ -10,21 +10,21 @@
   (ctmx/make-routes
    "/events"
    (fn [req]
-     (ui/html5-response
-      (view/gigs-list-page req)))))
+     (ui/app-shell req
+                   (view/gigs-list-page req)))))
 
 (defn gig-detail-route []
   (ctmx/make-routes
    "/event/{gig/gig-id}/"
    (fn [req]
-     (ui/html5-response (view/gigs-detail-page req)))))
+     (ui/app-shell req (view/gigs-detail-page req)))))
 
 (defn gig-log-play-route []
   (ctmx/make-routes
    "/event/{gig/gig-id}/log-play"
    (fn [req]
-     (ui/html5-response
-      (view/gig-log-plays req)))))
+     (ui/app-shell req
+                   (view/gig-log-plays req)))))
 
 (def gigs-interceptors [{:name ::gigs--interceptor
                          :enter (fn [ctx]

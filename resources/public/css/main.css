@@ -17,6 +17,13 @@
   --yellow-400: #F5F569;
 }
 
+html {
+  @apply h-full bg-white;
+}
+body {
+  @apply h-full;
+}
+
 .btn {@apply inline-flex items-center border border-transparent font-medium rounded transition ease-in-out duration-150;}
 .btn-xs { @apply px-2.5 py-1.5 text-xs leading-4; }
 .btn-sm  { @apply px-3 py-2 text-sm leading-4; }
@@ -239,4 +246,38 @@
 }
 .choices__list.choices__list--dropdown.is-active {
   @apply block;
+}
+
+#desktop-user-menu.enter {
+  @apply transition ease-out duration-100;
+}
+#desktop-user-menu.enter-start {
+  @apply transform opacity-0 scale-95;
+}
+#desktop-user-menu.enter-end {
+  @apply transform opacity-100 scale-100;
+}
+#desktop-user-menu.leave-end {
+}
+
+
+.fade-enter {
+  @apply transition ease-out duration-100;
+}
+.fade-enter-start {
+  @apply transform opacity-0 scale-95;
+}
+.fade-enter-end {
+  @apply transform opacity-100 scale-100;
+}
+
+
+.fade-leave {
+  @apply transition ease-in duration-75;
+}
+.fade-leave-start {
+  @apply transform opacity-100 scale-100;
+}
+.fade-leave-end {
+  @apply transform opacity-0 scale-95;
 }

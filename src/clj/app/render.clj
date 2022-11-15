@@ -1,6 +1,6 @@
 (ns app.render
   (:require
-   [app.i18n :as i18n]
+   [ctmx.render :as ctmx.render]
    [hiccup.page :as hiccup.page]
    [hiccup2.core :refer [html]]))
 
@@ -56,3 +56,13 @@
    [:script {:src "/js/popperjs@2-dev.js" :defer true}]
    [:script {:src "/js/tippy@6-dev.js" :defer true}]
    [:script {:src "/js/app.js" :defer true :type :module}]))
+
+(defn html5-response
+  ([body] (html5-response nil body))
+  ([js body]
+   (html-response
+    (html5-safe
+     (head)
+     [:body (ctmx.render/walk-attrs body)
+      (body-end)]
+     (when js [:script {:src (str "/js" js)}])))))

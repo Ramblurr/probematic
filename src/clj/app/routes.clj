@@ -1,7 +1,6 @@
 (ns app.routes
   (:require
    [app.auth :as auth]
-   [app.auth.auth-endpoint :as auth.endpoint]
    [app.gigs.routes :refer [events-routes]]
    [app.insurance.routes :refer [insurance-routes insurance-interceptors]]
    [app.interceptors :as interceptors]

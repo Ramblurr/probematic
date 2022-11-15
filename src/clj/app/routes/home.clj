@@ -10,16 +10,16 @@
    (ctmx/make-routes
     "/"
     (fn [req]
-      (ui/main-layout req
-                      [:div.min-h-screen.bg-white
-                       [:div.py-10 [:main [:div.max-w-7xl.mx-auto.sm:px-6.lg:px-8]
-                                    [:div {:class "content"}
-                                     [:ul
-                                      [:li
-                                       [:a {:href "/members"} "Members"]]
-                                      [:li
-                                       [:a {:href "/songs"} "Songs"]]
-                                      [:li
-                                       [:a {:href "/events"} "Gigs/Probes"]]
-                                      [:li
-                                       [:a {:href "/insurance"} "Instrument Insurance"]]]]]]])))])
+      (ui/app-shell req
+                    [:div.min-h-screen.bg-white
+                     [:div.py-10 [:main [:div.max-w-7xl.mx-auto.sm:px-6.lg:px-8]
+                                  [:div {:class "content"}
+                                   [:ul
+                                    [:li
+                                     [:a {:href "/members"} "Members"]]
+                                    [:li
+                                     [:a {:href "/songs"} "Songs"]]
+                                    [:li
+                                     [:a {:href "/events"} "Gigs/Probes"]]
+                                    [:li
+                                     [:a {:href "/insurance"} "Instrument Insurance"]]]]]]])))])

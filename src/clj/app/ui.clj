@@ -21,18 +21,8 @@
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
 
-(defn html5-response
-  ([body] (html5-response nil body))
-  ([js body]
-   (render/html-response
-    (render/html5-safe
-     (render/head)
-     [:body (ctmx.render/walk-attrs body)
-      (render/body-end)]
-     (when js [:script {:src (str "/js" js)}])))))
-
-(defn main-layout [req body]
-  (html5-response
+(defn app-shell [req body]
+  (render/html5-response
    [:div {:class "min-h-full"}
     ;; (layout/mobile-menu)
     (layout/desktop-menu)
