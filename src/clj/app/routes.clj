@@ -23,8 +23,7 @@
    (home-routes)
    (songs-routes)
    (events-routes)
-   ["" {:interceptors insurance-interceptors}
-    (insurance-routes)]
+   (insurance-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
    ])
 

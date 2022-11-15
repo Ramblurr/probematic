@@ -22,6 +22,7 @@
    [app.insurance.controller :as controller]))
 
 (repl/disable-reload! (find-ns 'browser))
+(repl/disable-reload! *ns*)
 
 (set! *print-namespace-maps* false)
 

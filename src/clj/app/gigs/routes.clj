@@ -1,6 +1,6 @@
 (ns app.gigs.routes
   (:require
-   [app.ui :as ui]
+   [app.layout :as layout]
    [app.gigs.views :as view]
    [datomic.client.api :as d]
    [ctmx.core :as ctmx]
@@ -10,21 +10,21 @@
   (ctmx/make-routes
    "/events"
    (fn [req]
-     (ui/app-shell req
-                   (view/gigs-list-page req)))))
+     (layout/app-shell req
+                       (view/gigs-list-page req)))))
 
 (defn gig-detail-route []
   (ctmx/make-routes
    "/event/{gig/gig-id}/"
    (fn [req]
-     (ui/app-shell req (view/gigs-detail-page req)))))
+     (layout/app-shell req (view/gigs-detail-page req)))))
 
 (defn gig-log-play-route []
   (ctmx/make-routes
    "/event/{gig/gig-id}/log-play"
    (fn [req]
-     (ui/app-shell req
-                   (view/gig-log-plays req)))))
+     (layout/app-shell req
+                       (view/gig-log-plays req)))))
 
 (def gigs-interceptors [{:name ::gigs--interceptor
                          :enter (fn [ctx]
@@ -35,7 +35,8 @@
                                       gig-id (assoc-in [:request :gig] (controller/retrieve-gig db gig-id)))))}])
 
 (defn events-routes []
-  ["" {:interceptors gigs-interceptors}
+  ["" {:interceptors gigs-interceptors
+       :app.route/name :app/gigs}
    (gigs-list-route)
    (gig-detail-route)
    (gig-log-play-route)])

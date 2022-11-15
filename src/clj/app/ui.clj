@@ -9,7 +9,6 @@
    [app.humanize :as humanize]
    [app.i18n :as i18n]
    [app.icons :as icon]
-   [app.layout :as layout]
    [app.render :as render]
    [app.util :as util]
    [clojure.string :as str]
@@ -20,13 +19,6 @@
 
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
-
-(defn app-shell [req body]
-  (render/html5-response
-   [:div {:class "min-h-full"}
-    ;; (layout/mobile-menu)
-    (layout/desktop-menu)
-    (layout/nav-bar)]))
 
 (defn unauthorized-error-body [req]
   (let [tr (i18n/tr-from-req req)
@@ -350,6 +342,20 @@
   (apply button (conj opts :a :tag)))
 
 (defn page-header [& {:keys [title subtitle buttons] :as args}]
+  [:div {:class "border-b border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
+   [:div {:class "min-w-0 flex-1"}
+    [:h1 {:class "text-lg font-medium leading-6 text-gray-900 sm:truncate"} title]
+    (when subtitle
+      [:p {:class "text-sm font-medium text-gray-500"}
+       subtitle])]
+   [:div {;; :class "mt-4 flex sm:mt-0 sm:ml-4"
+          :class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
+    buttons
+    ;; [:button {:type "button" :class "sm:order-0 order-1 ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 sm:ml-0"} "Share"]
+    ;; [:button {:type "button" :class "order-0 inline-flex items-center rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 sm:order-1 sm:ml-3"} "Create"]
+    ]])
+
+(defn page-header2 [& {:keys [title subtitle buttons] :as args}]
   [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
    [:div {:class "flex items-center space-x-5"}
     [:div
@@ -377,6 +383,13 @@
   (if (str/blank? nick)
     name
     nick))
+
+(defn member-section
+  "Renders the member's section"
+  [{:member/keys [section]}]
+  (if section
+    (:section/name section)
+    "No Section"))
 
 (defn member-select [& {:keys [id value label members variant]
                         :or {label "Member"
