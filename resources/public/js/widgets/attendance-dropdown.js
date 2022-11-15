@@ -4,6 +4,11 @@ const ClickHandler = (root, instance) => (e) => {
   const svg = e.target.querySelector('svg').cloneNode(true)
   root.querySelector(".item-icon").innerHTML = svg.outerHTML;
   root.querySelector(".item-input").value = value;
+  const newSvg = root.querySelector(".item-icon").querySelector("svg")
+  newSvg.classList.remove("w-5")
+  newSvg.classList.remove("h-5")
+  newSvg.classList.add("w-3")
+  newSvg.classList.add("h-3")
   const form = root.closest('form');
   htmx.trigger(form, "planChanged")
   instance.hide();

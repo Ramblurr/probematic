@@ -1,4 +1,5 @@
 import {$, enter, leave} from "../utils.js"
+// based on https://sebastiandedeyne.com/javascript-framework-diet/enter-leave-transitions/
 
 export function ActionMenu(event, dropdownTrigger) {
     const selector = dropdownTrigger.getAttribute("data-action-menu-trigger")

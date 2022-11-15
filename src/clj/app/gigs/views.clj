@@ -184,16 +184,17 @@
                                         ;[:p "Last Played "]
         ]]]]))
 
-(defn attendance-opts [tr]
-  (let [icon-class "mr-3 text-gray-400 w-5 h-5"
+(defn attendance-opts [tr size]
+  (let [icon-class "mr-3 text-gray-400"
+        size-class (if (= size :large) "w-5 h-5" "w-3 h-3")
         red-class "text-red-500 group-hover:text-red-500"
         green-class "text-green-500 group-hover:text-green-500"]
-    [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class green-class)}
-     {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class green-class)}
-     {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class "text-gray-500")}
-     {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class red-class)}
-     {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class red-class)}
-     {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class "text-black")}]))
+    [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class)}
+     {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class)}
+     {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
+     {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class)}
+     {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class)}
+     {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black")}]))
 
 (defn attendance-dropdown-opt [{:keys [label value icon icon-class]}]
   [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
@@ -201,8 +202,8 @@
 
 (defn attendance-dropdown [& {:keys [gigo-key value tr]
                               :or {value "unknown"}}]
-  (let [opts (attendance-opts tr)
-        current-opt (m/find-first #(= value (:value %)) opts)
+  (let [opts (attendance-opts tr :large)
+        current-opt (m/find-first #(= value (:value %)) (attendance-opts tr :small))
         button-size-class-normal "px-4 py-2 text-sm "
         button-size-class-small "px-2 py-1 text-xs "]
     [:div {:class "dropdown relative inline-block text-left"}
