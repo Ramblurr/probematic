@@ -6,21 +6,37 @@
    [app.auth :as auth]
    [clojure.string :as str]))
 
+(def navigation [{:label "Home" :icon icon/home :href "/" :route-name :app/home}
+                 {:label "Gigs/Probes" :icon icon/trumpet :href "/events" :route-name :app/gigs}
+                 {:label "Songs" :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
+                 {:label "Members" :icon icon/users-outline :href "/members" :route-name :app/members}
+                 {:label "Insurance" :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
+
+(def user-menu-sections [{:items [{:label "View Profile" :href "#"}
+                                  {:label "Settings" :href "#"}
+                                  {:label "Notifications" :href "#"}]}
+                         {:items [{:label "Logout" :href "#"}]}])
+
+(defn user-menu-item [idx {:keys [label href]}]
+  [:a {:href href :class "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id (str "user-menu-item-" idx)}
+   label])
+
+(defn user-menu-section [section]
+  [:div {:class "py-1" :role "none"}
+   (map-indexed user-menu-item (:items section))])
+
 (defn app-container [req member body]
   [:div {:class "flex flex-col lg:pl-64"}
- ;; "<!-- Search header -->"
    [:div {:class "sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white lg:hidden"}
-  ;; "<!-- Sidebar toggle, controls the 'sidebarOpen' sidebar state. -->"
     [:button {:type "button" :class "border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"
               :data-flyout-trigger "#mobile-flyout-menu"}
      [:span {:class "sr-only"} "Open sidebar"]
-   ;; "<!-- Heroicon name: outline/bars-3-center-left -->"
+     ;; "<!-- Heroicon name: outline/bars-3-center-left -->"
      [:svg {:class "h-6 w-6" :xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
       [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"}]]]
     [:div {:class "flex flex-1 justify-between px-4 sm:px-6 lg:px-8"}
      [:div {:class "flex flex-1"}]
      [:div {:class "flex items-center"}
-    ;; "<!-- Profile dropdown -->"
       [:div {:class "relative ml-3"}
        [:div
         [:button {:type "button"
@@ -30,16 +46,7 @@
          (ui/avatar-img member :class "h-8 w-8 rounded-full")]]
        [:div {:id "user-menu" :data-action-menu true
               :class "hidden absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
-        [:div {:class "py-1" :role "none"}
-       ;; "<!-- Active: \"bg-gray-100 text-gray-900\" Not Active: \"text-gray-700\" -->"
-         [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-0"} "View profile"]
-         [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-1"} "Settings"]
-         [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-2"} "Notifications"]]
-        [:div {:class "py-1" :role "none"}
-         [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-3"} "Get desktop app"]
-         [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-4"} "Support"]]
-        [:div {:class "py-1" :role "none"}
-         [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "user-menu-item-5"} "Logout"]]]]]]]
+        (map user-menu-section user-menu-sections)]]]]]
    [:main {:class "flex-1"}
     body]])
 
@@ -62,16 +69,8 @@
           :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           ;; :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           :role "menu" :aria-orientation "vertical" :aria-labelledby "options-menu-button" :tabindex "-1"}
-    [:div {:class "py-1" :role "none"}
-     ;; "<!-- Active: \"bg-gray-100 text-gray-900\" Not Active: \"text-gray-700\" -->"
-     [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-0"} "View !profile"]
-     [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-1"} "Settings"]
-     [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-2"} "Notifications"]]
-    [:div {:class "py-1" :role "none"}
-     [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-3"} "Get desktop app"]
-     [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-4"} "Support"]]
-    [:div {:class "py-1" :role "none"}
-     [:a {:href "#" :class "text-gray-700 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id "options-menu-item-5"} "Logout"]]]])
+    (map user-menu-section user-menu-sections)]])
+
 (defn secondary-navigation []
   [:div {:class "mt-8"}
    [:h3 {:class "px-3 text-sm font-medium text-gray-500" :id "mobile-teams-headline"} "Teams"]
@@ -85,6 +84,7 @@
     [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
      [:span {:class "w-2.5 h-2.5 mr-4 bg-yellow-500 rounded-full" :aria-hidden "true"}]
      [:span {:class "truncate"} "Customer Success"]]]])
+
 (defn nav-item [req {:keys [label icon href route-name]}]
   (let [active? (= route-name (-> req :reitit.core/match :data  :app.route/name))]
     [:a {:href href
@@ -100,12 +100,6 @@
                      "text-gray-500"
                      "text-gray-400 group-hover:text-gray-500"))})
      label]))
-
-(def navigation [{:label "Home" :icon icon/home :href "/" :route-name :app/home}
-                 {:label "Gigs/Probes" :icon icon/trumpet :href "/events" :route-name :app/gigs}
-                 {:label "Songs" :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
-                 {:label "Members" :icon icon/users-outline :href "/members" :route-name :app/members}
-                 {:label "Insurance" :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
 
 (defn sidebar-navigation [req]
   [:nav {:class "mt-6 px-3"}
