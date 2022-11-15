@@ -11,7 +11,8 @@
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.auth :as auth]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -212,7 +213,7 @@
 
 (defn post-comment! [{:keys [datomic-conn] :as req}]
   (let [{:keys [body]} (common/unwrap-params req)
-        author [:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"]
+        author (d/ref (auth/get-current-member req))
         gig-id (-> req :path-params :gig/gig-id)
         gig-txs [{:db/id "new_comment"
                   :comment/comment-id (sq/generate-squuid)

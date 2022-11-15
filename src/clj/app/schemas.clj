@@ -68,7 +68,8 @@
     :encoders (mt/-string-encoders)}))
 
 (defn decode-datomic [schema doc]
-  (m/decode schema doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
+  (m/decode schema doc malli-opts (mt/transformer datomic-transformer)))
+
 (defn encode-datomic [schema doc]
   (m/encode schema doc malli-opts (mt/transformer datomic-transformer mt/strip-extra-keys-transformer)))
 

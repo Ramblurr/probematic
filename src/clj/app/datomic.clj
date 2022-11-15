@@ -94,6 +94,7 @@
         db attr val-pattern pattern)))
 
 (def entity-ids [:gig/gig-id
+                 :member/gigo-key
                  :song/song-id
                  :insurance.policy/policy-id
                  :played/play-id

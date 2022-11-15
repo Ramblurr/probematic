@@ -374,13 +374,12 @@
      (comment-input member (str "#" id) endpoint tr))])
 
 (ctmx/defcomponent ^:endpoint gigs-detail-page-comment [{:keys [db] :as req} gig]
-  (let [comp-name (util/comp-namer #'gigs-detail-page-comment)
-        archived? (domain/gig-archived? gig)
-        current-user (auth/get-current-member req)
-        tr (i18n/tr-from-req req)
-        {:gig/keys [comments]} (cond (util/post? req)  (controller/post-comment! req)
-                                     :else gig)]
-
+  (let [comp-name              (util/comp-namer #'gigs-detail-page-comment)
+        archived?              (domain/gig-archived? gig)
+        current-user           (auth/get-current-member req)
+        tr                     (i18n/tr-from-req req)
+        {:gig/keys [comments]} (cond (util/post? req) (controller/post-comment! req)
+                                     :else            gig)]
     (comment-section current-user archived? id (comp-name) tr comments)))
 
 (ctmx/defcomponent ^:endpoint  gigs-detail-page-info [{:keys [db] :as req} gig ^:boolean edit?]
