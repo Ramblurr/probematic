@@ -17,7 +17,7 @@
   (ctmx/make-routes
    "/notice"
    (fn [req]
-     (render/html5-response
+     (ui/html5-response
       [:div.container
        [:div.row.my-2
         [:div.col
@@ -60,7 +60,7 @@
   (ctmx/make-routes
    "/login"
    (fn [req]
-     (render/html5-response
+     (ui/html5-response
 
       [:div
        (click-div req 0)

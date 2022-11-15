@@ -1,6 +1,6 @@
 (ns app.members.routes
   (:require
-   [app.render :as render]
+   [app.ui :as ui]
    [app.members.views :as view]
    [app.members.controller :as controller]
    [datomic.client.api :as d]
@@ -10,14 +10,14 @@
   (ctmx/make-routes
    "/member/{gigo-key}"
    (fn [req]
-     (render/html5-response
+     (ui/html5-response
       (view/members-detail-page req)))))
 
 (defn members-index []
   (ctmx/make-routes
    "/members"
    (fn [req]
-     (render/html5-response
+     (ui/html5-response
       (view/members-index-page req)))))
 
 (def members-interceptors [{:name ::members--interceptor

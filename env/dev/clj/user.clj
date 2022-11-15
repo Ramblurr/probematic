@@ -16,9 +16,9 @@
   (defn handler-list-songs [conn {:keys [parameters htmx?] :as req}]
     (let [{:keys [song]} (:query parameters)]
       (if htmx?
-        (render/partial-response
+        (ui/partial-response
          (songs-list req conn song))
-        (render/html5-response
+        (ui/html5-response
          [:div {:class "mt-6"}
           [:div {:class "flex space-x-4"}
            (songs-filter req)

@@ -1,6 +1,6 @@
 (ns app.routes.errors
   (:require
-   [app.render :as render]
+   [app.ui :as ui]
    [app.util :as util]
    [clojure.set :as set]
    [sentry-clj.core :as sentry]))
@@ -64,23 +64,23 @@
 (defn unauthorized-error [req ex]
   (send-sentry! req ex)
   (if (:htmx? req)
-    (render/error-page-response-fragment ex req 401)
-    (render/error-page-response ex req 401)))
+    (ui/error-page-response-fragment ex req 401)
+    (ui/error-page-response ex req 401)))
 
 (defn validation-error [req ex]
   (send-sentry! req ex)
   (if (:htmx? req)
-    (render/error-page-response-fragment ex req 400)
-    (render/error-page-response ex req 400)))
+    (ui/error-page-response-fragment ex req 400)
+    (ui/error-page-response ex req 400)))
 
 (defn datomic-not-found-error [req ex]
   (send-sentry! req ex)
   (if (:htmx? req)
-    (render/error-page-response ex req 404)
-    (render/error-page-response-fragment ex req 404)))
+    (ui/error-page-response ex req 404)
+    (ui/error-page-response-fragment ex req 404)))
 
 (defn unknown-error [req ex]
   (send-sentry! req ex)
   (if (:htmx? req)
-    (render/error-page-response-fragment ex req 500)
-    (render/error-page-response ex req 500)))
+    (ui/error-page-response-fragment ex req 500)
+    (ui/error-page-response ex req 500)))

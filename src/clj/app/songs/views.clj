@@ -22,7 +22,7 @@
           [:form {:id id :hx-post (path ".")
                   :class "space-y-4"}
            (list
-            (render/select :id (path "song-id")
+            (ui/select :id (path "song-id")
                            :label "Songs"
                            :value (value "song")
                            :options (map (fn [s]
@@ -30,7 +30,7 @@
                                             :label (:song/title s)
                                             :selected? false}) songs))
 
-            (render/select :id (path "gig-id")
+            (ui/select :id (path "gig-id")
                            :label "Gig/Probe"
                            :value (value "song")
                            :options (map (fn [{:gig/keys [gig-id title date]}]
@@ -38,20 +38,20 @@
                                             :label (str title " " (when date (ui/format-dt date)))
                                             :selected? false}) gigs)))
 
-           (render/radio-button-group  :id (path  "play-type") :label "Play Type"
+           (ui/radio-button-group  :id (path  "play-type") :label "Play Type"
                                        :required? true
                                        :value (value "play-type")
                                        :options [{:id (path "play-type/gig") :label "Gig" :value "play-emphasis/gig"  :size :large}
                                                  {:id (path "play-type/gig") :label "Probe: Intensiv" :value "play-emphasis/intensiv"  :size :large}
                                                  {:id (path "play-type/gig") :label "Probe: Durch" :value "play-emphasis/durch"  :size :large}])
-           (render/radio-button-group  :id (path  "feeling") :label "How'd it go?"
+           (ui/radio-button-group  :id (path  "feeling") :label "How'd it go?"
                                        :required? true
                                        :value (value "feeling")
                                        :class "emotion-radio"
                                        :options [{:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile"}
                                                  {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"}
                                                  {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"}])
-           (render/textarea :name (path  "comment") :label "Thoughts?"
+           (ui/textarea :name (path  "comment") :label "Thoughts?"
                             :value (value "comment"))
 
            [:div
@@ -63,14 +63,14 @@
 (defn song-detail [{:keys [db] :as req} song-title]
   (if-let [song (controller/retrieve-song db song-title)]
     [:div
-     (render/page-header :title song-title
+     (ui/page-header :title song-title
 
                          :subtitle (list  "Last played " (ui/datetime (:song/last-played song)))
-                         :buttons (list  (render/button :label "Comment"
+                         :buttons (list  (ui/button :label "Comment"
                                                         :priority :white
                                                         :centered? true
                                                         :attr {:href "/songs/new"})
-                                         (render/button :label "Log Play"
+                                         (ui/button :label "Log Play"
                                                         :priority :primary
                                                         :centered? true
                                                         :class "items-center justify-center "
@@ -85,7 +85,7 @@
       (if (:song result)
         (response/redirect "/songs/")
         [:form {:id id :hx-post "song-new" :class "mt-6"}
-         (render/text :label "New Song Name" :name  (path "song") :placeholder "Watermelon Man" :value (value "song"))
+         (ui/text :label "New Song Name" :name  (path "song") :placeholder "Watermelon Man" :value (value "song"))
          [:div {:class "pt-5"}
           (when (:error result)
             [:span {:class "text-red-500 mb-1"}
@@ -162,14 +162,14 @@
 
 (ctmx/defcomponent songs-page [req]
   [:div
-   (render/page-header :title "Songs"
+   (ui/page-header :title "Songs"
                        :buttons (list
-                                 (render/button :tag :a :label "Log Play"
+                                 (ui/button :tag :a :label "Log Play"
                                                 :priority :primary
                                                 :centered? true
                                                 :attr {:href "/songs/log-play/"}
                                                 :icon icon/plus)
-                                 (render/button :tag :a :label "New Song"
+                                 (ui/button :tag :a :label "New Song"
                                                 :priority :white
                                                 :centered? true
                                                 :attr {:href "/songs/new"})))
@@ -181,7 +181,7 @@
    ])
 (defn song-toggler [{:song/keys [title selected]}]
   [:li (comment {:class
-                 (render/cs
+                 (ui/cs
                   "rounded border-4 mx-0 my-1 p-2 block basis-1/2 "
                   (if  selected "border-green-200" "border-gray-200"))
                  :_ "on click toggle between .border-gray-200 and .border-green-200"})

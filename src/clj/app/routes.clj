@@ -7,7 +7,6 @@
    [app.interceptors :as interceptors]
    [app.members.routes :refer [members-routes]]
    [app.routes.home :refer [home-routes]]
-   [app.routes.login :refer [login-routes]]
    [app.routes.pedestal-reitit]
    [app.songs.routes :refer [songs-routes]]
    [reitit.ring :as ring]))
@@ -25,12 +24,10 @@
    (home-routes)
    (songs-routes)
    (events-routes)
-   (login-routes)
    ["" {:interceptors insurance-interceptors}
     (insurance-routes)]
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
-   ["/login-backend"
-    {:get {:handler (partial #'auth.endpoint/login-page system)}}]])
+   ])
 
 (defn default-handler [{:keys [] :as system}]
   (ring/routes
