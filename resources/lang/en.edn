@@ -57,10 +57,14 @@
         :past "Past"
         :no-past "No gigs/probes in the past 2 weeks"
         :no-future "No upcoming gigs/probes"}
+ :insurance {:title "Insurance & Instruments"
+             :policies "Policies"
+             :insurance-policy "Insurance Policy"}
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
  :instruments "Instruments"
+ :instrument "Instrument"
  :none "None"
  :section "Section"
  :section-none "No Section"
@@ -69,7 +73,8 @@
           :cancel "Cancel"
           :comment "Comment"
           :add "Add"
-          :create "Create"}
+          :create "Create"
+          :duplicate "Duplicate"}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"
               :high "Motiviert"

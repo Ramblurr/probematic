@@ -648,7 +648,7 @@
    [:div {:class "relative ml-4 sm:ml-0 "}
     [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
      [:div {:class "w-full border-t border-gray-300"}]]
-    [:div {:class "relative flex items-center justify-between"}
+    [:div {:class "relative flex items-center justify-between mb-2"}
      [:span {:class "bg-gray-100 pr-3 text-lg font-medium text-gray-900"}
       title]
      (when button

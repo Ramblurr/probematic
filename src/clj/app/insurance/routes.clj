@@ -18,7 +18,7 @@
    "/instrument/{instrument-id}/"
    (fn [req]
      (layout/app-shell req
-                       (view/instrument-detail-page req)))))
+                       (view/instrument-detail-page req false)))))
 
 (defn insurance-create []
   (ctmx/make-routes
