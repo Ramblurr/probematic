@@ -424,7 +424,7 @@
         archived? (domain/gig-archived? gig)
         gig (cond (and (not archived?) (util/post? req)) (:gig (controller/update-gig! req))
                   :else (:gig req))
-        {:gig/keys [gig-id title date end-date status gig-type
+        {:gig/keys [title date end-date status gig-type
                     contact pay-deal call-time set-time end-time
                     outfit description location setlist leader post-gig-plans
                     more-details]} gig]
@@ -490,9 +490,9 @@
               (ui/dl-item (tr [:gig/date]) (ui/date :value date :name (path "date")))
               (ui/dl-item (tr [:gig/end-date]) (ui/date :value date :name (path "end-date") :required? false))
               (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members (q/members-for-select-active db)))
-              (ui/dl-item (tr [:gig/call-time]) (ui/time :value call-time :name (path "call-time")))
-              (ui/dl-item (tr [:gig/set-time]) (ui/time :value set-time :name (path "set-time") :required? false))
-              (ui/dl-item (tr [:gig/end-time]) (ui/time :value end-time :name (path "end-time") :required? false))
+              (ui/dl-item (tr [:gig/call-time]) (ui/input-time :value call-time :name (path "call-time")))
+              (ui/dl-item (tr [:gig/set-time]) (ui/input-time :value set-time :name (path "set-time") :required? false))
+              (ui/dl-item (tr [:gig/end-time]) (ui/input-time :value end-time :name (path "end-time") :required? false))
               (ui/dl-item (tr [:gig/location]) (ui/text :value location :name (path "location")))
               (ui/dl-item (tr [:gig/outfit]) (ui/text :value outfit :name (path "outfit") :required? false))
               (ui/dl-item (tr [:gig/pay-deal]) (ui/text :value pay-deal :name (path "pay-deal") :required? false))

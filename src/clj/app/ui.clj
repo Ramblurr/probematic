@@ -275,7 +275,7 @@
 (defn text [& opts]
   (apply input (conj opts "text" :type)))
 
-(defn datetime [& {:keys [value name required?]}]
+(defn input-datetime [& {:keys [value name required?]}]
   [:input {:type "datetime-local" :name name
            :value (when value (t/date-time value))
            :required required?
@@ -287,7 +287,7 @@
            :required required?
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
 
-(defn time [& {:keys [value name required?]}]
+(defn input-time [& {:keys [value name required?]}]
   [:input {:type "time" :name name
            :value (when value (t/time value))
            :required required?
@@ -318,8 +318,7 @@
                         priority :white
                         size  :normal
                         disabled? false
-                        tag :button}
-                 :as   args}]
+                        tag :button}}]
 
   [tag (merge
         {:class
