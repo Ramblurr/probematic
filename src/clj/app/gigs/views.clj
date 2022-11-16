@@ -264,7 +264,7 @@
 
        (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gig-id gig-id :gigo-key gigo-key :comment comment :edit? true}}]
          (if comment
-           [:span (merge hx-attrs {:class "ml-2 cursor-pointer text-blue-500 hover:text-blue-600"})
+           [:span (merge hx-attrs {:class "text-xs sm:text-sm ml-2 link-blue"})
             comment]
            [:button  hx-attrs
             (icon/comment-outline {:class "ml-2 mb-2 w-5 h-5 cursor-pointer hover:text-blue-500 active:text-blue-300"})])))]))
@@ -309,14 +309,26 @@
                        gigo-key motivation))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
-  (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
-    [:div {:class "grid grid-cols grid-cols-5" :id id}
-     [:div {:class "col-span-2 align-middle"}
-      [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
-       (ui/member-nick member)]]
-     [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
-     [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
-     [:div {:class "col-span-1 "} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)]]))
+  (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)
+        has-comment? (:attendance/comment attendance)]
+    [:div {:id id}
+     ;; for mobile < sm
+     [:div {:class (ui/cs "sm:hidden grid grid-rows-auto  grid-cols-3")}
+      [:div {:class (ui/cs "grid gap-x-2 grid-cols-6 col-span-3")}
+       [:div {:class "col-span-2 align-middle"} [:a {:href (url/link-member gigo-key) :class "link-blue align-middle"} (ui/member-nick member)]]
+       [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
+       [:div {:class "col-span-2"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
+       (when-not has-comment? [:div {:class "col-span-1 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])]
+      (when has-comment?
+        [:div {:class "col-start-2 col-span-2 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])]
+     ;; for > sm
+     [:div {:class "hidden sm:grid sm:grid-cols sm:grid-cols-6 sm:gap-x-2"}
+      [:div {:class "col-span-2 align-middle"}
+       [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
+        (ui/member-nick member)]]
+      [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
+      [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
+      [:div {:class "col-span-2 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)]]]))
 
 (defn gig-attendance-person-archived [{:keys [db] :as req} idx attendance]
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
@@ -333,12 +345,10 @@
              (str/split (:section/name section) #"/")))
 
 (ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx section]
-  [:div {:id id :class (ui/cs "grid grid-cols-3 gap-x-0 gap-y-8 mt-2 mb-2 px-4 py-0 sm:px-6 border-b border-gray-200")}
-
-   [:div {:class "col-span-1 font-bold break-words"} (section-name-wrappable section)]
-   [:div {:class "col-span-2"}
+  [:div {:class "gap-x-0 gap-y-8 mt-2 mb-2 px-4 py-0 sm:px-6 border-b border-gray-200"}
+   [:div {:class "font-bold break-words"} (section-name-wrappable section)]
+   [:div {:id id :class ""}
     (rt/map-indexed gig-attendance-person req (:members section))]])
-
 (ctmx/defcomponent ^:endpoint gig-attendance-archived [{:keys [db] :as req} idx section]
   [:div {:id id :class (ui/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
                               (when (= 0 (mod idx 2))
