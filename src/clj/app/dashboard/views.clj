@@ -31,31 +31,27 @@
                              (util/comp-namer #'gig-attendance-person-comment)
                              gig-id gigo-key comment edit?))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} gig]
+(ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx gig]
   (let [attendance (:attendance gig)
         gig-id (:gig/gig-id gig)
-        {:member/keys [gigo-key] :as member} (:attendance/member attendance)]
-    [:div {:class "grid grid-cols grid-flow-col auto-cols-auto gap-x-2" :id id}
-     [:div {:class ""} (gig-attendance-person-plan req gig-id gigo-key (:attendance/plan attendance))]
-     [:div {:class ""} (gig-attendance-person-motivation req gig-id gigo-key (:attendance/motivation attendance))]
-     [:div {:class ""} (gig-attendance-person-comment req gig-id gigo-key (:attendance/comment attendance) false)]]))
-
-(ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx gig]
-  [:div {:id id :class (ui/cs "flex flex-col md:grid md:grid-cols-4 gap-x-0 md:gap-y-8 px-4 py-2 sm:px-6 last:rounded-b-md border-b border-gray-200"
-                              (when (= 0 idx) "sm:rounded-t-md")
-                              (if (= 0 (mod idx 2))
-                                "bg-white"
-                                "bg-white"))}
-   [:div {:class "order-2 md:order-none md:col-span-1 text-sm whitespace-nowrap"}
-    [:div {:class "flex gap-x-2 md:grid md:grid-flow-col md:auto-cols-min"}
-     [:div {:class "hidden md:block"} (ui/gig-status-icon (:gig/status gig))]
-     [:div {:class "md:order-none md:min-w-[5rem]"} (ui/gig-date gig)]
-     [:div {:class "md:order-none "} (ui/gig-time gig)]]]
-   [:div {:class "order-1 md:order-none md:col-span-2 font-bold md:font-normal"}
-    [:a {:href (url/link-gig gig) :class  "link-blue"} (:gig/title gig)]]
-   [:div {:class "order-last md:order-none md:col-span-1 flex gap-x-2"}
-    [:div {:class "block md:hidden"} (ui/gig-status-icon (:gig/status gig))]
-    (gig-attendance-person req gig)]])
+        {:member/keys [gigo-key]} (:attendance/member attendance)]
+    [:div {:id id :class (ui/cs "flex flex-col md:grid md:grid-cols-4 gap-x-0 md:gap-y-8 px-4 py-2 sm:px-6 last:rounded-b-md border-b border-gray-200"
+                                (when (= 0 idx) "sm:rounded-t-md")
+                                (if (= 0 (mod idx 2))
+                                  "bg-white"
+                                  "bg-white"))}
+     [:div {:class "order-2 md:order-none md:col-span-1 text-sm whitespace-nowrap"}
+      [:div {:class "flex gap-x-2 md:grid md:grid-flow-col md:auto-cols-min"}
+       [:div {:class "hidden md:block"} (ui/gig-status-icon (:gig/status gig))]
+       [:div {:class "md:order-none md:min-w-[5rem]"} (ui/gig-date gig)]
+       [:div {:class "md:order-none "} (ui/gig-time gig)]]]
+     [:div {:class "order-1 md:order-none font-bold md:font-normal"}
+      [:a {:href (url/link-gig gig) :class "link-blue"} (:gig/title gig)]]
+     [:div {:class "order-last md:order-none md:col-span-2 flex gap-x-2"}
+      [:div {:class "block md:hidden"} (ui/gig-status-icon (:gig/status gig))]
+      [:div (gig-attendance-person-plan req gig-id gigo-key (:attendance/plan attendance))]
+      [:div (gig-attendance-person-motivation req gig-id gigo-key (:attendance/motivation attendance))]
+      [:div (gig-attendance-person-comment req gig-id gigo-key (:attendance/comment attendance) false)]]]))
 
 (ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db] :as req}]
   (let [member (auth/get-current-member req)
