@@ -18,7 +18,7 @@
    "/members"
    (fn [req]
      (layout/app-shell req
-                       (view/members-index-page req)))))
+                       (view/members-index-page req false)))))
 
 (def members-interceptors [{:name ::members--interceptor
                             :enter (fn [ctx]

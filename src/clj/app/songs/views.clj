@@ -23,36 +23,36 @@
                   :class "space-y-4"}
            (list
             (ui/select :id (path "song-id")
-                           :label "Songs"
-                           :value (value "song")
-                           :options (map (fn [s]
-                                           {:value (:song/title s)
-                                            :label (:song/title s)
-                                            :selected? false}) songs))
+                       :label "Songs"
+                       :value (value "song")
+                       :options (map (fn [s]
+                                       {:value (:song/title s)
+                                        :label (:song/title s)
+                                        :selected? false}) songs))
 
             (ui/select :id (path "gig-id")
-                           :label "Gig/Probe"
-                           :value (value "song")
-                           :options (map (fn [{:gig/keys [gig-id title date]}]
-                                           {:value gig-id
-                                            :label (str title " " (when date (ui/format-dt date)))
-                                            :selected? false}) gigs)))
+                       :label "Gig/Probe"
+                       :value (value "song")
+                       :options (map (fn [{:gig/keys [gig-id title date]}]
+                                       {:value gig-id
+                                        :label (str title " " (when date (ui/format-dt date)))
+                                        :selected? false}) gigs)))
 
            (ui/radio-button-group  :id (path  "play-type") :label "Play Type"
-                                       :required? true
-                                       :value (value "play-type")
-                                       :options [{:id (path "play-type/gig") :label "Gig" :value "play-emphasis/gig"  :size :large}
-                                                 {:id (path "play-type/gig") :label "Probe: Intensiv" :value "play-emphasis/intensiv"  :size :large}
-                                                 {:id (path "play-type/gig") :label "Probe: Durch" :value "play-emphasis/durch"  :size :large}])
+                                   :required? true
+                                   :value (value "play-type")
+                                   :options [{:id (path "play-type/gig") :label "Gig" :value "play-emphasis/gig"  :size :large}
+                                             {:id (path "play-type/gig") :label "Probe: Intensiv" :value "play-emphasis/intensiv"  :size :large}
+                                             {:id (path "play-type/gig") :label "Probe: Durch" :value "play-emphasis/durch"  :size :large}])
            (ui/radio-button-group  :id (path  "feeling") :label "How'd it go?"
-                                       :required? true
-                                       :value (value "feeling")
-                                       :class "emotion-radio"
-                                       :options [{:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile"}
-                                                 {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"}
-                                                 {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"}])
+                                   :required? true
+                                   :value (value "feeling")
+                                   :class "emotion-radio"
+                                   :options [{:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile"}
+                                             {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"}
+                                             {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"}])
            (ui/textarea :name (path  "comment") :label "Thoughts?"
-                            :value (value "comment"))
+                        :value (value "comment"))
 
            [:div
             [:div {:class "flex justify-end"}
@@ -65,16 +65,16 @@
     [:div
      (ui/page-header :title song-title
 
-                         :subtitle (list  "Last played " (ui/datetime (:song/last-played song)))
-                         :buttons (list  (ui/button :label "Comment"
-                                                        :priority :white
-                                                        :centered? true
-                                                        :attr {:href "/songs/new"})
-                                         (ui/button :label "Log Play"
-                                                        :priority :primary
-                                                        :centered? true
-                                                        :class "items-center justify-center "
-                                                        :attr {:href (str "/song/log-play/" song-title "/")})))]
+                     :subtitle (list  "Last played " (ui/datetime (:song/last-played song)))
+                     :buttons (list  (ui/button :label "Comment"
+                                                :priority :white
+                                                :centered? true
+                                                :attr {:href "/songs/new"})
+                                     (ui/button :label "Log Play"
+                                                :priority :primary
+                                                :centered? true
+                                                :class "items-center justify-center "
+                                                :attr {:href (str "/song/log-play/" song-title "/")})))]
 
     [:div
      [:p "Song not found."]
@@ -163,17 +163,17 @@
 (ctmx/defcomponent songs-page [req]
   [:div
    (ui/page-header :title "Songs"
-                       :buttons (list
-                                 (ui/button :tag :a :label "Log Play"
-                                                :priority :primary
-                                                :centered? true
-                                                :attr {:href "/songs/log-play/"}
-                                                :icon icon/plus)
-                                 (ui/button :tag :a :label "New Song"
-                                                :priority :white
-                                                :centered? true
-                                                :attr {:href "/songs/new"})))
-   [:div {:class "flex space-x-4 mt-8 sm:mt-0"}
+                   :buttons (list
+                             (ui/button :tag :a :label "Log Play"
+                                        :priority :primary
+                                        :centered? true
+                                        :attr {:href "/songs/log-play/"}
+                                        :icon icon/plus)
+                             (ui/button :tag :a :label "New Song"
+                                        :priority :white
+                                        :centered? true
+                                        :attr {:href "/songs/new"})))
+   [:div {:class "flex space-x-4 mt-8 sm:mt-0 bg-white"}
     (songs-filter req)]
 
    (songs-list req "")

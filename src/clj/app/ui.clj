@@ -598,9 +598,9 @@
    [:div {:class "ml-3 text-sm"}
     [:label {:for id :class "font-medium text-gray-700"} label]]])
 
-(defn toggle [& {:keys [label hx-target hx-get active? id]}]
+(defn toggle [& {:keys [label hx-target hx-get hx-vals active? id]}]
   [:div {:class "flex items-center"}
-   [:button {:type "button" :hx-target hx-target :hx-get hx-get
+   [:button {:type "button" :hx-target hx-target :hx-get hx-get :hx-vals hx-vals
              :class (cs (if active? "bg-indigo-600" "bg-gray-200") "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2")
              :_ "on click toggle between .bg-gray-200 and .bg-indigo-600 end
                  on click toggle between .translate-x-5 and .translate-x-0 on <span/> in me end "

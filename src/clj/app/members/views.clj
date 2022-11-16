@@ -81,10 +81,10 @@
         (if edit?
           (list
            (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
-                          :attr {:hx-get (comp-name "?edit=false") :hx-target (hash ".")})
+                      :attr {:hx-get (comp-name "?edit=false") :hx-target (hash ".")})
            (ui/button :label (tr [:action/save])  :priority :primary :centered? true))
           (ui/button :label (tr [:action/edit]) :priority :white :centered? true
-                         :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]
+                     :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]
       [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
        [:div {:class "space-y-6 md:col-span-2 md:col-start-1"}
         [:section
@@ -95,14 +95,14 @@
           [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
            [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
             (ui/dl-item (tr [:Email]) (if edit?
-                                            (ui/input :name (path "email") :label "" :value email :type :email)
-                                            email))
+                                        (ui/input :name (path "email") :label "" :value email :type :email)
+                                        email))
             (ui/dl-item (tr [:Phone]) (if edit?
-                                            (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
-                                            phone))
+                                        (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
+                                        phone))
             (ui/dl-item (tr [:Active]) (if edit?
-                                             (ui/toggle-checkbox  :checked? active? :name (path "active?"))
-                                             (ui/bool-bubble active?)))]]]]
+                                         (ui/toggle-checkbox  :checked? active? :name (path "active?"))
+                                         (ui/bool-bubble active?)))]]]]
         [:section
          [:div {:class "bg-white shadow sm:rounded-lg"}
           [:div {:class "px-4 py-5 sm:px-6"}
@@ -117,19 +117,19 @@
             (ui/dl-item (tr [:private-instruments]) (count private-instruments))
             (ui/dl-item (tr [:outstanding-payments]) (ui/money 0 :EUR))
             (ui/dl-item (tr [:instruments]) (if (empty? coverages)
-                                                  (tr [:none])
-                                                  [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
-                                                   (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
-                                                          [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
-                                                           [:div {:class "flex w-0 flex-1 items-center"}
-                                                            (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
-                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} name]
-                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
-                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/money value :EUR)]
-                                                            [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
-                                                           [:div {:class "ml-4 flex-shrink-0"}
-                                                            [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]])
-                                                        coverages)]))]]]]
+                                              (tr [:none])
+                                              [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
+                                               (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
+                                                      [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
+                                                       [:div {:class "flex w-0 flex-1 items-center"}
+                                                        (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
+                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} name]
+                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
+                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/money value :EUR)]
+                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
+                                                       [:div {:class "ml-4 flex-shrink-0"}
+                                                        [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]])
+                                                    coverages)]))]]]]
 
         [:section
          [:div {:class "bg-white shadow sm:rounded-lg"}
@@ -173,8 +173,8 @@
        (let [icon (if active? icon/xmark icon/plus)
              class (if active? "text-red-500" "text-green-500")]
          (ui/button :icon icon :size :small
-                        :class class
-                        :attr {:hx-post (comp-name) :hx-target (hash ".")}))]
+                    :class class
+                    :attr {:hx-post (comp-name) :hx-target (hash ".")}))]
       ;;
       )]))
 
@@ -212,29 +212,22 @@
        (ui/table-body
         (rt/map-indexed member-row-ro req (map :member/gigo-key members)))))))
 
-(ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req} ^:boolean edit?]
   (ctmx/with-req req
-    (let [edit? (util/qp-bool req :edit)
-          add? (util/qp-bool req :add)
+    (let [add? (util/qp-bool req :add)
           comp-name (util/comp-namer #'members-index-page)]
       [:div {:id id}
        (ui/page-header :title "Member Admin")
+       [:div {:class "mt-2"}
+        [:div {:class "px-4 sm:px-6 lg:px-8"}
+         [:div {:class "flex items-center justify-end"}
+          [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
+           (ui/toggle :label "Edit" :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
+           (ui/button :label "Add" :priority :white :class "" :icon icon/plus :centered? true
+                      :attr {:hx-target (hash ".") :hx-get (comp-name "?add=true")})]]
 
-       (let [_ 1]
-         [:div {:class "mt-2"}
-          [:div {:class "px-4 sm:px-6 lg:px-8"}
-           [:div {:class "flex items-center justify-center bg-white p-8"}]
-           [:div {:class "sm:flex sm:items-center"}
-            [:div {:class "sm:flex-auto"}
-             [:h1 {:class "text-2xl font-semibold text-gray-900"} "Members"]
-             [:p {:class "mt-2 text-sm text-gray-700"} ""]]
-            [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}
-             (ui/toggle :label "Edit" :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (if edit? (comp-name "?edit=false") (comp-name "?edit=true")))
-             (ui/button :label "Add" :priority :white :class "" :icon icon/plus :centered? true
-                            :attr {:hx-target (hash ".") :hx-get (comp-name "?add=true")})]]
-
-           [:div {:class "mt-4"}
-            [:table {:class "min-w-full divide-y divide-gray-300"}
-             (if edit?
-               (member-table-rw req)
-               (member-table-ro req))]]]])])))
+         [:div {:class "mt-4"}
+          [:table {:class "min-w-full divide-y divide-gray-300"}
+           (if edit?
+             (member-table-rw req)
+             (member-table-ro req))]]]]])))
