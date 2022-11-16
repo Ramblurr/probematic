@@ -528,13 +528,15 @@
                 (ui/dl-item (tr [:gig/post-gig-plans]) post-gig-plans "sm:col-span-3"))))
            ;;
            ]]]]]]]))
-(ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req} ^:boolean show-committed?]
   (let [{:gig/keys [gig-id] :as gig} (:gig req)
+        comp-name (util/comp-namer #'gigs-detail-page)
         tr (i18n/tr-from-req req)
         archived? (domain/gig-archived? gig)
         attendances-by-section (if archived?
-                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendances-for-gig db gig-id))
-                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id)))]
+                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendances-for-gig db gig-id) false)
+                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
+
     [:div {:id id}
      (gigs-detail-page-info req gig false)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
@@ -544,7 +546,13 @@
         [:div {:class "bg-white shadow sm:rounded-lg"}
          [:div {:class "px-4 py-5 sm:px-6"}
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-           (tr [:gig/attendance])]]
+           (tr [:gig/attendance])]
+          [:p
+           [:button {:class "btn btn-indigo-normal" :hx-get (comp-name) :hx-target (hash ".") :hx-vals {:show-committed? (not show-committed?)}}
+            (if show-committed?
+              "Show All"
+              "Show Committed")]]]
+
          [:div {:class "border-t border-gray-200"}
           (if archived?
             (rt/map-indexed gig-attendance-archived req attendances-by-section)

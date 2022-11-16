@@ -218,13 +218,16 @@
 
 (defn attendance-plans-by-section-for-gig
   "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
-  [db gig-id attendance-for-gig]
+  [db gig-id attendance-for-gig committed-only?]
   (->> attendance-for-gig
        (group-by :attendance/section)
        (reduce (fn [acc [k v]]
                  (when k
                    (conj acc {:section/name k
-                              :members (util/isort-by #(-> % :attendance/member member-nick-or-name) v)})))
+                              :members
+                              (cond->> v
+                                committed-only? (filter #(= :plan/definitely (:attendance/plan %)))
+                                true (util/isort-by #(-> % :attendance/member member-nick-or-name)))})))
                [])))
 
 (defn section-for-member [db gigo-key]

@@ -17,7 +17,7 @@
   (ctmx/make-routes
    "/event/{gig/gig-id}/"
    (fn [req]
-     (layout/app-shell req (view/gigs-detail-page req)))))
+     (layout/app-shell req (view/gigs-detail-page req false)))))
 
 (defn gig-log-play-route []
   (ctmx/make-routes
