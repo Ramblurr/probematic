@@ -9,7 +9,6 @@ htmx.onLoad(function(content) {
 })
 
 document.body.addEventListener('htmx:beforeSwap', function(evt) {
-    console.log(evt)
     if(evt.detail.xhr.status === 404){
         // alert the user when a 404 occurs (maybe use a nicer mechanism than alert())
         alert("Error: Could Not Find Resource TODO make this nicer");
@@ -38,7 +37,10 @@ document.body.addEventListener("htmx:beforeSwap", function(evt) {
 document.body.addEventListener("htmx:afterSettle", function(evt) {
   NProgress.done();
   setTimeout(() => NProgress.remove(), 1000)
-});
+  if(evt.target.querySelector(".dropdown")) {
+    DropdownAll(evt.target)
+  }
+})
 
 
 document.body.addEventListener("htmx:responseError", function(evt) {

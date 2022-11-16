@@ -48,7 +48,9 @@
        :description "Public Gig Description"
        :post-gig-plans "Post Gig Plans"
        :gig-info "Gig Info"
-       :probe-info "Probe Info"}
+       :probe-info "Probe Info"
+       :show-all "Show All"
+       :show-committed "Show Committed"}
 
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"

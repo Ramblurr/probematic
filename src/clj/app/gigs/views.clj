@@ -278,14 +278,9 @@
                  (if post?
                    (-> (controller/update-attendance-plan! req gig-id) :attendance :attendance/plan)
                    plan)
-                 :plan/no-response)
-        body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
-                     (attendance-dropdown :tr tr :gig-id gig-id :gigo-key gigo-key :value (name plan-kw))]]
-    (if post?
-      (ui/trigger-response "newDropdown" body-result
-                           {:trigger-type :hx-trigger-after-settle
-                            :data (str (hash ".") " .dropdown")})
-      body-result)))
+                 :plan/no-response)]
+    [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
+     (attendance-dropdown :tr tr :gig-id gig-id :gigo-key gigo-key :value (name plan-kw))]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
   (plan-endpoint req
@@ -544,14 +539,17 @@
 ;;;; Attendance Section
        [:section
         [:div {:class "bg-white shadow sm:rounded-lg"}
-         [:div {:class "px-4 py-5 sm:px-6"}
+         [:div {:class "px-4 py-5 sm:px-6 flex flex-row flex-items-center justify-between"}
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
            (tr [:gig/attendance])]
-          [:p
-           [:button {:class "btn btn-indigo-normal" :hx-get (comp-name) :hx-target (hash ".") :hx-vals {:show-committed? (not show-committed?)}}
-            (if show-committed?
-              "Show All"
-              "Show Committed")]]]
+          [:div
+           (ui/button :label (if show-committed?
+                               (tr [:gig/show-all])
+                               (tr [:gig/show-committed]))
+                      :size :xsmall
+                      :priority :primary
+                      :centered? true
+                      :attr  {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:show-committed? (not show-committed?)}})]]
 
          [:div {:class "border-t border-gray-200"}
           (if archived?

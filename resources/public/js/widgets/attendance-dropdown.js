@@ -74,6 +74,10 @@ export const Dropdown = (root) => {
 
 }
 
-export const DropdownAll = () => {
-  document.querySelectorAll('.dropdown').forEach(Dropdown)
+export const DropdownAll = (target) => {
+  if (target) {
+    target.querySelectorAll('.dropdown').forEach(Dropdown)
+  } else {
+    document.querySelectorAll('.dropdown').forEach(Dropdown)
+  }
 }
