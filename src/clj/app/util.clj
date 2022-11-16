@@ -3,7 +3,8 @@
    [clojure.walk :as walk]
    [medley.core :as m]
    [ctmx.form :as form]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [tick.core :as t]))
 
 (defn clean-number [n]
   (str/replace n #"[^+\d]" ""))
@@ -116,3 +117,28 @@
   (replace-deep #{:password} "<REDACTED>" [{:user {:name "alice" :password "hunter2"}}])
   ;;
   )
+
+(defn local-time-austria!
+  "Returns a zoned date time for the local austrian time"
+  [] (t/in (t/instant) "Europe/Vienna"))
+
+(defn time-inside?
+  "Returns true if   start <= reference < end"
+  [start end reference]
+  (and (t/>= reference start)
+       (t/< reference end)))
+
+(defn time-window [zdt]
+  (let [time (t/time zdt)]
+    (cond
+      (time-inside? (t/time "00:00") (t/time "05:00") time)
+      :nightowl
+
+      (time-inside? (t/time "05:00") (t/time "12:00") time)
+      :morning
+
+      (time-inside? (t/time "12:00") (t/time "17:00") time)
+      :afternoon
+
+      (time-inside? (t/time "17:00") (t/time "00:00") time)
+      :evening)))

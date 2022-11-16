@@ -32,23 +32,23 @@
   (domain/db->gig
    (d/find-by db :gig/gig-id gig-id q/gig-detail-pattern)))
 
-(defn gigs-before [db time]
+(defn gigs-before [db instant]
   (results->gigs  (d/q '[:find (pull ?e pattern)
                          :in $ ?time pattern
                          :where
                          [?e :gig/gig-id _]
                          [?e :gig/date ?date]
-                         [(< ?date ?time)]] db (t/inst time) q/gig-pattern)))
+                         [(< ?date ?time)]] db instant q/gig-pattern)))
 
-(defn gigs-after [db time]
+(defn gigs-after [db instant]
   (results->gigs (d/q '[:find (pull ?e pattern)
                         :in $ ?reference-time pattern
                         :where
                         [?e :gig/gig-id _]
                         [?e :gig/date ?date]
-                        [(>= ?date ?reference-time)]] db (t/inst time) q/gig-pattern)))
+                        [(>= ?date ?reference-time)]] db instant q/gig-pattern)))
 
-(defn gigs-between [db start end]
+(defn gigs-between [db instant-start instant-end]
   (results->gigs (d/q '[:find (pull ?e pattern)
                         :in $ ?ref-start ?ref-end pattern
                         :where
@@ -56,13 +56,89 @@
                         [?e :gig/date ?date]
                         [(>= ?date ?ref-start)]
                         [(<= ?date ?ref-end)]] db
-                      (t/inst start) (t/inst end) q/gig-pattern)))
+                      instant-start  instant-end q/gig-pattern)))
+
+(defn date-midnight-today! []
+  (-> (t/date)
+      (t/at (t/midnight))
+      (t/in "UTC")
+      (t/inst)))
 
 (defn gigs-future [db]
-  (gigs-after db (t/at (t/date) (t/midnight))))
+  (gigs-after db (date-midnight-today!)))
 
 (defn gigs-past [db]
-  (gigs-before db (t/at (t/date) (t/midnight))))
+  (gigs-before db (date-midnight-today!)))
+
+(defn attach-attendance [db member {:gig/keys [gig-id] :as gig}]
+  (assoc gig :attendance (q/attendance-for-gig db gig-id (:member/gigo-key member))))
+
+(defn gigs-planned-for
+  "Return the gigs that the member as supplied an attendance plan for"
+  [db member]
+  (->>
+   (results->gigs (d/q '[:find (pull ?gig pattern)
+                         :in $ ?member ?reference-time pattern
+                         :where
+                         [?gig :gig/date ?date]
+                         [(>= ?date ?reference-time)]
+                         [?a :attendance/gig ?gig]
+                         [?a :attendance/member ?member]
+                         [?a :attendance/plan ?plan]
+                         [(!= ?plan :plan/no-response)]]
+                       db (d/ref member) (date-midnight-today!) q/gig-pattern))
+   (map (partial attach-attendance db member))))
+
+(def member {:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
+
+(clojure.core/comment
+  (d/find-by db :gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCAw" q/gig-pattern))
+
+(defn gigs-needing-plan
+  "Return the gigs that the member needs to supply an attendance plan for"
+  [db member]
+  (let [gigs-with-no-attendance
+        (->>
+         (d/q '[:find (pull ?gig pattern)
+                :in $ ?member ?reference-time pattern
+                :where
+                [?gig :gig/date ?date]
+                [(>= ?date ?reference-time)]
+                [?gig :gig/gig-id ?gig-id]
+                (not-join [?gig ?member]
+                          [?a :attendance/gig ?gig]
+                          [?a :attendance/member ?member])]
+
+              db (d/ref member) (date-midnight-today!) q/gig-detail-pattern)
+         results->gigs
+         (map (fn [gig]
+                (assoc gig :attendance {:attendance/section (:member/section member)
+                                        :attendance/member  member
+                                        :attendance/plan :plan/no-response}))))
+        gigs-with-unknown-attendance (->> (d/q '[:find (pull ?gig pattern)
+                                                 :in $ ?member ?reference-time pattern
+                                                 :where
+                                                 [?gig :gig/date ?date]
+                                                 [(>= ?date ?reference-time)]
+                                                 [?a :attendance/gig ?gig]
+                                                 [?a :attendance/member ?member]
+                                                 (or
+                                                  [(missing? $ ?a :attendance/plan)]
+                                                  [?a :attendance/plan :plan/no-response]
+                                                  [?a :attendance/plan :plan/unknown])]
+
+                                               db (d/ref member) (date-midnight-today!) q/gig-detail-pattern)
+                                          results->gigs
+                                          (map (partial attach-attendance db member)))]
+
+    (sort-by :gig/date
+             (concat gigs-with-no-attendance gigs-with-unknown-attendance))))
+
+(clojure.core/comment
+  (q/attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw"
+                        "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")
+
+  (gigs-needing-plan db {:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"}))
 
 (defn page
   ([offset limit coll]
@@ -71,24 +147,23 @@
    (page coll 0 limit)))
 
 (defn gigs-past-page [db offset limit]
-  (let [now (t/inst (t/at (t/date) (t/midnight)))]
-    (->>
-     (d/q '[:find (pull ?e pattern)
-            :in $ ?time pattern
-            :where
-            [?e :gig/gig-id _]
-            [?e :gig/date ?date]
-            [(< ?date ?time)]] db now [:gig/gig-id :gig/date :db/id])
-     (map first)
-     (sort-by :gig/date)
-     (page offset limit)
-     (map :db/id)
-     (d/pull-many db q/gig-pattern)
-     (sort-by :gig/date)
-     (mapv domain/db->gig))))
+  (->>
+   (d/q '[:find (pull ?e pattern)
+          :in $ ?time pattern
+          :where
+          [?e :gig/gig-id _]
+          [?e :gig/date ?date]
+          [(< ?date ?time)]] db (date-midnight-today!) [:gig/gig-id :gig/date :db/id])
+   (map first)
+   (sort-by :gig/date)
+   (page offset limit)
+   (map :db/id)
+   (d/pull-many db q/gig-pattern)
+   (sort-by :gig/date)
+   (mapv domain/db->gig)))
 
 (defn gigs-past-two-weeks [db]
-  (let [now (t/at (t/date) (t/midnight))
+  (let [now (date-midnight-today!)
         then (t/<< now (t/new-duration 14 :days))]
     (gigs-between db then now)))
 
@@ -108,18 +183,12 @@
                       (map #(-> % :played/song :song/song-id))
                       (some (fn [p] (= p (:song/song-id song)))))))))
 
-(defn gig+member [gig-id gigo-key]
-  (pr-str [gig-id gigo-key]))
-
 (defn get-attendance
   ([db gig-id gigo-key]
-   (get-attendance db (gig+member gig-id gigo-key)))
+   (get-attendance db (q/gig+member gig-id gigo-key)))
   ([db gig+member]
    (assert (string? gig+member))
    (d/find-by db :attendance/gig+member gig+member q/attendance-pattern)))
-
-(defn attendance-touch-ts [a]
-  (assoc a :attendance/updated (t/inst)))
 
 (defn transact-attendance! [datomic-conn attendance-txs gig+member]
   (let [result (d/transact datomic-conn {:tx-data attendance-txs})]
@@ -136,7 +205,7 @@
   [:db/add (d/ref attendance) :attendance/updated (t/inst)])
 
 (defn create-attendance-tx [db gig-id gigo-key]
-  {:attendance/gig+member (gig+member gig-id gigo-key)
+  {:attendance/gig+member (q/gig+member gig-id gigo-key)
    :attendance/gig        [:gig/gig-id gig-id]
    :attendance/member     [:member/gigo-key gigo-key]
    :attendance/updated    (t/inst)
@@ -145,9 +214,10 @@
 (defn create-attendance-plan-tx [db gig-id gigo-key plan]
   (assoc (create-attendance-tx db gig-id gigo-key) :attendance/plan plan))
 
-(defn update-attendance-plan! [{:keys [datomic-conn db] :as req}]
+(defn update-attendance-plan! [{:keys [datomic-conn db] :as req} gig-id]
   (let [{:keys [gigo-key plan] :as params} (common/unwrap-params req)
-        gig-id (-> req :path-params :gig/gig-id)
+        _ (assert gig-id)
+        _ (assert gigo-key)
         attendance (get-attendance db gig-id gigo-key)
         plan-kw (str->plan plan)
         attendance-txs (if attendance
@@ -156,7 +226,7 @@
                          [(create-attendance-plan-tx db gig-id gigo-key plan-kw)])]
 
     (assert plan-kw (format  "unknown plan value: '%s'" plan))
-    (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
+    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key))))
 
 (defn create-attendance-comment-tx [db gig-id gigo-key comment]
   (assoc (create-attendance-tx db gig-id gigo-key) :attendance/comment comment))
@@ -167,9 +237,10 @@
 (defn retract-attendance-comment-tx [attendance]
   [:db/retract (d/ref attendance) :attendance/comment])
 
-(defn update-attendance-comment! [{:keys [datomic-conn db] :as req}]
+(defn update-attendance-comment! [{:keys [datomic-conn db] :as req} gig-id]
   (let [{:keys [gigo-key comment] :as params} (common/unwrap-params req)
-        gig-id (-> req :path-params :gig/gig-id)
+        _ (assert gig-id)
+        _ (assert gigo-key)
         attendance (get-attendance db gig-id gigo-key)
         attendance-txs (if attendance
                          (if (str/blank? comment)
@@ -185,7 +256,7 @@
 
     (if (= :nop attendance-txs)
       {:attendance attendance}
-      (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key)))))
+      (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key)))))
 
 (defn create-attendance-motivation-tx [db gig-id gigo-key motivation]
   (assoc (create-attendance-tx db gig-id gigo-key) :attendance/motivation motivation))
@@ -193,9 +264,8 @@
 (defn update-attendance-motivation-tx [attendance motivation]
   [:db/add (d/ref attendance) :attendance/motivation motivation])
 
-(defn update-attendance-motivation! [{:keys [datomic-conn db] :as req}]
+(defn update-attendance-motivation! [{:keys [datomic-conn db] :as req} gig-id]
   (let [{:keys [gigo-key motivation] :as params} (common/unwrap-params req)
-        gig-id (-> req :path-params :gig/gig-id)
         _ (assert gig-id)
         _ (assert gigo-key)
         attendance (get-attendance db gig-id gigo-key)
@@ -205,7 +275,7 @@
                            (touch-attendance-tx attendance)]
                           [(create-attendance-motivation-tx db gig-id gigo-key motivation-kw)])]
     (assert motivation-kw (format  "unknown motivation value: %s" motivation))
-    (transact-attendance! datomic-conn attendance-txs (gig+member gig-id gigo-key))))
+    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key))))
 
 (defn transact-gig! [datomic-conn gig-txs gig-id]
   (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
@@ -293,7 +363,13 @@
     (require '[integrant.repl.state :as state])
     (def env (:app.ig/env state/system))
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db  (datomic/db conn)))        ;; rcf
+    (def db  (datomic/db conn))) ;; rcf
+
+  (q/attendances-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw")
+  (q/attendances-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCAw")
+  (tap> {:result
+         (q/attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw"
+                               "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")})
 
   ;;
   )

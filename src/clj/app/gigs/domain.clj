@@ -10,7 +10,8 @@
                :gig.status/confirmed
                :gig.status/cancelled])
 
-(def plans [:plan/definitely
+(def plans [:plan/no-response
+            :plan/definitely
             :plan/probably
             :plan/unknown
             :plan/probably-not

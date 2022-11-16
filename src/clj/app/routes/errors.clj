@@ -76,8 +76,8 @@
 (defn datomic-not-found-error [req ex]
   (send-sentry! req ex)
   (if (:htmx? req)
-    (ui/error-page-response ex req 404)
-    (ui/error-page-response-fragment ex req 404)))
+    (ui/error-page-response-fragment ex req 404)
+    (ui/error-page-response ex req 404)))
 
 (defn unknown-error [req ex]
   (send-sentry! req ex)

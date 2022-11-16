@@ -145,9 +145,6 @@
                 trigger-name)}
     :body (ctmx.render/html body)}))
 
-(defn cs [& names]
-  (clojure.string/join " " (filter identity names)))
-
 (def select-size {:normal "text-base  sm:text-sm py-2 pl-3 pr-10 mt-1"
                   :small "text-xs py-1 pl-2 pr-5 "})
 
@@ -342,7 +339,7 @@
   (apply button (conj opts :a :tag)))
 
 (defn page-header [& {:keys [title subtitle buttons] :as args}]
-  [:div {:class "border-b border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
+  [:div {:class "border-b border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 bg-white"}
    [:div {:class "min-w-0 flex-1"}
     [:h1 {:class "text-lg font-medium leading-6 text-gray-900 sm:truncate"} title]
     (when subtitle
@@ -367,7 +364,7 @@
     buttons]])
 
 (defn page-header-full [& {:keys [title subtitle buttons] :as args}]
-  [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
+  [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 bg-white"}
    [:div {:class "flex items-center space-x-5 w-full sm:w-1/2"}
     [:div {:class "w-full"}
      [:h1 {:class "text-2xl font-bold text-gray-900 w-full"} title]
@@ -649,12 +646,11 @@
 (defn divider-left
   ([title] (divider-left title nil))
   ([title button]
-
-   [:div {:class "relative"}
+   [:div {:class "relative ml-4 sm:ml-0 "}
     [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
      [:div {:class "w-full border-t border-gray-300"}]]
     [:div {:class "relative flex items-center justify-between"}
-     [:span {:class "bg-white pr-3 text-lg font-medium text-gray-900 bg-white pr-3 text-lg font-medium text-gray-900"}
+     [:span {:class "bg-gray-100 pr-3 text-lg font-medium text-gray-900"}
       title]
      (when button
        button)]]))
@@ -698,10 +694,30 @@
 
 (defn gig-status-icon [status]
   (let [{:keys [icon color]} (gig-status-icons status)]
-    (icon {:class (str "mr-1.5 h-5 w-5 inline " color)})))
+    ;; mr-1.5
+    (icon {:class (str " h-5 w-5 inline " color)})))
 
 (defn format-dt [dt]
   (t/format (t/formatter "dd-MMM-yyyy") dt))
+
+(defn gig-date-all [{:gig/keys [date call-time]}]
+  (cond
+    (and date call-time)
+    (let [dt (t/at date call-time)]
+      [:time {:datetime (str dt)}
+       (t/format (t/formatter "dd.MM.yy E HH:mm") dt)])
+    (some? date)
+    [:time {:datetime (str date)}
+     (t/format (t/formatter "dd.MM.yy E") date)]
+    :else nil))
+
+(defn gig-date [{:gig/keys [date call-time]}]
+  (when date
+    (t/format (t/formatter "dd.MM.yy E") date)))
+
+(defn gig-time [{:gig/keys [date call-time]}]
+  (when call-time
+    (t/format (t/formatter "HH:mm") (t/at date call-time))))
 
 (defn datetime [dt]
   (if dt

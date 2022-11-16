@@ -2,7 +2,8 @@
   (:require
    [clojure.string :as string]
    [malli.core :as m]
-   [tick.core :as t])
+   [tick.core :as t]
+   [app.debug :as debug])
   (:import
    [java.time Duration]))
 
@@ -54,7 +55,7 @@
                                                          :decode/string      #(some-> % t/inst)
                                                          :encode/string      str
                                                          :decode/datomic     #(some-> % t/date)
-                                                         :encode/datomic     #(some-> % (t/at (t/midnight)) t/inst)
+                                                         :encode/datomic     #(some-> % (t/at (t/midnight)) (t/in "UTC") t/inst)
                                                          :decode/json        #(some-> % t/date)
                                                          :encode/json        str
                                                          :json-schema/type   "string"

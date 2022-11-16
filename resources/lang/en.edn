@@ -4,6 +4,13 @@
  :Email "E-Mail"
  :Phone "Phone"
  :Active "Active?"
+ :dashboard {:welcome "Welcome %1!"
+             :morning "Good morning, %1"
+             :afternoon "Good afternoon, %1"
+             :evening "Good evening, %1"
+             :nightowl "Hi there nightowl, %1"
+             :unanswered "Need Attention!"
+             :upcoming "All Upcoming Gigs"}
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
@@ -16,7 +23,8 @@
             :meeting "Meeting"
             :gig "Gig"}
 
- :gig {:comment-placeholder "Say your piece!"
+ :gig {:attendance "Attendance"
+       :comment-placeholder "Say your piece!"
        :no-comments "No comments."
        :title "Title"
        :contact "Contact"
@@ -71,7 +79,8 @@
         :unknown "Don't Know"
         :probably-not "Probably Not"
         :definitely-not "Can't Do It"
-        :not-interested "Not Interested"}
+        :not-interested "Not Interested"
+        :no-response "No Response"}
  :error {:unknown-title "Something went wrong"
          :unknown-message "Sorry about this. It's not your fault. Please contact Casey and tell him this error code:"
          :not-found-title "Not Found"

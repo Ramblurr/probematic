@@ -5,7 +5,7 @@
    [app.insurance.routes :refer [insurance-routes insurance-interceptors]]
    [app.interceptors :as interceptors]
    [app.members.routes :refer [members-routes]]
-   [app.routes.home :refer [home-routes]]
+   [app.dashboard.routes :refer [dashboard-routes]]
    [app.routes.pedestal-reitit]
    [app.songs.routes :refer [songs-routes]]
    [reitit.ring :as ring]))
@@ -20,7 +20,7 @@
                             (interceptors/current-user-interceptor system))}
 
    (members-routes)
-   (home-routes)
+   (dashboard-routes)
    (songs-routes)
    (events-routes)
    (insurance-routes)

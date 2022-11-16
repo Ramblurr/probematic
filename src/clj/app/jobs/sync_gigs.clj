@@ -15,7 +15,10 @@
 
 (defn at-midnight [d]
   (when d
-    (t/inst (t/at d (t/midnight)))))
+    (-> d
+        (t/at (t/midnight))
+        (t/in "UTC")
+        (t/inst))))
 
 ;; Since gigo can be pretty slow, and it is a free service
 ;; we cache the list of gigs and attendance to avoid hammering it too much
@@ -52,9 +55,7 @@
     util/remove-empty-strings)))
 
 (defn update-gigs-db! [conn gigs]
-  (d/transact conn {:tx-data
-                    (debug/xxx
-                     (map gig-tx gigs))}))
+  (d/transact conn {:tx-data (map gig-tx gigs)}))
 
 (defn probe? [g]
   (and
@@ -232,7 +233,9 @@
 
   (gigo/update-cache! (:gigo _opts))
 
-  (update-gigs-db! (:conn _opts) @gigo/gigs-cache)
+  (do
+    (update-gigs-db! (:conn _opts) @gigo/gigs-cache)
+    :nil)
 
   (def result (update-dialogflow-gig-entities! (-> _opts :env) (-> _opts :conn) (-> _opts :df-clients :entity-types-client)))
   (future-done? result)

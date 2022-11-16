@@ -26,16 +26,16 @@
      (layout/app-shell req
                        (view/gig-log-plays req)))))
 
-(def gigs-interceptors [{:name ::gigs--interceptor
-                         :enter (fn [ctx]
-                                  (let [conn (-> ctx :request :datomic-conn)
-                                        db (d/db conn)
-                                        gig-id (-> ctx :request :path-params :gig/gig-id)]
-                                    (cond-> ctx
-                                      gig-id (assoc-in [:request :gig] (controller/retrieve-gig db gig-id)))))}])
+(def gigs-interceptors {:name ::gigs--interceptor
+                        :enter (fn [ctx]
+                                 (let [conn (-> ctx :request :datomic-conn)
+                                       db (d/db conn)
+                                       gig-id (-> ctx :request :path-params :gig/gig-id)]
+                                   (cond-> ctx
+                                     gig-id (assoc-in [:request :gig] (controller/retrieve-gig db gig-id)))))})
 
 (defn events-routes []
-  ["" {:interceptors gigs-interceptors
+  ["" {:interceptors [gigs-interceptors]
        :app.route/name :app/gigs}
    (gigs-list-route)
    (gig-detail-route)

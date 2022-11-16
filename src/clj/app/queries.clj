@@ -12,6 +12,7 @@
                          {:attendance/member [:member/name :member/gigo-key :member/nick]}
                          :attendance/plan
                          :attendance/gig+member
+                         {:attendance/gig [:gig/gig-id]}
                          :attendance/comment
                          :attendance/motivation
                          :attendance/updated])
@@ -106,6 +107,9 @@
                                                        :instrument.category/code
                                                        :instrument.category/name]}])
 
+(defn gig+member [gig-id gigo-key]
+  (pr-str [gig-id gigo-key]))
+
 (defn members-for-select
   [db]
   (mapv first
@@ -166,20 +170,36 @@
    (map first)
    (map #(update % :member/section :section/name))))
 
-(defn attendance-for-gig [db gig-id]
+(defn attendance-for-gig
+  "Return the member's attendance for the gig"
+  [db gig-id gigo-key]
+  (->
+   (datomic/q '[:find (pull ?gig pattern)
+                :in $ ?gig-id ?gig+member pattern
+                :where
+                [?gig :gig/gig-id ?gig-id]
+                [?a :attendance/gig+member ?gig+member]]
+              db gig-id (gig+member gig-id gigo-key)
+              [:gig/title {:attendance/_gig attendance-pattern}])
+   ffirst
+   :attendance/_gig
+   first))
+(defn attendances-for-gig
+  "Return a list of attendances for the gig for all members"
+  [db gig-id]
   (->>
    (d/find-by db :gig/gig-id gig-id
               [:gig/gig-type :gig/title {:attendance/_gig attendance-pattern}])
    :attendance/_gig
    (map #(update % :attendance/section :section/name))
-     ;; (group-by #(-> % :attendance/section :section/name))
+   ;; (group-by #(-> % :attendance/section :section/name))
    ))
 
 (defn attendance-for-gig-with-all-active-members
   "Returns a list of maps :attendance/ with attendance attributes for all active members.
-  If some member has a concrete plan response for the gig, that will be included, if not then the plan is set to unknown."
+  If some member has a concrete plan response for the gig, that will be included, if not then the plan is set to no-response."
   [db gig-id]
-  (let [plans (attendance-for-gig db gig-id)
+  (let [plans (attendances-for-gig db gig-id)
         members  (active-members db)
         no-plan (remove (fn [member]
                           (m/find-first (fn [p]
@@ -189,7 +209,7 @@
             (map (fn [member]
                    {:attendance/section (:member/section member)
                     :attendance/member  member
-                    :attendance/plan :plan/unknown}) no-plan))))
+                    :attendance/plan :plan/no-response}) no-plan))))
 
 (defn member-nick-or-name [member]
   (if (:member/nick member)
@@ -271,7 +291,7 @@
                :attendance/_gig
                ;; (group-by #(-> % :attendance/section :section/name))
                )
-        plans (attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
+        plans (attendances-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
         members (active-members db)
         no-plan]
 
@@ -279,7 +299,7 @@
             (map (fn [member]
                    {:attendance/section (:member/section member)
                     :attendance/member  member
-                    :attendance/plan :plan/unknown}) no-plan)))
+                    :attendance/plan :plan/no-response}) no-plan)))
   (active-members-by-section db)
   (->>
    (attendance-for-gig-with-all-active-members db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"))

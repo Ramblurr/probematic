@@ -189,27 +189,29 @@
         size-class (if (= size :large) "w-5 h-5" "w-3 h-3")
         red-class "text-red-500 group-hover:text-red-500"
         green-class "text-green-500 group-hover:text-green-500"]
-    [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class)}
-     {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class)}
-     {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
-     {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class)}
-     {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class)}
-     {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black")}]))
+    {:opts [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class)}
+            {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class)}
+            {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
+            {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class)}
+            {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class)}
+            {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black")}]
+     :default {:label (tr [:plan/no-response]) :value (name :plan/no-response) :icon icon/minus :icon-class (ui/cs icon-class  size-class "text-gray-500")}}))
 
 (defn attendance-dropdown-opt [{:keys [label value icon icon-class]}]
   [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
    (icon {:class  icon-class}) label])
 
-(defn attendance-dropdown [& {:keys [gigo-key value tr]
-                              :or {value "unknown"}}]
-  (let [opts (attendance-opts tr :large)
-        current-opt (m/find-first #(= value (:value %)) (attendance-opts tr :small))
+(defn attendance-dropdown [& {:keys [gigo-key gig-id value tr]
+                              :or {value "no-response"}}]
+  (let [{:keys [opts default]} (attendance-opts tr :large)
+        current-opt (or (m/find-first #(= value (:value %)) (:opts (attendance-opts tr :small))) default)
         button-size-class-normal "px-4 py-2 text-sm "
         button-size-class-small "px-2 py-1 text-xs "]
     [:div {:class "dropdown relative inline-block text-left"}
      [:div
-      [:button {:type "button" :class (ui/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100")  :aria-expanded "true", :aria-haspopup "true"}
+      [:button {:type "button" :class (ui/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100 min-h-[25px]")  :aria-expanded "true", :aria-haspopup "true"}
        [:input {:type "hidden" :name "gigo-key" :value gigo-key}]
+       [:input {:type "hidden" :name "gig-id" :value gig-id}]
        [:input {:type "hidden" :name "plan" :value (:value current-opt) :class "item-input"}]
        [:span {:class "item-icon"}
         ((:icon current-opt) {:class (ui/cs (:icon-class current-opt) "w-3 h-3")})]
@@ -223,35 +225,35 @@
        [:div {:class "py-1" :role "none"}
         (map attendance-dropdown-opt  opts)]]]]))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
-  (let [comp-name (util/comp-namer #'gig-attendance-person-plan)
-        post? (util/post? req)
-        tr (i18n/tr-from-req req)
-        plan-kw (or
-                 (if post?
-                   (-> (controller/update-attendance-plan! req) :attendance :attendance/plan)
-                   plan)
-                 :plan/unknown)
-        body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
-                     (attendance-dropdown :tr tr :gigo-key gigo-key :value (name plan-kw))]]
-    (if post?
-      (ui/trigger-response "newDropdown" body-result
-                           {:trigger-type :hx-trigger-after-settle
-                            :data (str (hash ".") " .dropdown")})
-      body-result)))
+(defn motivation-endpoint [req {:keys [path id hash value]} comp-name gig-id gigo-key motivation]
+  (let [post?      (util/post? req)
+        gigo-key   (or gigo-key (value "gigo-key"))
+        gig-id     (or gig-id (value "gig-id"))
+        tr         (i18n/tr-from-req req)
+        motivation (if post?
+                     (-> (controller/update-attendance-motivation! req gig-id) :attendance :attendance/motivation)
+                     motivation)]
+    [:form {:id id :hx-target (hash ".")}
+     [:input {:type :hidden :name (path "gig-id") :value gig-id}]
+     (ui/select
+      :id (path "motivation")
+      :value (when motivation (name motivation))
+      :size :small
+      :extra-attrs {:hx-trigger "change" :hx-post (comp-name) :hx-vals (ui/hx-vals {(path "gigo-key") gigo-key})}
+      :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/motivations))]))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment  ^:boolean edit?]
-  (let [comp-name (util/comp-namer #'gig-attendance-person-comment)
-        post? (util/post? req)
+(defn comment-endpoint [req {:keys [path id hash value]} comp-name gig-id gigo-key comment edit?]
+  (let [post? (util/post? req)
         gigo-key (or gigo-key (value "gigo-key"))
+        gig-id (or gig-id (value "gig-id"))
         comment (if post?
-                  (-> (controller/update-attendance-comment! req) :attendance :attendance/comment)
+                  (-> (controller/update-attendance-comment! req gig-id) :attendance :attendance/comment)
                   comment)]
     [:div {:id id :class ""}
      (if edit?
        (ui/text :name (path "comment") :value comment :required? false :size :small
                 :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
-                              :hx-vals (ui/hx-vals {(path "gigo-key") gigo-key})
+                              :hx-vals {(path "gigo-key") gigo-key (path "gig-id") gig-id}
                               :_ "on focus or htmx:afterRequest or load
                                           set :initial_value to my value
                                         end
@@ -260,28 +262,51 @@
                                           blur() me
                                         end"})
 
-       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gigo-key gigo-key :comment comment :edit? true}}]
+       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gig-id gig-id :gigo-key gigo-key :comment comment :edit? true}}]
          (if comment
            [:span (merge hx-attrs {:class "ml-2 cursor-pointer text-blue-500 hover:text-blue-600"})
             comment]
            [:button  hx-attrs
             (icon/comment-outline {:class "ml-2 mb-2 w-5 h-5 cursor-pointer hover:text-blue-500 active:text-blue-300"})])))]))
 
+(defn plan-endpoint [req {:keys [path id hash value]} comp-name gig-id gigo-key plan]
+  (let [post? (util/post? req)
+        tr (i18n/tr-from-req req)
+        gigo-key   (or gigo-key (value "gigo-key"))
+        gig-id     (or gig-id (value "gig-id"))
+        plan-kw (or
+                 (if post?
+                   (-> (controller/update-attendance-plan! req gig-id) :attendance :attendance/plan)
+                   plan)
+                 :plan/no-response)
+        body-result [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
+                     (attendance-dropdown :tr tr :gig-id gig-id :gigo-key gigo-key :value (name plan-kw))]]
+    (if post?
+      (ui/trigger-response "newDropdown" body-result
+                           {:trigger-type :hx-trigger-after-settle
+                            :data (str (hash ".") " .dropdown")})
+      body-result)))
+
+(ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
+  (plan-endpoint req
+                 {:path path :id id :hash hash :value value}
+                 (util/comp-namer #'gig-attendance-person-plan)
+                 (-> req :path-params :gig/gig-id)
+                 gigo-key plan))
+
+(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment  ^:boolean edit?]
+  (comment-endpoint req
+                    {:path path :id id :hash hash :value value}
+                    (util/comp-namer #'gig-attendance-person-comment)
+                    (-> req :path-params :gig/gig-id)
+                    gigo-key comment edit?))
+
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [{:keys [db] :as req} gigo-key motivation]
-  (ctmx/with-req req
-    (let [comp-name (util/comp-namer #'gig-attendance-person-motivation)
-          gigo-key (or gigo-key (value "gigo-key"))
-          tr (i18n/tr-from-req req)
-          motivation (if post?
-                       (-> (controller/update-attendance-motivation! req) :attendance :attendance/motivation)
-                       motivation)]
-      [:form {:id id :hx-target (hash ".")}
-       (ui/select
-        :id (path "motivation")
-        :value (when motivation (name motivation))
-        :size :small
-        :extra-attrs {:hx-trigger "change"  :hx-post (comp-name) :hx-vals (ui/hx-vals {(path "gigo-key") gigo-key})}
-        :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/motivations))])))
+  (motivation-endpoint req
+                       {:path path :id id :hash hash :value value}
+                       (util/comp-namer #'gig-attendance-person-motivation)
+                       (-> req :path-params :gig/gig-id)
+                       gigo-key motivation))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
@@ -303,12 +328,14 @@
      [:div {:class "col-span-1"} (:attendance/motivation attendance)]
      [:div {:class "col-span-1 "} (:attendance/comment attendance)]]))
 
-(ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx section]
-  [:div {:id id :class (ui/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
-                              (when (= 0 (mod idx 2))
-                                "bg-gray-100"))}
+(defn section-name-wrappable [section]
+  (interpose [:span "/" [:wbr]]
+             (str/split (:section/name section) #"/")))
 
-   [:div {:class "col-span-1 font-bold"} (:section/name section)]
+(ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx section]
+  [:div {:id id :class (ui/cs "grid grid-cols-3 gap-x-0 gap-y-8 mt-2 mb-2 px-4 py-0 sm:px-6 border-b border-gray-200")}
+
+   [:div {:class "col-span-1 font-bold break-words"} (section-name-wrappable section)]
    [:div {:class "col-span-2"}
     (rt/map-indexed gig-attendance-person req (:members section))]])
 
@@ -317,7 +344,7 @@
                               (when (= 0 (mod idx 2))
                                 "bg-gray-100"))}
 
-   [:div {:class "col-span-1 font-bold"} (:section/name section)]
+   [:div {:class "col-span-1 font-bold break-words"} (section-name-wrappable section)]
    [:div {:class "col-span-2"}
     (rt/map-indexed gig-attendance-person-archived req (:members section))]])
 
@@ -492,14 +519,11 @@
            ;;
            ]]]]]]]))
 (ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req}]
-  (let [{:gig/keys [gig-id title date end-date status
-                    contact pay-deal call-time set-time end-time
-                    outfit description location setlist leader post-gig-plans
-                    more-details] :as gig} (:gig req)
-
+  (let [{:gig/keys [gig-id] :as gig} (:gig req)
+        tr (i18n/tr-from-req req)
         archived? (domain/gig-archived? gig)
         attendances-by-section (if archived?
-                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig db gig-id))
+                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendances-for-gig db gig-id))
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id)))]
     [:div {:id id}
      (gigs-detail-page-info req gig false)
@@ -510,7 +534,7 @@
         [:div {:class "bg-white shadow sm:rounded-lg"}
          [:div {:class "px-4 py-5 sm:px-6"}
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-           "Attendance"]]
+           (tr [:gig/attendance])]]
          [:div {:class "border-t border-gray-200"}
           (if archived?
             (rt/map-indexed gig-attendance-archived req attendances-by-section)

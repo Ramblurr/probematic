@@ -6,7 +6,7 @@
    [app.auth :as auth]
    [clojure.string :as str]))
 
-(def navigation [{:label "Home" :icon icon/home :href "/" :route-name :app/home}
+(def navigation [{:label "Home" :icon icon/home :href "/" :route-name :app/dashboard}
                  {:label "Gigs/Probes" :icon icon/trumpet :href "/events" :route-name :app/gigs}
                  {:label "Songs" :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
                  {:label "Members" :icon icon/users-outline :href "/members" :route-name :app/members}
