@@ -85,6 +85,7 @@
 (ctmx/defcomponent ^:endpoint insurance-detail-page-header [{:keys [db] :as req} ^:boolean edit?]
   (ctmx/with-req req
     (let [policy-id (-> req :path-params :policy-id)
+          tr (i18n/tr-from-req req)
           comp-name (util/comp-namer #'insurance-detail-page-header)
           {:insurance.policy/keys [name effective-at effective-until premium-factor] :as policy} (controller/retrieve-policy db (parse-uuid policy-id))
           result (and post? (controller/update-policy! req (parse-uuid policy-id)))]
@@ -94,145 +95,120 @@
          (if edit?
            {:id id :hx-post (comp-name) :hx-target (hash ".")}
            {:id id})
-         (ui/page-header :title (if edit?
-                                  (ui/text :label "Name" :name (path "name") :value name)
-                                  name)
-                         :buttons (if edit?
-                                    (list
-                                     (ui/button :label "Cancel"
-                                                :priority :white
-                                                :centered? true
-                                                :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? false}})
-                                     (ui/button :label "Save"
-                                                :priority :primary
-                                                :centered? true))
-                                    (ui/button :label "Edit"
-                                               :priority :white
-                                               :centered? true
-                                               :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}})))
-         [:div {:class "mt-6 sm:px-6 lg:px-8"}
-          [:div {:class "mx-auto mt-6 max-w-5xl px-4 py-4 sm:px-6 lg:px-8 bg-white rounded-md"}
-           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Effective At"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if edit?
-                [:input {:type "date" :name "effective-at" :id "effective-at"
-                         :value (t/date effective-at)
-                         :required true
-                         :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
-                (ui/datetime effective-at))]]
 
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Effective Until"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if edit?
-                [:input {:type "date" :name "effective-until" :id "effective-until"
-                         :value (t/date effective-until)
-                         :required true
-                         :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
-                (ui/datetime effective-until))]]
+         (ui/panel {:title (if edit?
+                             (ui/text :label "Name" :name (path "name") :value name)
+                             name)
+                    :buttons  (if edit?
+                                (list
+                                 (ui/button :label "Cancel"
+                                            :priority :white
+                                            :centered? true
+                                            :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? false}})
+                                 (ui/button :label "Save"
+                                            :priority :primary
+                                            :centered? true))
+                                (ui/button :label "Edit"
+                                           :priority :white
+                                           :centered? true
+                                           :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}}))}
+                   (ui/dl
+                    (ui/dl-item (tr [:insurance/effective-at])
+                                (if edit?
+                                  [:input {:type "date" :name "effective-at" :id "effective-at"
+                                           :value (t/date effective-at)
+                                           :required true
+                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
+                                  (ui/datetime effective-at)))
+                    (ui/dl-item (tr [:insurance/effective-until])
+                                (if edit?
+                                  [:input {:type "date" :name "effective-until" :id "effective-until"
+                                           :value (t/date effective-until)
+                                           :required true
+                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
+                                  (ui/datetime effective-until)))
+                    (ui/dl-item (tr [:insurance/premium-base-factor])
+                                (if edit?
+                                  [:input {:type "number" :name "base-factor" :id "base-factor"
+                                           :value premium-factor
+                                           :step "0.00000001" :min "0" :max "2.0"
+                                           :required true
+                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
+                                  premium-factor))))]))))
 
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"} "Premium Base Factor"]
-             [:dd {:class "mt-1 text-sm text-gray-900"}
-              (if edit?
-                [:input {:type "number" :name "base-factor" :id "base-factor"
-                         :value premium-factor
-                         :step "0.00000001" :min "0" :max "2.0"
-                         :required true
-                         :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
-                premium-factor)]]]]]]))))
+(ctmx/defcomponent  insurance-coverage-types-item-ro [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
+  (ui/dl-item name premium-factor))
 
-(ctmx/defcomponent ^:endpoint insurance-coverage-types [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [policy-id (-> req :path-params :policy-id parse-uuid)
-          edit? (Boolean/valueOf (-> req :query-params :edit))
-          add? (Boolean/valueOf (-> req :query-params :add))
-          policy (cond
-                   put?
-                   (:policy (controller/create-coverage-type! req policy-id))
-                   post?
-                   (:policy
-                    (controller/update-coverage-types! req policy-id))
-                   :else
-                   (controller/retrieve-policy db policy-id))
-          coverage-types (:insurance.policy/coverage-types policy)
+(ctmx/defcomponent insurance-coverage-types-item-rw [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
+  (let [tr (i18n/tr-from-req req)]
+    (ui/dl-item
+     (ui/text :label "Coverage Name" :name (path "name") :value name)
+     [:div {:class "mt-2"}
+      (ui/factor-input :label  (tr [:insurance/premium-factor]) :name (path "premium-factor") :value premium-factor)
+      (let [delete-id (path "delete")]
+        [:div {:class "mt-2 relative flex items-start"}
+         [:input {:type "hidden" :value type-id :name (path "type-id")}]
+         [:div {:class "flex h-5 items-center"}
+          [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
+         [:div {:class "ml-3 text-sm"}
+          [:label {:for delete-id :class "font-medium text-gray-700"} (tr [:action/delete])]]])])))
 
-          body-result
-          [(if edit? :form :div)
-           (if edit?
-             {:id id :hx-post "insurance-coverage-types"}
-             {:id id})
+(ctmx/defcomponent ^:endpoint insurance-coverage-types [{:keys [db] :as req} ^:boolean edit? ^:boolean add?]
+  (let [comp-name (util/comp-namer #'insurance-coverage-types)
+        post? (util/post? req)
+        put? (util/put? req)
+        policy-id (-> req :path-params :policy-id parse-uuid)
+        tr (i18n/tr-from-req req)
+        policy (cond
+                 put?
+                 (:policy (controller/create-coverage-type! req policy-id))
+                 post?
+                 (:policy
+                  (controller/update-coverage-types! req policy-id))
+                 :else
+                 (controller/retrieve-policy db policy-id))
+        coverage-types (:insurance.policy/coverage-types policy)
 
-           [:div {:class "mt-6 sm:px-6 lg:px-8"}
-            [:div {:class "mx-auto mt-6 max-w-5xl px-4 py-4 sm:px-6 lg:px-8 bg-white rounded-md"}
+        body-result
+        [:div {:id id}
+         (ui/panel {:title (tr [:insurance/coverage-types])
+                    :buttons (cond
+                               edit?
+                               (list
+                                (ui/button :label "Save" :priority :primary  :centered? true :attr {:form (path "editform")})
+                                (ui/button :label "Cancel" :priority :white :centered? true
+                                           :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")}))
+                               add?
+                               (ui/button :label "Cancel" :priority :white :centered? true
+                                          :attr {:hx-get (comp-name) :hx-vals {:add? false} :hx-target (hash ".")})
+                               (empty? coverage-types) nil
+                               :else
+                               (list
+                                (ui/button :label "Edit" :priority :white :centered? true
+                                           :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
+                                (ui/button :label "Add" :priority :white :centered? true :icon icon/plus
+                                           :attr {:hx-get (comp-name) :hx-vals {:add? true}  :hx-target (hash ".")})))}
+                   (when (seq coverage-types)
+                     [:form {:hx-post (comp-name) :hx-target (hash ".") :id (path "editform")}
+                      (ui/dl (rt/map-indexed (if edit? insurance-coverage-types-item-rw insurance-coverage-types-item-ro) req coverage-types))])
+                   (when add?
+                     [:form {:hx-put (comp-name) :hx-target (hash ".")}
+                      (ui/dl
+                       (ui/dl-item (ui/text :label (tr [:insurance/coverage-name])  :name (path "coverage-name") :placeholder "Over Night")
+                                   [:div {:class "mt-2"}
+                                    (ui/factor-input :label (tr [:insurance/premium-factor]) :name (path "premium-factor") :value "0.2")
+                                    (ui/button :label "Add" :priority :primary :class "mt-2")]))])
+                   (when (and (not add?) (empty? coverage-types))
+                     [:div {:class "text-gray-600 flex flex-col items-center"}
+                      [:div
+                       "You need to create a coverage type."]
+                      [:div
+                       (ui/button :label (tr [:action/create]) :priority :white :icon icon/plus :size :small
+                                  :attr {:hx-get (comp-name) :hx-vals {:add? true}  :hx-target (hash ".")})]]))]]
 
-             [:div {:class "mt-2 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
-              [:div {:class "flex items-center space-x-5"}
-               [:h2 {:class "text-2xl font-bold text-gray-900"}
-                "Coverage Types"]]
-              [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0"}
-               (if edit?
-                 (list
-
-                  (ui/button :label "Save" :priority :primary  :centered? true
-                             :attr {:hx-target (hash ".")})
-                  (ui/button :label "Cancel" :priority :white :centered? true
-                             :attr {:hx-get "insurance-coverage-types?edit=false" :hx-target (hash ".")}))
-
-                 (list
-                  (ui/button :label "Edit" :priority :white :centered? true
-                             :attr {:hx-get "insurance-coverage-types?edit=true" :hx-target (hash ".")})
-                  (ui/button :label "Add" :priority :white :class "mt-2" :icon icon/plus
-                             :attr {:hx-target (hash ".") :hx-get "insurance-coverage-types?add=true"})))]]
-
-             [:div
-              [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
-               (if (and (not add?) (empty? coverage-types))
-                 [:div
-                  [:div
-                   "You need to create a coverage type."]
-                  [:div
-                   (ui/button :label "Coverage Type" :priority :primary :icon icon/plus
-                              :attr {:hx-get "insurance-coverage-types?add=true" :hx-target (hash ".")})]]
-
-                 [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-                  (map-indexed (fn [idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
-                                 (let [namer (fn [k]
-                                               (path (str "types_" idx "_" k)))]
-                                   [:div {:class "sm:col-span-1"}
-                                    [:dt {:class "text-sm font-medium text-gray-500"}
-                                     (if edit?
-                                       (ui/text :label "Coverage Name" :name (namer "name") :value name)
-                                       name)]
-                                    [:dd {:class "mt-2 text-sm text-gray-900"}
-                                     (if edit?
-                                       (ui/factor-input :label "Premium Factor" :name (namer "premium-factor") :value premium-factor)
-                                       premium-factor)
-                                     (when edit?
-                                       (let [delete-id (namer "delete")]
-                                         [:div {:class "mt-2 relative flex items-start"}
-                                          [:input {:type "hidden" :value type-id :name (namer "type-id")}]
-                                          [:div {:class "flex h-5 items-center"}
-                                           [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
-                                          [:div {:class "ml-3 text-sm"}
-                                           [:label {:for delete-id :class "font-medium text-gray-700"} "Delete"]]]))]]))
-
-                               coverage-types)
-
-                  (when add?
-                    [:form {:class "sm:col-span-1"}
-                     [:dt {:class "text-sm font-medium text-gray-500"}
-                      (ui/text :label "Coverage Name" :name (path "coverage-name") :placeholder "Over Night")]
-                     [:dd {:class "mt-2 text-sm text-gray-900"}
-                      (ui/factor-input :label "Premium Factor" :name (path "premium-factor") :value "0.2")
-                      (ui/button :label "Add" :priority :primary :class "mt-2"
-                                 :attr {:hx-target (hash ".") :hx-put "insurance-coverage-types"})]])])]]]]]]
-
-      (if post?
-        (ui/trigger-response "refreshCoverages" body-result)
-        body-result))))
+    (if post?
+      (ui/trigger-response "refreshCoverages" body-result)
+      body-result)))
 
 (defn unused-categories
   "Given a list of all instrument categories and an insurance policy, this function returns the list of categories that are not defined in the insurance policy's category factorsl"
@@ -543,7 +519,7 @@
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
   [:div
    (insurance-detail-page-header req false)
-   (insurance-coverage-types req)
+   (insurance-coverage-types req false false)
    (insurance-category-factors req)
    (insurance-instrument-coverage req)])
 

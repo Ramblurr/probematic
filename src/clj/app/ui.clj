@@ -4,7 +4,6 @@
    (java.text DecimalFormat NumberFormat)
    (java.util Locale))
   (:require
-
    [hiccup2.core :refer [html]]
    [app.humanize :as humanize]
    [app.i18n :as i18n]
@@ -298,7 +297,7 @@
                               :white
                               "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary
-                              "border-transparent bg-indigo-600 px-4 py-2  text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              "border-transparent bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
 
 (def button-sizes-classes {:xsmall "px-2.5 py-1.5 text-xs"
@@ -323,7 +322,8 @@
   [tag (merge
         {:class
          (cs
-          "inline-flex items-center border font-medium"
+          "inline-flex items-center rounded-md border font-medium"
+          ;; "inline-flex items-center border font-medium"
           ;; "inline-flex items-center rounded-md border"
           (size button-sizes-classes)
           (priority button-priority-classes)
@@ -743,3 +743,20 @@
     [:dt {:class "text-sm font-medium text-gray-500"} label]
     [:dd {:class "mt-1 text-sm text-gray-900"}
      value]]))
+
+(defn dl [& items]
+  [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+   items])
+
+(defn panel [{:keys [title buttons]} & body]
+  [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
+   [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
+    [:section
+     [:div {:class "bg-white shadow sm:rounded-lg"}
+      [:div {:class "px-4 py-5 px-6  flex items-center justify-between "}
+       (when title
+         [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} title])
+       [:div {:class "space-x-2 flex"}
+        buttons]]
+      [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
+       body]]]]])

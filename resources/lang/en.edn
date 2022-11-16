@@ -59,7 +59,13 @@
         :no-future "No upcoming gigs/probes"}
  :insurance {:title "Insurance & Instruments"
              :policies "Policies"
-             :insurance-policy "Insurance Policy"}
+             :insurance-policy "Insurance Policy"
+             :effective-at "Effective At"
+             :effective-until "Effective Until"
+             :premium-base-factor "Premium Base Factor"
+             :premium-factor "Premium Factor"
+             :coverage-types "Coverage Types"
+             :coverage-name "Coverage Name"}
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
@@ -69,6 +75,7 @@
  :section "Section"
  :section-none "No Section"
  :action {:edit "Edit"
+          :delete "Delete"
           :save "Save"
           :cancel "Cancel"
           :comment "Comment"

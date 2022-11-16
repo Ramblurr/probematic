@@ -228,8 +228,10 @@
 
 (defn update-coverage-types! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (common/unwrap-params req)
+        _ (tap> {:pars params :raw (:params req)})
         policy-id (common/ensure-uuid policy-id)
-        tx-data (mapv (fn [{:keys [premium-factor name type-id delete]}]
+        tx-data (mapv (fn [{:keys [premium-factor name type-id delete] :as args}]
+                        (tap> args)
                         (if delete
                           [:db/retractEntity [:insurance.coverage.type/type-id (parse-uuid type-id)]]
                           {:insurance.coverage.type/name name
