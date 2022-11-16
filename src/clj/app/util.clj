@@ -140,5 +140,6 @@
       (time-inside? (t/time "12:00") (t/time "17:00") time)
       :afternoon
 
-      (time-inside? (t/time "17:00") (t/time "00:00") time)
-      :evening)))
+      (time-inside? (t/time "17:00") (t/time "23:59") time)
+      :evening
+      :else :wut?)))
