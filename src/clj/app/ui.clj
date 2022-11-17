@@ -340,7 +340,9 @@
 (defn page-header [& {:keys [title subtitle buttons] :as args}]
   [:div {:class "border-b border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 bg-white"}
    [:div {:class "min-w-0 flex-1"}
-    [:h1 {:class "text-lg font-medium leading-6 text-gray-900 sm:truncate"} title]
+    [:h1 {:class
+          ;; NOTE: i removed sm:truncate from this class list, because it cuts off the input label. later we might need a better solution when a title is very long
+          "text-lg font-medium leading-6 text-gray-900"} title]
     (when subtitle
       [:p {:class "text-sm font-medium text-gray-500"}
        subtitle])]
