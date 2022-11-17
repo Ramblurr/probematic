@@ -160,26 +160,15 @@
       [:div {:class "flex items-center justify-between"}
        [:div {:class "flex items-center space-x-2"}
         (ui/gig-status-icon status)
-        [:p {:class "truncate text-sm font-medium text-indigo-600"} title]]
-       [:div {:class "ml-2 flex flex-shrink-0"}
-        (when (domain/in-future? gig)
-          (ui/button :tag :a :attr {:href (url/link-gig gig "/log-play/")}
-                     :label "Log Plays" :priority :white-rounded :size :small))]]
+        [:p {:class "truncate text-sm font-medium text-indigo-600"} title]]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
-       [:div {:class "flex"}
-        [:p {:class "flex items-center text-sm text-gray-500"}
-         (icon/location-dot {:class style-icon})
-         location]
-        [:p {:class "mt-2 flex items-center text-sm text-gray-500 mt-0 ml-6"}
-
-         (icon/calendar {:class style-icon})
-         (ui/datetime date)]]
-
-       [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
-                                        ;(icon/calendar {:class style-icon})
-                                        ;[:p "Last Played "]
-        ]]]]))
+       [:div {:class "flex items-center text-sm text-gray-500"}
+        (icon/location-dot {:class style-icon})
+        location]
+       [:div {:class "mt-2 flex items-center text-sm text-gray-500 mt-0 ml-6 min-w-[8rem]"}
+        (icon/calendar {:class style-icon})
+        (ui/datetime date)]]]]))
 
 (defn attendance-opts [tr size]
   (let [icon-class "mr-3 text-gray-400"
@@ -572,22 +561,22 @@
                                            :centered? true
                                            :attr {:href "/events/new"} :icon icon/plus)))
 
-     [:div {:class "mt-6 px-4 sm:px-6 lg:px-8"}
-      (ui/divider-left (tr [:gigs/upcoming]))
-      [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"
-             :id "songs-list"}
-       (if (empty? future-gigs)
-         (tr [:gigs/no-future])
-         [:ul {:role "list", :class "divide-y divide-gray-200"}
-          (map (fn [gig]
-                 [:li
-                  (gig-row gig)]) future-gigs)])]
-      (ui/divider-left (tr [:gigs/past]))
-      [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
-             :id "songs-list"}
-       (if (empty? past-gigs)
-         (tr [:gigs/no-past])
-         [:ul {:role "list", :class "divide-y divide-gray-200"}
-          (map (fn [gig]
-                 [:li
-                  (gig-row gig)]) past-gigs)])]]]))
+     [:div {:class "mt-6 px-4 sm:px-6 md:px-8 md:flex md:flex-row md:space-x-4"}
+      [:div {:class "max-w-lg"}
+       (ui/divider-left (tr [:gigs/upcoming]))
+       [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"}
+        (if (empty? future-gigs)
+          (tr [:gigs/no-future])
+          [:ul {:role "list" :class "divide-y divide-gray-200"}
+           (map (fn [gig]
+                  [:li
+                   (gig-row gig)]) future-gigs)])]]
+      [:div {:class "max-w-lg"}
+       (ui/divider-left (tr [:gigs/past]))
+       [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"}
+        (if (empty? past-gigs)
+          (tr [:gigs/no-past])
+          [:ul {:role "list", :class "divide-y divide-gray-200"}
+           (map (fn [gig]
+                  [:li
+                   (gig-row gig)]) past-gigs)])]]]]))
