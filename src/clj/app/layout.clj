@@ -4,18 +4,21 @@
    [app.render :as render]
    [app.icons :as icon]
    [app.auth :as auth]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [app.i18n :as i18n]))
 
-(def navigation [{:label "Home" :icon icon/home :href "/" :route-name :app/dashboard}
-                 {:label "Gigs/Probes" :icon icon/trumpet :href "/events" :route-name :app/gigs}
-                 {:label "Songs" :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
-                 {:label "Members" :icon icon/users-outline :href "/members" :route-name :app/members}
-                 {:label "Insurance" :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
+(defn navigation [tr]
+  [{:label (tr [:nav/home]) :icon icon/home :href "/" :route-name :app/dashboard}
+   {:label (tr [:nav/gigs]) :icon icon/trumpet :href "/events" :route-name :app/gigs}
+   {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
+   {:label (tr [:nav/members]) :icon icon/users-outline :href "/members" :route-name :app/members}
+   {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
 
-(def user-menu-sections [{:items [{:label "View Profile" :href "#"}
-                                  {:label "Settings" :href "#"}
-                                  {:label "Notifications" :href "#"}]}
-                         {:items [{:label "Logout" :href "#"}]}])
+(defn user-menu-sections [tr]
+  [{:items [{:label (tr [:nav/profile]) :href "#"}
+            {:label (tr [:nav/settings]) :href "#"}
+            {:label (tr [:nav/notifications]) :href "#"}]}
+   {:items [{:label (tr [:nav/logout]) :href "#"}]}])
 
 (defn user-menu-item [idx {:keys [label href]}]
   [:a {:href href :class "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id (str "user-menu-item-" idx)}
@@ -46,11 +49,11 @@
          (ui/avatar-img member :class "h-8 w-8 rounded-full")]]
        [:div {:id "user-menu" :data-action-menu true
               :class "hidden absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
-        (map user-menu-section user-menu-sections)]]]]]
+        (map user-menu-section (user-menu-sections (i18n/tr-from-req req)))]]]]]
    [:main {:class "flex-1"}
     body]])
 
-(defn user-account-actions [member]
+(defn user-account-actions [req member]
   [:div {:class "relative inline-block px-3 text-left"}
    [:div
     [:button {:type "button"
@@ -69,7 +72,7 @@
           :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           ;; :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           :role "menu" :aria-orientation "vertical" :aria-labelledby "options-menu-button" :tabindex "-1"}
-    (map user-menu-section user-menu-sections)]])
+    (map user-menu-section (user-menu-sections (i18n/tr-from-req req)))]])
 
 (defn secondary-navigation []
   [:div {:class "mt-8"}
@@ -104,7 +107,7 @@
 (defn sidebar-navigation [req]
   [:nav {:class "mt-6 px-3"}
    [:div {:class "space-y-1" :hx-boost "true"}
-    (map (partial nav-item req) navigation)]
+    (map (partial nav-item req) (navigation (i18n/tr-from-req req)))]
    ;; (secondary-navigation)
    ])
 
@@ -114,7 +117,7 @@
     (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]
 
    [:div {:class "mt-5 flex h-0 flex-1 flex-col overflow-y-auto pt-1"}
-    (user-account-actions member)
+    (user-account-actions req member)
     (sidebar-navigation req)]])
 
 (defn mobile-menu [req]
@@ -132,7 +135,7 @@
      [:div {:class "mt-5 h-0 flex-1 overflow-y-auto"}
       [:nav {:class "px-2"}
        [:div {:class "space-y-1"}
-        (map (partial nav-item req) navigation)]
+        (map (partial nav-item req) (navigation (i18n/tr-from-req req)))]
        ;; (secondary-navigation)
        ]]]
     ;; Dummy element to force sidebar to shrink to fit close icon

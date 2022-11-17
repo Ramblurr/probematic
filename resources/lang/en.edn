@@ -90,7 +90,15 @@
               :build-year "Build Year"
               :create-title "New Instrument"
               :create-subtitle "Enter details for the Instrument"}
-
+ :nav {:home "Home"
+       :gigs "Gigs & Probes"
+       :songs "Songs"
+       :members "Members"
+       :insurance "Insurance"
+       :profile "Profile"
+       :settings "Settings"
+       :notifications "Notifications"
+       :logout "Logout"}
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
