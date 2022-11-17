@@ -8,6 +8,7 @@
    [app.dashboard.routes :refer [dashboard-routes]]
    [app.routes.pedestal-reitit]
    [app.songs.routes :refer [songs-routes]]
+   [app.probeplan.routes :refer [probeplan-routes]]
    [reitit.ring :as ring]))
 
 (defn routes [system]
@@ -23,6 +24,7 @@
    (dashboard-routes)
    (songs-routes)
    (events-routes)
+   (probeplan-routes)
    (insurance-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
    ])

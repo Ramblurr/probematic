@@ -10,6 +10,7 @@
 (defn navigation [tr]
   [{:label (tr [:nav/home]) :icon icon/home :href "/" :route-name :app/dashboard}
    {:label (tr [:nav/gigs]) :icon icon/trumpet :href "/events" :route-name :app/gigs}
+   {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
    {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
    {:label (tr [:nav/members]) :icon icon/users-outline :href "/members" :route-name :app/members}
    {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])

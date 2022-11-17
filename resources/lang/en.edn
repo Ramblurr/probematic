@@ -92,6 +92,7 @@
               :create-subtitle "Enter details for the Instrument"}
  :nav {:home "Home"
        :gigs "Gigs & Probes"
+       :probeplan "Probenplan"
        :songs "Songs"
        :members "Members"
        :insurance "Insurance"
