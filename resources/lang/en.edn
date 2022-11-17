@@ -66,6 +66,7 @@
         :no-past "No gigs/probes in the past 2 weeks"
         :no-future "No upcoming gigs/probes"}
  :insurance {:title "Insurance & Instruments"
+             :name "Policy Name"
              :policies "Policies"
              :insurance-policy "Insurance Policy"
              :effective-at "Effective At"
@@ -76,13 +77,24 @@
              :coverage-name "Coverage Name"
              :category-factors "Category Factors"
              :covered-instruments "Covered Instruments"
-             :instrument-coverage "Instrument Coverage"}
+             :instrument-coverage "Instrument Coverage"
+             :create-title "New Insurance Policy"
+             :create-subtitle "Enter details for the new policy."}
+ :instrument {:owner "Owner"
+              :instrument "Instrument"
+              :category "Category"
+              :make "Make"
+              :model "Model"
+              :name "Instrument Name"
+              :serial-number "Serial Number"
+              :build-year "Build Year"
+              :create-title "New Instrument"
+              :create-subtitle "Enter details for the Instrument"}
 
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
  :instruments "Instruments"
- :instrument "Instrument"
  :none "None"
  :section "Section"
  :section-none "No Section"

@@ -501,87 +501,88 @@
    (insurance-instrument-coverage req false false)])
 
 (ctmx/defcomponent ^:endpoint insurance-create-page [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [this-year (t/year (t/now))
-          next-year (t/year (t/>> (t/now) (t/new-duration 365 :days)))
-          result (and post? (controller/create-policy! req))]
-      (if (:policy result)
-        (response/hx-redirect (url/link-policy (:policy result)))
-        [:div {:class "px-4 py-4"}
-         [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
-          [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
-           [:div {:class "space-y-6 sm:space-y-5"}
-            [:div
-             [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}
-              "New Insurance Policy"]
-             [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}
-              "Enter details for the new policy."]]
-            [:div {:class "space-y-6 sm:space-y-5"}
-             [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
-              [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"} "Policy Name"]
-              [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
-               [:input {:type "text" :name "name" :id "name"
-                        :value (str "Band Instruments " this-year " - " next-year)
-                        :required true
-                        :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
-             [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
-              [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
-               "Effective At"]
-              [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
-               [:input {:type "date" :name "effective-at" :id "effective-at"
-                        :value (str this-year "-05-01")
-                        :required true
-                        :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
-             [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
-              [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
-               "Effective Until"]
-              [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
-               [:input {:type "date" :name "effective-until" :id "effective-until"
-                        :value (str next-year "-04-30")
-                        :required true
-                        :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
-             [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
-              [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
-               "Premium Base Factor"]
-              [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
-               (ui/factor-input :name "base-factor" :value (* (bigdec 1.07) (bigdec 0.00447)))]]]]]
-          [:div {:class "pt-5"}
-           [:div {:class "flex justify-end"}
-            [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
-             "Cancel"]
-            [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
-             "Create"]]]]]))))
+  (let [this-year (t/year (t/now))
+        next-year (t/year (t/>> (t/now) (t/new-duration 365 :days)))
+        tr (i18n/tr-from-req req)
+        result (and (util/post? req) (controller/create-policy! req))]
+    (if (:policy result)
+      (response/hx-redirect (url/link-policy (:policy result)))
+
+      [:div
+       (ui/page-header :title  (tr [:insurance/create-title])
+                       :subtitle (tr [:insurance/create-subtitle]))
+       (ui/panel {}
+                 [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
+                  [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
+                   [:div {:class "space-y-6 sm:space-y-5"}
+
+                    [:div {:class "space-y-6 sm:space-y-5"}
+                     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
+                      [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
+                       (tr [:insurance/name])]
+                      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+                       [:input {:type "text" :name "name" :id "name"
+                                :value (str "Band Instruments " this-year " - " next-year)
+                                :required true
+                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
+                     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
+                      [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
+                       (tr [:insurance/effective-at])]
+                      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+                       [:input {:type "date" :name "effective-at" :id "effective-at"
+                                :value (str this-year "-05-01")
+                                :required true
+                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
+                     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
+                      [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
+                       (tr [:insurance/effective-until])]
+                      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+                       [:input {:type "date" :name "effective-until" :id "effective-until"
+                                :value (str next-year "-04-30")
+                                :required true
+                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
+                     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
+                      [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
+                       (tr [:insurance/premium-base-factor])]
+                      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+                       (ui/factor-input :name "base-factor" :value (* (bigdec 1.07) (bigdec 0.00447)))]]]]]
+                  [:div {:class "pt-5"}
+                   [:div {:class "flex justify-end"}
+                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                     (tr [:action/cancel])]
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                     (tr [:action/create])]]]])])))
 
 (ctmx/defcomponent ^:endpoint instrument-create-page [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [result (and post? (controller/create-instrument! req))]
-      (if-let [instrument  (:instrument result)]
-        (response/hx-redirect (url/link-instrument instrument))
-        [:div {:class "px-4 py-4"}
-         [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
-          [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
-           [:div {:class "space-y-6 sm:space-y-5"}
-            [:div
-             [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}
-              "New Instrument"]
-             [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}
-              "Enter details for the Instrument"]]
-            [:div {:class "space-y-6 sm:space-y-5"}
+  (let [result (and (util/post? req) (controller/create-instrument! req))
+        tr (i18n/tr-from-req req)]
+    (if-let [instrument  (:instrument result)]
+      (response/hx-redirect (url/link-instrument instrument))
+      [:div
+       (ui/page-header :title (tr [:instrument/create-title])
+                       :subtitle (tr [:instrument/create-subtitle]))
+       (ui/panel {}
+                 [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
+                  [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
+                   [:div {:class "space-y-6 sm:space-y-5"}
+                    [:div
+                     [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
+                     [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
+                    [:div {:class "space-y-6 sm:space-y-5"}
+                     (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-gigo-key") :members (q/members-for-select db) :variant :left)
+                     (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
+                     (ui/text-left :label (tr [:instrument/name]) :id (path "name"))
+                     (ui/text-left :label (tr [:instrument/make]) :id (path "make"))
+                     (ui/text-left :label (tr [:instrument/model]) :id (path "model"))
+                     (ui/text-left :label (tr [:instrument/serial-number]) :id (path "serial-number") :required? false)
+                     (ui/text-left :label (tr [:instrument/build-year]) :id (path "build-year") :required? false)]]]
 
-             (ui/member-select :label "Owner" :id (path "owner-gigo-key") :members (q/members-for-select db) :variant :left)
-             (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
-             (ui/text-left :label "Instrument Name" :id (path "name"))
-             (ui/text-left :label "Make" :id (path "make"))
-             (ui/text-left :label "Model" :id (path "model"))
-             (ui/text-left :label "Serial Number" :id (path "serial-number") :required? false)
-             (ui/text-left :label "Build Year" :id (path "build-year") :required? false)]]]
-
-          [:div {:class "pt-5"}
-           [:div {:class "flex justify-end"}
-            [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
-             "Cancel"]
-            [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
-             "Create"]]]]]))))
+                  [:div {:class "pt-5"}
+                   [:div {:class "flex justify-end"}
+                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                     (tr [:action/cancel])]
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                     (tr [:action/create])]]]])])))
 
 (ctmx/defcomponent ^:endpoint instrument-detail-page [{:keys [db] :as req} ^:boolean edit?]
   (let [post? (util/post? req)
@@ -617,37 +618,37 @@
         [:div {:class "mx-auto mt-6 max-w-5xl px-4 py-4 sm:px-6 lg:px-8 bg-white rounded-md"}
          [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
           [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} "Owner"]
+           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/owner])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
               (ui/member-select :variant :inline-no-label :id (path "owner-gigo-key") :members (q/members-for-select db))
               (-> instrument :instrument/owner :member/name))]]
           [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} "Category"]
+           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/category])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
               (ui/instrument-category-select :variant :inline-no-label :id (path "category-id") :categories (controller/instrument-categories db))
               (-> instrument :instrument/category :instrument.category/name))]]
           [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} "Make"]
+           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/make])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
               (ui/text :label "" :name (path "make") :value make)
               make)]]
           [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} "Model"]
+           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/model])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
               (ui/text :label "" :name (path "model") :value model :required? false)
               model)]]
           [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} "Build-Year"]
+           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/build-year])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
               (ui/text :label "" :name (path "build-year") :value build-year :required? false)
               build-year)]]
           [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} "Serial-Number"]
+           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/serial-number])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
               (ui/text :label "" :name (path "serial-number") :value serial-number  :required? false)
@@ -676,7 +677,7 @@
 
      (let [instruments (controller/instruments db)]
        [:div {:class "mt-6 sm:px-6 lg:px-8"}
-        (ui/divider-left (tr [:instruments]) (ui/link-button :label (tr [:instrument])
+        (ui/divider-left (tr [:instruments]) (ui/link-button :label (tr [:instrument/instrument])
                                                              :priority :white-rounded
                                                              :centered? true
                                                              :attr {:href "/instrument-new/"} :icon icon/plus))

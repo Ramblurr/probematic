@@ -752,13 +752,14 @@
 
 (defn panel [{:keys [title buttons]} & body]
   [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
-   [:div {:class "space-y-6 lg:col-span-2 lg:col-start-1"}
+   [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
     [:section
      [:div {:class "bg-white shadow sm:rounded-lg"}
-      [:div {:class "px-4 py-5 px-6  flex items-center justify-between "}
-       (when title
-         [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} title])
-       [:div {:class "space-x-2 flex"}
-        buttons]]
+      (when (or title buttons)
+        [:div {:class "px-4 py-5 px-6  flex items-center justify-between "}
+         (when title
+           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} title])
+         [:div {:class "space-x-2 flex"}
+          buttons]])
       [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
        body]]]]])
