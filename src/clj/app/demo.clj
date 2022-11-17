@@ -4,7 +4,9 @@
    [com.github.javafaker Faker])
   (:require [clojure.string :as str]
             [datomic.client.api :as d]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [tick.core :as t]
+            [app.gigs.domain :as domain]))
 
 (def faker (Faker.))
 
@@ -62,5 +64,42 @@
                                :member/nick "admin"
                                :member/email "admin@example.com"
                                :member/phone "+112738127387"
+                               :member/section [:section/name "bass"]
                                :member/active? true}]})
   (d/transact conn {:tx-data (rand-members-txs 30)}))
+
+(defn seed-gigs! [conn]
+  (log/info "Seeding gigs")
+  (d/transact conn {:tx-data
+                    (map domain/gig->db
+                         [{:gig/gig-id (gigo-key)
+                           :gig/title "Rehersal"
+                           :gig/location "Proberaum"
+                           :gig/gig-type :gig.type/probe
+                           :gig/status :gig.status/confirmed
+                           :gig/date  (t/>> (t/date) (t/new-period 7 :days))
+                           :gig/contact        [:member/gigo-key "admin"]
+                           :gig/call-time (t/time "19:00")
+                           :gig/set-time (t/time "19:30")}
+                          {:gig/gig-id (gigo-key)
+                           :gig/title "Rehersal"
+                           :gig/location "Proberaum"
+                           :gig/gig-type :gig.type/probe
+                           :gig/status :gig.status/confirmed
+                           :gig/date  (t/>> (t/date) (t/new-period 14 :days))
+                           :gig/contact        [:member/gigo-key "admin"]
+                           :gig/call-time (t/time "19:00")
+                           :gig/set-time (t/time "19:30")}
+                          {:gig/gig-id (gigo-key)
+                           :gig/title "Treibhaus Gig"
+                           :gig/location "Treibhaus"
+                           :gig/gig-type :gig.type/gig
+                           :gig/status :gig.status/unconfirmed
+                           :gig/date  (t/>> (t/date) (t/new-period 6 :days))
+                           :gig/contact        [:member/gigo-key "admin"]
+                           :gig/call-time (t/time "13:00")
+                           :gig/leader     "Norbert"
+                           :gig/post-gig-plans "Pizza and beer"
+                           :gig/more-details   "We're playing at Weltfest again this year."
+                           :gig/pay-deal "500 EUR + drinks"
+                           :gig/set-time (t/time "13:20")}])}))

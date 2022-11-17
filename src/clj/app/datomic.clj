@@ -134,7 +134,9 @@
     ;;   (tx validation/entity-attrs))
     (when (config/demo-mode? env)
       (when (= 0 (count-all (d/db conn) :member/gigo-key))
-        (demo/seed-random-members! conn))))
+        (demo/seed-random-members! conn))
+      (when (= 0 (count-all (d/db conn) :gig/gig-id))
+        (demo/seed-gigs! conn))))
   :seeded)
 
 (when nil :cool)
