@@ -221,96 +221,79 @@
             used-category-ids)
      all-categories)))
 
-(ctmx/defcomponent ^:endpoint insurance-category-factors [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [policy-id (-> req :path-params :policy-id parse-uuid)
-          comp-name "insurance-category-factors"
-          edit? (Boolean/valueOf (-> req :query-params :edit))
-          add? (Boolean/valueOf (-> req :query-params :add))
-          policy (cond
-                   put?
-                   (:policy (controller/create-category-factor! req policy-id))
-                   post?
-                   (:policy
-                    (controller/update-category-factors! req policy-id))
-                   :else
-                   (controller/retrieve-policy db policy-id))
-          category-factors (:insurance.policy/category-factors policy)
-          all-categories (controller/instrument-categories db)
-          not-used-instrument-categories (unused-categories all-categories policy)
-          no-more-categories? (empty? not-used-instrument-categories)
-          body-result
+(ctmx/defcomponent  insurance-category-factors-item-ro [{:keys [db] :as req} idx {:insurance.category.factor/keys [category factor category-factor-id]}]
+  (ui/dl-item (:instrument.category/name category) factor))
 
-          [(if edit? :form :div)
-           (if edit?
-             {:id id :hx-post comp-name}
-             {:id id})
+(ctmx/defcomponent insurance-category-factors-item-rw [{:keys [db] :as req} idx {:insurance.category.factor/keys [category factor category-factor-id]}]
+  (let [tr (i18n/tr-from-req req)]
+    (ui/dl-item
+     (:instrument.category/name category)
+     [:div {:class "mt-2"}
+      (ui/factor-input :label (tr [:insurance/premium-factor]) :name (path "premium-factor") :value factor)
+      (let [delete-id (path "delete")]
+        [:div {:class "mt-2 relative flex items-start"}
+         [:input {:type "hidden" :value category-factor-id :name (path "category-id")}]
+         [:div {:class "flex h-5 items-center"}
+          [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
+         [:div {:class "ml-3 text-sm"}
+          [:label {:for delete-id :class "font-medium text-gray-700"} (tr [:action/delete])]]])])))
 
-           [:div {:class "mt-2 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8"}
-            [:div {:class "flex items-center space-x-5"}
-             [:h2 {:class "text-2xl font-bold text-gray-900"}
-              "Category Factors"]]
-            [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0"}
-             (if edit?
-               (list
-                (ui/button :label "Save" :priority :primary  :centered? true
-                           :attr {:hx-target (hash ".")})
-                (ui/button :label "Cancel" :priority :white :centered? true
-                           :attr {:hx-get (str comp-name "?edit=false") :hx-target (hash ".")}))
-               (list
-                (ui/button :label "Edit" :priority :white :centered? true
-                           :attr {:hx-get (str comp-name "?edit=true") :hx-target (hash ".")})
-                (when-not no-more-categories?
-                  (ui/button :label "Add" :priority :white :class "mt-2" :icon icon/plus
-                             :attr {:hx-target (hash ".") :hx-get (str comp-name "?add=true")}))))]]
+(ctmx/defcomponent ^:endpoint insurance-category-factors [{:keys [db] :as req} ^:boolean edit? ^:boolean add?]
+  (let [policy-id (-> req :path-params :policy-id parse-uuid)
+        comp-name (util/comp-namer #'insurance-category-factors)
+        post? (util/post? req)
+        put? (util/put? req)
+        policy (cond
+                 put?
+                 (:policy (controller/create-category-factor! req policy-id))
+                 post?
+                 (:policy
+                  (controller/update-category-factors! req policy-id))
+                 :else
+                 (controller/retrieve-policy db policy-id))
+        tr (i18n/tr-from-req req)
+        category-factors (:insurance.policy/category-factors policy)
+        all-categories (controller/instrument-categories db)
+        not-used-instrument-categories (unused-categories all-categories policy)
+        no-more-categories? (empty? not-used-instrument-categories)
+        body-result
 
-           [:div
-            [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
-             (if (and (not add?) (empty? category-factors))
-               [:div
-                [:div
-                 "You need to create the category factors. "]
-                [:div
-                 (ui/button :label "Coverage Type" :priority :primary :icon icon/plus
-                            :attr {:hx-get (str comp-name "?add=true") :hx-target (hash ".")})]]
+        [:div {:id id}
+         (ui/panel {:title (tr [:insurance/category-factors])
+                    :buttons (cond
+                               edit?
+                               (list
+                                (ui/button :label "Save" :priority :primary :centered? true
+                                           :attr {:form (path "editform")})
+                                (ui/button :label "Cancel" :priority :white :centered? true
+                                           :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")}))
+                               add?
+                               (list
+                                (ui/button :label "Cancel" :priority :white :centered? true
+                                           :attr {:hx-get (comp-name) :hx-vals {:add? false} :hx-target (hash ".")}))
+                               :else
+                               (list
+                                (ui/button :label "Edit" :priority :white :centered? true
+                                           :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
+                                (when-not no-more-categories?
+                                  (ui/button :label "Add" :priority :white :icon icon/plus :centered? true
+                                             :attr {:hx-get (comp-name) :hx-vals {:add? true} :hx-target (hash ".")}))))}
 
-               [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-                (map-indexed (fn [idx {:insurance.category.factor/keys [category factor category-factor-id]}]
-                               (let [namer (fn [k]
-                                             (path (str "catfact_" idx "_" k)))
-                                     category-name (:instrument.category/name category)]
-                                 [:div {:class "sm:col-span-1"}
-                                  [:dt {:class "text-sm font-medium text-gray-500"}
-                                   (if edit?
-                                     (ui/text :label "Category" :name (namer "name") :value category-name)
-                                     category-name)]
-                                  [:dd {:class "mt-2 text-sm text-gray-900"}
-                                   (if edit?
-                                     (ui/factor-input :label "Premium Factor" :name (namer "premium-factor") :value factor)
-                                     factor)
-                                   (when edit?
-                                     (let [delete-id (namer "delete")]
-                                       [:div {:class "mt-2 relative flex items-start"}
-                                        [:input {:type "hidden" :value category-factor-id :name (namer "category-id")}]
-                                        [:div {:class "flex h-5 items-center"}
-                                         [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
-                                        [:div {:class "ml-3 text-sm"}
-                                         [:label {:for delete-id :class "font-medium text-gray-700"} "Delete"]]]))]]))
+                   (when (seq category-factors)
+                     [:form {:hx-post (comp-name) :hx-target (hash ".") :id (path "editform")}
+                      (ui/dl (rt/map-indexed (if edit? insurance-category-factors-item-rw  insurance-category-factors-item-ro) req category-factors))])
+                   (when add?
+                     [:form {:hx-put (comp-name) :hx-target (hash ".")}
+                      (ui/dl
+                       (ui/dl-item
+                        (ui/instrument-category-select :variant :inline :id (path "category-id") :categories not-used-instrument-categories)
+                        [:div {:class "mt-2"}
+                         (ui/factor-input :label (tr [:insurance/premium-factor]) :name (path "premium-factor") :value "0.2")
+                         (ui/button :label "Add" :priority :primary :class "mt-2")]))]))]]
 
-                             category-factors)
-
-                (when add?
-                  [:form {:class "sm:col-span-1"}
-                   [:dt {:class "text-sm font-medium text-gray-500"}
-                    (ui/instrument-category-select :variant :inline :id (path "category-id") :categories not-used-instrument-categories)]
-                   [:dd {:class "mt-2 text-sm text-gray-900"}
-                    (ui/factor-input :label "Premium Factor" :name (path "premium-factor") :value "0.2")
-                    (ui/button :label "Cancel" :priority :white :icon icon/plus :attr {:hx-get (str comp-name "?add=false") :hx-target (hash ".")})
-                    (ui/button :label "Add" :priority :primary :class "mt-2"
-                               :attr {:hx-target (hash ".") :hx-put comp-name})]])])]]]]
-      (if post?
-        (ui/trigger-response "refreshCoverages" body-result)
-        body-result))))
+    (if post?
+      (ui/trigger-response "refreshCoverages" body-result)
+      body-result)))
 
 (defn remove-covered-instruments [all-instruments instrument-coverages]
   (let [covered-instruments (map :instrument.coverage/instrument instrument-coverages)]
@@ -381,147 +364,141 @@
      )))
 
 (ctmx/defcomponent ^:endpoint coverage-table-row-rw [{:keys [db] :as req} idx coverage-id]
-  (ctmx/with-req req
-    (let [policy (:policy req)
-          coverage-types (:insurance.policy/coverage-types policy)
-          coverage (cond post?
-                         (:coverage (controller/toggle-instrument-coverage-type! req coverage-id (-> req :params :type-id)))
-                         delete?
-                         (:policy (controller/remove-instrument-coverage! req coverage-id))
+  (let [policy (:policy req)
+        post? (util/post? req)
+        delete? (util/delete? req)
+        coverage-types (:insurance.policy/coverage-types policy)
+        coverage (cond post?
+                       (:coverage (controller/toggle-instrument-coverage-type! req coverage-id (-> req :params :type-id)))
+                       delete?
+                       (:policy (controller/remove-instrument-coverage! req coverage-id))
 
-                         :else
-                         (controller/retrieve-coverage db coverage-id))]
-      (if (and delete? coverage)
-        ""
-        (into [] (concat
-                  [:tr {:id id}
-                   (shared-static-columns coverage)]
-                  (map-indexed  (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
-                                  [:td {:class "px-3 py-4" :hx-include (str "#coverage" idx "type" type-idx  " input") :id (str "coverage" idx "type" type-idx)}
-                                   [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
-                                   [:input {:type "hidden" :name "type-id" :value type-id}]
-                                   (let [has? (controller/get-coverage-type-from-coverage coverage type-id)
-                                         icon (if has? icon/xmark icon/plus)
-                                         class (if has? "text-red-500" "text-green-500")]
-                                     (ui/button :icon icon :size :small
-                                                :class class
-                                                :attr {:hx-post "coverage-table-row-rw" :hx-target (hash ".")}))])
-                                coverage-types)
-                  (shared-static-columns-end coverage)
-                  (list
-                   [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
-                    [:form {:hx-delete "coverage-table-row-rw" :hx-target (hash ".") :hx-confirm "Are you sure?"}
-                     [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
-                     [:span {:class "flex flex-row space-x-2"}
-                      [:button {:type "submit" :class "text-red-600 hover:text-indigo-900 cursor-pointer"} "Delete"]]]])))))))
-
-(ctmx/defcomponent ^:endpoint coverage-table-row-ro [{:keys [db] :as req} idx coverage-id]
-  (ctmx/with-req req
-    (let [policy (:policy req)
-          coverage-types (:insurance.policy/coverage-types policy)
-          coverage (controller/retrieve-coverage db coverage-id)
-          coverage (controller/update-total-coverage-price policy coverage)
-          _ (tap> coverage)]
+                       :else
+                       (controller/retrieve-coverage db coverage-id))]
+    (if (and delete? coverage)
+      ""
       (into [] (concat
                 [:tr {:id id}
                  (shared-static-columns coverage)]
-                (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                        [:td {:class "px-3 py-4 text-right"}
-                         (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
-                           [:div (ui/money (:insurance.coverage.type/cost coverage-type) :EUR)]
-                           (icon/xmark {:class "w-5 h-5 inline"}))])
-
-                      coverage-types)
-
+                (map-indexed  (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
+                                [:td {:class "px-3 py-4" :hx-include (str "#coverage" idx "type" type-idx  " input") :id (str "coverage" idx "type" type-idx)}
+                                 [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
+                                 [:input {:type "hidden" :name "type-id" :value type-id}]
+                                 (let [has? (controller/get-coverage-type-from-coverage coverage type-id)
+                                       icon (if has? icon/xmark icon/plus)
+                                       class (if has? "text-red-500" "text-green-500")]
+                                   (ui/button :icon icon :size :small
+                                              :class class
+                                              :attr {:hx-post "coverage-table-row-rw" :hx-target (hash ".")}))])
+                              coverage-types)
                 (shared-static-columns-end coverage)
                 (list
                  [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
-                  [:span {:class "flex flex-row space-x-2"}
-                   [:button {:type "submit" :class "text-white hover:text-indigo-900 cursor-pointer"} "Delete"]]]))))))
+                  [:form {:hx-delete "coverage-table-row-rw" :hx-target (hash ".") :hx-confirm "Are you sure?"}
+                   [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
+                   [:span {:class "flex flex-row space-x-2"}
+                    [:button {:type "submit" :class "text-red-600 hover:text-indigo-900 cursor-pointer"} "Delete"]]]]))))))
+
+(ctmx/defcomponent ^:endpoint coverage-table-row-ro [{:keys [db] :as req} idx coverage-id]
+  (let [policy (:policy req)
+        coverage-types (:insurance.policy/coverage-types policy)
+        coverage (controller/retrieve-coverage db coverage-id)
+        coverage (controller/update-total-coverage-price policy coverage)]
+    (into [] (concat
+              [:tr {:id id}
+               (shared-static-columns coverage)]
+              (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                      [:td {:class "px-3 py-4 text-right"}
+                       (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
+                         [:div (ui/money (:insurance.coverage.type/cost coverage-type) :EUR)]
+                         (icon/xmark {:class "w-5 h-5 inline"}))])
+
+                    coverage-types)
+
+              (shared-static-columns-end coverage)
+              (list
+               [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
+                [:span {:class "flex flex-row space-x-2"}
+                 [:button {:type "submit" :class "text-white hover:text-indigo-900 cursor-pointer"} "Delete"]]])))))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table-rw [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [policy (:policy req)
-          instrument-coverages (:insurance.policy/covered-instruments policy)
-          table-headers (coverage-table-headers policy)]
+  (let [policy (:policy req)
+        instrument-coverages (:insurance.policy/covered-instruments policy)
+        table-headers (coverage-table-headers policy)]
 
-      (list
-       (ui/table-row-head table-headers)
-       (ui/table-body
-        (rt/map-indexed coverage-table-row-rw req (map :instrument.coverage/coverage-id instrument-coverages)))))))
+    (list
+     (ui/table-row-head table-headers)
+     (ui/table-body
+      (rt/map-indexed coverage-table-row-rw req (map :instrument.coverage/coverage-id instrument-coverages))))))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table-ro [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [policy (:policy req)
-          instrument-coverages (:insurance.policy/covered-instruments policy)
-          table-headers (coverage-table-headers policy)]
+  (let [policy (:policy req)
+        instrument-coverages (:insurance.policy/covered-instruments policy)
+        table-headers (coverage-table-headers policy)]
 
-      (list
-       (ui/table-row-head table-headers)
-       (ui/table-body
-        (rt/map-indexed coverage-table-row-ro req (map :instrument.coverage/coverage-id instrument-coverages)))))))
+    (list
+     (ui/table-row-head table-headers)
+     (ui/table-body
+      (rt/map-indexed coverage-table-row-ro req (map :instrument.coverage/coverage-id instrument-coverages))))))
 
-(ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [policy-id (-> req :policy :insurance.policy/policy-id)
-          edit? (util/qp-bool req :edit)
-          add? (util/qp-bool req :add)
-          policy (cond
-                   put?
-                   (:policy (controller/create-instrument-coverage! req policy-id))
-                   post?
-                   (:policy
-                    (controller/update-coverage-types! req policy-id))
-                   :else
-                   (:policy req))
-          instrument-coverages (:insurance.policy/covered-instruments policy)
-          non-covered-instruments (remove-covered-instruments (controller/instruments db) instrument-coverages)]
-      (if (and put? policy)
-        ctmx.response/hx-refresh
-        [:div {:id id :hx-trigger "refreshCoverages from:body" :hx-get "insurance-instrument-coverage"}
+(ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req} ^:boolean edit? ^:boolean add?]
+  (let [policy-id (-> req :policy :insurance.policy/policy-id)
+        comp-name (util/comp-namer #'insurance-instrument-coverage)
+        post? (util/post? req)
+        put? (util/put? req)
+        tr (i18n/tr-from-req req)
+        policy (cond
+                 put?
+                 (:policy (controller/create-instrument-coverage! req policy-id))
+                 post?
+                 (:policy
+                  (controller/update-coverage-types! req policy-id))
+                 :else
+                 (:policy req))
+        instrument-coverages (:insurance.policy/covered-instruments policy)
+        non-covered-instruments (remove-covered-instruments (controller/instruments db) instrument-coverages)]
+    (if (and put? policy)
+      ctmx.response/hx-refresh
+      [:div {:id id :hx-trigger "refreshCoverages from:body" :hx-get (comp-name)}
+       [:div {:class "mt-2"}
+        [:div {:class "px-4 sm:px-6 lg:px-8"}
+         [:div {:class "sm:flex sm:items-center"}
+          [:div {:class "sm:flex-auto"}
+           [:h1 {:class "text-2xl font-semibold text-gray-900"} (tr [:insurance/covered-instruments])]
+           [:p {:class "mt-2 text-sm text-gray-700"} ""]]
+          [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}
+           (ui/toggle :label "Edit" :active? edit? :id "instrument-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? (not edit?)})
+           (ui/button :label "Add" :priority :white :class "" :icon icon/plus :centered? true
+                      :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:add? true}})]]
+         (when add?
+           [:div {:class "w-96"}
+            [:form
+             (ui/instrument-select :id (path "instrument-id") :instruments non-covered-instruments :variant :inline)
+             (ui/money-input :id (path "value") :label "Value" :required? true)
+             (ui/checkbox :id (path "private?") :label "Private?")
 
-         [:div {:class "mt-2"}
+             (ui/button :label "Cancel" :priority :white :icon icon/plus :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:add? false}})
+             (ui/button :label "Add" :priority :primary :attr {:hx-target (hash ".") :hx-put (comp-name)})]])
+         [:div {:class "-mx-4 mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:-mx-6 md:mx-0 md:rounded-lg"}
+          [:table {:class "min-w-full divide-y divide-gray-300"}
+           (if edit?
+             (insurance-instrument-coverage-table-rw req)
+             (insurance-instrument-coverage-table-ro req))]]]
 
-          [:div {:class "px-4 sm:px-6 lg:px-8"}
-           [:div {:class "flex items-center justify-center bg-white p-8"}]
-           [:div {:class "sm:flex sm:items-center"}
-            [:div {:class "sm:flex-auto"}
-             [:h1 {:class "text-2xl font-semibold text-gray-900"} "Covered Instruments"]
-             [:p {:class "mt-2 text-sm text-gray-700"} ""]]
-            [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}
-             (ui/toggle :label "Edit" :active? edit? :id "instrument-table-edit-toggle" :hx-target (hash ".") :hx-get (if edit? "insurance-instrument-coverage?edit=false" "insurance-instrument-coverage?edit=true"))
-             (ui/button :label "Add" :priority :white :class "" :icon icon/plus :centered? true
-                        :attr {:hx-target (hash ".") :hx-get "insurance-instrument-coverage?add=true"})]]
-           (when add?
-             [:div {:class "w-96"}
-              [:form
-               (ui/instrument-select :id (path "instrument-id") :instruments non-covered-instruments :variant :inline)
-               (ui/money-input :id (path "value") :label "Value" :required? true)
-               (ui/checkbox :id (path "private?") :label "Private?")
-
-               (ui/button :label "Cancel" :priority :white :icon icon/plus :attr {:hx-get "insurance-instrument-coverage?add=false" :hx-target (hash ".")})
-               (ui/button :label "Add" :priority :primary :class "mt-2"
-                          :attr {:hx-target (hash ".") :hx-put "insurance-instrument-coverage"})]])
-           [:div {:class "-mx-4 mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:-mx-6 md:mx-0 md:rounded-lg"}
-            [:table {:class "min-w-full divide-y divide-gray-300"}
-             (if edit?
-               (insurance-instrument-coverage-table-rw req)
-               (insurance-instrument-coverage-table-ro req))]]]
-
-          [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
-           (when (and (not add?) (empty? instrument-coverages))
-             [:div
-              [:div
-               "You should add a coverage to an instrument"]
-              [:div
-               (ui/button :label "Instrument Coverage" :priority :primary :icon icon/plus :attr {:hx-get "insurance-instrument-coverage?add=true" :hx-target (hash ".")})]])]]]))))
+        [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
+         (when (and (not add?) (empty? instrument-coverages))
+           [:div
+            [:div
+             "You should add a coverage to an instrument"]
+            [:div
+             (ui/button :label (tr [:insurance/instrument-coverage]) :priority :primary :icon icon/plus :attr {:hx-get (comp-name) :hx-vals {:add? true} :hx-target (hash ".")})]])]]])))
 
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
   [:div
    (insurance-detail-page-header req false)
    (insurance-coverage-types req false false)
-   (insurance-category-factors req)
-   (insurance-instrument-coverage req)])
+   (insurance-category-factors req false false)
+   (insurance-instrument-coverage req false false)])
 
 (ctmx/defcomponent ^:endpoint insurance-create-page [{:keys [db] :as req}]
   (ctmx/with-req req

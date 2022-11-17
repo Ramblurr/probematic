@@ -65,7 +65,11 @@
              :premium-base-factor "Premium Base Factor"
              :premium-factor "Premium Factor"
              :coverage-types "Coverage Types"
-             :coverage-name "Coverage Name"}
+             :coverage-name "Coverage Name"
+             :category-factors "Category Factors"
+             :covered-instruments "Covered Instruments"
+             :instrument-coverage "Instrument Coverage"}
+
  :band-instruments "Band Instruments"
  :private-instruments "Private Instruments"
  :outstanding-payments "Outstanding Payments"
