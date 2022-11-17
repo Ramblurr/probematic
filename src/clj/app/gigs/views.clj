@@ -161,9 +161,9 @@
     [:a {:href (url/link-gig gig) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:p {:class "truncate text-sm font-medium text-indigo-600"}
+       [:div {:class "flex items-center space-x-2"}
         (ui/gig-status-icon status)
-        title]
+        [:p {:class "truncate text-sm font-medium text-indigo-600"} title]]
        [:div {:class "ml-2 flex flex-shrink-0"}
         (when (domain/in-future? gig)
           (ui/button :tag :a :attr {:href (url/link-gig gig "/log-play/")}
