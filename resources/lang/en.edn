@@ -23,6 +23,13 @@
             :meeting "Meeting"
             :gig "Gig"}
 
+ :play-log {:not-played "Not Played"
+            :nice "Nice!"
+            :okay "Okay"
+            :bad "Uh-oh"
+            :intensive "Intensive focus"
+            :diagram-legend "Legend"}
+
  :gig {:attendance "Attendance"
        :comment-placeholder "Say your piece!"
        :no-comments "No comments."
@@ -50,7 +57,8 @@
        :gig-info "Gig Info"
        :probe-info "Probe Info"
        :show-all "Show All"
-       :show-committed "Show Committed"}
+       :show-committed "Show Committed"
+       :play-log-subtitle "Here you can record what was played at this gig/probe."}
 
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"

@@ -63,34 +63,33 @@
          (map #(merge {:name id :model value :required? required?} %))
          (map-indexed radio-button))]])
 
-(defn log-play-legend []
+(defn log-play-legend [tr]
   (let [shared-classes "h-8 w-8 border-solid border-b-2 pb-1"]
-    [:div {:class ""}
+    [:div {:class "ml-2"}
      [:h3 {:class "font-bold"}
-      "Legend"]
+      (tr [:play-log/diagram-legend])]
 
-     [:div {:class "flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 "}
-      [:div {:class "flex items-center justify-start"}
+     [:div {:class "grid grid-cols-3 space-y-2 max-w-sm sm:max-w-none sm:grid-cols-7 sm:space-x-3"}
+      [:div {:class "flex items-center justify-start sm:min-w-fit"}
        (icon/circle-xmark-outline {:class (ui/cs shared-classes "icon-not-played border-gray-500")})
-       "Not Played"]
+       (tr [:play-log/not-played])]
       [:div {:class "flex items-center justify-start"}
        (icon/smile {:class (ui/cs shared-classes "icon-smile border-green-500")})
-       "Nice!"]
+       (tr [:play-log/nice])]
       [:div {:class "flex items-center justify-start"}
        (icon/meh {:class (ui/cs shared-classes "icon-meh border-blue-500")})
-       "Okay"]
+       (tr [:play-log/okay])]
       [:div {:class "flex items-center justify-start"}
        (icon/sad {:class (ui/cs shared-classes "icon-sad border-red-500")})
-       "Uh-oh"]
-      [:div {:class "flex justify-start items-center"}
+       (tr [:play-log/bad])]
+      [:div {:class "col-span-2 flex justify-start items-center"}
        (icon/fist-punch {:class (ui/cs shared-classes "icon-fist-punch border-purple-500")})
-       "Intensiv geprobt"]]]))
+       (tr [:play-log/intensive])]]]))
 
 (ctmx/defcomponent gig-log-play [{:keys [db] :as req} idx play]
   (let [was-played? (some? (:played/play-id play))
         check-id (path "intensive")
         radio-id (path "feeling")
-        _ (value "foo")
         song (:played/song play)
         song-id (:song/song-id song)
         feeling-value (util/kw->str (or (:played/rating play) :play-rating/not-played))
@@ -129,32 +128,30 @@
         (icon/fist-punch {:class "h-8 w-8"})]]]]))
 
 (ctmx/defcomponent ^:endpoint gig-log-plays [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [gig-id (-> req :path-params :gig/gig-id)
-          gig (controller/retrieve-gig db gig-id)
-          plays (cond post?
-                      (:plays (controller/log-play! req gig-id))
-                      :else
-                      (controller/plays-by-gig db gig-id))
-          songs-not-played (controller/songs-not-played plays (q/find-all-songs db))
-          ;; our log-play component wants to have "plays" for every song
-          ;; so we enrich the actual plays with stubs for the songs that were not played
-          plays (sort-by #(-> % :played/song :song/title) (concat plays
-                                                                  (map (fn [s] {:played/song s}) songs-not-played)))]
+  (let [gig-id (-> req :path-params :gig/gig-id)
+        post? (util/post? req)
+        tr (i18n/tr-from-req req)
+        gig (controller/retrieve-gig db gig-id)
+        plays (cond post?
+                    (:plays (controller/log-play! req gig-id))
+                    :else
+                    (controller/plays-by-gig db gig-id))
+        songs-not-played (controller/songs-not-played plays (q/find-all-songs db))
+        ;; our log-play component wants to have "plays" for every song
+        ;; so we enrich the actual plays with stubs for the songs that were not played
+        plays (sort-by #(-> % :played/song :song/title) (concat plays
+                                                                (map (fn [s] {:played/song s}) songs-not-played)))]
 
-      [:form {:id id :hx-post (path ".")
-              :class "space-y-4"}
-
-       (ui/page-header :title (list  (:gig/title gig) " (" (ui/datetime (:gig/date gig)) ")") :subtitle "Here you can record what was played at this gig/probe.")
-
-       (log-play-legend)
-       [:ul {:class "toggler-container"}
-        (rt/map-indexed gig-log-play req plays)]
-       [:div
-        [:div {:class "flex justify-end"}
-         [:a {:href "/events", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-         [:button {:class "ml-3 btn btn-sm btn-indigo-high"
-                   :type "submit"} "Save"]]]])))
+    [:form {:id id :hx-post (path ".") :class "space-y-4"}
+     (ui/page-header :title (list  (:gig/title gig) " (" (ui/datetime (:gig/date gig)) ")")
+                     :subtitle (tr [:gig/play-log-subtitle]))
+     (log-play-legend tr)
+     [:ul {:class "toggler-container"}
+      (rt/map-indexed gig-log-play req plays)]
+     [:div
+      [:div {:class "flex justify-end"}
+       [:a {:href (url/link-gigs-home) :class "btn btn-sm btn-clear-normal"} (tr [:action/cancel])]
+       [:button {:class "ml-3 btn btn-sm btn-indigo-high" :type "submit"} (tr [:action/save])]]]]))
 
 (defn gig-row [{:gig/keys [status title location date gig-id] :as gig}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]

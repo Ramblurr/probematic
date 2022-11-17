@@ -14,3 +14,5 @@
 
 (def link-policy (partial link-helper "/insurance/" :insurance.policy/policy-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
+
+(defn link-gigs-home [] "/events")
