@@ -1,0 +1,11 @@
+#+title: Todo List for the Probematic
+
+* Features
+** Probenplan
+** Logout
+** User Profile/Settings Page
+** Gig email notifications
+** Insurance edit coverage value
+
+* Production Checklist
+** Brotli compression for css/js (see https://github.com/RutledgePaulV/ring-compression/)
