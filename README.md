@@ -9,6 +9,15 @@ Making probes automatic.
 
 1. You need clojure installed `clj`
 2. You need datomic dev-local installed locally [see here](https://docs.datomic.com/cloud/dev-local.html)
+3. You need node/npm installed to build the CSS
+
+### Build the CSS
+
+``` sh
+npm install
+
+npx tailwindcss -i resources/public/css/main.css -o resources/public/css/compiled/main.css
+```
 
 ### Run in demo mode
 
