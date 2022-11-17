@@ -38,8 +38,10 @@
   (routes/routes system))
 
 (defmethod ig/init-key :app.ig.jobs/definitions
-  [_ system]
-  (jobs/job-defs system))
+  [_ {:keys [env] :as system}]
+  (if (config/demo-mode? env)
+    {}
+    (jobs/job-defs system)))
 
 (defmethod ig/init-key ::pedestal
   [_ {:keys [service routes handler env] :as system}]
@@ -69,24 +71,25 @@
   (server/stop server))
 
 (defmethod ig/init-key ::gigo-client
-  [_ {:keys [env] :as opts}]
-  {:username (get-in env [:gigo :username])
-   :password (get-in env [:gigo :password])
-   :cookie-atom (atom nil)})
+  [_ {:keys [env]}]
+  (when-not (config/demo-mode? env)
+    {:username (get-in env [:gigo :username])
+     :password (get-in env [:gigo :password])
+     :cookie-atom (atom nil)}))
 
 (defmethod ig/init-key ::datomic-db
   [_ config]
-  (println "\nStarted Datomic DB")
+  (log/info "Started Datomic DB")
   (let [db-name (select-keys config [:db-name])
         client (d/client (select-keys config [:server-type :system :storage-dir]))
         _ (d/create-database client db-name)
         conn (d/connect client db-name)]
-    (datomic/load-dataset conn)
+    (datomic/load-dataset (:env config) conn)
     (assoc config :conn conn)))
 
 (defmethod ig/halt-key! ::datomic-db
   [_ config]
-  (println "\nStopping Datomic DB")
+  (log/info "Stopping Datomic DB")
   (dl/release-db (select-keys config [:system :db-name])))
 
 (defmethod ig/init-key ::i18n-langs
@@ -95,5 +98,6 @@
 
 (defmethod ig/init-key ::sentry
   [_ {:keys [env]}]
-  (sentry/init! (-> env :sentry :dsn)
-                {:environment (-> env :profile)}))
+  (when-not (config/demo-mode? env)
+    (sentry/init! (-> env :sentry :dsn)
+                  {:environment (-> env :profile)})))

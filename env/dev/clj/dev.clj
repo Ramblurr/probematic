@@ -31,7 +31,7 @@
 (def conn (:conn datomic))
 (def app (-> state/system :app.ig.router/routes))
 
-(defn go []
+(defn go-with-browser []
   (dev-extra/go)
   (browser/open-browser "http://localhost:4180/"))
 
@@ -39,30 +39,41 @@
   (dev-extra/reset)
   (browser/refresh))
 
-(defn halt []
-  (dev-extra/halt))
-
 (comment
-  (go)
-  (eta/chrome {:path-driver "/usr/bin/chromedriver"
-               :path-browser "/usr/bin/chromium-freeworld"})
 
-  @browser
-
+  ;; Run go to start the system
   (dev-extra/go)
+  ;; Run halt to shutdown the system
   (dev-extra/halt)
-  (dev-extra/reset)
+  ;; Run reset to reload all code and restart the system
+  ;; if the browser is connected it will refresh the page
+  (refresh)
 
-;;;  SEEDS
+  ;; If you have chromium  and chromium driver installed
+  ;; you can get code reloading by using this version of go
+  ;; see readme for more info
+  (go-with-browser)
 
+;;;; Setup Interant Repl State
+;;; Run this before running either of the seeds below
   (do
     (require '[integrant.repl.state :as state])
     (def env (:app.ig/env state/system))
-    (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def gigo (:app.ig/gigo-client state/system))
-    (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")) ;; rcf
+    (def conn (-> state/system :app.ig/datomic-db :conn))) ;; rcf
+
+;;;; DEMO SEEDS
+;;;  Run this to seed the instance with demo data
+  (do
+    (require '[app.demo :as demo])
+    (demo/seed-random-members! conn))
+
+;;; REAL  SEEDS
+;;; only run this if you have access to the external systems
+;;; DO NOT run this in demo mode
 
   (do
+    (def gigo (:app.ig/gigo-client state/system))
+    (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
     (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic2/gigo-members.json") j/keyword-keys-object-mapper)
           tx-data (map (fn [{:keys [gigo_key email nick name section occ]}]
                          {:member/gigo-key (str/trim gigo_key)
@@ -82,9 +93,9 @@
                            (gigo/get-band-members! gigo sno))})
     :seed-done) ;; END SEEDS
 
-  (halt)
-  (dev-extra/go)
-  (go)
+;;;; Scratch pad
+  ;;  everything below is notes/scratch
+
   (require '[clojure.tools.namespace.repl :refer [refresh]])
   (refresh)
 

@@ -3,7 +3,8 @@
    [app.ui :as ui]
    [app.util :as util]
    [clojure.set :as set]
-   [sentry-clj.core :as sentry]))
+   [sentry-clj.core :as sentry]
+   [clojure.tools.logging :as log]))
 
 (def dangerous-keys
   #{:datomic-conn
@@ -61,25 +62,32 @@
      (tap> event-data)
      (sentry/send-event event-data))))
 
+(defn log-error! [ex]
+  (log/error ex))
+
 (defn unauthorized-error [req ex]
+  (log-error! ex)
   (send-sentry! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 401)
     (ui/error-page-response ex req 401)))
 
 (defn validation-error [req ex]
+  (log-error! ex)
   (send-sentry! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 400)
     (ui/error-page-response ex req 400)))
 
 (defn datomic-not-found-error [req ex]
+  (log-error! ex)
   (send-sentry! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 404)
     (ui/error-page-response ex req 404)))
 
 (defn unknown-error [req ex]
+  (log-error! ex)
   (send-sentry! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 500)

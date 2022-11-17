@@ -4,7 +4,8 @@
    [app.gigs.views :as view]
    [datomic.client.api :as d]
    [ctmx.core :as ctmx]
-   [app.gigs.controller :as controller]))
+   [app.gigs.controller :as controller]
+   [clojure.tools.logging :as log]))
 
 (defn gigs-list-route []
   (ctmx/make-routes

@@ -4,7 +4,10 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [com.yetanalytics.squuid :as sq]
-            [medley.core :as m]))
+            [app.config :as config]
+            [app.demo :as demo]
+            [medley.core :as m]
+            [clojure.tools.logging :as log]))
 
 (defn ident-has-attr?
   [db ident attr]
@@ -16,21 +19,6 @@
         (dissoc :uuid-key)
         (assoc uuid-key (sq/generate-squuid)))
     tx))
-
-(defn load-dataset
-  [conn]
-  (let [db (d/db conn)
-        tx #(d/transact conn {:tx-data %})]
-    (when-not (ident-has-attr? db :member/name :db/ident)
-      (tap> "Loading db schema")
-      (tx (-> (io/resource "schema.edn") slurp edn/read-string))
-      ;; (tx (map uuid-for-seed (-> (io/resource "seeds.edn") slurp edn/read-string)))
-      (tx (-> (io/resource "seeds.edn") slurp edn/read-string)))
-    ;; (when-not (ident-has-attr? db :account/account-id :db.attr/preds)
-    ;;   (tx validation/attr-pred))
-    ;; (when-not (ident-has-attr? db :account/validate :db.entity/attrs)
-    ;;   (tx validation/entity-attrs))
-    ))
 
 (defn transact [conn opts]
   (try
@@ -66,6 +54,18 @@
          :where
          [?e ?attr ?v]]
        db attr pattern))
+
+(defn count-all
+  "Returns the number of entities having attr"
+  [db attr]
+  (let [result
+        (ffirst (d/q '[:find (count ?e)
+                       :in $ ?attr
+                       :where [?e ?attr ?v]]
+                     db attr))]
+    (if (nil? result)
+      0
+      result)))
 
 (defn find-all-by
   "Returns the entities having attr and val"
@@ -118,6 +118,26 @@
    [k (k m)]))
 
 (def q d/q)
+
+(defn load-dataset
+  [env conn]
+  (let [db (d/db conn)
+        tx #(d/transact conn {:tx-data %})]
+    (when-not (ident-has-attr? db :member/name :db/ident)
+      (log/info "Loading db schema")
+      (tx (-> (io/resource "schema.edn") slurp edn/read-string))
+      ;; (tx (map uuid-for-seed (-> (io/resource "seeds.edn") slurp edn/read-string)))
+      (tx (-> (io/resource "seeds.edn") slurp edn/read-string)))
+    ;; (when-not (ident-has-attr? db :account/account-id :db.attr/preds)
+    ;;   (tx validation/attr-pred))
+    ;; (when-not (ident-has-attr? db :account/validate :db.entity/attrs)
+    ;;   (tx validation/entity-attrs))
+    (when (config/demo-mode? env)
+      (when (= 0 (count-all (d/db conn) :member/gigo-key))
+        (demo/seed-random-members! conn))))
+  :seeded)
+
+(when nil :cool)
 
 (comment
   (do

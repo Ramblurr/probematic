@@ -19,7 +19,8 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [ring.middleware.keyword-params :as keyword-params]))
+   [ring.middleware.keyword-params :as keyword-params]
+   [clojure.tools.logging :as log]))
 
 (defn current-user-interceptor
   "Fetches the current user from the request (see app.auth/auth-interceptor),
@@ -166,32 +167,35 @@
                 ctx))}))
 
 (defn default-interceptors [system]
-  [human-id-interceptor
-   (i18n-interceptor system)
-   service-error-handler
-   (auth/auth-interceptor (-> system :env :auth :cert-filename)
-                          (-> system :env :auth :known-roles))
-   dev-mode-interceptor
-   middlewares/cookies
-   ;; query-params & form-params
-   (parameters/parameters-interceptor)
-   ;; content-negotiation
-   (muuntaja/format-negotiate-interceptor)
-   ;; encoding response body
-   (muuntaja/format-response-interceptor)
-   ;; exception handling
-   ;; exception-interceptor
-   ;; decoding request body
-   (muuntaja/format-request-interceptor)
-   ;; coercing response bodys
-   (coercion/coerce-response-interceptor)
-   ;; coercing request parameters
-   (coercion/coerce-request-interceptor)
-   htmx-interceptor
-   ;; htmx reequires all params (query, form etc) to be keywordized
-   keyword-params-interceptor
-   ;; multipart
-   (multipart/multipart-interceptor)])
+  (into [] (remove nil?
+                   [human-id-interceptor
+                    (i18n-interceptor system)
+                    service-error-handler
+                    (if (config/demo-mode? (:env system))
+                      auth/demo-auth-interceptor
+                      (auth/auth-interceptor (-> system :env :auth :cert-filename)
+                                             (-> system :env :auth :known-roles)))
+                    dev-mode-interceptor
+                    middlewares/cookies
+                    ;; query-params & form-params
+                    (parameters/parameters-interceptor)
+                    ;; content-negotiation
+                    (muuntaja/format-negotiate-interceptor)
+                    ;; encoding response body
+                    (muuntaja/format-response-interceptor)
+                    ;; exception handling
+                    ;; exception-interceptor
+                    ;; decoding request body
+                    (muuntaja/format-request-interceptor)
+                    ;; coercing response bodys
+                    (coercion/coerce-response-interceptor)
+                    ;; coercing request parameters
+                    (coercion/coerce-request-interceptor)
+                    htmx-interceptor
+                    ;; htmx reequires all params (query, form etc) to be keywordized
+                    keyword-params-interceptor
+                    ;; multipart
+                    (multipart/multipart-interceptor)])))
 
 (defn with-default-interceptors [service system]
   (update-in service [:io.pedestal.http/interceptors] conj (default-interceptors system)))

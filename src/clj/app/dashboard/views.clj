@@ -64,10 +64,11 @@
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list
-                                (ui/button :label (tr [:action/create])
-                                           :priority :primary
-                                           :centered? true
-                                           :attr {:href "/events/new"} :icon icon/plus)))
+                                (when false ;; TODO
+                                  (ui/button :label (tr [:action/create])
+                                             :priority :primary
+                                             :centered? true
+                                             :attr {:href "/events/new"} :icon icon/plus))))
 
      (when (seq need-answer-gigs)
        [:div {:class "mt-6 sm:px-6 lg:px-8"}
@@ -77,4 +78,7 @@
      (when (seq gigs-planned)
        [:div {:class "mt-6 sm:px-6 lg:px-8"}
         (ui/divider-left (tr [:dashboard/upcoming]))
-        (rt/map-indexed gig-attendance req gigs-planned)])]))
+        (rt/map-indexed gig-attendance req gigs-planned)])
+     (when-not (or (seq gigs-planned) (seq need-answer-gigs))
+       [:div {:class "mt-6 sm:px-6 lg:px-8"}
+        "You have no upcoming gigs or probes. Why don't you create one?"])]))

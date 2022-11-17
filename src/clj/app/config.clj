@@ -6,6 +6,9 @@
 (defn dev-mode? [env]
   (= :dev (profile env)))
 
+(defn demo-mode? [env]
+  (= :demo (profile env)))
+
 (defn prod-mode? [env]
   (= :prod (profile env)))
 

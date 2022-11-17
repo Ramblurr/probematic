@@ -105,7 +105,8 @@
   [:nav {:class "mt-6 px-3"}
    [:div {:class "space-y-1" :hx-boost "true"}
     (map (partial nav-item req) navigation)]
-   (secondary-navigation)])
+   ;; (secondary-navigation)
+   ])
 
 (defn desktop-menu [req member]
   [:div {:id "desktop-sidebar-menu" :class "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"}
@@ -132,7 +133,8 @@
       [:nav {:class "px-2"}
        [:div {:class "space-y-1"}
         (map (partial nav-item req) navigation)]
-       (secondary-navigation)]]]
+       ;; (secondary-navigation)
+       ]]]
     ;; Dummy element to force sidebar to shrink to fit close icon
     [:div {:class "w-14 flex-shrink-0" :aria-hidden "true"}]]])
 

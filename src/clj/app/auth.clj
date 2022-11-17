@@ -55,6 +55,13 @@
   (set/subset? roles
                (get-in req [:app.auth/session :session/roles])))
 
+(def demo-auth-interceptor
+  {:name ::demo-auth-interceptor
+   :enter #(-> % (assoc-in [:request :app.auth/session] {:session/username "admin"
+                                                         :session/email "admin@example.com"
+                                                         :session/groups #{"/Mitglieder" "/admin"}
+                                                         :session/roles #{:Mitglieder :admin}}))})
+
 (defn auth-interceptor
   "This function returns an interceptor that will extract and verify the JWT in the
   x-forwarded-access-token header. It will be verified with the certificate contained in the certificate-filename.
