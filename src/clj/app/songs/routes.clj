@@ -21,10 +21,10 @@
 
 (defn song-detail-routes []
   (ctmx/make-routes
-   "/song/{song/title}/"
+   "/song/{song-id}/"
    (fn [req]
      (layout/app-shell req
-                       (view/song-detail req (-> req :path-params :song/title))))))
+                       (view/song-detail req  (parse-uuid (-> req :path-params :song-id)))))))
 
 (defn songs-log-play-routes []
   (ctmx/make-routes

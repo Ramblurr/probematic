@@ -171,10 +171,13 @@
                    [human-id-interceptor
                     (i18n-interceptor system)
                     service-error-handler
-                    (if (config/demo-mode? (:env system))
-                      auth/demo-auth-interceptor
-                      (auth/auth-interceptor (-> system :env :auth :cert-filename)
-                                             (-> system :env :auth :known-roles)))
+                    (cond (config/demo-mode? (:env system))
+                          auth/demo-auth-interceptor
+                          (config/dev-mode? (:env system))
+                          auth/dev-auth-interceptor
+                          :else (auth/auth-interceptor (-> system :env :auth :cert-filename)
+                                                       (-> system :env :auth :known-roles)))
+
                     dev-mode-interceptor
                     middlewares/cookies
                     ;; query-params & form-params

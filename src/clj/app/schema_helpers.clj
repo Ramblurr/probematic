@@ -3,7 +3,8 @@
    [clojure.string :as string]
    [malli.core :as m]
    [tick.core :as t]
-   [app.debug :as debug])
+   [app.debug :as debug]
+   [clojure.string :as str])
   (:import
    [java.time Duration]))
 
@@ -71,13 +72,18 @@
                                                      :json-schema/type   "string"
                                                      :json-schema/format "date"}}))
 
+(defn blank->nil [v]
+  (if (str/blank? v)
+    nil
+    v))
+
 ;; This schema can store time with sub-minute resolution
 (def TimeSchema (m/-simple-schema {:type            :app.schemas/time
                                    :pred            t/time?
                                    :type-properties {:error/message      "should be a valid time"
-                                                     :decode/string      #(some-> % t/time)
+                                                     :decode/string      #(some-> % blank->nil  t/time)
                                                      :encode/string      str
-                                                     :decode/json        #(some-> % t/time)
+                                                     :decode/json        #(some-> % blank->nil t/time)
                                                      :encode/json        str
                                                      :decode/datomic     #(some-> % t/time)
                                                      :encode/datomic     str

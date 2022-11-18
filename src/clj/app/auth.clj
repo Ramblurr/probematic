@@ -61,6 +61,12 @@
                                                          :session/email "admin@example.com"
                                                          :session/groups #{"/Mitglieder" "/admin"}
                                                          :session/roles #{:Mitglieder :admin}}))})
+(def dev-auth-interceptor
+  {:name ::dev-auth-interceptor
+   :enter #(-> % (assoc-in [:request :app.auth/session] {:session/username "casey"
+                                                         :session/email "me@***REMOVED***"
+                                                         :session/groups #{"/Mitglieder" "/admin"}
+                                                         :session/roles #{:Mitglieder :admin}}))})
 
 (defn auth-interceptor
   "This function returns an interceptor that will extract and verify the JWT in the

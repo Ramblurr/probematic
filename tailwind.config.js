@@ -1,10 +1,13 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ["./src/**/*.clj",
-              "./src/**/*.cljs",
-              "./resources/public/css/main.css"
-             ],
+    content: {
+        files: ["./src/**/*.clj",
+                "./src/**/*.cljs",
+                "./resources/public/js/widgets/**/*.js",
+                "./resources/public/js/app.js"
+               ],
+    },
     theme: {
         extend: {
             colors: {

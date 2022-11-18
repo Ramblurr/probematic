@@ -1,6 +1,23 @@
 (ns app.probeplan
-  (:require [app.datomic :as d]
-            [app.queries :as q]))
+  (:require
+   [tick.core :as t]
+   [tick.alpha.interval :as t.i]
+   [app.datomic :as d]
+   [app.queries :as q]))
+
+(defn next-wednesday [from]
+  (if (= t/WEDNESDAY (t/day-of-week from))
+    from
+    (recur (next-wednesday (t/>> from (t/new-period 1 :days))))))
+
+(defn wednesday-sequence
+  "Return a lazy infinite sequence of dates that are wednesdays starting on from."
+  [from]
+  (t/range
+   (t/beginning (next-wednesday from))
+   ;; ok.. it's not really infinite
+   (t/end (t/>> (t/date) (t/new-period 999 :months)))
+   (t/new-period 7 :days)))
 
 {:db/ident :probeplan/gig
  :db/doc "The gig this probeplan belongs to"
@@ -85,10 +102,12 @@
     (require '[integrant.repl.state :as state])
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db (datomic/db conn)))         ; rcF
+    (def db (datomic/db conn))) ;; rcf
 
   (let [song-cycle (make-song-cycle db)]
     (take 7 song-cycle))
+
+  (partition)
 
   (take 5 (nthrest (make-song-cycle db) 2))
 

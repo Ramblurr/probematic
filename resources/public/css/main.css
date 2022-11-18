@@ -350,3 +350,17 @@ body {
 .flyout-closeButton-leave-end {
   @apply opacity-0;
 }
+
+.fade-out:after {
+  content  : "";
+  position : absolute;
+  z-index  : 1;
+  bottom   : 0;
+  left     : -1px;
+  pointer-events   : none;
+  background-image : linear-gradient(to bottom,
+                    rgba(255,255,255, 0),
+                    rgba(255,255,255, 1) 90%);
+  width    : 101%;
+  height   : 20em;
+}

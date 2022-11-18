@@ -8,7 +8,8 @@
    [ctmx.core :as ctmx]
    [clojure.string :as clojure.string]
    [ctmx.response :as response]
-   [app.queries :as q]))
+   [app.queries :as q]
+   [app.urls :as url]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -60,12 +61,11 @@
              [:button {:class "ml-3 btn btn-sm btn-indigo-high"
                        :type "submit"} "Save"]]]])))))
 
-(defn song-detail [{:keys [db] :as req} song-title]
-  (if-let [song (controller/retrieve-song db song-title)]
+(defn song-detail [{:keys [db] :as req} song-id]
+  (if-let [{:song/keys [title last-played]} (controller/retrieve-song db song-id)]
     [:div
-     (ui/page-header :title song-title
-
-                     :subtitle (list  "Last played " (ui/datetime (:song/last-played song)))
+     (ui/page-header :title title
+                     :subtitle (list  "Last played " (ui/datetime last-played))
                      :buttons (list  (ui/button :label "Comment"
                                                 :priority :white
                                                 :centered? true
@@ -74,7 +74,7 @@
                                                 :priority :primary
                                                 :centered? true
                                                 :class "items-center justify-center "
-                                                :attr {:href (str "/song/log-play/" song-title "/")})))]
+                                                :attr {:href (str "/song/log-play/" song-id "/")})))]
 
     [:div
      [:p "Song not found."]
@@ -95,9 +95,9 @@
            [:button {:class "ml-3 btn btn-sm btn-indigo-high"
                      :type "submit"} "Save"]]]]))))
 
-(defn song-row [{:song/keys [title active last-played score play-count]}]
+(defn song-row [{:song/keys [title active last-played score play-count] :as song}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href (str  "/song/" title "/"), :class "block hover:bg-gray-50"}
+    [:a {:href (url/link-song song) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-indigo-600"}

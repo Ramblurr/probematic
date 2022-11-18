@@ -52,7 +52,8 @@
     (tap> start-msg)
     (log/info start-msg)
     (cond-> service
-      true (assoc :io.pedestal.http/container-options {:io.pedestal.http.jetty/http-configuration (interceptors/http-configuration 8000)})
+      true (assoc :io.pedestal.http/container-options {:io.pedestal.http.jetty/http-configuration (interceptors/http-configuration
+                                                                                                   (-> env :max-header-size))})
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
       true (interceptors/with-default-interceptors system)

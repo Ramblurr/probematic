@@ -9,7 +9,7 @@
    "/probeplan"
    (fn [req]
      (layout/app-shell req
-                       (view/probeplan-index-page req)))))
+                       (view/probeplan-index-page req false)))))
 
 (defn probeplan-routes []
   ["" {:app.route/name :app/probeplan}

@@ -21,6 +21,7 @@
  :sentry      {:dsn #ref [:secrets :sentry :dsn]}
  :auth        {:cert-filename "keycloak-realm.crt"
                :known-roles   #{:admin :Mitglieder}}
+ :max-header-size 10000
  :ig/system   {:app.ig/profile          #profile {:prod :prod
                                                   :dev  :dev
                                                   :demo :demo

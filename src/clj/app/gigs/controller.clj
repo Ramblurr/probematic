@@ -318,9 +318,8 @@
 
 (defn update-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (common/path-param req :gig/gig-id)
-        params   (-> req common/unwrap-params common/no-blanks util/remove-nils (assoc :gig-id gig-id))
-        params (assoc params :date "")
-        decoded  (s/decode UpdateGig params)]
+        params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id))
+        decoded  (util/remove-nils (s/decode UpdateGig params))]
     (if (s/valid? UpdateGig decoded)
       (let [tx (-> decoded
                    (common/ns-qualify-key :gig)
@@ -328,9 +327,9 @@
                    (update :gig/gig-type str->gig-type)
                    (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
                    (domain/gig->db))]
-        (tap> {:params params :decoded decoded :tx tx :expl (s/explain-human UpdateGig decoded)})
+        ;; (tap> {:params params :decoded decoded :tx tx :expl (s/explain-human UpdateGig decoded)})
         (transact-gig! datomic-conn [tx] gig-id))
-      (s/throw-error "Cannot update the gig. The gig data is invalid." req UpdateGig decoded))))
+      (s/throw-error "Cannot update the gig. The gig data is invalid." nil  UpdateGig decoded))))
 
 (defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
   (let [song-id (common/ensure-uuid song-id)

@@ -19,6 +19,26 @@
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
 
+(defn cs-tw [& names]
+  (clojure.string/join " "
+                       (->> names (filter identity) (map name))))
+
+(comment
+  ;; here's an interesting way to use tailwind outside of strings, as pure symbols
+  (defn tw-fn [symbols]
+    (mapv name symbols))
+
+  (defmacro tw [& names]
+    (tw-fn names))
+  ;; example
+  [:div {:class (cs (tw min-h-full text-black)
+                    (when true (tw border))
+                    (when false (tw ml-6)))}]
+
+  ;; not using this because it arguably doesn't bring you much.. and, crucially,
+  ;; it breaks tailwind classes with colons in them: i.e., sm:flex
+  )
+
 (defn unauthorized-error-body [req]
   (let [tr (i18n/tr-from-req req)
         human-id (:human-id req)]
@@ -145,10 +165,12 @@
     :body (ctmx.render/html body)}))
 
 (def select-size {:normal "text-base  sm:text-sm py-2 pl-3 pr-10 mt-1"
-                  :small "text-xs py-1 pl-2 pr-5 "})
+                  :small "text-xs py-1 pl-2 pr-5 "
+                  :xsmall "text-xs py-1 pl-0 pr-0 "})
 
 (def select-label-size {:normal "text-base  sm:text-sm "
-                        :small "text-xs "})
+                        :small "text-xs"
+                        :xsmall "text-xs"})
 (defn select [& {:keys [id label options value extra-attrs size]
                  :or {extra-attrs {}
                       size :normal}}]
@@ -420,6 +442,11 @@
   (let [options (map (fn [[k v]]
                        {:value k :label v}) motivations)]
     (select :id id :label label :value value :options options :extra-attrs extra-attrs :size :small)))
+
+(defn song-select [& {:keys [id value label songs extra-attrs size] :or {size :small}}]
+  (let [options (map (fn [{:song/keys [title song-id]}]
+                       {:value song-id :label title}) songs)]
+    (select :id id :label label :value value :options options :extra-attrs extra-attrs :size size)))
 
 (defn instrument-select [& {:keys [id value label instruments :variant]
                             :or {label "Instrument"
