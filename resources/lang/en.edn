@@ -58,7 +58,8 @@
        :probe-info "Probe Info"
        :show-all "Show All"
        :show-committed "Show Committed"
-       :play-log-subtitle "Here you can record what was played at this gig/probe."}
+       :play-log-subtitle "Here you can record what was played at this gig/probe."
+       :probeplan "Probeplan"}
 
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"

@@ -399,6 +399,39 @@
                                      :else            gig)]
     (comment-section current-user archived? id (comp-name) tr comments)))
 
+(ctmx/defcomponent ^:endpoint  gigs-detail-page-setlist [{:keys [db] :as req} gig ^:boolean edit?]
+  (let [comp-name (util/comp-namer #'gigs-detail-page-setlist)
+        tr (i18n/tr-from-req req)
+        archived? (domain/gig-archived? gig)
+        all-songs (q/find-all-songs db)
+        gig (cond (and (not archived?) (util/post? req)) (:gig (controller/update-gig! req))
+                  :else (:gig req))
+        {:gig/keys [title date end-date status gig-type
+                    contact pay-deal call-time set-time end-time
+                    outfit description location setlist leader post-gig-plans
+                    more-details]} gig]
+
+    [:form  {:id id :hx-post (comp-name)}
+
+     (ui/panel {:title (tr [:gig/setlist])
+                :buttons (ui/button :tag :a :label "Edit" :priority :white :attr {:href (url/link-probeplan-home) :hx-boost true})}
+               [:div {:class "max-w-lg"}
+                [:div {:class "mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2"}
+                 (map-indexed (fn [idx {:song/keys [title] :as song}]
+                                (let [intensive? (< idx 2)]
+                                  [:div {:class
+                                         (ui/cs
+                                          "relative flex items-center space-x-3 rounded-lg px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-pink-500 focus-within:ring-offset-2 hover:border-gray-400"
+                                          (if intensive? "bg-orange-200 border border-orange-500" "bg-white border border-gray-300 "))}
+                                   (when intensive?
+                                     [:div {:class "flex-shrink-0"}
+                                      (icon/fist-punch {:class "h-10 w-10 text-orange-600"})])
+                                   [:div {:class "min-w-0 flex-1"}
+                                    [:a {:href (url/link-song song) :class "focus:outline-none"  :hx-boost true}
+                                     [:span {:class "absolute inset-0" :aria-hidden "true"}]
+                                     [:p {:class "text-sm font-medium text-gray-900"} title]
+                                     [:p {:class "truncate text-sm text-gray-500"} "Last Played: never"]]]]))
+                              (take 6 all-songs))]])]))
 (ctmx/defcomponent ^:endpoint  gigs-detail-page-probeplan [{:keys [db] :as req} gig ^:boolean edit?]
   (let [comp-name (util/comp-namer #'gigs-detail-page-probeplan)
         tr (i18n/tr-from-req req)
@@ -413,7 +446,7 @@
 
     [:form  {:id id :hx-post (comp-name)}
 
-     (ui/panel {:title "Probeplan"
+     (ui/panel {:title (tr [:gig/probeplan])
                 :buttons (ui/button :tag :a :label "Edit" :priority :white :attr {:href (url/link-probeplan-home) :hx-boost true})}
                [:div {:class "max-w-lg"}
                 [:div {:class "mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2"}
@@ -543,7 +576,7 @@
            ;;
            ]]]]]]]))
 (ctmx/defcomponent ^:endpoint gigs-detail-page [{:keys [db] :as req} ^:boolean show-committed?]
-  (let [{:gig/keys [gig-id] :as gig} (:gig req)
+  (let [{:gig/keys [gig-id gig-type] :as gig} (:gig req)
         comp-name (util/comp-namer #'gigs-detail-page)
         tr (i18n/tr-from-req req)
         archived? (domain/gig-archived? gig)
@@ -553,7 +586,11 @@
 
     [:div {:id id}
      (gigs-detail-page-info req gig false)
-     (gigs-detail-page-probeplan req gig false)
+     (cond (#{:gig.type/probe :gig.type/extra-probe} gig-type)
+           (gigs-detail-page-probeplan req gig false)
+           (#{:gig.type/gig} gig-type)
+           (gigs-detail-page-setlist req gig false)
+           :else nil)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
 ;;;; Attendance Section

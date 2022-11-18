@@ -1,5 +1,6 @@
 (ns app.probeplan.routes
   (:require
+   [app.queries :as q]
    [app.layout :as layout]
    [app.probeplan.views :as view]
    [ctmx.core :as ctmx]))
@@ -11,6 +12,12 @@
      (layout/app-shell req
                        (view/probeplan-index-page req false)))))
 
+(def probeplan-interceptor
+  {:name ::probeplan-interceptor
+   :enter (fn [ctx]
+            (assoc-in ctx [:request :all-songs] (q/find-all-songs (-> ctx :request :db))))})
+
 (defn probeplan-routes []
-  ["" {:app.route/name :app/probeplan}
+  ["" {:app.route/name :app/probeplan
+       :interceptors [probeplan-interceptor]}
    (probeplan-index-route)])

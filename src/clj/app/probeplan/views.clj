@@ -18,55 +18,49 @@
 
 (defn probe-row [songs])
 
-(ctmx/defcomponent ^:endpoint probeplan-probe-song-col-ro [{:keys [db] :as req} idx  {:song/keys [title song-id] :as song}]
-  (let [comp-name (util/comp-namer #'probeplan-probe-song-col-ro)
-        all-songs (q/find-all-songs db)]
-    [:td {:class (ui/cs
-                  "px-2 py-1"
+(defn probeplan-probe-song-col-ro [idx  {:song/keys [title song-id] :as song}]
+  [:td {:class (ui/cs
+                "px-2 py-1"
                   ;; "max-w-[12rem] truncate"
-                  (if (or (= idx 0) (= idx 1)) "bg-orange-100" "bg-blue-100"))
-          :_ "on click toggle .hidden on the first <div.rw/> in me end
-              on click toggle .hidden on the first <div.ro/> in me end"
-          :hx-include (str (hash ".") " select,", (hash ".") " input")}
+                (if (or (= idx 0) (= idx 1)) "bg-orange-100" "bg-blue-100"))}
 
-     [:div  ;; {:class "min-h-[29px]"}
-      [:div {:class "hidden rw"}
-       (ui/song-select :id (path "song-id") :label "" :value song-id :songs all-songs :size :small :extra-attrs {:hx-post "probeplan-index-page" :hx-target "../"})]
-      [:div {:class "ro"}
-       title]]]))
+   [:div  ;; {:class "min-h-[29px]"}
+    title]])
 
-(ctmx/defcomponent ^:endpoint probeplan-probe-song-col-rw [{:keys [db] :as req} idx {:song/keys [title song-id] :keys [fixed?]}]
-  (let [all-songs (q/find-all-songs db)]
+(ctmx/defcomponent probeplan-probe-song-col-rw [{:keys [db] :as req} idx {:song/keys [title song-id] :keys [fixed?]}]
+  (let [all-songs (:all-songs req)]
     [:td {:class (ui/cs
                   "px-2 py-1"
                   ;; "max-w-[12rem] truncate"
                   (if (or (= idx 0) (= idx 1)) "bg-orange-100" "bg-blue-100"))}
      (if fixed?
-       (ui/song-select :id (path "song-id") :label "" :size :small :value song-id :songs all-songs)
+       (ui/song-select :id (path "song-id") :label "" :size :small :value song-id :songs all-songs :extra-attrs {:data-form true})
        title)]))
 
-(defn probeplan-probe-row [edit? {:keys [db] :as req} idx {:keys [date songs last-fixed? fixed? num-gigs]}]
-  [:tr {:class (ui/cs "border border-x-black border-y-gray-300 border-l border-r border-b border-t-0"
-                      (cond
-                        last-fixed? "border-solid border-b-1 border-b-black"
-                        fixed? "border-solid"
-                        :else "border-dashed"))}
+(ctmx/defcomponent probeplan-probe-row [{:keys [db] :as req} idx {:keys [date songs last-fixed? fixed? num-gigs]}]
+  (let [edit? (-> req :params :edit?)]
+    [:tr {:class (ui/cs "border border-x-black border-y-gray-300 border-l border-r border-b border-t-0"
+                        (cond
+                          last-fixed? "border-solid border-b-1 border-b-black"
+                          fixed? "border-solid"
+                          :else "border-dashed"))}
 
-   [:td {:class "px-2"} (inc idx)]
-   [:td {:class "font-mono px-2 py-1 bg-green-100"}
-    (let [date-str (t/format (t/formatter "dd.MM") date)]
-      (if fixed?
-        [:a {:href "#" :class "link-blue underline"} date-str]
-        date-str))]
+     [:td {:class "px-2"} (inc idx)
+      [:input {:type :hidden :data-form true :name (path "probe") :value date}]]
+     [:td {:class "font-mono px-2 py-1 bg-green-100"}
+      (let [date-str (t/format (t/formatter "dd.MM") date)]
+        (if fixed?
+          [:a {:href "#" :class "link-blue underline"} date-str]
+          date-str))]
 
-   [:td {:class ""} num-gigs]
-   (if edit?
-     (rt/map-indexed probeplan-probe-song-col-rw req (map #(merge {:fixed? fixed?} %) songs))
-     (rt/map-indexed probeplan-probe-song-col-ro req songs))
-   (if (and edit? fixed?)
-     [:td {}
-      (ui/button :label "Gig Probe" :size :xsmall)]
-     [:td])])
+     [:td {:class ""} num-gigs]
+     (if edit?
+       (rt/map-indexed probeplan-probe-song-col-rw req (map #(merge {:fixed? fixed?} %) songs))
+       (map-indexed probeplan-probe-song-col-ro  songs))
+     (if (and edit? fixed?)
+       [:td {}
+        (ui/button :label "Gig Probe" :size :xsmall)]
+       [:td])]))
 
 (defn howitworks [tr]
   (ui/panel {:title "How This Works"}
@@ -79,13 +73,14 @@
                [:li {:class "ml-8"} "A human (you!) can edit the plans for the next 4 probes."]
                [:li {:class "ml-8"} "The system will update all probeplans after the next 4 based on the parameters mentioned before"]
                [:li {:class "ml-8"} "The Gigs column shows the number of gigs taking place after the Probe, but before the next one."]
-               [:li {:class "ml-8"} "Use the \"Gig Probe\" button to change a probe from a Probeplan to a Setlist to practice a setlist for a gig."]
+               [:li {:class "ml-8"} "Use the \"Gig Probe\" button to change a probe from a Probeplan to a Setlist in order to practice a setlist for a gig."]
                ;;
                ]]]))
 (ctmx/defcomponent ^:endpoint probeplan-index-page [{:keys [db] :as req} ^:boolean edit?]
   probeplan-probe-song-col-ro
   probeplan-probe-song-col-rw
   (let [tr (i18n/tr-from-req req)
+        post? (util/post? req)
         comp-name (util/comp-namer #'probeplan-index-page)
         song-cycle (pp/make-song-cycle db)
         num-probes 20
@@ -102,7 +97,9 @@
                                           :num-gigs (rand-int 3)
                                           :fixed? (<= (inc idx) num-fixed)})
                     (range) songs probe-dates)]
-    (tap> probes)
+    (when post?
+
+      (tap> {:params (util/unwrap-params req)  :req (:params req)}))
     [:div {:id id}
      (ui/page-header :title (tr [:nav/probeplan]))
      (howitworks tr)
@@ -110,7 +107,12 @@
       [:div {:class ""}
        [:div {:class "flex items-center justify-end"}
         [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
-         (ui/toggle :label "Edit" :active? edit? :id (path "toggle") :hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? (not edit?)})]]
+         (if edit?
+           (list
+            (ui/button :label (tr [:action/cancel]) :priority :white  :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? false}})
+            (ui/button :label (tr [:action/save]) :priority :primary  :attr {:hx-target (hash ".") :hx-post (comp-name) :hx-include "[data-form]"}))
+           (ui/button :label (tr [:action/edit]) :priority :white  :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? true}}))]]
+
        [:div {:class "mt-4"}
 
         [:table {:class "min-w-full text-sm table-auto fade-out relative"}
@@ -124,14 +126,4 @@
                               {:label "Durchspielen 3"}
                               {:label ""}])
 
-         (map-indexed (partial probeplan-probe-row edit? req) probes)
-         [:tr
-          [:td]
-          [:td]
-          [:td]
-          [:td]
-          [:td ""]
-          [:td ""]
-          [:td ""]
-          [:td ""]
-          [:td]]]]]]]))
+         (rt/map-indexed probeplan-probe-row req probes)]]]]]))
