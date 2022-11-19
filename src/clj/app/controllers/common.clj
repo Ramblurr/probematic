@@ -19,7 +19,10 @@
   [m ns]
   (m/map-keys #(keyword  (name ns) (name %)) m))
 
-(defn ensure-uuid [v]
+;;; TODO refactor usages of this fn to util/ensure-uuid
+(defn ensure-uuid
+  "DEPRECATED. use util/ensure-uuid"
+  [v]
   (if (string? v)
     (parse-uuid v)
     v))

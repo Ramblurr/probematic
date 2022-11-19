@@ -149,6 +149,11 @@
   (util/isort-by :song/title
                  (mapv first
                        (d/find-all db :song/song-id song-pattern))))
+(defn find-songs [db song-ids]
+  (if (empty? song-ids)
+    []
+    (filter #((set song-ids) (:song/song-id %))
+            (find-all-songs db))))
 
 (defn active-members-by-section [db]
   (->>

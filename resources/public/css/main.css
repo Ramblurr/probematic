@@ -364,3 +364,37 @@ body {
   width    : 101%;
   height   : 20em;
 }
+
+.htmx-request .pulsate {
+    animation: pulsate 1s ease-out;
+    animation-iteration-count: infinite;
+    opacity: 0.5;
+}
+
+.pulse-delay {
+    animation-delay: 5s;
+    animation-name: pulsate;
+    animation-duration: 2s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: infinite;
+    opacity: 1;
+}
+
+@-webkit-keyframes pulsate {
+    0% {
+        opacity: 1.0;
+    }
+    25% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 0.2;
+    }
+
+    75% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1.0;
+    }
+}

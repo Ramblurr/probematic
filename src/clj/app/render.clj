@@ -53,6 +53,7 @@
    [:script {:src "/js/nprogress.js"}]
    [:script {:src "/js/popperjs@2-dev.js"}]
    [:script {:src "/js/tippy@6-dev.js"}]
+   [:script {:src "/js/sortable@1.14.0.js"}]
    [:script {:src "/js/app.js" :type :module}]))
 
 (defn html5-response

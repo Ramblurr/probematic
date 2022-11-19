@@ -334,7 +334,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-post hx-vals form]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -342,6 +342,7 @@
                         tag :button}}]
 
   [tag (merge
+        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-vals hx-vals :form form})
         {:class
          (cs
           "inline-flex items-center rounded-md border font-medium"
@@ -777,8 +778,8 @@
   [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
    items])
 
-(defn panel [{:keys [title buttons]} & body]
-  [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
+(defn panel [{:keys [id title buttons]} & body]
+  [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3" :id id}
    [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
     [:section
      [:div {:class "bg-white shadow sm:rounded-lg"}

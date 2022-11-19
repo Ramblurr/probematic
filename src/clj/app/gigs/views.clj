@@ -399,39 +399,101 @@
                                      :else            gig)]
     (comment-section current-user archived? id (comp-name) tr comments)))
 
-(ctmx/defcomponent ^:endpoint  gigs-detail-page-setlist [{:keys [db] :as req} gig ^:boolean edit?]
+(defn song-checkbox [selected-songs idx song]
+  (let [this-song-id (str (:song/song-id song))
+        {:keys [song-order]} (m/find-first #(= (:song-id %) this-song-id) selected-songs)]
+    [:li
+     [:label {:for this-song-id :class "rounded border-4 mx-0 my-1 p-2  basis-1/2 grid grid-flow-col grid-cols-auto justify-between"}
+      [:span {:class "truncate"} (:song/title song)]
+      [:input {:type :hidden :name (str idx "_songs_song-order")  :value (or song-order "9999")}]
+      [:input {:type :checkbox :id this-song-id  :name (str idx "_songs_song-id") :value this-song-id
+               :checked (some? song-order)}]]]))
+
+(declare gig-setlist-sort)
+(declare gigs-detail-page-setlist)
+
+(ctmx/defcomponent ^:endpoint gig-setlist-choose-songs [{:keys [db] :as req}]
+  (let [all-songs (q/find-all-songs db)
+        comp-name (util/comp-namer #'gig-setlist-choose-songs)
+        tr (i18n/tr-from-req req)]
+    (if (util/put? req)
+      (gig-setlist-sort req (util/unwrap-params req))
+      (let [selected-songs (util/unwrap-params req)]
+        (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
+                   :buttons (ui/button :class "pulse-delay" :label (tr [:action/save]) :priority :primary :form id)}
+                  [:form {:hx-target "#setlist-container" :hx-put (comp-name) :id id}
+                   [:ul {:class "p-0 m-0 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-y-0 md:gap-x-2"}
+                    (map-indexed (partial song-checkbox selected-songs) all-songs)]])))))
+
+(ctmx/defcomponent ^:endpoint  gig-setlist-sort [{:keys [db] :as req} ^:array selected-songs]
+  (let [tr (i18n/tr-from-req req)
+        song-ids (->>  (or selected-songs (-> req util/json-params :songs))
+                       (filter :song-id)
+                       (sort-by :song-order)
+                       (map :song-id)
+                       (map util/ensure-uuid))
+        songs (util/index-sort-by song-ids :song/song-id (q/find-songs db song-ids))]
+    (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
+               :buttons (ui/button :class "pulse-delay" :label (tr [:action/done]) :priority :primary :form id)}
+              [:form {:class "w-full" :hx-post (util/comp-name #'gigs-detail-page-setlist) :hx-target "#setlist-container" :id id}
+               [:p "Drag the songs into setlist order."]
+               [:div {:class "htmx-indicator pulsate"} "Updating..."]
+               [:ul {:class "sortable p-0 m-0 grid grid-cols-1 gap-y-0 md:gap-x-2 max-w-sm"}
+                (map (fn [{:song/keys [song-id title]}]
+                       [:li {:class "rounded border-4 mx-0 my-1 p-2  basis-1/2 grid grid-flow-col grid-cols-auto justify-between"}
+                        [:div {:class "drag-handle cursor-pointer"} (icon/bars {:class "h-5 w-5"})]
+                        [:input {:type :hidden :name "song-ids" :value song-id}]
+                        title]) songs)]])))
+
+(defn gigs-detail-page-setlist-list-ro [selected-songs]
+  [:ul {:class "list-disc" :hx-boost true}
+   (map (fn [{:song/keys [title] :as song}]
+          [:li {:class "ml-4"}
+           [:a {:href (url/link-song song) :class "link-blue"}
+            title]]) selected-songs)])
+
+;;;; Setlist editing Flow:
+;; setlist --[Edit]-----> choose songs --[Save]--> order --[Done]--> setlist (repeat)
+;;        \--[Reorder]---------------------------/
+;;
+
+(defn serialize-selected-songs [selected-songs]
+  (map-indexed (fn [idx {:keys [song-order song-id]}]
+                 (list
+                  [:input {:type :hidden :name (str idx "_songs_song-order")  :value (or song-order idx)}]
+                  [:input {:type :hidden :name (str idx "_songs_song-id") :value song-id}]))
+               selected-songs))
+
+(ctmx/defcomponent ^:endpoint  gigs-detail-page-setlist [{:keys [db] :as req} ^:array song-ids]
+  gig-setlist-choose-songs
+  gig-setlist-sort
   (let [comp-name (util/comp-namer #'gigs-detail-page-setlist)
         tr (i18n/tr-from-req req)
-        archived? (domain/gig-archived? gig)
-        all-songs (q/find-all-songs db)
-        gig (cond (and (not archived?) (util/post? req)) (:gig (controller/update-gig! req))
-                  :else (:gig req))
-        {:gig/keys [title date end-date status gig-type
-                    contact pay-deal call-time set-time end-time
-                    outfit description location setlist leader post-gig-plans
-                    more-details]} gig]
+        song-ids (map util/ensure-uuid song-ids)
+        songs (util/index-sort-by song-ids :song/song-id (cond (util/post? req)
+                                                               (q/find-songs db song-ids)
+                                                               :else
+                                                               []))
+        selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)]
+    (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
+               :buttons (when (seq songs)
+                          (list
+                           [:form {:hx-post (util/comp-name #'gig-setlist-choose-songs)  :hx-target "#setlist-container"}
+                            (serialize-selected-songs selected-songs)
+                            (ui/button :label (tr [:action/edit]) :priority :white)]
+                           (list
+                            [:form {:hx-post (util/comp-name #'gig-setlist-sort)  :hx-target "#setlist-container"}
+                             (serialize-selected-songs selected-songs)
+                             (ui/button :label (tr [:action/reorder]) :priority :white)])))}
+              [:div {:id "setlist-container" :class ""}
+               (if (empty? songs)
+                 [:div {:class "flex flex-col items-center justify-center"}
+                  [:div
+                   (ui/button :label (tr [:gig/create-setlist]) :priority :primary :icon icon/plus
+                              :attr {:hx-get (util/comp-name #'gig-setlist-choose-songs)
+                                     :hx-vals {:target (hash ".") :post (comp-name)} :hx-target "#setlist-container"})]]
+                 (gigs-detail-page-setlist-list-ro songs))])))
 
-    [:form  {:id id :hx-post (comp-name)}
-
-     (ui/panel {:title (tr [:gig/setlist])
-                :buttons (ui/button :tag :a :label "Edit" :priority :white :attr {:href (url/link-probeplan-home) :hx-boost true})}
-               [:div {:class "max-w-lg"}
-                [:div {:class "mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2"}
-                 (map-indexed (fn [idx {:song/keys [title] :as song}]
-                                (let [intensive? (< idx 2)]
-                                  [:div {:class
-                                         (ui/cs
-                                          "relative flex items-center space-x-3 rounded-lg px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-pink-500 focus-within:ring-offset-2 hover:border-gray-400"
-                                          (if intensive? "bg-orange-200 border border-orange-500" "bg-white border border-gray-300 "))}
-                                   (when intensive?
-                                     [:div {:class "flex-shrink-0"}
-                                      (icon/fist-punch {:class "h-10 w-10 text-orange-600"})])
-                                   [:div {:class "min-w-0 flex-1"}
-                                    [:a {:href (url/link-song song) :class "focus:outline-none"  :hx-boost true}
-                                     [:span {:class "absolute inset-0" :aria-hidden "true"}]
-                                     [:p {:class "text-sm font-medium text-gray-900"} title]
-                                     [:p {:class "truncate text-sm text-gray-500"} "Last Played: never"]]]]))
-                              (take 6 all-songs))]])]))
 (ctmx/defcomponent ^:endpoint  gigs-detail-page-probeplan [{:keys [db] :as req} gig ^:boolean edit?]
   (let [comp-name (util/comp-namer #'gigs-detail-page-probeplan)
         tr (i18n/tr-from-req req)
@@ -589,7 +651,7 @@
      (cond (#{:gig.type/probe :gig.type/extra-probe} gig-type)
            (gigs-detail-page-probeplan req gig false)
            (#{:gig.type/gig} gig-type)
-           (gigs-detail-page-setlist req gig false)
+           (gigs-detail-page-setlist req  nil)
            :else nil)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}

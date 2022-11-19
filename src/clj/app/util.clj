@@ -50,6 +50,9 @@
 (defn unwrap-params
   [req] (-> req :params form/json-params-pruned))
 
+(defn json-params
+  [req] (-> req :params form/json-params))
+
 (defn remove-nils
   "Returns the map less any keys that have nil values"
   [m]
@@ -84,6 +87,9 @@
      (-> var meta :name str))
     ([s]
      (str (-> var meta :name) s))))
+
+(defn comp-name [var]
+  ((comp-namer var)))
 
 (defn kw->str [kw]
   (when kw
@@ -143,3 +149,32 @@
       (time-inside? (t/time "17:00") (t/time "23:59") time)
       :evening
       :else :wut?)))
+
+(defn ensure-coll
+  "If v is nil, returns nil. If v is a collection, returns a collection. Otherwise returns [v].
+  Useful when you have a value that may be a collection or a single value, but you want to operate on a collection in any case.
+  "
+  [v]
+  (when v
+    (if (coll? v)
+      v
+      [v])))
+
+(defn index-sort-by
+  "Sorts the items in coll by k according to the order of values of k in manifest.
+  Probably too slow on large collections."
+  [manifest k coll]
+  (sort-by (fn [item]
+             (.indexOf manifest (get item k)))
+           coll))
+
+(defn ensure-uuid [v]
+  (if (string? v)
+    (parse-uuid v)
+    v))
+
+(comment
+  (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])
+
+  ;;
+  )

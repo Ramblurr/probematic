@@ -59,7 +59,8 @@
        :show-all "Show All"
        :show-committed "Show Committed"
        :play-log-subtitle "Here you can record what was played at this gig/probe."
-       :probeplan "Probeplan"}
+       :probeplan "Probeplan"
+       :create-setlist "Make Setlist"}
 
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"
@@ -109,6 +110,8 @@
  :section "Section"
  :section-none "No Section"
  :action {:edit "Edit"
+          :done "Done"
+          :reorder "Reorder"
           :delete "Delete"
           :save "Save"
           :cancel "Cancel"

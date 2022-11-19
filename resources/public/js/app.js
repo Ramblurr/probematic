@@ -40,7 +40,23 @@ document.body.addEventListener("htmx:afterSettle", function(evt) {
   if(evt.target.querySelector(".dropdown")) {
     DropdownAll(evt.target)
   }
+  if(evt.target.querySelector(".sortable")) {
+    initSortable(evt.target);
+  }
 })
+
+const initSortable = (target) => {
+  console.log("init sortable")
+    var sortables = target.querySelectorAll(".sortable");
+    for (var i = 0; i < sortables.length; i++) {
+      var sortable = sortables[i];
+      new Sortable(sortable, {
+          animation: 150,
+        ghostClass: 'bg-blue-300',
+        handle: '.drag-handle'
+      });
+    }
+}
 
 
 document.body.addEventListener("htmx:responseError", function(evt) {
