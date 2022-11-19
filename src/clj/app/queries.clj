@@ -107,6 +107,10 @@
                                                        :instrument.category/code
                                                        :instrument.category/name]}])
 
+(def setlist-v1-pattern [{:setlist/gig [:gig/gig-id]}
+                         :setlist/version
+                         :setlist.v1/songs])
+
 (defn gig+member [gig-id gigo-key]
   (pr-str [gig-id gigo-key]))
 
@@ -248,6 +252,27 @@
 
 (defn member-by-email [db email]
   (d/find-by db :member/email email member-pattern))
+
+(defn setlist-for-gig [db gig-id]
+  (-> (d/find-by db :setlist/gig [:gig/gig-id gig-id] setlist-v1-pattern)
+      (update  :setlist.v1/songs #(map (partial datomic/pull db song-pattern) %))))
+
+(defn setlist-song-tuples-for-gig [db gig-id]
+  (->>
+   (-> (d/find-by db :setlist/gig [:gig/gig-id gig-id] [:setlist.v1/ordered-songs])
+       :setlist.v1/ordered-songs)
+   (sort-by second)
+   (map #(update % 0 (fn [eid] (->> (datomic/pull db [:song/song-id] eid)
+                                    (into [])
+                                    first))))))
+
+(defn setlist-song-ids-for-gig [db gig-id]
+  (->> (-> (d/find-by db :setlist/gig [:gig/gig-id gig-id] [:setlist.v1/ordered-songs])
+           :setlist.v1/ordered-songs)
+       (sort-by second)
+       (map first)
+       (map (partial datomic/pull db [:song/song-id]))
+       (map :song/song-id)))
 
 (comment
   (do

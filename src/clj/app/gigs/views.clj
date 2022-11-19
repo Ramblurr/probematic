@@ -470,10 +470,9 @@
   (let [comp-name (util/comp-namer #'gigs-detail-page-setlist)
         tr (i18n/tr-from-req req)
         song-ids (map util/ensure-uuid song-ids)
-        songs (util/index-sort-by song-ids :song/song-id (cond (util/post? req)
-                                                               (q/find-songs db song-ids)
-                                                               :else
-                                                               []))
+        songs (util/index-sort-by song-ids :song/song-id (if (util/post? req)
+                                                           (controller/update-setlist! req song-ids)
+                                                           (q/find-songs db song-ids)))
         selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                :buttons (when (seq songs)
@@ -642,6 +641,7 @@
         comp-name (util/comp-namer #'gigs-detail-page)
         tr (i18n/tr-from-req req)
         archived? (domain/gig-archived? gig)
+        setlist-song-ids (q/setlist-song-ids-for-gig db gig-id)
         attendances-by-section (if archived?
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendances-for-gig db gig-id) false)
                                  (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
@@ -651,7 +651,7 @@
      (cond (#{:gig.type/probe :gig.type/extra-probe} gig-type)
            (gigs-detail-page-probeplan req gig false)
            (#{:gig.type/gig} gig-type)
-           (gigs-detail-page-setlist req  nil)
+           (gigs-detail-page-setlist req  setlist-song-ids)
            :else nil)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}

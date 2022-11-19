@@ -26,6 +26,15 @@
                   :motivation/very-low])
 (def gig-types [:gig.type/probe :gig.type/extra-probe :gig.type/meeting :gig.type/gig])
 
+(def setlist-versions [:setlist.version/v1])
+
+(def SetlistV1Entity
+  (s/schema
+   [:map {:name :app.entity/setlist.v1}
+    [:setlist/gig ::s/datomic-ref]
+    [:setlist/version [:enum :setlist.version/v1]]
+    [:setlist.v1/ordered-songs [:sequential [:tuple ::s/datomic-ref :int]]]]))
+
 (defn enum-from [values]
   (into [:enum] values))
 

@@ -28,9 +28,11 @@
   [system]
   {:name ::current-user-interceptor
    :enter (fn [ctx]
-            (assoc-in ctx [:request :app.auth/session :session/member]
-                      (q/member-by-email (d/db (-> system :datomic :conn))
-                                         (-> ctx :request :app.auth/session :session/email))))})
+            (assert (-> ctx :request :app.auth/session :session/email) "no authenticated member email")
+            (let [member (q/member-by-email (d/db (-> system :datomic :conn))
+                                            (-> ctx :request :app.auth/session :session/email))]
+              (assert member "no authenticated member")
+              (assoc-in ctx [:request :app.auth/session :session/member] member)))})
 
 (def keyword-params-interceptor
   "Keywordizes request parameter keys. CTMX expects this."

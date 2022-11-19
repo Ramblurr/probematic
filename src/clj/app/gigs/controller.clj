@@ -1,6 +1,7 @@
 (ns app.gigs.controller
   (:refer-clojure :exclude [comment])
   (:require
+   [clojure.data :as clojure.data]
    [app.controllers.common :as common]
    [app.datomic :as d]
    [app.debug :as debug]
@@ -331,13 +332,46 @@
         (transact-gig! datomic-conn [tx] gig-id))
       (s/throw-error "Cannot update the gig. The gig data is invalid." nil  UpdateGig decoded))))
 
+(defn reconcile-setlist [eid new-song-tuples current-song-tuples]
+  (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
+        add-tx (map #(-> [:db/add eid :setlist.v1/ordered-songs %]) (filter some? added))
+        remove-tx (map #(-> [:db/retract eid :setlist.v1/ordered-songs %]) (filter some? removed))]
+    (concat add-tx remove-tx)))
+
+(defn update-setlist!
+  "Updates the setlist for the current gig. song-ids are ordered. Returns the songs in the setlist."
+  [{:keys [datomic-conn db] :as req} song-ids]
+  (let [gig-id (common/path-param req :gig/gig-id)
+        song-tuples (map-indexed (fn [idx sid] [[:song/song-id sid] idx]) song-ids)
+        current (q/setlist-song-tuples-for-gig db  gig-id)
+        txs (reconcile-setlist "setlist" song-tuples current)
+        tx  {:setlist/gig [:gig/gig-id gig-id]
+             :db/id "setlist"
+             :setlist/version :setlist.version/v1}
+        txs (concat [tx] txs)
+        result (datomic/transact datomic-conn {:tx-data txs})]
+    (q/find-songs (:db-after result) song-ids)))
+
+(clojure.core/comment
+  (update-setlist! {:datomic-conn conn :db db :path-params {:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDCiYe6CAw"}}
+                   [#uuid "01844740-3eed-856d-84c1-c26f07068207"]) ;
+
+  (q/setlist-song-tuples-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDCiYe6CAw") ;
+
+  (reconcile-setlist "A" (set [[:song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207" 0]
+                               [:song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820a" 1]])
+                     (set [[:song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207" 1]
+                           [:song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820a" 0]])) ;
+  ;; p
+  )
+
 (defn upsert-log-play-tx [gig-id {:keys [song-id play-id feeling intensive]}]
   (let [song-id (common/ensure-uuid song-id)
         play-id (or (common/ensure-uuid play-id) (sq/generate-squuid))
         rating (keyword feeling)
         emphasis (keyword (if (string? intensive) intensive (second intensive)))]
     {:played/gig [:gig/gig-id gig-id]
-     :played/song  [:song/song-id song-id]
+     :played/song [:song/song-id song-id]
      :played/rating rating
      :played/gig+song (pr-str [gig-id song-id])
      :played/play-id play-id

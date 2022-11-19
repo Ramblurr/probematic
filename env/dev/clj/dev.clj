@@ -72,7 +72,7 @@
 ;;; DO NOT run this in demo mode
 
   (do
-    (def gigo (:app.ig/gigo-client state/system))
+    (def gigoc (:app.ig/gigo-client state/system))
     (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
     (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic2/gigo-members.json") j/keyword-keys-object-mapper)
           tx-data (map (fn [{:keys [gigo_key email nick name section occ]}]
@@ -84,13 +84,12 @@
                           :member/active? (not occ)}) members)]
       (d/transact conn {:tx-data tx-data}))
     (sync-members/update-member-data! conn (sync-members/fetch-people-data! (:airtable env)))
-    (gigo/update-cache! gigo)
+    (gigo/update-cache! gigoc)
     (sync-gigs/update-gigs-db! conn @gigo/gigs-cache)
-
     (d/transact conn {:tx-data
                       (map (fn [{:keys [id display_name]}]
                              [:db/add [:member/gigo-key id] :member/nick display_name])
-                           (gigo/get-band-members! gigo sno))})
+                           (gigo/get-band-members! gigoc sno))})
     :seed-done) ;; END SEEDS
 
 ;;;; Scratch pad

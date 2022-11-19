@@ -165,6 +165,25 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+;;;; Setlist
+
+   {:db/ident :setlist/version
+    :db/doc "The version of the setlist entity (future versions might have different attributes)"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :setlist/gig
+    :db/doc "The gig this setlist belongs to."
+    :db/valueType :db.type/ref
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :setlist.v1/ordered-songs
+    :db/doc "The ordered songs in this setlist"
+    :db/valueType :db.type/tuple
+    :db/tupleTypes [:db.type/ref :db.type/long]
+    :db/cardinality :db.cardinality/many}
+
 ;;;; Comments
 
    {:db/ident :comment/comment-id
@@ -471,5 +490,4 @@
 
    ;; premium basis for an instrument = instrument value x category factor x premium-factor
    ;; premium for additional coverage = premium basis x coverage premium factor
-   ;;
    ]
