@@ -24,7 +24,7 @@
    "/song/{song-id}/"
    (fn [req]
      (layout/app-shell req
-                       (view/song-detail req  (parse-uuid (-> req :path-params :song-id)))))))
+                       (view/song-detail-page req false)))))
 
 (defn songs-log-play-routes []
   (ctmx/make-routes

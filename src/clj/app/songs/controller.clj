@@ -41,7 +41,7 @@
       result)))
 
 (defn retrieve-song [db song-id]
-  (d/find-by db :song/song-id song-id q/song-pattern))
+  (d/find-by db :song/song-id song-id q/song-pattern-detail))
 
 (comment
 

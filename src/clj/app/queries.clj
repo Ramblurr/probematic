@@ -26,7 +26,9 @@
                             {:instrument/_owner [:instrument/name :instrument/instrument-id
                                                  {:instrument/category [:instrument.category/name]}]}])
 
-(def song-pattern [:song/title :song/song-id])
+(def song-pattern [:song/title :song/song-id :song/active?])
+(def song-pattern-detail [:song/title :song/song-id
+                          :song/active?])
 
 (def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
 (def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location
@@ -314,6 +316,11 @@
                 :position position
                 :emphasis emphasis}))
        (sort-by :position)))
+
+(defn all-sections [db]
+  (->>
+   (d/find-all db :section/name [:section/name :section/default?])
+   (mapv first)))
 
 (comment
   (do

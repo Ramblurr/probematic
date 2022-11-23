@@ -62,24 +62,93 @@
              [:button {:class "ml-3 btn btn-sm btn-indigo-high"
                        :type "submit"} "Save"]]]])))))
 
-(defn song-detail [{:keys [db] :as req} song-id]
-  (if-let [{:song/keys [title last-played]} (controller/retrieve-song db song-id)]
-    [:div
-     (ui/page-header :title title
-                     :subtitle (list  "Last played " (ui/datetime last-played))
-                     :buttons (list  (ui/button :label "Comment"
-                                                :priority :white
-                                                :centered? true
-                                                :attr {:href "/songs/new"})
-                                     (ui/button :label "Log Play"
-                                                :priority :primary
-                                                :centered? true
-                                                :class "items-center justify-center "
-                                                :attr {:href (str "/song/log-play/" song-id "/")})))]
+(ctmx/defcomponent ^:endpoint song-sheet-music [{:keys [db] :as req} ^:boolean edit?]
+  (let [song-id (parse-uuid (-> req :path-params :song-id))
+        {:song/keys [title active?] :as song} (controller/retrieve-song db song-id)
+        tr (i18n/tr-from-req req)
+        comp-name (util/comp-namer #'song-sheet-music)
+        post? (util/post? req)
+        sections (q/all-sections db)]
+    (ui/panel {:title (tr [:song/sheet-music-title])
+               :buttons (ui/button :label (tr [:action/edit]) :priority :white :centered? true
+                                   :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})}
+              (ui/dl
+               (ui/dl-item "Musescore"
+                           (ui/rich-ul {}
+                                       (ui/rich-li {:icon icon/file-pdf-outline}
+                                                   (ui/rich-li-text {} "Musescore Original")
+                                                   (ui/rich-li-action-a :href "#" :label (tr [:action/download])))
+                                       (ui/rich-li {:icon icon/file-pdf-outline}
+                                                   (ui/rich-li-text {} "Musescore Actual")
+                                                   (ui/rich-li-action-a :href "#" :label (tr [:action/download])))))
 
-    [:div
-     [:p "Song not found."]
-     [:a {:href "/songs/" :class "underline hover:text-indigo-600 text-indigo-500"} "Back to song list"]]))
+               (map (fn [{:section/keys [name default?]}]
+                      (ui/dl-item name
+                                  (ui/rich-ul {}
+                                              (map (fn [_]
+                                                     (ui/rich-li {:icon icon/file-pdf-outline}
+                                                                 (ui/rich-li-text {} "F Horn")
+                                                                 (ui/rich-li-action-a :href "#" :label (tr [:action/download]))))
+                                                   (range (inc (rand-int 3))))) "sm:col-span-1"))
+
+                    sections)))))
+
+(ctmx/defcomponent ^:endpoint song-detail-page [{:keys [db] :as req} ^:boolean edit?]
+  (let [song-id (parse-uuid (-> req :path-params :song-id))
+        {:song/keys [title active?] :as song} (controller/retrieve-song db song-id)
+        tr (i18n/tr-from-req req)
+        comp-name (util/comp-namer #'song-detail-page)
+        post? (util/post? req)
+        sections (q/all-sections db)]
+    [:form {:id id :hx-post (comp-name)}
+     (if edit?
+       (ui/page-header-full :title
+                            (ui/text :label (tr [:song/title]) :name (path "title") :value title)
+                            :subtitle [:div {:class "mt-2"}
+                                       (ui/toggle-checkbox :label (tr [:song/active]) :name (path "active?") :checked? active?)]
+
+                            :buttons
+                            (list
+                             (ui/button :label (tr [:action/save]) :priority :primary  :centered? true :attr {:form (path "editform")})
+                             (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
+                                        :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})))
+
+       (ui/page-header :title title
+                       :subtitle (ui/song-active-bubble song)
+                       ;; (list  "Last played " (ui/datetime last-played))
+                       :buttons (cond
+                                  edit?
+                                  (list
+                                   (ui/button :label (tr [:action/save]) :priority :primary  :centered? true :attr {:form (path "editform")})
+                                   (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
+                                              :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")}))
+                                  :else
+                                  (list
+                                   (ui/button :label (tr [:action/edit]) :priority :white :centered? true
+                                              :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
+
+                                   (ui/button :label (tr [:song/log-play])
+                                              :priority :primary
+                                              :centered? true
+                                              :class "items-center justify-center "
+                                              :attr {:href (str "/song/log-play/" song-id "/")})))))
+
+     (ui/panel {:title (tr [:song/background-title])}
+               (ui/dl
+                (ui/dl-item (tr [:song/composition-credits]) "Mucca Pazza")
+                (ui/dl-item (tr [:song/arrangement-credits]) "l-ra")
+                (ui/dl-item (tr [:song/origin]) "Leo brought this to the band in 2018")
+                (ui/dl-item (tr [:song/arrangement-notes]) "Form: 16 bar blues.\nStart der Phrase Takt 1 und takt 4 jeweils mit extremen Sforzato crescendo"
+                            "sm:col-span-3")))
+     (ui/panel {:title (tr [:song/play-stats-title])}
+               (ui/dl
+                (ui/dl-item (tr [:song/play-count]) "0")
+                (ui/dl-item (tr [:song/gig-count]) "0")
+                (ui/dl-item (tr [:song/probe-count]) "0")
+                (ui/dl-item (tr [:song/last-played-gig]) [:a {:class "link-blue" :href "#"} "Demo"])
+                (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href "#"} "2022-11-23"])))
+     (song-sheet-music req false)]))
+
 (ctmx/defcomponent ^:endpoint song-new [req]
   (let [tr (i18n/tr-from-req req)]
     (if (util/post? req)
@@ -89,6 +158,7 @@
       [:div
        (ui/page-header :title (tr [:song/create-title])
                        :subtitle (tr [:song/create-subtitle]))
+
        (ui/panel {}
                  [:form {:hx-post (util/comp-name #'song-new) :class "space-y-8 divide-y divide-gray-200"}
                   [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
@@ -107,7 +177,7 @@
                     [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
                      (tr [:action/create])]]]])])))
 
-(defn song-row [{:song/keys [title active last-played score play-count] :as song}]
+(defn song-row [{:song/keys [title last-played score play-count] :as song}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
     [:a {:href (url/link-song song) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
@@ -115,7 +185,7 @@
        [:p {:class "truncate text-sm font-medium text-indigo-600"}
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
-        (ui/bool-bubble active)]]
+        (ui/song-active-bubble song)]]
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
@@ -173,24 +243,25 @@
      (song-list filtered-songs)]))
 
 (ctmx/defcomponent songs-page [req]
-  [:div
-   (ui/page-header :title "Songs"
-                   :buttons (list
-                             (ui/button :tag :a :label "Log Play"
-                                        :priority :primary
-                                        :centered? true
-                                        :attr {:href "/songs/log-play/"}
-                                        :icon icon/plus)
-                             (ui/button :tag :a :label "New Song"
-                                        :priority :white
-                                        :centered? true
-                                        :attr {:href "/songs/new"})))
-   [:div {:class "flex space-x-4 mt-8 sm:mt-0 bg-white"}
-    (songs-filter req)]
+  (let [tr (i18n/tr-from-req req)]
+    [:div
+     (ui/page-header :title (tr [:song/list-title])
+                     :buttons (list
+                               (ui/button :tag :a :label (tr [:song/log-play])
+                                          :priority :primary
+                                          :centered? true
+                                          :attr {:href "/songs/log-play/"}
+                                          :icon icon/plus)
+                               (ui/button :tag :a :label (tr [:song/create-title])
+                                          :priority :white
+                                          :centered? true
+                                          :attr {:href "/songs/new"})))
+     [:div {:class "flex space-x-4 mt-8 sm:mt-0 bg-white"}
+      (songs-filter req)]
 
-   (songs-list req "")
+     (songs-list req "")
                                         ; (song-toggle-list songs)
-   ])
+     ]))
 (defn song-toggler [{:song/keys [title selected]}]
   [:li (comment {:class
                  (ui/cs

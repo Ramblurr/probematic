@@ -109,18 +109,15 @@
                  (ui/dl-item (tr [:outstanding-payments]) (ui/money 0 :EUR))
                  (ui/dl-item (tr [:instruments]) (if (empty? coverages)
                                                    (tr [:none])
-                                                   [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
-                                                    (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
-                                                           [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
-                                                            [:div {:class "flex w-0 flex-1 items-center"}
-                                                             (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
-                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} name]
-                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
-                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/money value :EUR)]
-                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
-                                                            [:div {:class "ml-4 flex-shrink-0"}
-                                                             [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]])
-                                                         coverages)]) "sm:col-span-3")))
+                                                   (ui/rich-ul {}
+                                                               (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
+                                                                      (ui/rich-li {:icon icon/trumpet}
+                                                                                  (ui/rich-li-text {} name)
+                                                                                  (ui/rich-li-text {} (:instrument.category/name category))
+                                                                                  (ui/rich-li-text {} (ui/money value :EUR))
+                                                                                  (ui/rich-li-text {} (ui/bool-bubble (not private?) {false "Private" true "Band"}))
+                                                                                  (ui/rich-li-action-a :href "#" :label "View")))
+                                                                    coverages))) "sm:col-span-3")))
       (ui/panel {:title (tr ["Gigs & Probes"])
                  :subtitle (tr ["Fun stats!"])}
                 (ui/dl

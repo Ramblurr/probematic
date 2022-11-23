@@ -737,6 +737,15 @@
                 text-color bg-color)}
      label]))
 
+(defn song-active-bubble [song]
+  (let [[text-color bg-color label] (if (:song/active? song)
+                                      ["text-green-500" "bg-green-100" "Active"]
+                                      ["text-red-500" "bg-red-100" "Inactive"])]
+    [:span {:class
+            (cs "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                text-color bg-color)}
+     label]))
+
 (defn gig-status-icon [status]
   (let [{:keys [icon color]} (gig-status-icons status)]
     ;; mr-1.5
@@ -807,3 +816,21 @@
           buttons]])
       [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
        body]]]]])
+
+(defn rich-li-action-a [& {:keys [href label attrs]}]
+  [:div {:class "ml-4 flex-shrink-0"} [:a
+                                       (merge
+                                        {:href href, :class "font-medium text-blue-600 hover:text-blue-500"}
+                                        attrs) label]])
+(defn rich-li-text [_ body]
+  [:span {:class "ml-2 w-0 flex-1 truncate"} body])
+
+(defn rich-li [{:keys [icon]} & items]
+  [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
+   [:div {:class "flex w-0 flex-1 items-center"}
+    (when icon
+      (icon {:class "h-5 w-5 flex-shrink-0 text-gray-400"}))
+    items]])
+(defn rich-ul [_ & items]
+  [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
+   items])
