@@ -531,7 +531,7 @@
 
 (ctmx/defcomponent  gig-probeplan-sort-item [req idx {:song/keys [song-id title] :keys [position emphasis] :as arg}]
   (let [checked? (= :probeplan.emphasis/intensive (probeplan.domain/str->play-emphasis emphasis))]
-    [:li {:class "rounded border-4 mx-0 my-1 p-2  basis-1/2 grid grid-flow-col grid-cols-auto justify-between"}
+    [:li {:class "rounded border-4 mx-0 my-1 p-2  basis-1/2 grid grid-flow-col grid-cols-auto justify-between items-center"}
      [:div {:class "drag-handle cursor-pointer"} (icon/bars {:class "h-5 w-5"})]
      [:input {:type :hidden :name (path "song-id") :value song-id}]
      [:input {:type :hidden :name (path "position") :value idx :data-sort-order true}]
