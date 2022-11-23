@@ -70,19 +70,19 @@
 
      [:div {:class "grid grid-cols-3 space-y-2 max-w-sm sm:max-w-none sm:grid-cols-7 sm:space-x-3"}
       [:div {:class "flex items-center justify-start sm:min-w-fit"}
-       (icon/circle-xmark-outline {:class (ui/cs shared-classes "icon-not-played border-gray-500")})
+       (icon/circle-xmark-outline {:class (ui/cs shared-classes "icon-not-played border-gray-500 toggler--checked")})
        (tr [:play-log/not-played])]
       [:div {:class "flex items-center justify-start"}
-       (icon/smile {:class (ui/cs shared-classes "icon-smile border-green-500")})
+       (icon/smile {:class (ui/cs shared-classes "icon-smile border-green-500 toggler--checked")})
        (tr [:play-log/nice])]
       [:div {:class "flex items-center justify-start"}
-       (icon/meh {:class (ui/cs shared-classes "icon-meh border-blue-500")})
+       (icon/meh {:class (ui/cs shared-classes "icon-meh border-blue-500 toggler--checked")})
        (tr [:play-log/okay])]
       [:div {:class "flex items-center justify-start"}
-       (icon/sad {:class (ui/cs shared-classes "icon-sad border-red-500")})
+       (icon/sad {:class (ui/cs shared-classes "icon-sad border-red-500 toggler--checked")})
        (tr [:play-log/bad])]
       [:div {:class "col-span-2 flex justify-start items-center"}
-       (icon/fist-punch {:class (ui/cs shared-classes "icon-fist-punch border-purple-500")})
+       (icon/fist-punch {:class (ui/cs shared-classes "icon-fist-punch intensiv--checked")})
        (tr [:play-log/intensive])]]]))
 
 (ctmx/defcomponent gig-log-play [{:keys [db] :as req} idx play]

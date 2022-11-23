@@ -125,18 +125,18 @@ body {
 }
 
 .icon-not-played {
-  @apply text-gray-500;
+  @apply text-gray-400;
 }
 
 .icon-smile {
-  @apply text-green-500;
+  @apply text-green-400;
 }
 .icon-sad {
-  @apply text-red-500;
+  @apply text-red-400;
 }
 
 .icon-meh {
-  @apply text-blue-500;
+  @apply text-blue-400;
 }
 
 .radio-button-checked .icon-smile {
@@ -217,6 +217,19 @@ body {
 }
 
 
+.toggler--checked.icon-not-played {
+  @apply text-gray-500;
+}
+.toggler--checked.icon-sad  {
+  @apply text-red-500;
+}
+.toggler--checked.icon-meh  {
+  @apply text-blue-500;
+}
+.toggler--checked.icon-smile {
+  @apply text-green-500;
+}
+
 .toggler--checked.icon-not-played svg {
   @apply border-gray-500;
 }
@@ -235,9 +248,11 @@ body {
   @apply border-transparent border-solid border-b-2;
 }
 .icon-fist-punch {
+  @apply text-purple-400;
+}
+.intensiv--checked {
   @apply text-purple-500;
 }
-
 .intensiv--checked.icon-fist-punch svg {
   padding-bottom: 1px;
   @apply border-solid border-b-2;
