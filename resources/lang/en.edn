@@ -59,7 +59,10 @@
        :show-all "Show All"
        :show-committed "Show Committed"
        :play-log-subtitle "Here you can record what was played at this gig/probe."
+       :probeplan-sort "Drag the songs into probeplan order, and mark a couple as intensive."
        :probeplan "Probeplan"
+       :probeplan-choose "Choose 5 songs."
+       :create-probeplan "Make Probeplan"
        :create-setlist "Make Setlist"}
 
  :gigs {:title "Gigs & Probes"
@@ -139,4 +142,5 @@
          :unauthorized-title "Authentication failed"
          :unauthorized-message "Your identity is unknown to the system.. something probably went wrong. Please contact Casey and tell him this error code:"
          :go-home "Go Home"
-         :notify "Click to notify Casey"}}
+         :notify "Click to notify Casey"}
+ :updating "Updating..."}

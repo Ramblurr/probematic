@@ -1,19 +1,20 @@
 (ns app.gigs.controller
   (:refer-clojure :exclude [comment])
   (:require
-   [clojure.data :as clojure.data]
+   [app.auth :as auth]
    [app.controllers.common :as common]
    [app.datomic :as d]
    [app.debug :as debug]
    [app.gigs.domain :as domain]
+   [app.probeplan.domain :as probeplan.domain]
    [app.queries :as q]
    [app.schemas :as s]
    [app.util :as util]
+   [clojure.data :as clojure.data]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [tick.core :as t]
-   [app.auth :as auth]))
+   [tick.core :as t]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -305,8 +306,8 @@
     [:end-date {:optional true} ::s/date]
     [:location ::s/non-blank-string]
     [:contact :string]
-    [:gig-type (domain/enum-from (map name domain/gig-types))]
-    [:status (domain/enum-from (map name domain/statuses))]
+    [:gig-type (s/enum-from (map name domain/gig-types))]
+    [:status (s/enum-from (map name domain/statuses))]
     [:call-time ::s/time]
     [:set-time {:optional true} ::s/time]
     [:end-time {:optional true} ::s/time]
@@ -351,6 +352,34 @@
         txs (concat [tx] txs)
         result (datomic/transact datomic-conn {:tx-data txs})]
     (q/find-songs (:db-after result) song-ids)))
+
+(defn reconcile-probeplan [eid new-song-tuples current-song-tuples]
+  (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
+        add-tx (map #(-> [:db/add eid :probeplan.classic/ordered-songs %]) (filter some? added))
+        remove-tx (map #(-> [:db/retract eid :probeplan.classic/ordered-songs %]) (filter some? removed))]
+    (concat add-tx remove-tx)))
+
+(defn probeplan-song-tx [{:keys [song-id emphasis position] :as s}]
+  [[:song/song-id (util/ensure-uuid song-id)]
+   (Integer/parseInt position)
+   (or
+    (probeplan.domain/str->play-emphasis emphasis) probeplan.domain/probeplan-classic-default-emphasis)])
+
+(defn update-probeplan!
+  "Updates the probeplan for the current gig. song-ids are ordered. Returns the songs in the setlist."
+  [{:keys [datomic-conn db] :as req} song-id-emphases]
+  (let [gig-id (common/path-param req :gig/gig-id)
+        song-tuples (map probeplan-song-tx song-id-emphases)
+        current (q/probeplan-song-tuples-for-gig db  gig-id)
+        ;; _ (tap> {:sides song-id-emphases :song-tups song-tuples :current current})
+        txs (reconcile-probeplan "probeplan" song-tuples current)
+        tx  {:probeplan/gig [:gig/gig-id gig-id]
+             :db/id "probeplan"
+             :probeplan/version :probeplan.version/classic}
+        txs (concat [tx] txs)
+        ;; _ (tap> txs)
+        result (datomic/transact datomic-conn {:tx-data txs})]
+    (q/probeplan-songs-for-gig (:db-after result) gig-id)))
 
 (clojure.core/comment
   (update-setlist! {:datomic-conn conn :db db :path-params {:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDCiYe6CAw"}}

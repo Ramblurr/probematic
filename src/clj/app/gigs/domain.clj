@@ -32,20 +32,17 @@
   (s/schema
    [:map {:name :app.entity/setlist.v1}
     [:setlist/gig ::s/datomic-ref]
-    [:setlist/version [:enum :setlist.version/v1]]
+    [:setlist/version (s/enum-from setlist-versions)]
     [:setlist.v1/ordered-songs [:sequential [:tuple ::s/datomic-ref :int]]]]))
-
-(defn enum-from [values]
-  (into [:enum] values))
 
 (def GigEntity
   (s/schema
    [:map {:name :app.entity/gig}
     [:gig/gig-id ::s/non-blank-string]
     [:gig/title {:max 4096} ::s/non-blank-string]
-    [:gig/status (enum-from statuses)]
+    [:gig/status (s/enum-from statuses)]
     [:gig/date ::s/instdate]
-    [:gig/gig-type (enum-from gig-types)]
+    [:gig/gig-type (s/enum-from gig-types)]
     [:gig/location {:optional true :max 4096} ::s/non-blank-string]
     [:gig/contact {:optional true} ::s/datomic-ref]
     [:gig/call-time {:optional true} ::s/minute-time]

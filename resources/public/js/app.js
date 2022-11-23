@@ -50,9 +50,15 @@ const initSortable = (target) => {
     for (var i = 0; i < sortables.length; i++) {
       var sortable = sortables[i];
       new Sortable(sortable, {
-          animation: 150,
+        animation: 150,
         ghostClass: 'bg-blue-300',
-        handle: '.drag-handle'
+        handle: '.drag-handle',
+        onUpdate: (evt) => {
+          sortable.querySelectorAll("input[data-sort-order]").forEach((el, i) => {
+            //console.log("setting", el, i);
+            el.setAttribute("value", i);
+          });
+        }
       });
     }
 }
@@ -80,3 +86,16 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('newDropdown', function(evt) {
   Dropdown(document.querySelector(evt.detail.value))
 });
+
+function checkboxLimitReached(event) {
+  const checkedChecks = document.querySelectorAll("[data-checkbox-limit]:checked");
+  if(checkedChecks.length == 0 ) return false;
+  const maximum = parseInt(checkedChecks[0].getAttribute("data-maximum"));
+  if (checkedChecks.length >= maximum + 1) {
+    console.log("max reached")
+    return true;
+  }
+  return false;
+}
+
+window.checkboxLimitReached = checkboxLimitReached;

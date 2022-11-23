@@ -179,10 +179,31 @@
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :setlist.v1/ordered-songs
-    :db/doc "The ordered songs in this setlist"
+    :db/doc "The ordered songs in this setlist. A tuple of song-entity and order."
     :db/valueType :db.type/tuple
     :db/tupleTypes [:db.type/ref :db.type/long]
     :db/cardinality :db.cardinality/many}
+
+;;;; Probeplan
+   {:db/ident :probeplan/gig
+    :db/doc "The gig this probeplan belongs to"
+    :db/valueType :db.type/ref
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :probeplan/version
+    :db/doc "The version of the probeplan entity (different versions store different attributes)"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    ;; :db.attr/preds 'app.probeplan.domain/probeplan-version?
+    }
+   {:db/ident :probeplan.classic/ordered-songs
+    :db/doc "The other songs to be 'durchgespielt'. A tuple of [song-entity order emphasis]"
+    :db/valueType :db.type/tuple
+    :db/tupleTypes [:db.type/ref :db.type/long :db.type/keyword]
+    :db/cardinality :db.cardinality/many
+    ;; :db.attr/preds 'app.probeplan.domain/probeplan-classic-ordered-song?
+    }
 
 ;;;; Comments
 
@@ -486,8 +507,7 @@
    {:db/ident :insurance.category.factor/factor
     :db/doc "The pricing factory for the category"
     :db/valueType :db.type/bigdec
-    :db/cardinality :db.cardinality/one}
+    :db/cardinality :db.cardinality/one}]
 
-   ;; premium basis for an instrument = instrument value x category factor x premium-factor
-   ;; premium for additional coverage = premium basis x coverage premium factor
-   ]
+;; premium basis for an instrument = instrument value x category factor x premium-factor
+;; premium for additional coverage = premium basis x coverage premium factor

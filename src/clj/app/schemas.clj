@@ -80,20 +80,8 @@
    (m/schema s
              (update malli-opts :registry mr/composite-registry local-registry))))
 
-(defn sanitize-error
-  "Sanitizes an error for printing in logs"
-  [e]
-  (if-let [data (ex-data e)]
-    (if (-> data :explain :value)
-      (-> data
-          (medley/dissoc-in [:explain :value])
-          (update-in [:explain :schema] (fn [s] (m/properties s)))
-          (update-in [:explain :errors] (fn [es]
-                                          (map #(dissoc % :value) es))))
-
-      e)
-
-    e))
+(defn enum-from [values]
+  (into [:enum] values))
 
 (comment
   (require '[malli.error :as me]

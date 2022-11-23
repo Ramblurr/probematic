@@ -1,12 +1,12 @@
 (ns app.queries
   (:require
-   [datomic.client.api :as datomic]
    [app.datomic :as d]
+   [app.debug :as debug]
    [app.util :as util]
-   [tick.core :as t]
-   [medley.core :as m]
    [clojure.set :as set]
-   [app.debug :as debug]))
+   [datomic.client.api :as datomic]
+   [medley.core :as m]
+   [tick.core :as t]))
 
 (def attendance-pattern [{:attendance/section [:section/name]}
                          {:attendance/member [:member/name :member/gigo-key :member/nick]}
@@ -265,7 +265,6 @@
    (map #(update % 0 (fn [eid] (->> (datomic/pull db [:song/song-id] eid)
                                     (into [])
                                     first))))))
-
 (defn setlist-song-ids-for-gig [db gig-id]
   (->> (-> (d/find-by db :setlist/gig [:gig/gig-id gig-id] [:setlist.v1/ordered-songs])
            :setlist.v1/ordered-songs)
@@ -273,6 +272,48 @@
        (map first)
        (map (partial datomic/pull db [:song/song-id]))
        (map :song/song-id)))
+
+(defn probeplan-song-tuples-for-gig
+  [db gig-id]
+  (->> (d/q '[:find ?result
+              :in $ ?gig-id
+              :where
+              [?e :probeplan/gig ?gig-id]
+              [?e :probeplan.classic/ordered-songs ?tup]
+              [(untuple  ?tup) [?song-eid ?position ?emphasis]]
+              [?song-eid :song/song-id ?song-id]
+              [(tuple ?song-id ?position ?emphasis) ?result]]
+            db [:gig/gig-id gig-id])
+       (mapv first)
+       (mapv (fn [song]
+               (update song 0 #(vector :song/song-id %))))))
+
+(defn probeplan-songs-for-gig
+  "Returns a list of maps with the following keys:
+
+     :song/title
+     :song/song-id
+     :emphasis
+     :position
+  "
+  [db gig-id]
+  (->> (d/q '[:find ?result
+              :in $ ?gig-id
+              :where
+              [?e :probeplan/gig ?gig-id]
+              [?e :probeplan.classic/ordered-songs ?tup]
+              [(untuple  ?tup) [?song-eid ?position ?emphasis]]
+              [?song-eid :song/title ?song-title]
+              [?song-eid :song/song-id ?song-id]
+              [(tuple ?song-id ?song-title ?position ?emphasis) ?result]]
+            db [:gig/gig-id gig-id])
+       (mapv first)
+       (mapv (fn [[song-id title position emphasis]]
+               {:song/song-id song-id
+                :song/title title
+                :position position
+                :emphasis emphasis}))
+       (sort-by :position)))
 
 (comment
   (do
@@ -338,5 +379,31 @@
    (attendance-for-gig-with-all-active-members db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"))
 
   (attendance-plans-by-section-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
+  (d/q '[:find ?result
+         :in $ ?gig-id
+         :where
+         [?e :probeplan/gig ?gig-id]
+         [?e :probeplan.classic/ordered-songs ?tup]
+         [(untuple  ?tup) [?song-eid ?position ?emphasis]]
+         [?song-eid :song/title ?song-title]
+         [?song-eid :song/song-id ?song-id]
+         [(tuple ?song-id ?song-title ?position ?emphasis) ?result]]
+       db [:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw"])
+
+  (d/find-by db :probeplan/gig
+             [:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw"]
+             '[*])
+  (d/q '[:find ?song-title ;; [?song-id ?song-title ?position ?emphasis]
+         :in $ ?val
+         :where
+         [?e :probeplan/gig ?val]
+         [?e :probeplan.classic/ordered-songs ?tup]
+         [(untuple ?song-eid ?position ?emphasis) ?tup]
+         [?song-eid :song/title ?song-title]
+         [?song-eid :song/song-id ?song-id]]
+       db :probeplan/gig
+       [:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw"])
+  (probeplan-songs-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw")
+  (probeplan-song-tuples-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw")
   ;;
   )

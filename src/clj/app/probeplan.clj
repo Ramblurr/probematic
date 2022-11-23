@@ -50,16 +50,6 @@
  :db/valueType :db.type/ref
  :db/cardinality :db.cardinality/many}
 
-{:db/ident :setlist/song
- :db/doc "The song to be played"
- :db/valueType :db.type/ref
- :db/cardinality :db.cardinality/one}
-
-{:db/ident :setlist/position
- :db/doc "The position of the song in the setlist"
- :db/valueType :db.type/long
- :db/cardinality :db.cardinality/one}
-
 (defn gen-plan-for-gig [db gig]
   (let [tx-data [{:probeplan/gig (d/ref gig)
                   :probeplan/format :classic

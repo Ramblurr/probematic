@@ -54,7 +54,7 @@
   ;; see readme for more info
   (go-with-browser)
 
-;;;; Setup Interant Repl State
+;;;; Setup Integrant Repl State
 ;;; Run this before running either of the seeds below
   (do
     (require '[integrant.repl.state :as state])
