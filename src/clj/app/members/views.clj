@@ -85,70 +85,47 @@
            (ui/button :label (tr [:action/save])  :priority :primary :centered? true))
           (ui/button :label (tr [:action/edit]) :priority :white :centered? true
                      :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]
-      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
-       [:div {:class "space-y-6 md:col-span-2 md:col-start-1"}
-        [:section
-         [:div {:class "bg-white shadow sm:rounded-lg"}
-          [:div {:class "px-4 py-5 sm:px-6"}
-           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-            (tr [:Contact-Information])]]
-          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
-           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-            (ui/dl-item (tr [:Email]) (if edit?
-                                        (ui/input :name (path "email") :label "" :value email :type :email)
-                                        email))
-            (ui/dl-item (tr [:Phone]) (if edit?
-                                        (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
-                                        phone))
-            (ui/dl-item (tr [:Active]) (if edit?
-                                         (ui/toggle-checkbox  :checked? active? :name (path "active?"))
-                                         (ui/bool-bubble active?)))]]]]
-        [:section
-         [:div {:class "bg-white shadow sm:rounded-lg"}
-          [:div {:class "px-4 py-5 sm:px-6"}
-           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-            (tr [:member/insurance-title])]
-           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}
-            (tr [:member/insurance-subtitle])]]
-          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
-           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+      (ui/panel {:title
+                 (tr [:Contact-Information])}
+                (ui/dl
+                 (ui/dl-item (tr [:Email]) (if edit?
+                                             (ui/input :name (path "email") :label "" :value email :type :email)
+                                             email))
+                 (ui/dl-item (tr [:Phone]) (if edit?
+                                             (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
+                                             phone))
+                 (ui/dl-item (tr [:Active]) (if edit?
+                                              (ui/toggle-checkbox  :checked? active? :name (path "active?"))
+                                              (ui/bool-bubble active?)))))
 
-            (ui/dl-item (tr [:band-instruments])  (count band-instruments))
-            (ui/dl-item (tr [:private-instruments]) (count private-instruments))
-            (ui/dl-item (tr [:outstanding-payments]) (ui/money 0 :EUR))
-            (ui/dl-item (tr [:instruments]) (if (empty? coverages)
-                                              (tr [:none])
-                                              [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
-                                               (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
-                                                      [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
-                                                       [:div {:class "flex w-0 flex-1 items-center"}
-                                                        (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
-                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} name]
-                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
-                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/money value :EUR)]
-                                                        [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
-                                                       [:div {:class "ml-4 flex-shrink-0"}
-                                                        [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]])
-                                                    coverages)]))]]]]
+      (ui/panel {:title
+                 (tr [:member/insurance-title])
+                 :subtitle
+                 (tr [:member/insurance-subtitle])}
+                (ui/dl
 
-        [:section
-         [:div {:class "bg-white shadow sm:rounded-lg"}
-          [:div {:class "px-4 py-5 sm:px-6"}
-           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
-            (tr ["Gigs & Probes"])]
-           [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}
-            (tr ["Fun stats!"])]]
-          [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
-           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"}
-              (tr ["Gigs Attended"])]
-             [:dd {:class "mt-1 text-sm text-gray-900"} "coming soon"]]
-            [:div {:class "sm:col-span-1"}
-             [:dt {:class "text-sm font-medium text-gray-500"}
-              (tr ["Probes Attended"])]
-             [:dd {:class "mt-1 text-sm text-gray-900"} "coming soon"]]]]]]]]]]))
+                 (ui/dl-item (tr [:band-instruments])  (count band-instruments))
+                 (ui/dl-item (tr [:private-instruments]) (count private-instruments))
+                 (ui/dl-item (tr [:outstanding-payments]) (ui/money 0 :EUR))
+                 (ui/dl-item (tr [:instruments]) (if (empty? coverages)
+                                                   (tr [:none])
+                                                   [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
+                                                    (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
+                                                           [:li {:class "flex items-center justify-between py-3 pl-3 pr-4 text-sm"}
+                                                            [:div {:class "flex w-0 flex-1 items-center"}
+                                                             (icon/trumpet {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
+                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} name]
+                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} (:instrument.category/name category)]
+                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/money value :EUR)]
+                                                             [:span {:class "ml-2 w-0 flex-1 truncate"} (ui/bool-bubble (not private?) {false "Private" true "Band"})]]
+                                                            [:div {:class "ml-4 flex-shrink-0"}
+                                                             [:a {:href "#", :class "font-medium text-blue-600 hover:text-blue-500"} "View"]]])
+                                                         coverages)]) "sm:col-span-3")))
+      (ui/panel {:title (tr ["Gigs & Probes"])
+                 :subtitle (tr ["Fun stats!"])}
+                (ui/dl
+                 (ui/dl-item (tr ["Gigs Attended"]) "coming soon")
+                 (ui/dl-item (tr ["Probes Attended"]) "coming soon")))]]))
 
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
   (let [td-class "px-3 py-4"
