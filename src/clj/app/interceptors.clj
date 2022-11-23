@@ -130,7 +130,11 @@
     (assert lang-dicts "Translations not available")
     {:name ::i18n-interceptor
      :enter (fn [ctx]
-              (let [request (:request ctx)
+
+              (let [lang-dicts (if (config/dev-mode? (:env system))
+                                 (i18n/read-langs)
+                                 lang-dicts)
+                    request (:request ctx)
                     headers (:headers request)
                     query-string (:query-string request)
                     lang-qr (query-string-lang query-string)
