@@ -17,7 +17,7 @@
    "/songs/new"
    (fn [req]
      (layout/app-shell req
-                       (view/song-new req "")))))
+                       (view/song-new req)))))
 
 (defn song-detail-routes []
   (ctmx/make-routes

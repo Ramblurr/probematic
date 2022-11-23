@@ -135,6 +135,10 @@
         :definitely-not "Can't Do It"
         :not-interested "Not Interested"
         :no-response "No Response"}
+ :song {:create-title "Add Song"
+        :create-subtitle ""
+        :title "Song Title"
+        :active "Active?"}
  :error {:unknown-title "Something went wrong"
          :unknown-message "Sorry about this. It's not your fault. Please contact Casey and tell him this error code:"
          :not-found-title "Not Found"

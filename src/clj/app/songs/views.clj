@@ -1,15 +1,16 @@
 (ns app.songs.views
   (:require
-   [app.ui :as ui]
-   [app.render :as render]
-   [app.songs.controller :as controller]
    [app.gigs.controller :as gig.controller]
+   [app.i18n :as i18n]
    [app.icons :as icon]
-   [ctmx.core :as ctmx]
-   [clojure.string :as clojure.string]
-   [ctmx.response :as response]
    [app.queries :as q]
-   [app.urls :as url]))
+   [app.songs.controller :as controller]
+   [app.ui :as ui]
+   [app.urls :as url]
+   [app.util :as util]
+   [clojure.string :as clojure.string]
+   [ctmx.core :as ctmx]
+   [ctmx.response :as response]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -79,21 +80,32 @@
     [:div
      [:p "Song not found."]
      [:a {:href "/songs/" :class "underline hover:text-indigo-600 text-indigo-500"} "Back to song list"]]))
-(ctmx/defcomponent ^:endpoint song-new [req song-name]
-  (ctmx/with-req req
-    (let [result (and post? (controller/create-song! req))]
-      (if (:song result)
-        (response/redirect "/songs/")
-        [:form {:id id :hx-post "song-new" :class "mt-6"}
-         (ui/text :label "New Song Name" :name  (path "song") :placeholder "Watermelon Man" :value (value "song"))
-         [:div {:class "pt-5"}
-          (when (:error result)
-            [:span {:class "text-red-500 mb-1"}
-             "This song name already exists"])
-          [:div {:class "flex justify-end"}
-           [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-           [:button {:class "ml-3 btn btn-sm btn-indigo-high"
-                     :type "submit"} "Save"]]]]))))
+(ctmx/defcomponent ^:endpoint song-new [req]
+  (let [tr (i18n/tr-from-req req)]
+    (if (util/post? req)
+      (do
+        (controller/create-song! req)
+        (response/hx-redirect "/songs/"))
+      [:div
+       (ui/page-header :title (tr [:song/create-title])
+                       :subtitle (tr [:song/create-subtitle]))
+       (ui/panel {}
+                 [:form {:hx-post (util/comp-name #'song-new) :class "space-y-8 divide-y divide-gray-200"}
+                  [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
+                   [:div {:class "space-y-6 sm:space-y-5"}
+                    [:div
+                     [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
+                     [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
+                    [:div {:class "space-y-6 sm:space-y-5"}
+                     (ui/text-left :label (tr [:song/title]) :id (path "title") :placeholder "Watermelon Man" :value (value "title"))
+                     (ui/toggle-checkbox-left :id (path "active?") :label (tr [:song/active]) :checked? true :name (path "active?"))]]]
+
+                  [:div {:class "pt-5"}
+                   [:div {:class "flex justify-end"}
+                    [:a {:href "/songs" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                     (tr [:action/cancel])]
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                     (tr [:action/create])]]]])])))
 
 (defn song-row [{:song/keys [title active last-played score play-count] :as song}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]

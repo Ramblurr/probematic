@@ -3,16 +3,17 @@
    [app.datomic :as d]
    [app.queries :as q]
    [app.util :as util]
-   [com.yetanalytics.squuid :as sq]))
+   [com.yetanalytics.squuid :as sq]
+   [ctmx.rt]))
 
 (defn create-song! [req]
-  (let [title (-> req util/unwrap-params :song)
+  (let [{:keys [title active?]} (-> req util/unwrap-params)
         song-id (sq/generate-squuid)
         result (d/transact (:datomic-conn req)
                            {:tx-data [{:song/title title :song/song-id song-id
                                        :song/play-count 0
-                                       :song/active? true}]})]
-    (if  (d/db-ok? result)
+                                       :song/active? (ctmx.rt/parse-boolean active?)}]})]
+    (if (d/db-ok? result)
       {:song result}
       result)))
 
