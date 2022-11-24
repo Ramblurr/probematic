@@ -1,10 +1,12 @@
 (ns app.songs.controller
   (:require
    [app.datomic :as d]
+   [app.file-utils :as fu]
    [app.queries :as q]
    [app.util :as util]
    [com.yetanalytics.squuid :as sq]
-   [ctmx.rt]))
+   [ctmx.rt]
+   [datomic.client.api :as datomic]))
 
 (defn create-song! [req]
   (let [{:keys [title active?]} (-> req util/unwrap-params)
@@ -42,6 +44,18 @@
 
 (defn retrieve-song [db song-id]
   (d/find-by db :song/song-id song-id q/song-pattern-detail))
+
+(defn add-sheet-music! [{:keys [datomic-conn]} song-id section-name selected-path]
+  (let [tx {:sheet-music/sheet-id (sq/generate-squuid)
+            :sheet-music/song [:song/song-id song-id]
+            :sheet-music/section [:section/name section-name]
+            :sheet-music/title (fu/basename selected-path)
+            :file/webdav-path selected-path}]
+    (:db-after
+     (datomic/transact datomic-conn {:tx-data [tx]}))))
+(defn remove-sheet-music! [{:keys [datomic-conn]} sheet-id]
+  (:db-after
+   (datomic/transact datomic-conn {:tx-data [[:db/retractEntity [:sheet-music/sheet-id sheet-id]]]})))
 
 (comment
 

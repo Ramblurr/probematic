@@ -19,14 +19,15 @@
       #{"audio/mpeg" "audio/flac" "audio/ogg"} icon/file-audio-solid
       icon/file-solid)))
 
-(defn file-row [{:keys [endpoint values] :as target-params} root-dir current-dir idx {:keys [directory? file? name path full-path content-type content-length] :as file}]
+(defn file-row [{:keys [endpoint target values] :as target-params} root-dir current-dir idx {:keys [directory? file? name path full-path content-type content-length] :as file}]
   [:tr
    [:td {:class "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8  hover:bg-gray-100 "}
     [:button (merge {:class "cursor-pointer flex w-full"}
-                    (if directory? {:hx-get "traverse-dir" :hx-target "#file-picker"
+                    (if directory? {:hx-get "/choose-file/traverse-dir" :hx-target "#file-picker"
                                     :hx-vals
                                     {:current-dir current-dir :root-dir root-dir :target-dir (str "/" path) :target-params (pr-str target-params)}}
                         {:hx-post endpoint
+                         :hx-target (or target "#file-picker")
                          :hx-vals (merge values {:selected-path path})}))
 
      ((file-icon-for file) {:class "h-5 w-5 mr-2"}) name]]
@@ -51,10 +52,18 @@
                       [:div {:class "flex items-center"}
                        [:svg {:class "h-5 w-5 flex-shrink-0 text-gray-300", :xmlns "http://www.w3.org/2000/svg", :fill "currentColor", :viewbox "0 0 20 20", :aria-hidden "true"}
                         [:path {:d "M5.555 17.776l8-16 .894.448-8 16-.894-.448z"}]]
-                       [:button {:hx-get "traverse-dir" :hx-target "#file-picker"
+                       [:button {:hx-get "/choose-file/traverse-dir" :hx-target "#file-picker"
                                  :hx-vals {:current-dir current-dir :root-dir root-dir :target-dir path :target-params (pr-str target-params)}
                                  :class "ml-0 text-sm font-medium text-gray-500 hover:text-gray-700"} name]]]))
                  (fu/component-paths current-dir))]])
+
+(defn- file-picker-main
+  [req target-params root-dir current-dir]
+  (let [tr (i18n/tr-from-req req)
+        files (sardine/list-directory (:webdav req) current-dir)]
+    [:div {:id "file-picker"}
+     (file-breadcrumb tr target-params root-dir current-dir)
+     (file-table tr target-params root-dir current-dir files)]))
 
 (defn file-picker
   "Renders a file picker interface.
@@ -65,11 +74,11 @@
   target-params is a map containing
      :endpoint - the endpoint to POST the :selected-path too
      :values   - a map of values that are POSTed alongside the :selected-path
+     :target (optional) - the hx-target to swap at after the file is selected
   "
   [req target-params root-dir current-dir]
-  (let [files (sardine/list-directory (:webdav req) current-dir)
-        tr (i18n/tr-from-req req)]
-    [:div {:id "file-picker"}
+  (let [tr (i18n/tr-from-req req)]
+    [:div {}
      [:div {:class "sm:flex sm:items-center  pl-4 sm:pl-6 mb-2"}
       [:div {:class "sm:flex-auto"}
        [:h1 {:class "text-xl font-semibold text-gray-900"}
@@ -77,11 +86,19 @@
        [:p {:class "mt-2 text-sm text-gray-700"} "A table of placeholder stock market data that does not make any sense."]]
       [:div {:class "mt-4 sm:mt-0 sm:ml-16 sm:flex-none"}
        (ui/button :label (tr [:action/cancel]) :priority :white)]]
-     (file-breadcrumb tr target-params root-dir current-dir)
-     (file-table tr target-params root-dir current-dir files)]))
+     (file-picker-main req target-params root-dir current-dir)]))
+
+(defn file-picker-panel
+  "Like file-picker but rendered inside a ui/panel"
+  [req {:keys [target-params id title subtitle root-dir current-dir]}]
+  (let [tr (i18n/tr-from-req req)]
+    (ui/panel {:title title :id id
+               :subtitle subtitle
+               :buttons (ui/button :label (tr [:action/cancel]) :priority :white)}
+              (file-picker-main req target-params root-dir current-dir))))
 
 (ctmx/defcomponent ^:endpoint traverse-dir [req root-dir current-dir target-dir ^:edn target-params]
-  (file-picker req target-params root-dir (fu/strip-trailing-slash (fu/normalize-path target-dir))))
+  (file-picker-main req target-params root-dir (fu/strip-trailing-slash (fu/normalize-path target-dir))))
 
 (ctmx/defcomponent ^:endpoint choose-file-page [req]
   traverse-dir

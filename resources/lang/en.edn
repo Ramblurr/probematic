@@ -117,6 +117,7 @@
           :download "Download"
           :reorder "Reorder"
           :delete "Delete"
+          :remove "Remove"
           :save "Save"
           :cancel "Cancel"
           :comment "Comment"
@@ -153,7 +154,11 @@
         :arrangement-credits "Arranged By"
         :arrangement-notes "Arrangement Info"
         :origin "Origin"
-        :sheet-music-title "Sheet Music"}
+        :solo-count "# Solos"
+        :sheet-music-title "Sheet Music"
+        :choose-sheet-music-title "Choose Sheet Music File"
+        :choose-sheet-music-subtitle "For section: %1"
+        :other-sheet-music "Musescore, etc"}
  :file {:choose-file "Choose a File"
         :name "Filename"
         :size "Size"}

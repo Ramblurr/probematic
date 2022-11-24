@@ -18,20 +18,20 @@
  {:song/title "Tammurriata Nera" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068215"}
  {:song/title "Tschufittl Cocek" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068216"}
  {:song/title "You Move You Lose" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068217"}
- {:section/name "bass" :section/default? false :db/id "bass"}
- {:section/name "flute" :section/default? false :db/id "flute"}
- {:section/name "percussion" :section/default? false}
- {:section/name "sax alto" :section/default? false}
- {:section/name "sax soprano/clarinet" :section/default? false}
- {:section/name "sax tenor" :section/default? false}
- {:section/name "trombone/bombardino" :section/default? false}
- {:section/name "trumpet" :section/default? false}
- {:section/name "dance" :section/default? false}
- {:section/name "melodica" :section/default? false}
- {:section/name "cabaret" :section/default? false}
- {:section/name "violin" :section/default? false}
- {:section/name "horn" :section/default? false}
- {:section/name "No Section" :section/default? true}
+ {:section/name "bass" :section/default? false :db/id "bass" :section/position 1 :section/active? true}
+ {:section/name "flute" :section/default? false :db/id "flute" :section/position 8 :section/active? true}
+ {:section/name "percussion" :section/default? false :section/position 0 :section/active? true}
+ {:section/name "sax alto" :section/default? false :section/position 4 :section/active? true}
+ {:section/name "sax soprano/clarinet" :section/default? false :section/position 7 :section/active? true}
+ {:section/name "sax tenor" :section/default? false :section/position 3 :section/active? true}
+ {:section/name "trombone/bombardino" :section/default? false :section/position 2 :section/active? true}
+ {:section/name "trumpet" :section/default? false :section/position 6 :section/active? true}
+ {:section/name "horn" :section/default? false :section/position 5}
+ {:section/name "dance" :section/default? false :section/position 10}
+ {:section/name "melodica" :section/default? false :section/position 9}
+ {:section/name "cabaret" :section/default? false  :section/position 11}
+ {:section/name "violin" :section/default? false :section/position 12}
+ {:section/name "No Section" :section/default? true  :section/position 9999 :section/active? true}
  {:sheet-music/sheet-id #uuid "7e361059-9366-4187-ac02-d2fba660075b"
   :sheet-music/song "Asterix" :sheet-music/section "bass"
   :sheet-music/title "Asterix-tuba_v2.pdf"

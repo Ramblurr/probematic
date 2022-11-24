@@ -1,5 +1,6 @@
 (ns app.songs.views
   (:require
+   [app.file-browser.views :as file.browser.view]
    [app.gigs.controller :as gig.controller]
    [app.i18n :as i18n]
    [app.icons :as icon]
@@ -10,7 +11,8 @@
    [app.util :as util]
    [clojure.string :as clojure.string]
    [ctmx.core :as ctmx]
-   [ctmx.response :as response]))
+   [ctmx.response :as response]
+   [medley.core :as m]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -62,54 +64,101 @@
              [:button {:class "ml-3 btn btn-sm btn-indigo-high"
                        :type "submit"} "Save"]]]])))))
 
-(ctmx/defcomponent ^:endpoint song-sheet-music [{:keys [db] :as req} ^:boolean edit?]
-  (let [song-id (parse-uuid (-> req :path-params :song-id))
+(declare song-sheet-music)
+(declare song-sheet-music-edit)
+
+(ctmx/defcomponent ^:endpoint song-sheet-music-selected [{:keys [db] :as req} section-name selected-path]
+  (when (util/post? req)
+    (let [db-after (controller/add-sheet-music! req (parse-uuid (-> req :path-params :song-id))  section-name selected-path)]
+      (song-sheet-music-edit (assoc req :db db-after)))))
+
+(ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db] :as req} section-name selected-path]
+  (when (util/post? req)
+    (let [tr (i18n/tr-from-req req)]
+      (file.browser.view/file-picker-panel req
+                                           {:target-params
+                                            {:endpoint (util/comp-name #'song-sheet-music-selected) :values {:section-name section-name} :target (hash ".")}
+                                            :id id
+                                            :title (tr [:song/choose-sheet-music-title])
+                                            :subtitle (tr [:song/choose-sheet-music-subtitle] [section-name])
+                                            :root-dir "/Noten - Scores"
+                                            :current-dir "/Noten - Scores/aktuelle Stücke"}))))
+(ctmx/defcomponent ^:endpoint song-sheet-music-remove [req sheet-id]
+  (when (util/delete? req)
+    (let [db-after (controller/remove-sheet-music! req (parse-uuid sheet-id))]
+      (song-sheet-music-edit (assoc req :db db-after)))))
+
+(defn sheet-music-section-sheet-rw [target tr {:sheet-music/keys [title sheet-id]}]
+  (ui/rich-li {:icon icon/file-pdf-outline}
+              (ui/rich-li-text {} title)
+              (ui/rich-li-action (ui/button :size :2xsmall :priority :white-destructive :label (tr [:action/remove])
+                                            :hx-target target
+                                            :hx-delete (util/comp-name #'song-sheet-music-remove) :hx-vals {:sheet-id (str sheet-id)}))))
+
+(defn sheet-music-section-rw [target tr {:section/keys [name default?] :as section}]
+  (ui/dl-item (if default? (tr [:song/other-sheet-music]) name)
+              [:div {:class "flex flex-col"}
+               (ui/rich-ul {}
+                           (map (partial sheet-music-section-sheet-rw target tr) (:sheet-music/_section section)))
+               [:div {:class "flex justify-end mt-2"}
+                (ui/button :size :xsmall :priority :white :label (tr [:action/add]) :icon icon/plus :class ""
+                           :hx-vals {:section-name name}
+                           :hx-target target
+                           :hx-post (util/comp-name #'song-sheet-music-picker))]]))
+
+(ctmx/defcomponent ^:endpoint song-sheet-music-edit [{:keys [db] :as req}]
+  song-sheet-music-picker
+  song-sheet-music-remove
+  (let [tr              (i18n/tr-from-req req)
+        song-id         (parse-uuid (-> req :path-params :song-id))
+        sections        (q/sheet-music-for-song db song-id)
+        default-section (m/find-first :section/default? sections)
+        sections        (remove :section/default? sections)]
+    (ui/panel
+     {:title   (tr [:song/sheet-music-title]) :id id
+      :buttons (ui/button :label (tr [:action/done]) :priority :primary :centered? true
+                          :attr {:hx-get (util/comp-name #'song-sheet-music) :hx-vals {:edit? false} :hx-target (hash ".")})}
+     [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2"}
+
+      (sheet-music-section-rw (hash ".") tr default-section)
+      (map (partial sheet-music-section-rw (hash ".") tr) sections)])))
+
+(ctmx/defcomponent ^:endpoint song-sheet-music [{:keys [db] :as req}]
+  song-sheet-music-edit
+  (let [song-id                               (parse-uuid (-> req :path-params :song-id))
         {:song/keys [title active?] :as song} (controller/retrieve-song db song-id)
-        tr (i18n/tr-from-req req)
-        comp-name (util/comp-namer #'song-sheet-music)
-        post? (util/post? req)
-        sheet-music-by-section (q/sheet-music-for-song db song-id)
-        sections (q/all-sections db)]
-    (ui/panel {:title (tr [:song/sheet-music-title])
+        tr                                    (i18n/tr-from-req req)
+        sections-sheets                       (q/sheet-music-for-song db song-id)
+        default-section                       (m/find-first :section/default? sections-sheets)
+        sections-sheets                       (remove :section/default? sections-sheets)]
+    (ui/panel {:title   (tr [:song/sheet-music-title]) :id id
                :buttons (ui/button :label (tr [:action/edit]) :priority :white :centered? true
-                                   :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})}
+                                   :attr {:hx-get (util/comp-name #'song-sheet-music-edit) :hx-vals {:edit? true} :hx-target (hash ".")})}
               [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2"}
-               (map-indexed (fn [idx  section-name]
-                              (ui/dl-item section-name
-                                          (ui/rich-ul {}
-                                                      (map-indexed (fn [idx {:sheet-music/keys [title] :file/keys [webdav-path]}]
-                                                                     (ui/rich-li {:icon icon/file-pdf-outline}
-                                                                                 (ui/rich-li-text {} title)
-                                                                                 (ui/rich-li-action-a :href (url/link-file-download webdav-path) :label (tr [:action/download])))) (get sheet-music-by-section section-name)))
-                                          "sm:col-span-1")) (keys sheet-music-by-section))]
-              #_(ui/dl
-                 (ui/dl-item "Musescore"
-                             (ui/rich-ul {}
-                                         (ui/rich-li {:icon icon/file-pdf-outline}
-                                                     (ui/rich-li-text {} "Musescore Original")
-                                                     (ui/rich-li-action-a :href "#" :label (tr [:action/download])))
-                                         (ui/rich-li {:icon icon/file-pdf-outline}
-                                                     (ui/rich-li-text {} "Musescore Actual")
-                                                     (ui/rich-li-action-a :href "#" :label (tr [:action/download])))))
-
-                 (map (fn [{:section/keys [name default?]}]
-                        (ui/dl-item name
-                                    (ui/rich-ul {}
-                                                (map (fn [_]
-                                                       (ui/rich-li {:icon icon/file-pdf-outline}
-                                                                   (ui/rich-li-text {} "F Horn")
-                                                                   (ui/rich-li-action-a :href "#" :label (tr [:action/download]))))
-                                                     (range (inc (rand-int 3))))) "sm:col-span-1"))
-
-                      sections)))))
+               (ui/dl-item (tr [:song/other-sheet-music])
+                           (ui/rich-ul {}
+                                       (map (fn [{:sheet-music/keys [title] :file/keys [webdav-path]}]
+                                              (ui/rich-li {:icon icon/file-pdf-outline}
+                                                          (ui/rich-li-text {} title)
+                                                          (ui/rich-li-action-a :href (url/link-file-download webdav-path) :label (tr [:action/download]))))
+                                            (:sheet-music/_section default-section))))
+               (map (fn [section-sheet]
+                      (ui/dl-item (:section/name section-sheet)
+                                  (ui/rich-ul {}
+                                              (map (fn [{:sheet-music/keys [title] :file/keys [webdav-path]}]
+                                                     (ui/rich-li {:icon icon/file-pdf-outline}
+                                                                 (ui/rich-li-text {} title)
+                                                                 (ui/rich-li-action-a :href (url/link-file-download webdav-path) :label (tr [:action/download]))))
+                                                   (:sheet-music/_section section-sheet)))
+                                  "sm:col-span-1")) sections-sheets)])))
 
 (ctmx/defcomponent ^:endpoint song-detail-page [{:keys [db] :as req} ^:boolean edit?]
-  (let [song-id (parse-uuid (-> req :path-params :song-id))
+  (let [song-id                               (parse-uuid (-> req :path-params :song-id))
         {:song/keys [title active?] :as song} (controller/retrieve-song db song-id)
-        tr (i18n/tr-from-req req)
-        comp-name (util/comp-namer #'song-detail-page)
-        post? (util/post? req)
-        sections (q/all-sections db)]
+        tr                                    (i18n/tr-from-req req)
+        comp-name                             (util/comp-namer #'song-detail-page)
+        post?                                 (util/post? req)
+        sections                              (q/all-sections db)]
     [:form {:id id :hx-post (comp-name)}
      (if edit?
        (ui/page-header-full :title
@@ -120,7 +169,7 @@
                             :buttons
                             (list
                              (ui/button :label (tr [:action/save]) :priority :primary  :centered? true :attr {:form (path "editform")})
-                             (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
+                             (ui/button :label (tr [:action/done]) :priority :white :centered? true
                                         :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})))
 
        (ui/page-header :title title
@@ -148,8 +197,9 @@
                 (ui/dl-item (tr [:song/composition-credits]) "Mucca Pazza")
                 (ui/dl-item (tr [:song/arrangement-credits]) "l-ra")
                 (ui/dl-item (tr [:song/origin]) "Leo brought this to the band in 2018")
+                (ui/dl-item (tr [:song/solo-count]) "3")
                 (ui/dl-item (tr [:song/arrangement-notes]) "Form: 16 bar blues.\nStart der Phrase Takt 1 und takt 4 jeweils mit extremen Sforzato crescendo"
-                            "sm:col-span-3")))
+                            "sm:col-span-2")))
      (ui/panel {:title (tr [:song/play-stats-title])}
                (ui/dl
                 (ui/dl-item (tr [:song/play-count]) "0")
@@ -157,7 +207,7 @@
                 (ui/dl-item (tr [:song/probe-count]) "0")
                 (ui/dl-item (tr [:song/last-played-gig]) [:a {:class "link-blue" :href "#"} "Demo"])
                 (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href "#"} "2022-11-23"])))
-     (song-sheet-music req false)]))
+     (song-sheet-music req)]))
 
 (ctmx/defcomponent ^:endpoint song-new [req]
   (let [tr (i18n/tr-from-req req)]

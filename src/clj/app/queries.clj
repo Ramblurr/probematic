@@ -319,19 +319,40 @@
 
 (defn all-sections [db]
   (->>
-   (d/find-all db :section/name [:section/name :section/default?])
-   (mapv first)))
+   (d/find-all db :section/name [:section/name :section/default? :section/position])
+   (mapv first)
+   (sort-by :section/position)))
+
+(defn active-sections [db]
+  (->>
+   (d/find-all-by db :section/active? true [:section/name :section/default? :section/position])
+   (mapv first)
+   (sort-by :section/position)))
 
 (defn sheet-music-for-song
   [db song-id]
-  (->>
-   (d/find-all-by db :sheet-music/song [:song/song-id song-id] [:sheet-music/sheet-id
-                                                                :sheet-music/title
-                                                                {:sheet-music/section [:section/name]}
-                                                                :file/webdav-path])
-   (mapv first)
-   (map #(update % :sheet-music/section :section/name))
-   (group-by :sheet-music/section)))
+  (let [sections-with-sheets
+        (->>
+         (d/q '[:find  (pull ?section pattern)
+                :in $ ?song pattern
+                :where
+                [?sm :sheet-music/song ?song]
+                [?sm :sheet-music/section ?section]]
+              db
+              [:song/song-id song-id]
+              [:section/name :section/position :section/default? {:sheet-music/_section [:sheet-music/sheet-id :sheet-music/title :file/webdav-path]}])
+         (mapv first))
+        sections-with-no-sheets (->> (d/q '[:find (pull ?section pattern)
+                                            :in $ ?song pattern
+                                            :where
+                                            [?section :section/name _]
+                                            [?section :section/active? true]
+                                            (not-join [?section ?song]
+                                                      [_ :sheet-music/section ?section]
+                                                      [_ :sheet-music/song ?song])] db [:song/song-id song-id] [:section/name :section/default? :section/position])
+                                     (mapv first))]
+    (->> (concat sections-with-no-sheets sections-with-sheets)
+         (sort-by :section/position))))
 
 (comment
   (do

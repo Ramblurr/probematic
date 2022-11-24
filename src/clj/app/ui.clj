@@ -318,11 +318,14 @@
                               "border-transparent bg-indigo-100 px-4 py-2  text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                               :white
                               "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              :white-destructive
+                              "border-red-300 bg-white px-4 py-2 text-sm  text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary
                               "border-transparent bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
 
-(def button-sizes-classes {:xsmall "px-2.5 py-1.5 text-xs"
+(def button-sizes-classes {:2xsmall "px-1.5 py-0.5 text-xs"
+                           :xsmall "px-2.5 py-1.5 text-xs"
                            :small "px-3 py-2 text-sm leading-4"
                            :normal "px-4 py-2 text-sm"
                            :large "px-4 py-2 text-base"
@@ -334,7 +337,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-post hx-vals form]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals form]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -342,7 +345,7 @@
                         tag :button}}]
 
   [tag (merge
-        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-vals hx-vals :form form})
+        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :form form})
         {:class
          (cs
           "inline-flex items-center rounded-md border font-medium"
@@ -803,19 +806,26 @@
   [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
    items])
 
-(defn panel [{:keys [id title buttons]} & body]
+(defn panel [{:keys [id title subtitle buttons]} & body]
   [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3" :id id}
    [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
     [:section
      [:div {:class "bg-white shadow sm:rounded-lg"}
       (when (or title buttons)
         [:div {:class "px-4 py-5 px-6  flex items-center justify-between "}
-         (when title
-           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} title])
+         (when (or title subtitle)
+           [:div
+            [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} title]
+            (when subtitle
+              [:p {:class "text-sm font-medium text-gray-500 w-full"}
+               subtitle])])
          [:div {:class "space-x-2 flex"}
           buttons]])
       [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
        body]]]]])
+
+(defn rich-li-action [body]
+  [:div {:class "ml-4 flex-shrink-0"} body])
 
 (defn rich-li-action-a [& {:keys [href label attrs]}]
   [:div {:class "ml-4 flex-shrink-0"} [:a
@@ -831,6 +841,7 @@
     (when icon
       (icon {:class "h-5 w-5 flex-shrink-0 text-gray-400"}))
     items]])
+
 (defn rich-ul [_ & items]
   [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
    items])

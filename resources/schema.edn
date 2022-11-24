@@ -58,6 +58,17 @@
     :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :section/active?
+    :db/doc "If a section is active or not"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :section/position
+    :db/doc "The sort order of the section"
+    :db/valueType :db.type/long
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :section/default?
     :db/doc "If this section is the default section"
     :db/valueType :db.type/boolean
