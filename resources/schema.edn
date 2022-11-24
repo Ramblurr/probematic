@@ -63,22 +63,6 @@
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one}
 
-;;;; Sheet Music
-   {:db/ident :sheet-music/section
-    :db/doc "The section this sheet music is for"
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :sheet-music/title
-    :db/doc "The name of this sheet music"
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :sheet-music/download-url
-    :db/doc "The download url for the sheet music"
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one}
-
 ;;;; Gigs
    {:db/ident :gig/gig-id
     :db/doc "The gig id from gig-o-matic."
@@ -285,6 +269,39 @@
 
    {:db/ident :song/origin
     :db/doc "Where this song was obtained from"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/solo-count
+    :db/doc "The number of solos in this song"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+;;;; Sheet Music
+
+   {:db/ident :sheet-music/sheet-id
+    :db/doc "The id of the sheet music"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :sheet-music/song
+    :db/doc "The song this sheet music is for"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :sheet-music/section
+    :db/doc "The section this sheet music is for"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :sheet-music/title
+    :db/doc "The name of this sheet music"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :file/webdav-path
+    :db/doc "The canonical webdav path for the file"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 

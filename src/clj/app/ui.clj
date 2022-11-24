@@ -820,7 +820,7 @@
 (defn rich-li-action-a [& {:keys [href label attrs]}]
   [:div {:class "ml-4 flex-shrink-0"} [:a
                                        (merge
-                                        {:href href, :class "font-medium text-blue-600 hover:text-blue-500"}
+                                        {:href href :class "font-medium text-blue-600 hover:text-blue-500"}
                                         attrs) label]])
 (defn rich-li-text [_ body]
   [:span {:class "ml-2 w-0 flex-1 truncate"} body])

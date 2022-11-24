@@ -322,12 +322,25 @@
    (d/find-all db :section/name [:section/name :section/default?])
    (mapv first)))
 
+(defn sheet-music-for-song
+  [db song-id]
+  (->>
+   (d/find-all-by db :sheet-music/song [:song/song-id song-id] [:sheet-music/sheet-id
+                                                                :sheet-music/title
+                                                                {:sheet-music/section [:section/name]}
+                                                                :file/webdav-path])
+   (mapv first)
+   (map #(update % :sheet-music/section :section/name))
+   (group-by :sheet-music/section)))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  (sheet-music-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068207")
 
   (active-members-by-section db)
 

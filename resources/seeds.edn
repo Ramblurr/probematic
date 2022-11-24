@@ -1,4 +1,4 @@
-[{:song/title "Asterix" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207"}
+[{:song/title "Asterix" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207" :db/id "Asterix"}
  {:song/title "Bella Ciao" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068208"}
  {:song/title "Cumbia Sobre el Mar" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068209"}
  {:song/title "Der Zug um 7.40" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820a"}
@@ -18,8 +18,8 @@
  {:song/title "Tammurriata Nera" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068215"}
  {:song/title "Tschufittl Cocek" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068216"}
  {:song/title "You Move You Lose" :song/active? true :song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068217"}
- {:section/name "bass" :section/default? false}
- {:section/name "flute" :section/default? false}
+ {:section/name "bass" :section/default? false :db/id "bass"}
+ {:section/name "flute" :section/default? false :db/id "flute"}
  {:section/name "percussion" :section/default? false}
  {:section/name "sax alto" :section/default? false}
  {:section/name "sax soprano/clarinet" :section/default? false}
@@ -32,6 +32,14 @@
  {:section/name "violin" :section/default? false}
  {:section/name "horn" :section/default? false}
  {:section/name "No Section" :section/default? true}
+ {:sheet-music/sheet-id #uuid "7e361059-9366-4187-ac02-d2fba660075b"
+  :sheet-music/song "Asterix" :sheet-music/section "bass"
+  :sheet-music/title "Asterix-tuba_v2.pdf"
+  :file/webdav-path "Noten - Scores/aktuelle Stücke/Asterix/Asterix-tuba_v2.pdf"}
+ {:sheet-music/sheet-id #uuid "f31b42d4-d326-4b51-a021-3c738ce31af0"
+  :sheet-music/song "Asterix" :sheet-music/section "bass"
+  :sheet-music/title "Asterix-SusaV2.pdf"
+  :file/webdav-path "Noten - Scores/aktuelle Stücke/Asterix/Asterix-SusaV2.pdf"}
  {:db/id "blech" :instrument.category/name "Blech, Sax, Elektrisch" :instrument.category/code "1" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f07068219"}
  {:db/id "holz" :instrument.category/name "Holz" :instrument.category/code "2" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f0706821a"}
  {:db/id "schlag" :instrument.category/name "Schlag" :instrument.category/code "3" :instrument.category/category-id #uuid "01844740-3eed-856d-84c1-c26f0706821b"}

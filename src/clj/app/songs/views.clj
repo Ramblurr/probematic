@@ -68,30 +68,40 @@
         tr (i18n/tr-from-req req)
         comp-name (util/comp-namer #'song-sheet-music)
         post? (util/post? req)
+        sheet-music-by-section (q/sheet-music-for-song db song-id)
         sections (q/all-sections db)]
     (ui/panel {:title (tr [:song/sheet-music-title])
                :buttons (ui/button :label (tr [:action/edit]) :priority :white :centered? true
                                    :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})}
-              (ui/dl
-               (ui/dl-item "Musescore"
-                           (ui/rich-ul {}
-                                       (ui/rich-li {:icon icon/file-pdf-outline}
-                                                   (ui/rich-li-text {} "Musescore Original")
-                                                   (ui/rich-li-action-a :href "#" :label (tr [:action/download])))
-                                       (ui/rich-li {:icon icon/file-pdf-outline}
-                                                   (ui/rich-li-text {} "Musescore Actual")
-                                                   (ui/rich-li-action-a :href "#" :label (tr [:action/download])))))
+              [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2"}
+               (map-indexed (fn [idx  section-name]
+                              (ui/dl-item section-name
+                                          (ui/rich-ul {}
+                                                      (map-indexed (fn [idx {:sheet-music/keys [title] :file/keys [webdav-path]}]
+                                                                     (ui/rich-li {:icon icon/file-pdf-outline}
+                                                                                 (ui/rich-li-text {} title)
+                                                                                 (ui/rich-li-action-a :href (url/link-file-download webdav-path) :label (tr [:action/download])))) (get sheet-music-by-section section-name)))
+                                          "sm:col-span-1")) (keys sheet-music-by-section))]
+              #_(ui/dl
+                 (ui/dl-item "Musescore"
+                             (ui/rich-ul {}
+                                         (ui/rich-li {:icon icon/file-pdf-outline}
+                                                     (ui/rich-li-text {} "Musescore Original")
+                                                     (ui/rich-li-action-a :href "#" :label (tr [:action/download])))
+                                         (ui/rich-li {:icon icon/file-pdf-outline}
+                                                     (ui/rich-li-text {} "Musescore Actual")
+                                                     (ui/rich-li-action-a :href "#" :label (tr [:action/download])))))
 
-               (map (fn [{:section/keys [name default?]}]
-                      (ui/dl-item name
-                                  (ui/rich-ul {}
-                                              (map (fn [_]
-                                                     (ui/rich-li {:icon icon/file-pdf-outline}
-                                                                 (ui/rich-li-text {} "F Horn")
-                                                                 (ui/rich-li-action-a :href "#" :label (tr [:action/download]))))
-                                                   (range (inc (rand-int 3))))) "sm:col-span-1"))
+                 (map (fn [{:section/keys [name default?]}]
+                        (ui/dl-item name
+                                    (ui/rich-ul {}
+                                                (map (fn [_]
+                                                       (ui/rich-li {:icon icon/file-pdf-outline}
+                                                                   (ui/rich-li-text {} "F Horn")
+                                                                   (ui/rich-li-action-a :href "#" :label (tr [:action/download]))))
+                                                     (range (inc (rand-int 3))))) "sm:col-span-1"))
 
-                    sections)))))
+                      sections)))))
 
 (ctmx/defcomponent ^:endpoint song-detail-page [{:keys [db] :as req} ^:boolean edit?]
   (let [song-id (parse-uuid (-> req :path-params :song-id))
