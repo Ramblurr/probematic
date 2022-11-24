@@ -2,7 +2,8 @@
   (:require
    [app.auth :as auth]
    [app.gigs.routes :refer [events-routes]]
-   [app.insurance.routes :refer [insurance-routes insurance-interceptors]]
+   [app.file-browser.routes :refer [file-browser-routes]]
+   [app.insurance.routes :refer [insurance-routes]]
    [app.interceptors :as interceptors]
    [app.members.routes :refer [members-routes]]
    [app.dashboard.routes :refer [dashboard-routes]]
@@ -18,6 +19,7 @@
                             (interceptors/system-interceptor system)
                             (interceptors/datomic-interceptor system)
                             auth/require-authenticated-user
+                            (interceptors/webdav-interceptor system)
                             (interceptors/current-user-interceptor system))}
 
    (members-routes)
@@ -26,6 +28,7 @@
    (events-routes)
    (probeplan-routes)
    (insurance-routes)
+   (file-browser-routes)
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
    ])
 

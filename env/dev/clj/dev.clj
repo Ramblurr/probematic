@@ -3,7 +3,6 @@
    [app.routes.pedestal-reitit]
    [app.ig]
    [app.routes.pedestal-reitit]
-   [app.gigo.core :as gigo]
    [app.jobs.sync-gigs :as sync-gigs]
    [app.jobs.sync-members :as sync-members]
    [app.schemas :as schemas]
@@ -33,7 +32,8 @@
 
 (defn go-with-browser []
   (dev-extra/go)
-  (browser/open-browser "http://localhost:4180/"))
+  (browser/open-browser "http://localhost:4180/")
+  :done)
 
 (defn reset []
   (dev-extra/reset)

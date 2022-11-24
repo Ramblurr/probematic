@@ -77,6 +77,44 @@
       (< seconds 0) (plural-msg seconds :time/second.within :time/seconds.within)
       :else (tr [:now]))))
 
+(defn logn [num base]
+  (/ (Math/round (Math/log num))
+     (Math/round (Math/log base))))
+
+(defn filesize
+  "Format a number of bytes as a human readable filesize (eg. 10 kB). By
+   default, decimal suffixes (kB, MB) are used.  Passing :binary true will use
+   binary suffixes (KiB, MiB) instead.
+   Copyright © 2015 Thura Hlaing
+   Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
+   https://github.com/trhura/clojure-humanize
+   https://github.com/trhura/clojure-humanize/blob/master/LICENSE"
+  [bytes & {:keys [binary fmt]
+            :or {binary false
+                 fmt "%.1f"}}]
+
+  (if (zero? bytes)
+    ;; special case for zero
+    "0"
+
+    (let [decimal-sizes  [:B, :KB, :MB, :GB, :TB,
+                          :PB, :EB, :ZB, :YB]
+          binary-sizes [:B, :KiB, :MiB, :GiB, :TiB,
+                        :PiB, :EiB, :ZiB, :YiB]
+
+          units (if binary binary-sizes decimal-sizes)
+          base  (if binary 1024 1000)
+
+          base-pow  (int (Math/floor (logn bytes base)))
+          ;; if base power shouldn't be larger than biggest unit
+          base-pow  (if (< base-pow (count units))
+                      base-pow
+                      (dec (count units)))
+          suffix (name (get units base-pow))
+          value (float (/ bytes (Math/pow base base-pow)))]
+
+      (str (format fmt value) suffix))))
+
 (comment
   (let [then-t (t/<< (t/date-time) (t/new-duration 5 :days))
         now-t (t/date-time)]

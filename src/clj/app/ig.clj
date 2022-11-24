@@ -18,7 +18,8 @@
    [ol.system :as system]
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]
-   [sentry-clj.core :as sentry]))
+   [sentry-clj.core :as sentry]
+   [app.sardine :as sardine]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -102,3 +103,11 @@
   (when-not (config/demo-mode? env)
     (sentry/init! (-> env :sentry :dsn)
                   {:environment (-> env :profile)})))
+
+(defmethod ig/init-key ::webdav-sardine
+  [_ {:keys [env]}]
+  (sardine/build-config (:nextcloud env)))
+
+(defmethod ig/halt-key! ::webdav-sardine
+  [_ {:keys [client]}]
+  (sardine/shutdown client))

@@ -63,7 +63,8 @@
      (sentry/send-event event-data))))
 
 (defn log-error! [ex]
-  (log/error ex))
+  ;; (log/error ex)
+  )
 
 (defn unauthorized-error [req ex]
   (log-error! ex)

@@ -108,6 +108,12 @@
   {:name ::human-id-interceptor
    :enter (fn [ctx]
             (assoc-in ctx [:request :human-id] (human-id/human-id)))})
+(defn webdav-interceptor
+  "Add webdav service to request map"
+  [system]
+  {:name ::webdav-interceptor
+   :enter (fn [ctx]
+            (assoc-in ctx [:request :webdav] (:webdav system)))})
 
 (def tap-interceptor
   {:name :tap-interceptor

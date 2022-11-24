@@ -47,6 +47,7 @@
 (+ 1 1)
 
 (comment
+  (open-browser "http://localhost:4180")
 
   @browser
   (refresh)
