@@ -1,5 +1,6 @@
 (ns app.routes
   (:require
+   [reitit.coercion.malli :as rcm]
    [app.auth :as auth]
    [app.gigs.routes :refer [events-routes]]
    [app.file-browser.routes :refer [file-browser-routes]]
@@ -10,7 +11,8 @@
    [app.routes.pedestal-reitit]
    [app.songs.routes :refer [songs-routes]]
    [app.probeplan.routes :refer [probeplan-routes]]
-   [reitit.ring :as ring]))
+   [reitit.ring :as ring]
+   [app.sardine :as sardine]))
 
 (defn routes [system]
   ["" {:coercion     interceptors/default-coercion
@@ -29,6 +31,10 @@
    (probeplan-routes)
    (insurance-routes)
    (file-browser-routes)
+   ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
+                        :coercion rcm/coercion
+                        :app.route/name :app/nextcloud-fetch
+                        :handler (fn [req] (sardine/fetch-file-handler req false))}]
      ;["/index.html" (index-route frontend-index-adapter index-csp)]
    ])
 

@@ -72,6 +72,7 @@
 ;;; DO NOT run this in demo mode
 
   (do
+    (require '[app.gigo.core :as gigo])
     (def gigoc (:app.ig/gigo-client state/system))
     (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
     (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic2/gigo-members.json") j/keyword-keys-object-mapper)

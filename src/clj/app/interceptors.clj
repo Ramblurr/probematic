@@ -62,7 +62,7 @@
                             (assoc ctx :response {:status 400 :body "A bad one"})
 
                             [{:exception-type :clojure.lang.ExceptionInfo :cognitect.anomalies/category :cognitect.anomalies/incorrect}]
-                            (assoc ctx :response (errors/datomic-not-found-error (:request ctx) ex))
+                            (assoc ctx :response (errors/not-found-error (:request ctx) ex))
 
                             [{:exception-type :clojure.lang.ExceptionInfo :app/error-type :app.error.type/validation}]
                             (assoc ctx :response (errors/validation-error (:request ctx) ex))

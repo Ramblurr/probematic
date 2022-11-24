@@ -1,9 +1,11 @@
 (ns app.sardine
-  (:import [com.github.sardine Sardine SardineFactory DavResource]
-           [com.github.sardine.impl SardineImpl]
-           [java.net URLEncoder URLDecoder]
+  (:import [com.github.sardine DavResource]
+           [com.github.sardine.impl SardineImpl SardineException]
+           [java.net URLEncoder]
            [org.apache.http.client.utils URIBuilder])
-  (:require [app.file-utils :as fu] [clojure.string :as str]))
+  (:require
+   [app.file-utils :as fu] [clojure.string :as string]
+   [app.routes.errors :as errors]))
 
 (defn build-full-path [{:keys [webdav-base-path]} remote-path]
   (fu/path-join webdav-base-path (fu/strip-leading-slash remote-path)))
@@ -20,10 +22,10 @@
   (SardineImpl. token))
 
 (defn build-config [{:keys [host webdav-base-path token]}]
-  (assert (str/ends-with? webdav-base-path "/") "webdav base path must start and end with a slash")
-  (assert (str/starts-with? webdav-base-path "/") "webdav base path must start and end with a slash")
-  (assert (not (str/blank? host)) "Webdav host cannot be empty")
-  (assert (not (str/blank? token)) "Webdav bearer token cannot be empty")
+  (assert (string/ends-with? webdav-base-path "/") "webdav base path must start and end with a slash")
+  (assert (string/starts-with? webdav-base-path "/") "webdav base path must start and end with a slash")
+  (assert (not (string/blank? host)) "Webdav host cannot be empty")
+  (assert (not (string/blank? token)) "Webdav bearer token cannot be empty")
   {:token token :host host :webdav-base-path webdav-base-path
    :client (build-sardine token)})
 
@@ -61,11 +63,31 @@
           (sort-by (juxt :file? :name))))))
 
 (defn stream-file [{:keys [client] :as webdav-config} remote-path]
-  (let [path (build-uri webdav-config remote-path)]
-    (-> client (.get path))))
+  (let [uri (build-uri webdav-config (build-full-path webdav-config remote-path))]
+    (-> client (.get uri))))
+
+(defn content-disposition-filename [prefix name]
+  (format "%s; filename*=UTF-8''%s" prefix (URLEncoder/encode name "UTF-8")))
+
+(defn fetch-file-handler [req inline?]
+  (let [path (-> req :params :path)]
+    (try
+      (let [{:keys [content-type content-length name] :as file-info} (list-directory (:webdav req) path)]
+        {:status 200
+         :headers {"Content-Disposition" (content-disposition-filename (if inline?
+                                                                         "inline" "attachment")
+                                                                       name)
+                   "Content-Type" content-type
+                   "Content-Length" (str content-length)}
+         :body (stream-file (:webdav req) path)})
+      (catch SardineException e
+        (cond
+          (string/includes? (ex-message e) "404")
+          (errors/not-found-error req (ex-info "Nextcloud file not found" {:file-path path} e))
+          :else
+          (errors/unknown-error req (ex-info "Error fetching nextcloud file" {:file-path path} e)))))))
 
 (comment
-
   (do
     (require '[integrant.repl.state :as state])
     (def webdav-config (-> state/system :app.ig/webdav-sardine))) ;; rcf

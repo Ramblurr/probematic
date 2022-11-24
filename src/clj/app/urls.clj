@@ -1,4 +1,5 @@
-(ns app.urls)
+(ns app.urls
+  (:import [java.net URLEncoder URLDecoder]))
 
 (defn link-helper
   ([prefix id-key maybe-id]
@@ -7,6 +8,10 @@
    (let [maybe-id-id (if (map? maybe-id) (id-key maybe-id)
                          maybe-id)]
      (str prefix maybe-id-id suffix))))
+
+(defn url-encode
+  [string]
+  (some-> string str (URLEncoder/encode "UTF-8") (.replace "+" "%20")))
 
 (def link-member (partial link-helper "/member/" :member/gigo-key))
 
@@ -18,3 +23,6 @@
 
 (defn link-gigs-home [] "/events")
 (defn link-probeplan-home [] "/probeplan")
+
+(defn link-file-download [path]
+  (str "/nextcloud-fetch?path=" (url-encode path)))

@@ -80,7 +80,7 @@
     (ui/error-page-response-fragment ex req 400)
     (ui/error-page-response ex req 400)))
 
-(defn datomic-not-found-error [req ex]
+(defn not-found-error [req ex]
   (log-error! ex)
   (send-sentry! req ex)
   (if (:htmx? req)
