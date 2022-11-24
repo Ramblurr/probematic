@@ -153,12 +153,15 @@
                                   "sm:col-span-1")) sections-sheets)])))
 
 (ctmx/defcomponent ^:endpoint song-detail-page [{:keys [db] :as req} ^:boolean edit?]
-  (let [song-id                               (parse-uuid (-> req :path-params :song-id))
-        {:song/keys [title active?] :as song} (controller/retrieve-song db song-id)
-        tr                                    (i18n/tr-from-req req)
-        comp-name                             (util/comp-namer #'song-detail-page)
-        post?                                 (util/post? req)
-        sections                              (q/all-sections db)]
+  (let [song-id                          (parse-uuid (-> req :path-params :song-id))
+        post?                            (util/post? req)
+        song                             (if post? (controller/update-song! req (parse-uuid (-> req :path-params :song-id)))
+                                             (controller/retrieve-song db song-id))
+        {:song/keys [title active? composition-credits
+                     arrangement-credits arrangement-notes
+                     origin solo-count]} song
+        tr                               (i18n/tr-from-req req)
+        comp-name                        (util/comp-namer #'song-detail-page)]
     [:form {:id id :hx-post (comp-name)}
      (if edit?
        (ui/page-header-full :title
@@ -168,38 +171,45 @@
 
                             :buttons
                             (list
-                             (ui/button :label (tr [:action/save]) :priority :primary  :centered? true :attr {:form (path "editform")})
-                             (ui/button :label (tr [:action/done]) :priority :white :centered? true
-                                        :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})))
+                             (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
+                                        :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})
+                             (ui/button :label (tr [:action/save]) :priority :primary  :centered? true)))
 
        (ui/page-header :title title
                        :subtitle (ui/song-active-bubble song)
-                       ;; (list  "Last played " (ui/datetime last-played))
-                       :buttons (cond
-                                  edit?
-                                  (list
-                                   (ui/button :label (tr [:action/save]) :priority :primary  :centered? true :attr {:form (path "editform")})
-                                   (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
-                                              :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")}))
-                                  :else
-                                  (list
-                                   (ui/button :label (tr [:action/edit]) :priority :white :centered? true
-                                              :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
+                       :buttons (list
+                                 (ui/button :label (tr [:action/edit]) :priority :white :centered? true
+                                            :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
 
-                                   (ui/button :label (tr [:song/log-play])
-                                              :priority :primary
-                                              :centered? true
-                                              :class "items-center justify-center "
-                                              :attr {:href (str "/song/log-play/" song-id "/")})))))
+                                 (ui/button :label (tr [:song/log-play])
+                                            :priority :primary
+                                            :centered? true
+                                            :class "items-center justify-center "
+                                            :attr {:href (str "/song/log-play/" song-id "/")}))))
 
-     (ui/panel {:title (tr [:song/background-title])}
-               (ui/dl
-                (ui/dl-item (tr [:song/composition-credits]) "Mucca Pazza")
-                (ui/dl-item (tr [:song/arrangement-credits]) "l-ra")
-                (ui/dl-item (tr [:song/origin]) "Leo brought this to the band in 2018")
-                (ui/dl-item (tr [:song/solo-count]) "3")
-                (ui/dl-item (tr [:song/arrangement-notes]) "Form: 16 bar blues.\nStart der Phrase Takt 1 und takt 4 jeweils mit extremen Sforzato crescendo"
-                            "sm:col-span-2")))
+     (if edit?
+       (ui/panel {:title (tr [:song/background-title])}
+                 (ui/dl
+                  (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
+                  (ui/dl-item (tr [:song/composition-credits])
+                              (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false))
+                  (ui/dl-item (tr [:song/arrangement-credits])
+                              (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false))
+                  (ui/dl-item (tr [:song/origin])
+                              (ui/textarea :label "" :name (path "origin") :value origin :required? false)
+                              "sm:col-span-3")
+                  (ui/dl-item (tr [:song/arrangement-notes])
+                              (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false)
+                              "sm:col-span-3")))
+       (ui/panel {:title (tr [:song/background-title])}
+                 (ui/dl
+                  (ui/dl-item (tr [:song/solo-count]) solo-count)
+                  (ui/dl-item (tr [:song/composition-credits]) composition-credits)
+                  (ui/dl-item (tr [:song/arrangement-credits]) arrangement-credits)
+                  (ui/dl-item (tr [:song/origin]) origin
+                              "sm:col-span-3")
+                  (ui/dl-item (tr [:song/arrangement-notes]) arrangement-notes
+                              "sm:col-span-3"))))
      (ui/panel {:title (tr [:song/play-stats-title])}
                (ui/dl
                 (ui/dl-item (tr [:song/play-count]) "0")

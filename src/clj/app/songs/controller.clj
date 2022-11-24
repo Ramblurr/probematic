@@ -6,7 +6,9 @@
    [app.util :as util]
    [com.yetanalytics.squuid :as sq]
    [ctmx.rt]
-   [datomic.client.api :as datomic]))
+   [datomic.client.api :as datomic]
+   [ctmx.rt :as rt]
+   [clojure.string :as string]))
 
 (defn create-song! [req]
   (let [{:keys [title active?]} (-> req util/unwrap-params)
@@ -19,13 +21,22 @@
       {:song result}
       result)))
 
-;; (defn update-song! [req]
-;;   (let [title (-> req util/unwrap-params :song)
-;;         song-id (-> req :path-params :song/song-id)
-;;         result (transact-song (:datomic-conn req) {:title title :song-id song-id})]
-;;     (if  (db-ok? result)
-;;       {:song result}
-;;       result)))
+(defn retrieve-song [db song-id]
+  (d/find-by db :song/song-id song-id q/song-pattern-detail))
+
+(defn update-song! [{:keys [datomic-conn] :as req} song-id]
+  (let [{:keys [title active? composition-credits arrangement-credits arrangement-notes origin solo-count] :as p} (util/unwrap-params req)
+        tx (util/remove-nils {:song/song-id song-id
+                              :song/composition-credits composition-credits
+                              :song/arrangement-credits arrangement-credits
+                              :song/arrangement-notes arrangement-notes
+                              :song/title title
+                              :song/active? (rt/parse-boolean active?)
+                              :song/origin origin
+                              :song/solo-count (when-not (string/blank? solo-count) (Long/parseLong solo-count))})
+        result (datomic/transact datomic-conn {:tx-data [tx]})]
+
+    (retrieve-song (:db-after result) song-id)))
 
 (defn log-play! [req]
   (let [{:keys [gig-id song-id play-type feeling]} (util/unwrap-params req)
@@ -41,9 +52,6 @@
     (if (d/db-ok? result)
       {:play result}
       result)))
-
-(defn retrieve-song [db song-id]
-  (d/find-by db :song/song-id song-id q/song-pattern-detail))
 
 (defn add-sheet-music! [{:keys [datomic-conn]} song-id section-name selected-path]
   (let [tx {:sheet-music/sheet-id (sq/generate-squuid)

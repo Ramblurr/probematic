@@ -278,6 +278,11 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :song/arrangement-notes
+    :db/doc "Notes for the arrangement"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :song/origin
     :db/doc "Where this song was obtained from"
     :db/valueType :db.type/string

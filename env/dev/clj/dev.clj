@@ -114,5 +114,10 @@
 
   (system/system-config {:profile :dev})
 
-  ;;
+  (d/transact conn {:tx-data [{:db/ident :song/arrangement-notes
+                               :db/doc "Notes for the arrangement"
+                               :db/valueType :db.type/string
+                               :db/cardinality :db.cardinality/one}]})
+
+;;
   )
