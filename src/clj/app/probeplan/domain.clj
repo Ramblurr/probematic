@@ -2,11 +2,9 @@
   (:require
    [app.probeplan :as pp]
    [app.schemas :as s]
-   [clojure.data.generators :as gen]
    [clojure.set :as set]
    [medley.core :as m]
-   [tick.core :as t]
-   [app.queries :as q]))
+   [tick.core :as t]))
 
 (def probeplan-versions #{:probeplan.version/classic})
 
@@ -106,10 +104,11 @@
 (defn score-and-sort [s]
   (->> s
        (mapv #(assoc % :score (score-song %)))
+       (mapv #(select-keys % [:song/song-id :song/title :score]))
        (sort-by :score >)))
 
 (defn generate-probeplan
-  "A pure function that takes inputs and outputs a sequence of probe plans in priority order"
+  "A pure function that takes the historical play-stats and outputs a sequence of probe plans in priority order"
   [play-stats]
   (->> play-stats
        score-and-sort)

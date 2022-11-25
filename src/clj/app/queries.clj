@@ -163,13 +163,6 @@
 (defn gigs-past [db]
   (gigs-before db (date-midnight-today!)))
 
-(defn next-probes
-  "Return the future confirmed probes"
-  [db]
-  (->> (gigs-after db (date-midnight-today!))
-       (filter #(= :gig.type/probe (:gig/gig-type %)))
-       (filter #(= :gig.status/confirmed (:gig/status %)))))
-
 (defn gig+member [gig-id gigo-key]
   (pr-str [gig-id gigo-key]))
 
@@ -434,6 +427,22 @@
                                  {:song/first-performance [:gig/gig-id :gig/date]}
                                  {:song/first-rehearsal [:gig/gig-id :gig/date]}])
    (mapv first)))
+
+(defn next-probes
+  "Return the future confirmed probes"
+  [db]
+  (->> (gigs-after db (date-midnight-today!))
+       (filter #(= :gig.type/probe (:gig/gig-type %)))
+       (filter #(= :gig.status/confirmed (:gig/status %)))))
+
+(defn next-probes-with-plan
+  "Return the future confirmed probes"
+  [db comp]
+  (->>
+   (next-probes db)
+   (map (fn [gig]
+          (assoc gig :songs (->> (probeplan-songs-for-gig db (:gig/gig-id gig))
+                                 (sort-by :emphasis comp)))))))
 
 ;;;; END
 (comment

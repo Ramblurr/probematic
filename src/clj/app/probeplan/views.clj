@@ -53,8 +53,9 @@
 
      [:td {:class "px-2"} (inc idx)
       (when fixed?
-        [:input {:type :hidden :data-form true :name (path "gig-id") :value gig-id}]
-        [:input {:type :hidden :data-form true :name (path "date") :value date}])]
+        (list
+         [:input {:type :hidden :data-form true :name (path "gig-id") :value gig-id}]
+         [:input {:type :hidden :data-form true :name (path "date") :value date}]))]
      [:td {:class "font-mono px-2 py-1 bg-green-100"}
       (let [date-str (t/format (t/formatter "dd.MM") date)]
         (if fixed?
@@ -90,15 +91,9 @@
   (let [tr                (i18n/tr-from-req req)
         post?             (util/post? req)
         comp-name         (util/comp-namer #'probeplan-index-page)
-        probes (domain/future-probeplans (q/find-all-songs db)
-                                         (->>
-                                          (q/next-probes db)
-                                          (map (fn [gig]
-                                                 (assoc gig :songs (->> (q/probeplan-songs-for-gig db (:gig/gig-id gig))
-                                                                        (sort-by :emphasis domain/emphasis-comparator)))))))]
-
-    (when post?
-      (tap> {:params (util/unwrap-params req) :req (:params req)}))
+        probes (if post?
+                 (controller/update-probeplans! req)
+                 (controller/probeplan-plans db))]
     [:div {:id id}
      (ui/page-header :title (tr [:nav/probeplan]))
      (howitworks tr)
