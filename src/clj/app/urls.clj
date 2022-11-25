@@ -15,14 +15,15 @@
 
 (def link-member (partial link-helper "/member/" :member/gigo-key))
 
-(def link-gig (partial link-helper "/event/" :gig/gig-id))
+(def link-gig (partial link-helper "/gig/" :gig/gig-id))
 (def link-song (partial link-helper "/song/" :song/song-id))
 
 (def link-policy (partial link-helper "/insurance/" :insurance.policy/policy-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
 
-(defn link-gigs-home [] "/events")
+(defn link-gigs-home [] "/gigs/")
 (defn link-probeplan-home [] "/probeplan")
+(defn link-gig-create [] "/gigs/new/")
 
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))

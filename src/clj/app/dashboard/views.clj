@@ -68,7 +68,7 @@
                                   (ui/button :label (tr [:action/create])
                                              :priority :primary
                                              :centered? true
-                                             :attr {:href "/events/new"} :icon icon/plus))))
+                                             :attr {:href (url/link-gig-create)} :icon icon/plus))))
 
      (when (seq need-answer-gigs)
        [:div {:class "mt-6 sm:px-6 lg:px-8"}

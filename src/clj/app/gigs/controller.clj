@@ -333,6 +333,20 @@
         (transact-gig! datomic-conn [tx] gig-id))
       (s/throw-error "Cannot update the gig. The gig data is invalid." nil  UpdateGig decoded))))
 
+(defn create-gig! [{:keys [datomic-conn] :as req}]
+  (let [gig-id (str (sq/generate-squuid))
+        params (-> req util/unwrap-params util/remove-empty-strings util/remove-nils (assoc :gig-id gig-id))
+        decoded (util/remove-nils (s/decode UpdateGig params))
+        tx (-> decoded (common/ns-qualify-key :gig)
+               (update :gig/status str->status)
+               (update :gig/gig-type str->gig-type)
+               (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
+               (domain/gig->db))]
+    (tap> {:tx tx :decoded decoded :p params})
+    (if (s/valid? UpdateGig decoded)
+      (transact-gig! datomic-conn [tx] gig-id)
+      (s/throw-error "Cannot create the gig. The gig data is invalid." nil  UpdateGig decoded))))
+
 (defn reconcile-setlist [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
         add-tx (map #(-> [:db/add eid :setlist.v1/ordered-songs %]) (filter some? added))

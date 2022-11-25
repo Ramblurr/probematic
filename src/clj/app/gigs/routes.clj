@@ -9,20 +9,26 @@
 
 (defn gigs-list-route []
   (ctmx/make-routes
-   "/events"
+   ""
    (fn [req]
      (layout/app-shell req
                        (view/gigs-list-page req)))))
 
 (defn gig-detail-route []
   (ctmx/make-routes
-   "/event/{gig/gig-id}/"
+   "/{gig/gig-id}/"
    (fn [req]
      (layout/app-shell req (view/gigs-detail-page req false)))))
 
+(defn gig-create-route []
+  (ctmx/make-routes
+   "/new"
+   (fn [req]
+     (layout/app-shell req (view/gig-create-page req)))))
+
 (defn gig-log-play-route []
   (ctmx/make-routes
-   "/event/{gig/gig-id}/log-play"
+   "/{gig/gig-id}/log-play"
    (fn [req]
      (layout/app-shell req
                        (view/gig-log-plays req)))))
@@ -36,8 +42,32 @@
                                      gig-id (assoc-in [:request :gig] (controller/retrieve-gig db gig-id)))))})
 
 (defn events-routes []
-  ["" {:interceptors [gigs-interceptors]
-       :app.route/name :app/gigs}
-   (gigs-list-route)
-   (gig-detail-route)
-   (gig-log-play-route)])
+  ["" {:app.route/name :app/gigs}
+   ["/gigs"
+    (gig-create-route)
+    (gigs-list-route)]
+   ["/gig" {:interceptors [gigs-interceptors]}
+    (gig-detail-route)
+    (gig-log-play-route)]])
+
+(defn gigs-list-route []
+  (ctmx/make-routes
+   ""
+   (fn [req]
+     (layout/app-shell req
+                       (view/gigs-list-page req)))))
+
+(defn gig-detail-route []
+  (ctmx/make-routes
+   "/{gig/gig-id}/"
+   (fn [req]
+     (layout/app-shell req (view/gigs-detail-page req false)))))
+
+(defn events-routes []
+  ["" {:app.route/name :app/gigs}
+   ["/gigs"
+    (gig-create-route)
+    (gigs-list-route)]
+   ["/gig" {:interceptors [gigs-interceptors]}
+    (gig-detail-route)
+    (gig-log-play-route)]])

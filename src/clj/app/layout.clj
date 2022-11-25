@@ -5,11 +5,12 @@
    [app.icons :as icon]
    [app.auth :as auth]
    [clojure.string :as str]
-   [app.i18n :as i18n]))
+   [app.i18n :as i18n]
+   [app.urls :as url]))
 
 (defn navigation [tr]
   [{:label (tr [:nav/home]) :icon icon/home :href "/" :route-name :app/dashboard}
-   {:label (tr [:nav/gigs]) :icon icon/trumpet :href "/events" :route-name :app/gigs}
+   {:label (tr [:nav/gigs]) :icon icon/trumpet :href (url/link-gigs-home) :route-name :app/gigs}
    {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
    {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
    {:label (tr [:nav/members]) :icon icon/users-outline :href "/members" :route-name :app/members}
