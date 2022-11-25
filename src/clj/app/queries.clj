@@ -25,7 +25,7 @@
                             {:instrument/_owner [:instrument/name :instrument/instrument-id
                                                  {:instrument/category [:instrument.category/name]}]}])
 
-(def song-pattern [:song/title :song/song-id :song/active?])
+(def song-pattern [:song/title :song/song-id :song/active? :song/solo-count])
 (def song-pattern-detail [:song/title :song/song-id
                           :song/total-plays :song/total-performances :song/total-rehearsals
                           {:song/last-rehearsal [:gig/gig-id :gig/title :gig/date]}

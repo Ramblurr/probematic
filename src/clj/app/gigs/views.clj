@@ -450,10 +450,12 @@
 
 (defn gigs-detail-page-setlist-list-ro [selected-songs]
   [:ul {:class "list-disc" :hx-boost true}
-   (map (fn [{:song/keys [title] :as song}]
+   (map (fn [{:song/keys [title solo-count] :as song}]
           [:li {:class "ml-4"}
            [:a {:href (url/link-song song) :class "link-blue"}
-            title]]) selected-songs)])
+            title]
+           (when (and solo-count (> solo-count 0))
+             (list " (" solo-count " solos)"))]) selected-songs)])
 
 ;;;; Setlist editing Flow:
 ;; setlist --[Edit]-----> choose songs --[Save]--> order --[Done]--> setlist (repeat)
