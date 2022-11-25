@@ -746,7 +746,7 @@
                             (ui/datetime date)
                             (when end-date
                               [:span " " (ui/datetime end-date)]))
-                (ui/dl-item (tr [:gig/location]) location)
+                (ui/dl-item (tr [:gig/location]) location "break-words")
                 (ui/dl-item (tr [:gig/contact]) (ui/member-nick contact))
                 (ui/dl-item (tr [:gig/call-time]) (ui/time call-time))
                 (ui/dl-item (tr [:gig/set-time]) (ui/time set-time))
