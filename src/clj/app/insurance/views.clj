@@ -346,12 +346,6 @@
      [:td {:class "px-3 py-4"} model]
      [:td {:class "px-3 py-4"} build-year]
      [:td {:class "px-3 py-4"} serial-number]
-     [:td {:class "px-3 py-4"}
-      (if (:instrument.coverage/private? coverage)
-        "private"
-        "band")]
-     [:td {:class "px-3 py-4 text-right"}
-      (ui/money (:instrument.coverage/value coverage) :EUR)]
       ;;
      )))
 
@@ -379,7 +373,13 @@
       ""
       (into [] (concat
                 [:tr {:id id}
-                 (shared-static-columns coverage)]
+                 (shared-static-columns coverage)
+                 [:td {:class "px-3 py-4"}
+                  (if (:instrument.coverage/private? coverage)
+                    "private"
+                    "band")]
+                 [:td {:class "px-3 py-4 text-right"}
+                  (ui/money (:instrument.coverage/value coverage) :EUR)]]
                 (map-indexed  (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
                                 [:td {:class "px-3 py-4" :hx-include (str "#coverage" idx "type" type-idx  " input") :id (str "coverage" idx "type" type-idx)}
                                  [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
@@ -406,7 +406,14 @@
         coverage (controller/update-total-coverage-price policy coverage)]
     (into [] (concat
               [:tr {:id id}
-               (shared-static-columns coverage)]
+               (shared-static-columns coverage)
+
+               [:td {:class "px-3 py-4"}
+                (if (:instrument.coverage/private? coverage)
+                  "private"
+                  "band")]
+               [:td {:class "px-3 py-4 text-right"}
+                (ui/money (:instrument.coverage/value coverage) :EUR)]]
               (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
                       [:td {:class "px-3 py-4 text-right"}
                        (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
