@@ -540,7 +540,7 @@
      title
      [:div  {:class "border-l-4  border-gray-200 ml-2 pl-2 mt-1 flex items-center space-x-3"}
       [:label  {:for id :class (ui/cs "icon-fist-punch cursor-pointer" (when checked? "intensiv--checked"))}
-       [:input {:type "checkbox" :class "sr-only" :name (path "emphasis") :id id :value (or emphasis probeplan.domain/probeplan-classic-default-emphasis)
+       [:input {:type "checkbox" :class "sr-only" :name (path "emphasis") :id id
                 :_ "on change if I match <:checked/>
                                                 add .intensiv--checked to the closest parent <label/>
                                                 else

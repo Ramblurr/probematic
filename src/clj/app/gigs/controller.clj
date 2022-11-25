@@ -14,7 +14,8 @@
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [ctmx.rt :as rt]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -319,8 +320,9 @@
 (defn probeplan-song-tx [{:keys [song-id emphasis position] :as s}]
   [[:song/song-id (util/ensure-uuid song-id)]
    (Integer/parseInt position)
-   (or
-    (probeplan.domain/str->play-emphasis emphasis) probeplan.domain/probeplan-classic-default-emphasis)])
+   (if (rt/parse-boolean emphasis)
+     :probeplan.emphasis/intensive
+     probeplan.domain/probeplan-classic-default-emphasis)])
 
 (defn update-probeplan!
   "Updates the probeplan for the current gig. song-ids are ordered. Returns the songs in the setlist."
