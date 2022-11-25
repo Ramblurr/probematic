@@ -35,6 +35,7 @@
                            :where
                            [?gig :gig/date ?date]
                            [(>= ?date ?reference-time)]
+                           (not [?gig :gig/status :gig.status/cancelled])
                            [?a :attendance/gig ?gig]
                            [?a :attendance/member ?member]
                            [?a :attendance/plan ?plan]
@@ -53,6 +54,7 @@
                 [?gig :gig/date ?date]
                 [(>= ?date ?reference-time)]
                 [?gig :gig/gig-id ?gig-id]
+                (not [?gig :gig/status :gig.status/cancelled])
                 (not-join [?gig ?member]
                           [?a :attendance/gig ?gig]
                           [?a :attendance/member ?member])]
@@ -67,6 +69,7 @@
                                                  :in $ ?member ?reference-time pattern
                                                  :where
                                                  [?gig :gig/date ?date]
+                                                 (not [?gig :gig/status :gig.status/cancelled])
                                                  [(>= ?date ?reference-time)]
                                                  [?a :attendance/gig ?gig]
                                                  [?a :attendance/member ?member]
