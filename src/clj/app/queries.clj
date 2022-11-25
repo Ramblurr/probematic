@@ -30,7 +30,7 @@
 (def song-pattern-detail [:song/title :song/song-id
                           :song/active? :song/composition-credits :song/arrangement-credits :song/arrangement-notes :song/origin :song/solo-count])
 
-(def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location])
+(def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location :gig/gig-type])
 (def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location
                          :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
                          :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans

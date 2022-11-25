@@ -72,6 +72,13 @@
 (defn gigs-past [db]
   (gigs-before db (date-midnight-today!)))
 
+(defn next-probes
+  "Return the future confirmed probes"
+  [db]
+  (->> (gigs-after db (date-midnight-today!))
+       (filter #(= :gig.type/probe (:gig/gig-type %)))
+       (filter #(= :gig.status/confirmed (:gig/status %)))))
+
 (defn attach-attendance [db member {:gig/keys [gig-id] :as gig}]
   (assoc gig :attendance (q/attendance-for-gig db gig-id (:member/gigo-key member))))
 

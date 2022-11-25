@@ -304,10 +304,12 @@
            :required required?
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
 
-(defn date [& {:keys [value name required?]}]
+(defn date [& {:keys [value name required? min max]}]
   [:input {:type "date" :name name
            :value (when value  (t/date value))
            :required required?
+           :min min
+           :max max
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
 
 (defn input-time [& {:keys [value name required?]}]
