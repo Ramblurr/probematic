@@ -1,12 +1,12 @@
 (ns app.jobs.probe-housekeeping
   (:require
+   [app.gigs.domain :as domain]
    [app.probeplan :as probeplan]
-   [app.gigs.controller :as gig.controller]
+   [app.queries :as q]
+   [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
-   [tick.core :as t]
-   [com.yetanalytics.squuid :as sq]
-   [app.gigs.domain :as domain]))
+   [tick.core :as t]))
 
 (def minimum-gigs 4)
 (def maximum-create 4)
@@ -41,15 +41,16 @@
         txs (take maximum-create (map newprobe-tx probe-dates))]
     (datomic/transact conn {:tx-data txs})))
 
-(defn- probe-housekeeping [{:keys [conn]} _]
-  (let [probes (gig.controller/next-probes (datomic/db conn))
-        num-probes (count probes)]
-    (when (< num-probes minimum-gigs)
-      (create-probes! conn probes))))
+(defn- probe-housekeeping-job [{:keys [datomic] :as system} _]
+  (let [conn (:conn datomic)]
+    (let [probes (q/next-probes (datomic/db conn))
+          num-probes (count probes)]
+      (when (< num-probes minimum-gigs)
+        (create-probes! conn probes)))))
 
 (defn make-probe-housekeeping-job [system]
   (fn [{:job/keys [frequency initial-delay]}]
-    (jobs/make-repeating-job (partial  #'probe-housekeeping system) frequency initial-delay)))
+    (jobs/make-repeating-job (partial probe-housekeeping-job system) frequency initial-delay)))
 
 (comment
   (do
@@ -57,7 +58,7 @@
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db  (datomic/db conn))) ;; rcf
 
-  (gig.controller/next-probes db)
-  (probe-housekeeping {:conn conn} nil)
+  (q/next-probes db)
+  (probe-housekeeping-job {:conn conn} nil)
   ;;
   )

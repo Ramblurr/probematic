@@ -1,9 +1,8 @@
 (ns app.queries
   (:require
    [app.datomic :as d]
-   [app.debug :as debug]
+   [app.gigs.domain :as gig.domain]
    [app.util :as util]
-   [clojure.set :as set]
    [datomic.client.api :as datomic]
    [medley.core :as m]
    [tick.core :as t]))
@@ -112,6 +111,64 @@
 (def setlist-v1-pattern [{:setlist/gig [:gig/gig-id]}
                          :setlist/version
                          :setlist.v1/songs])
+
+(defn results->gigs [r]
+  (->> r
+       (mapv first)
+       (mapv gig.domain/db->gig)
+       (sort-by :gig/date)))
+
+(defn find-all-gigs [db]
+  (results->gigs (d/find-all db :gig/gig-id gig-pattern)))
+
+(defn retrieve-gig [db gig-id]
+  (gig.domain/db->gig
+   (d/find-by db :gig/gig-id gig-id gig-detail-pattern)))
+
+(defn gigs-before [db instant]
+  (results->gigs  (d/q '[:find (pull ?e pattern)
+                         :in $ ?time pattern
+                         :where
+                         [?e :gig/gig-id _]
+                         [?e :gig/date ?date]
+                         [(< ?date ?time)]] db instant gig-pattern)))
+
+(defn gigs-after [db instant]
+  (results->gigs (d/q '[:find (pull ?e pattern)
+                        :in $ ?reference-time pattern
+                        :where
+                        [?e :gig/gig-id _]
+                        [?e :gig/date ?date]
+                        [(>= ?date ?reference-time)]] db instant gig-pattern)))
+
+(defn gigs-between [db instant-start instant-end]
+  (results->gigs (d/q '[:find (pull ?e pattern)
+                        :in $ ?ref-start ?ref-end pattern
+                        :where
+                        [?e :gig/gig-id _]
+                        [?e :gig/date ?date]
+                        [(>= ?date ?ref-start)]
+                        [(<= ?date ?ref-end)]] db
+                      instant-start  instant-end gig-pattern)))
+
+(defn date-midnight-today! []
+  (-> (t/date)
+      (t/at (t/midnight))
+      (t/in "UTC")
+      (t/inst)))
+
+(defn gigs-future [db]
+  (gigs-after db (date-midnight-today!)))
+
+(defn gigs-past [db]
+  (gigs-before db (date-midnight-today!)))
+
+(defn next-probes
+  "Return the future confirmed probes"
+  [db]
+  (->> (gigs-after db (date-midnight-today!))
+       (filter #(= :gig.type/probe (:gig/gig-type %)))
+       (filter #(= :gig.status/confirmed (:gig/status %)))))
 
 (defn gig+member [gig-id gigo-key]
   (pr-str [gig-id gigo-key]))

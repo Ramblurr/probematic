@@ -132,7 +132,7 @@
   (let [gig-id (-> req :path-params :gig/gig-id)
         post? (util/post? req)
         tr (i18n/tr-from-req req)
-        gig (controller/retrieve-gig db gig-id)
+        gig (q/retrieve-gig db gig-id)
         plays (cond post?
                     (:plays (controller/log-play! req gig-id))
                     :else
@@ -823,7 +823,7 @@
        (gig-form nil false comp-name path tr (q/members-for-select-active db))])))
 
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
-  (let [future-gigs (controller/gigs-future db)
+  (let [future-gigs (q/gigs-future db)
         offset 0
         limit 10
         past-gigs (controller/gigs-past-page db offset limit)

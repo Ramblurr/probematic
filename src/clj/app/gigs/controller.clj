@@ -21,64 +21,6 @@
 (def str->status (zipmap (map name domain/statuses) domain/statuses))
 (def str->gig-type (zipmap (map name domain/gig-types) domain/gig-types))
 
-(defn results->gigs [r]
-  (->> r
-       (mapv first)
-       (mapv domain/db->gig)
-       (sort-by :gig/date)))
-
-(defn find-all-gigs [db]
-  (results->gigs (d/find-all db :gig/gig-id q/gig-pattern)))
-
-(defn retrieve-gig [db gig-id]
-  (domain/db->gig
-   (d/find-by db :gig/gig-id gig-id q/gig-detail-pattern)))
-
-(defn gigs-before [db instant]
-  (results->gigs  (d/q '[:find (pull ?e pattern)
-                         :in $ ?time pattern
-                         :where
-                         [?e :gig/gig-id _]
-                         [?e :gig/date ?date]
-                         [(< ?date ?time)]] db instant q/gig-pattern)))
-
-(defn gigs-after [db instant]
-  (results->gigs (d/q '[:find (pull ?e pattern)
-                        :in $ ?reference-time pattern
-                        :where
-                        [?e :gig/gig-id _]
-                        [?e :gig/date ?date]
-                        [(>= ?date ?reference-time)]] db instant q/gig-pattern)))
-
-(defn gigs-between [db instant-start instant-end]
-  (results->gigs (d/q '[:find (pull ?e pattern)
-                        :in $ ?ref-start ?ref-end pattern
-                        :where
-                        [?e :gig/gig-id _]
-                        [?e :gig/date ?date]
-                        [(>= ?date ?ref-start)]
-                        [(<= ?date ?ref-end)]] db
-                      instant-start  instant-end q/gig-pattern)))
-
-(defn date-midnight-today! []
-  (-> (t/date)
-      (t/at (t/midnight))
-      (t/in "UTC")
-      (t/inst)))
-
-(defn gigs-future [db]
-  (gigs-after db (date-midnight-today!)))
-
-(defn gigs-past [db]
-  (gigs-before db (date-midnight-today!)))
-
-(defn next-probes
-  "Return the future confirmed probes"
-  [db]
-  (->> (gigs-after db (date-midnight-today!))
-       (filter #(= :gig.type/probe (:gig/gig-type %)))
-       (filter #(= :gig.status/confirmed (:gig/status %)))))
-
 (defn attach-attendance [db member {:gig/keys [gig-id] :as gig}]
   (assoc gig :attendance (q/attendance-for-gig db gig-id (:member/gigo-key member))))
 
@@ -86,22 +28,17 @@
   "Return the gigs that the member as supplied an attendance plan for"
   [db member]
   (->>
-   (results->gigs (d/q '[:find (pull ?gig pattern)
-                         :in $ ?member ?reference-time pattern
-                         :where
-                         [?gig :gig/date ?date]
-                         [(>= ?date ?reference-time)]
-                         [?a :attendance/gig ?gig]
-                         [?a :attendance/member ?member]
-                         [?a :attendance/plan ?plan]
-                         [(!= ?plan :plan/no-response)]]
-                       db (d/ref member) (date-midnight-today!) q/gig-pattern))
+   (q/results->gigs (d/q '[:find (pull ?gig pattern)
+                           :in $ ?member ?reference-time pattern
+                           :where
+                           [?gig :gig/date ?date]
+                           [(>= ?date ?reference-time)]
+                           [?a :attendance/gig ?gig]
+                           [?a :attendance/member ?member]
+                           [?a :attendance/plan ?plan]
+                           [(!= ?plan :plan/no-response)]]
+                         db (d/ref member) (q/date-midnight-today!) q/gig-pattern))
    (map (partial attach-attendance db member))))
-
-(def member {:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
-
-(clojure.core/comment
-  (d/find-by db :gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCAw" q/gig-pattern))
 
 (defn gigs-needing-plan
   "Return the gigs that the member needs to supply an attendance plan for"
@@ -118,8 +55,8 @@
                           [?a :attendance/gig ?gig]
                           [?a :attendance/member ?member])]
 
-              db (d/ref member) (date-midnight-today!) q/gig-detail-pattern)
-         results->gigs
+              db (d/ref member) (q/date-midnight-today!) q/gig-detail-pattern)
+         q/results->gigs
          (map (fn [gig]
                 (assoc gig :attendance {:attendance/section (:member/section member)
                                         :attendance/member  member
@@ -136,8 +73,8 @@
                                                   [?a :attendance/plan :plan/no-response]
                                                   [?a :attendance/plan :plan/unknown])]
 
-                                               db (d/ref member) (date-midnight-today!) q/gig-detail-pattern)
-                                          results->gigs
+                                               db (d/ref member) (q/date-midnight-today!) q/gig-detail-pattern)
+                                          q/results->gigs
                                           (map (partial attach-attendance db member)))]
 
     (sort-by :gig/date
@@ -162,7 +99,7 @@
           :where
           [?e :gig/gig-id _]
           [?e :gig/date ?date]
-          [(< ?date ?time)]] db (date-midnight-today!) [:gig/gig-id :gig/date :db/id])
+          [(< ?date ?time)]] db (q/date-midnight-today!) [:gig/gig-id :gig/date :db/id])
    (map first)
    (sort-by :gig/date)
    (page offset limit)
@@ -172,9 +109,9 @@
    (mapv domain/db->gig)))
 
 (defn gigs-past-two-weeks [db]
-  (let [now (date-midnight-today!)
+  (let [now (q/date-midnight-today!)
         then (t/<< now (t/new-duration 14 :days))]
-    (gigs-between db then now)))
+    (q/gigs-between db then now)))
 
 (defn query-result->play
   [[play]]
@@ -288,7 +225,7 @@
 
 (defn transact-gig! [datomic-conn gig-txs gig-id]
   (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
-    {:gig (retrieve-gig (:db-after result) gig-id)}))
+    {:gig (q/retrieve-gig (:db-after result) gig-id)}))
 
 (defn post-comment! [{:keys [datomic-conn] :as req}]
   (let [{:keys [body]} (common/unwrap-params req)

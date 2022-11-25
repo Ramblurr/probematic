@@ -1,7 +1,6 @@
 (ns app.songs.views
   (:require
    [app.file-browser.views :as file.browser.view]
-   [app.gigs.controller :as gig.controller]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.queries :as q]
@@ -21,7 +20,7 @@
         (response/hx-redirect "/songs/")
         (let [conn (-> req :system :conn)
               songs (q/find-all-songs db)
-              gigs (gig.controller/find-all-gigs db)]
+              gigs (q/find-all-gigs db)]
 
           [:form {:id id :hx-post (path ".")
                   :class "space-y-4"}

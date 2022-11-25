@@ -1,11 +1,10 @@
 (ns app.gigs.routes
   (:require
-   [app.layout :as layout]
    [app.gigs.views :as view]
-   [datomic.client.api :as d]
+   [app.layout :as layout]
+   [app.queries :as q]
    [ctmx.core :as ctmx]
-   [app.gigs.controller :as controller]
-   [clojure.tools.logging :as log]))
+   [datomic.client.api :as d]))
 
 (defn gigs-list-route []
   (ctmx/make-routes
@@ -39,7 +38,7 @@
                                        db (d/db conn)
                                        gig-id (-> ctx :request :path-params :gig/gig-id)]
                                    (cond-> ctx
-                                     gig-id (assoc-in [:request :gig] (controller/retrieve-gig db gig-id)))))})
+                                     gig-id (assoc-in [:request :gig] (q/retrieve-gig db gig-id)))))})
 
 (defn events-routes []
   ["" {:app.route/name :app/gigs}
