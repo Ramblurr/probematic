@@ -641,13 +641,19 @@
                           :id (path "status")
                           :value (when status (name status))
                           :size :small
+                          :required? true
                           :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/statuses))
                          (ui/select
                           :id (path "gig-type")
                           :label (tr [:gig/gig-type])
                           :value (when gig-type (name gig-type))
                           :size :small
-                          :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
+                          :required? true
+                          :options
+                          (if (nil? gig)
+                            (concat [{:label "-" :value ""}]
+                                    (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
+                            (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types)))
                          (ui/checkbox :label (tr [:gig/email-about-change?]) :id (path "notify?")))
 
                         :buttons (when-not archived?

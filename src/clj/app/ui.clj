@@ -171,7 +171,7 @@
 (def select-label-size {:normal "text-base  sm:text-sm "
                         :small "text-xs"
                         :xsmall "text-xs"})
-(defn select [& {:keys [id label options value extra-attrs size]
+(defn select [& {:keys [id label options value extra-attrs size required?]
                  :or {extra-attrs {}
                       size :normal}}]
   (let [selected-value value]
@@ -179,7 +179,9 @@
      [:label {:for id :class (cs (get select-label-size size) "block font-medium text-gray-700")} label]
      [:select (merge {:name id :class
                       (cs  (get select-size size)
-                           "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500")}
+                           "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500")
+                      :required required?}
+
                      extra-attrs)
       (for [{:keys [value label selected?]} options]
         [:option {:selected (if (not (nil? selected?)) selected? (= value selected-value)) :value value} label])]]))

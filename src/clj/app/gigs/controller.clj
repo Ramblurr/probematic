@@ -342,7 +342,6 @@
                (update :gig/gig-type str->gig-type)
                (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
                (domain/gig->db))]
-    (tap> {:tx tx :decoded decoded :p params})
     (if (s/valid? UpdateGig decoded)
       (transact-gig! datomic-conn [tx] gig-id)
       (s/throw-error "Cannot create the gig. The gig data is invalid." nil  UpdateGig decoded))))
