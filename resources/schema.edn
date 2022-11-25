@@ -253,14 +253,102 @@
     :db/valueType :db.type/uuid
     :db/cardinality :db.cardinality/one}
 
-   {:db/ident :song/play-count
+   {:db/ident :song/total-plays
     :db/doc "The total number of times the song has been played"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/total-performances
+    :db/doc "The total number of times the song has been played at a gig"
+    :db/noHistory true
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
 
-   {:db/ident :song/last-played
+   {:db/ident :song/total-rehearsals
+    :db/doc "The total number of times the song has been played at a probe"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/total-rating-good
+    :db/doc "The total number of times the song has been rated good"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/total-rating-bad
+    :db/doc "The total number of times the song has been rated bad"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/total-rating-ok
+    :db/doc "The total number of times the song has been rated ok"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/six-month-total-rating-good
+    :db/doc "The total number of times the song has been rated good"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/six-month-total-rating-bad
+    :db/doc "The total number of times the song has been rated bad"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/six-month-total-rating-ok
+    :db/doc "The total number of times the song has been rated ok"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/days-since-performed
+    :db/doc "The number of days since the song was last performed"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/days-since-rehearsed
+    :db/doc "The number of days since the song was last rehearsed"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/days-since-intensive
+    :db/doc "The number of days since the song was last rehearsed intensively"
+    :db/noHistory true
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/last-played-on
     :db/doc "The time the song was last played"
+    :db/noHistory true
     :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/last-performance
+    :db/doc "The gig at which this song was last performed"
+    :db/noHistory true
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/last-rehearsal
+    :db/doc "The gig at which this song was last rehearsed"
+    :db/noHistory true
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/last-intensive
+    :db/doc "The gig at which this song was last intensively rehearsed"
+    :db/noHistory true
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :song/first-performance
+    :db/doc "The gig at which this song was first performed"
+    :db/noHistory true
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :song/first-rehearsal
+    :db/noHistory true
+    :db/doc "The gig at which this song was first rehearsed"
+    :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :song/active?

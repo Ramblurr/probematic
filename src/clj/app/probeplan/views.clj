@@ -1,6 +1,7 @@
 (ns app.probeplan.views
   (:require
 
+   [app.probeplan.domain :as domain]
    [app.probeplan :as pp]
    [app.util :as util]
    [app.urls :as url]
@@ -14,7 +15,8 @@
    [ctmx.rt :as rt]
    [medley.core :as m]
    [app.queries :as q]
-   [app.i18n :as i18n]))
+   [app.i18n :as i18n]
+   [clojure.set :as set]))
 
 (defn probe-row [songs])
 
@@ -28,17 +30,21 @@
     title]])
 
 (ctmx/defcomponent probeplan-probe-song-col-rw [{:keys [db] :as req} idx {:song/keys [title song-id] :keys [fixed?]}]
-  (let [all-songs (:all-songs req)]
+  (let [all-songs (:all-songs req)
+        intensive? (or (= idx 0) (= idx 1))]
     [:td {:class (ui/cs
                   "px-2 py-1"
                   ;; "max-w-[12rem] truncate"
-                  (if (or (= idx 0) (= idx 1)) "bg-orange-100" "bg-blue-100"))}
+                  (if intensive? "bg-orange-100" "bg-blue-100"))}
      (if fixed?
-       (ui/song-select :id (path "song-id") :label "" :size :small :value song-id :songs all-songs :extra-attrs {:data-form true})
+       (list
+        [:input {:type :hidden :name (path "emphasis") :value (if intensive? "intensive" "none")}]
+        [:input {:type :hidden :name (path "position") :value idx}]
+        (ui/song-select :id (path "song-id") :label "" :size :small :value song-id :songs all-songs :extra-attrs {:data-form true}))
        title)]))
 
-(ctmx/defcomponent probeplan-probe-row [{:keys [db] :as req} idx {:keys [date songs last-fixed? fixed? num-gigs]}]
-  (let [edit? (-> req :params :edit?)]
+(ctmx/defcomponent probeplan-probe-row [{:keys [db] :as req} idx {:keys [date songs last-fixed? fixed? num-gigs gig-id]}]
+  (let [edit? (rt/parse-boolean (-> req :params :edit?))]
     [:tr {:class (ui/cs "border border-x-black border-y-gray-300 border-l border-r border-b border-t-0"
                         (cond
                           last-fixed? "border-solid border-b-1 border-b-black"
@@ -46,11 +52,13 @@
                           :else "border-dashed"))}
 
      [:td {:class "px-2"} (inc idx)
-      [:input {:type :hidden :data-form true :name (path "probe") :value date}]]
+      (when fixed?
+        [:input {:type :hidden :data-form true :name (path "gig-id") :value gig-id}]
+        [:input {:type :hidden :data-form true :name (path "date") :value date}])]
      [:td {:class "font-mono px-2 py-1 bg-green-100"}
       (let [date-str (t/format (t/formatter "dd.MM") date)]
         (if fixed?
-          [:a {:href "#" :class "link-blue underline"} date-str]
+          [:a {:href (url/link-gig gig-id) :class "link-blue underline"} date-str]
           date-str))]
 
      [:td {:class ""} num-gigs]
@@ -79,27 +87,18 @@
 (ctmx/defcomponent ^:endpoint probeplan-index-page [{:keys [db] :as req} ^:boolean edit?]
   probeplan-probe-song-col-ro
   probeplan-probe-song-col-rw
-  (let [tr (i18n/tr-from-req req)
-        post? (util/post? req)
-        comp-name (util/comp-namer #'probeplan-index-page)
-        song-cycle (pp/make-song-cycle db)
-        num-probes 20
-        num-songs-p-probe 5
-        num-songs-needed (* 20 5)
-        num-fixed 4
-        num-floating (- num-probes 4)
-        probe-dates (take num-probes (pp/wednesday-sequence (t/date)))
-        songs (partition 5 (take num-songs-needed song-cycle))
-        probes (map (fn [idx songs date] {:songs songs
-                                          :date date
-                                          :idx idx
-                                          :last-fixed? (= (inc idx)  num-fixed)
-                                          :num-gigs (rand-int 3)
-                                          :fixed? (<= (inc idx) num-fixed)})
-                    (range) songs probe-dates)]
-    (when post?
+  (let [tr                (i18n/tr-from-req req)
+        post?             (util/post? req)
+        comp-name         (util/comp-namer #'probeplan-index-page)
+        probes (domain/future-probeplans (q/find-all-songs db)
+                                         (->>
+                                          (q/next-probes db)
+                                          (map (fn [gig]
+                                                 (assoc gig :songs (->> (q/probeplan-songs-for-gig db (:gig/gig-id gig))
+                                                                        (sort-by :emphasis domain/emphasis-comparator)))))))]
 
-      (tap> {:params (util/unwrap-params req)  :req (:params req)}))
+    (when post?
+      (tap> {:params (util/unwrap-params req) :req (:params req)}))
     [:div {:id id}
      (ui/page-header :title (tr [:nav/probeplan]))
      (howitworks tr)
@@ -110,20 +109,21 @@
          (if edit?
            (list
             (ui/button :label (tr [:action/cancel]) :priority :white  :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? false}})
-            (ui/button :label (tr [:action/save]) :priority :primary  :attr {:hx-target (hash ".") :hx-post (comp-name) :hx-include "[data-form]"}))
+            (ui/button :label (tr [:action/save]) :priority :primary  :attr {:form (path "form")}))
            (ui/button :label (tr [:action/edit]) :priority :white  :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? true}}))]]
 
        [:div {:class "mt-4"}
 
-        [:table {:class "min-w-full text-sm table-auto fade-out relative"}
-         (ui/table-row-head  [{:label "Nr"}
-                              {:label "Date"}
-                              {:label "Gigs"}
-                              {:label "Intensive 1"}
-                              {:label "Intensive 2"}
-                              {:label "Durchspielen 1"}
-                              {:label "Durchspielen 2"}
-                              {:label "Durchspielen 3"}
-                              {:label ""}])
+        [:form {:hx-post (comp-name) :hx-target (hash ".") :id (path "form")}
+         [:table {:class "min-w-full text-sm table-auto fade-out relative"}
+          (ui/table-row-head  [{:label "Nr"}
+                               {:label "Date"}
+                               {:label "Gigs"}
+                               {:label "Intensive 1"}
+                               {:label "Intensive 2"}
+                               {:label "Durchspielen 1"}
+                               {:label "Durchspielen 2"}
+                               {:label "Durchspielen 3"}
+                               {:label ""}])
 
-         (rt/map-indexed probeplan-probe-row req probes)]]]]]))
+          (rt/map-indexed probeplan-probe-row req probes)]]]]]]))

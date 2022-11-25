@@ -15,7 +15,8 @@
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [tick.core :as t]
-   [ctmx.rt :as rt]))
+   [ctmx.rt :as rt]
+   [app.probeplan.stats :as stats]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -102,11 +103,11 @@
           [?e :gig/date ?date]
           [(< ?date ?time)]] db (q/date-midnight-today!) [:gig/gig-id :gig/date :db/id])
    (map first)
-   (sort-by :gig/date)
+   (sort-by :gig/date t/>)
    (page offset limit)
    (map :db/id)
    (d/pull-many db q/gig-pattern)
-   (sort-by :gig/date)
+   (sort-by :gig/date t/>)
    (mapv domain/db->gig)))
 
 (defn gigs-past-two-weeks [db]
@@ -375,7 +376,9 @@
         tx-data (map #(upsert-log-play-tx gig-id %) play-params)
         result (d/transact datomic-conn {:tx-data tx-data})]
     (if (d/db-ok? result)
-      {:plays (plays-by-gig (:db-after result) gig-id)}
+      (do
+        (stats/calc-play-stats-in-bg! datomic-conn)
+        {:plays (plays-by-gig (:db-after result) gig-id)})
       result)))
 
 (clojure.core/comment

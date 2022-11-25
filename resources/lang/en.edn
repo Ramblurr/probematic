@@ -63,7 +63,9 @@
        :probeplan "Probeplan"
        :probeplan-choose "Choose 5 songs."
        :create-probeplan "Make Probeplan"
-       :create-setlist "Make Setlist"}
+       :create-setlist "Make Setlist"
+       :create-title "Create Gig"
+       :create-subtitle ""}
 
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"

@@ -15,7 +15,7 @@
         song-id (sq/generate-squuid)
         result (d/transact (:datomic-conn req)
                            {:tx-data [{:song/title title :song/song-id song-id
-                                       :song/play-count 0
+                                       :song/total-plays 0
                                        :song/active? (ctmx.rt/parse-boolean active?)}]})]
     (if (d/db-ok? result)
       {:song result}
@@ -103,7 +103,7 @@
                             {:song/title title
                              :song/active? true
                              :song/song-id (sq/generate-squuid)
-                             :song/play-count 0}) _titles)})
+                             :song/total-plays 0}) _titles)})
 
   (q/find-all-songs (d/db conn))
 

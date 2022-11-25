@@ -717,19 +717,19 @@
         [:div {:id id}
          (ui/page-header :title (list  title " " (ui/gig-status-icon status))
                          :subtitle (tr [gig-type])
-                         :buttons (when-not archived?
-                                    (list
+                         :buttons (list
+                                   (ui/button :label "Log Plays"
+                                              :tag :a
+                                              :priority :primary
+                                              :centered? true
+                                              :class "items-center justify-center"
+                                              :attr {:href (url/link-gig gig "/log-play/")})
+                                   (when-not archived?
                                      (ui/button :label (tr [:action/edit])
                                                 :priority :white
                                                 :centered? true
                                                 :class "items-center justify-center"
-                                                :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" true}})
-                                     (ui/button :label "Log Plays"
-                                                :tag :a
-                                                :priority :primary
-                                                :centered? true
-                                                :class "items-center justify-center"
-                                                :attr {:href (url/link-gig gig "/log-play/")}))))
+                                                :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" true}}))))
          [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
           [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
            [:section
@@ -825,7 +825,7 @@
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
   (let [future-gigs (q/gigs-future db)
         offset 0
-        limit 10
+        limit 100
         past-gigs (controller/gigs-past-page db offset limit)
         ;; past-gigs (controller/gigs-past-two-weeks db)
         tr (i18n/tr-from-req req)]
