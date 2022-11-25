@@ -411,6 +411,31 @@
     (->> (concat sections-with-no-sheets sections-with-sheets)
          (sort-by :section/position))))
 
+(defn load-play-stats [db]
+  (->>
+   (d/find-all db :song/song-id [:song/song-id
+                                 :song/title
+                                 :song/total-plays
+                                 :song/total-performances
+                                 :song/total-rehearsals
+                                 :song/total-rating-good
+                                 :song/total-rating-bad
+                                 :song/total-rating-ok
+                                 :song/six-month-total-rating-good
+                                 :song/six-month-total-rating-bad
+                                 :song/six-month-total-rating-ok
+                                 :song/days-since-performed
+                                 :song/days-since-rehearsed
+                                 :song/days-since-intensive
+                                 :song/last-played-on
+                                 {:song/last-performance [:gig/gig-id :gig/date]}
+                                 {:song/last-rehearsal [:gig/gig-id :gig/date]}
+                                 {:song/last-intensive [:gig/gig-id :gig/date]}
+                                 {:song/first-performance [:gig/gig-id :gig/date]}
+                                 {:song/first-rehearsal [:gig/gig-id :gig/date]}])
+   (mapv first)))
+
+;;;; END
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -418,7 +443,10 @@
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
 
+  (load-play-stats db)
   (sheet-music-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068207")
+
+  (retrieve-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCQw")
 
   (active-members-by-section db)
 

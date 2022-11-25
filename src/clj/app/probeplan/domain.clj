@@ -5,7 +5,8 @@
    [clojure.data.generators :as gen]
    [clojure.set :as set]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.queries :as q]))
 
 (def probeplan-versions #{:probeplan.version/classic})
 
@@ -87,73 +88,20 @@
 
     all-probes))
 
-(def song-data [{:song-id ""
-                 :title "Burkan Cocek"
-                 :days-since-performed 999
-                 :days-since-rehearsed 999
-                 :days-since-intensive 999}
-                {:song-id ""
-                 :title "Asterix"
-                 :days-since-performed 20
-                 :days-since-rehearsed 14
-                 :days-since-intensive 999}
-                {:song-id ""
-                 :title "Watermelon Man"
-                 :days-since-performed 300
-                 :days-since-rehearsed 7
-                 :days-since-intensive 7}
-                {:song-id ""
-                 :title "Cumbia Sobre"
-                 :days-since-performed 20
-                 :days-since-rehearsed 7
-                 :days-since-intensive 7}
-                {:song-id ""
-                 :title "Kids"
-                 :days-since-performed 20
-                 :days-since-rehearsed 7
-                 :days-since-intensive 14}
-                {:song-id ""
-                 :title "Klezma34"
-                 :days-since-performed 100
-                 :days-since-rehearsed 7
-                 :days-since-intensive 7}
-                {:song-id ""
-                 :title "Grenzrenner"
-                 :days-since-performed 20
-                 :days-since-rehearsed 14
-                 :days-since-intensive 30}
-                {:song-id ""
-                 :title "Inner Babylon"
-                 :days-since-performed 20
-                 :days-since-rehearsed 14
-                 :days-since-intensive 7}])
-
-(defn wrand
-  "given a vector of slice sizes, returns the index of a slice given a
-  random spin of a roulette wheel with compartments proportional to
-  slices."
-  [slices]
-  (let [total (reduce + slices)
-        r (rand total)]
-    (loop [i 0 sum 0]
-      (if (< r (+ (slices i) sum))
-        i
-        (recur (inc i) (+ (slices i) sum))))))
-
-(def slicem {:days-since-performed 50
-             :days-since-rehearsed 100
-             :days-since-intensive 50})
-
-(wrand (into [] (vals slicem)))
-
-(gen/weighted slicem)
+(def stat-weights {:song/days-since-performed 50
+                   :song/days-since-rehearsed 100
+                   :song/days-since-intensive 50})
 
 ;; score = a_rank * a_weight + b_rank * b_weight + c_rank * c_weight.
-(defn score-song [{:keys [days-since-performed days-since-rehearsed days-since-intensive]}]
+(defn score-song [{:song/keys [days-since-performed days-since-rehearsed days-since-intensive]
+                   :or  {days-since-performed 999
+                         days-since-rehearsed 999
+                         days-since-intensive 999}
+                   :as s}]
   (reduce +
-          [(* days-since-performed (:days-since-performed slicem))
-           (* days-since-rehearsed (:days-since-rehearsed slicem))
-           (* days-since-intensive (:days-since-intensive slicem))]))
+          [(* days-since-performed (:song/days-since-performed stat-weights))
+           (* days-since-rehearsed (:song/days-since-rehearsed stat-weights))
+           (* days-since-intensive (:song/days-since-intensive stat-weights))]))
 
 (defn score-and-sort [s]
   (->> s
@@ -162,8 +110,8 @@
 
 (defn generate-probeplan
   "A pure function that takes inputs and outputs a sequence of probe plans in priority order"
-  [song-data]
-  (->> song-data
+  [play-stats]
+  (->> play-stats
        score-and-sort)
 
 ;;
@@ -220,7 +168,7 @@
    :song/days-since-performed        (:days-since-performed stat)
    :song/days-since-rehearsed        (:days-since-rehearsed stat)
    :song/days-since-intensive        (:days-since-intensive stat)
-   :song/last-played-on              (:last-played-on stat)
+   :song/last-played-on              (when-let [v (:last-played-on stat)] (t/inst v))
    :song/last-performance            (when-let [v (:last-performance stat)] [:gig/gig-id v])
    :song/last-rehearsal              (when-let [v (:last-rehearsal stat)] [:gig/gig-id v])
    :song/last-intensive              (when-let [v (:last-intensive stat)] [:gig/gig-id v])
