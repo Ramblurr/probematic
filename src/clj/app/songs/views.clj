@@ -158,6 +158,8 @@
                                              (controller/retrieve-song db song-id))
         {:song/keys [title active? composition-credits
                      arrangement-credits arrangement-notes
+                     last-rehearsal last-performance
+                     total-plays total-performances total-rehearsals
                      origin solo-count]} song
         tr                               (i18n/tr-from-req req)
         comp-name                        (util/comp-namer #'song-detail-page)]
@@ -211,11 +213,13 @@
                               "sm:col-span-3"))))
      (ui/panel {:title (tr [:song/play-stats-title])}
                (ui/dl
-                (ui/dl-item (tr [:song/total-plays]) "0")
-                (ui/dl-item (tr [:song/gig-count]) "0")
-                (ui/dl-item (tr [:song/probe-count]) "0")
-                (ui/dl-item (tr [:song/last-played-gig]) [:a {:class "link-blue" :href "#"} "Demo"])
-                (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href "#"} "2022-11-23"])))
+                (ui/dl-item (tr [:song/total-plays]) total-plays)
+                (ui/dl-item (tr [:song/gig-count]) total-performances)
+                (ui/dl-item (tr [:song/probe-count]) total-rehearsals)
+                (ui/dl-item (tr [:song/last-played-gig]) [:a {:class "link-blue" :href (url/link-gig last-performance)} (:gig/title last-performance)])
+                (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href (url/link-gig last-rehearsal)}
+                                                            (ui/gig-date last-rehearsal) " "
+                                                            (:gig/title last-rehearsal)])))
      (song-sheet-music req)]))
 
 (ctmx/defcomponent ^:endpoint song-new [req]

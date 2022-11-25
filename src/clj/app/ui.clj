@@ -774,7 +774,7 @@
 
 (defn gig-date [{:gig/keys [date call-time]}]
   (when date
-    (t/format (t/formatter "dd.MM.yy E") date)))
+    (t/format (t/formatter "dd.MM.yy E") (t/date date))))
 
 (defn gig-time [{:gig/keys [date call-time]}]
   (when call-time
