@@ -174,4 +174,23 @@
          :unauthorized-message "Your identity is unknown to the system.. something probably went wrong. Please contact Casey and tell him this error code:"
          :go-home "Go Home"
          :notify "Click to notify Casey"}
- :updating "Updating..."}
+ :updating "Updating..."
+ :email-subject {:gig-created "New Gig: %1"
+                 :gig-updated "Gig Edit: %1"}
+ :email {:greeting "Hello!"
+         :new-gig-added "A new gig is coming up!"
+         :new-probe-added "A new probe is coming up!"
+         :new-extra-probe-added "A new extra-probe is coming up!"
+         :new-meeting-added "A new meeting is coming up!"
+         :gig-edited "Something has changed about a gig!"
+         :gig-edit-type "EDITED"
+         :need-to-change-availability? "I need to change my availability"
+         :want-reminder "Remind me in a few days"
+         :can-you-make-it? "Can you make it?"
+         :can-make-it "I can make it!"
+         :cannot-make-it "I cannot make it."
+         :gig-info-page "Take me to the Gig Info page"
+         :sign-off "Much love — SNObot"}
+
+;;
+ }

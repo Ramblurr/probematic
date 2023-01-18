@@ -1,6 +1,7 @@
 (ns app.probeplan.stats
   (:import [java.time Instant])
   (:require
+   [app.probeplan.domain :as domain]
    [app.datomic :as d]
    [app.util :as util]
    [datomic.client.api :as datomic]

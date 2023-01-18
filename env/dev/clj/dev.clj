@@ -2,7 +2,6 @@
   (:require
    [app.routes.pedestal-reitit]
    [app.ig]
-   [app.routes.pedestal-reitit]
    [app.jobs.sync-gigs :as sync-gigs]
    [app.jobs.sync-members :as sync-members]
    [app.schemas :as schemas]

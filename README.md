@@ -2,8 +2,7 @@
 
 > "probe" = "rehersal" in German. Pronounced PRO-beh ([listen](https://upload.wikimedia.org/wikipedia/commons/f/f9/De-probe.ogg))
 
-Making probes automatic.
-
+Making probes automatic... and so much more.
 
 ### Pre-req
 
@@ -35,3 +34,21 @@ Jack-in using your favorite editor. Be sure to supply `-A:dev` to set the dev pr
 1. from the `user` ns run `(dev)`
    this loads the app code and switches you into the `dev` ns
 2. run `(dev-extra/go)` to start the integrant system and boot the app
+
+
+## Notes for Future Me
+
+```
+
+# term 1
+bb repl
+
+# term 2
+bb watch-css
+
+# open user.clj
+# connect to repl
+# (dev)
+# (go)
+```
+
