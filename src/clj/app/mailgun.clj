@@ -3,6 +3,8 @@
    [jsonista.core :as j]
    [org.httpkit.client :as client]))
 
+(def retryable-errors #{429 500})
+
 (defn send-email-req
   "Creates the email payload
   documentation: https://documentation.mailgun.com/en/latest/api-sending.html#sending"
@@ -42,12 +44,16 @@
   (if-not (:demo-mode? mailgun)
     (let [resp @(client/request req)]
       (if (= 200 (:status resp))
-        (do (tap> resp)
-            {:result :email-sent
-             :mode (if (:test-mode? mailgun) :test-mode :prod-mode)
-             :mailgun-id (get  (j/read-value (:body resp)) "id")})
-        {:error (:status resp)
-         :message (j/read-value (:body resp))}))
+        (do
+          ;; (tap> resp)
+          {:result :email-sent
+           :mode (if (:test-mode? mailgun) :test-mode :prod-mode)
+           :mailgun-id (get  (j/read-value (:body resp)) "id")})
+        (do
+          ;; (tap> resp)
+          {:error (:status resp)
+           :retry? (retryable-errors (:status resp))
+           :message (get (j/read-value (:body resp)) "message")})))
     {:result :email-sent :mode :demo-mode}))
 
 (defn send-email!

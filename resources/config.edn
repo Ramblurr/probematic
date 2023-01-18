@@ -31,6 +31,7 @@
                    :send-domain    #ref [:secrets :mailgun :send-domain]
                    :mailgun-domain #ref [:secrets :mailgun :mailgun-domain]}
  :sentry          {:dsn #ref [:secrets :sentry :dsn]}
+ :redis           {:conn-spec #ref [:secrets :redis :conn-spec]}
  :auth            {:cert-filename "keycloak-realm.crt"
                    :known-roles   #{:admin :Mitglieder}}
  :max-header-size 10000
@@ -77,6 +78,10 @@
                                                                          :demo #envf ["%s/datomic.demo.data" PWD]}]}
                    :app.ig/i18n-langs       {}
                    :app.ig/mailgun          {:env #ig/ref :app.ig/env}
+                   :app.ig/redis            {:env #ig/ref :app.ig/env}
+                   :app.ig/email-worker     {:env     #ig/ref :app.ig/env
+                                             :redis   #ig/ref :app.ig/redis
+                                             :mailgun #ig/ref :app.ig/mailgun}
                    :app.ig/webdav-sardine   {:env #ig/ref :app.ig/env}
                    :app.ig.jobs/definitions {:env     #ig/ref :app.ig/env
                                              :gigo    #ig/ref :app.ig/gigo-client

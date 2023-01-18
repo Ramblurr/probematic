@@ -1,6 +1,8 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
+   [taoensso.carmine :as car]
+   [app.email-worker :as email-worker]
    [app.config :as config]
    [app.datomic :as datomic]
    [app.i18n :as i18n]
@@ -115,3 +117,16 @@
 (defmethod ig/init-key ::mailgun
   [_ {:keys [env]}]
   (:mailgun env))
+
+(defmethod ig/init-key ::redis
+  [_ {:keys [env]}]
+  {:pool (car/connection-pool {})
+   :spec (-> env :redis :conn-spec)})
+
+(defmethod ig/init-key ::email-worker
+  [_ sys]
+  (email-worker/start! sys))
+
+(defmethod ig/halt-key! ::email-worker
+  [_ sys]
+  (email-worker/stop! sys))

@@ -1,0 +1,14 @@
+---
+version: '3.8'
+services:
+  redis:
+    image: docker.io/library/redis:7
+    restart: always
+    command: [bash, -c, 'docker-entrypoint.sh --appendonly yes --save 60 1 --notify-keyspace-events AKE --requirepass devpassword123']
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./redis-dev:/data"
+    labels:
+      io.containers.autoupdate: registry
+...
