@@ -21,6 +21,15 @@
  :twilio          {:bot-number     #ref [:secrets :twilio :bot-number]
                    :twilio-account #ref [:secrets :twilio :twilio-account]
                    :twilio-token   #ref [:secrets :twilio :twilio-token]}
+ :mailgun         {;;  test mode hits the mailgun API but mailgun does not send the message.
+                   ;;  this still costs money
+                   :test-mode?     false
+                   ;; demo mode does not hit the mailgun API.. it marks mails as sent automatically
+                   :demo-mode?     false
+                   :api-key        #ref [:secrets :mailgun :api-key]
+                   :from           #ref [:secrets :mailgun :from]
+                   :send-domain    #ref [:secrets :mailgun :send-domain]
+                   :mailgun-domain #ref [:secrets :mailgun :mailgun-domain]}
  :sentry          {:dsn #ref [:secrets :sentry :dsn]}
  :auth            {:cert-filename "keycloak-realm.crt"
                    :known-roles   #{:admin :Mitglieder}}
@@ -48,16 +57,16 @@
                                              :profile    #ig/ref :app.ig/profile
                                              :routes     #ig/ref :app.ig.router/routes
                                              :handler    #ig/ref :app.ig/handler}
-                   :app.ig/handler          {:env        #ig/ref :app.ig/env}
+                   :app.ig/handler          {:env #ig/ref :app.ig/env}
                    :app.ig.router/routes    {:routes     #ig/refset :app.ig/routes
                                              :i18n-langs #ig/ref :app.ig/i18n-langs
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :webdav     #ig/ref :app.ig/webdav-sardine
                                              :env        #ig/ref :app.ig/env}
-                   :ol.ig/jobs              {:job-defs   #ig/ref :app.ig.jobs/definitions
-                                             :env        #ig/ref :app.ig/env}
-                   :app.ig/gigo-client      {:env        #ig/ref :app.ig/env}
-                   :app.ig/sentry           {:env        #ig/ref :app.ig/env}
+                   :ol.ig/jobs              {:job-defs #ig/ref :app.ig.jobs/definitions
+                                             :env      #ig/ref :app.ig/env}
+                   :app.ig/gigo-client      {:env #ig/ref :app.ig/env}
+                   :app.ig/sentry           {:env #ig/ref :app.ig/env}
                    :app.ig/datomic-db       {:server-type :dev-local
                                              :system      "dev"
                                              :db-name     "probematic"
@@ -67,15 +76,16 @@
                                                                          :test #envf ["%s/datomic.test.data" PWD]
                                                                          :demo #envf ["%s/datomic.demo.data" PWD]}]}
                    :app.ig/i18n-langs       {}
+                   :app.ig/mailgun          {:env #ig/ref :app.ig/env}
                    :app.ig/webdav-sardine   {:env #ig/ref :app.ig/env}
                    :app.ig.jobs/definitions {:env     #ig/ref :app.ig/env
                                              :gigo    #ig/ref :app.ig/gigo-client
                                              :datomic #ig/ref :app.ig/datomic-db}}
- :jobs            {:job/sync-gigs       {:job/frequency     [10 :minutes]
-                                         :job/initial-delay [2 :seconds]}
-                   :job/sync-members    {:job/frequency     [1 :hours]
-                                         :job/initial-delay [3 :seconds]}
-                   :job/update-airtable {:job/frequency     [1 :hours]
-                                         :job/initial-delay [2 :seconds]}
+ :jobs            {:job/sync-gigs          {:job/frequency     [10 :minutes]
+                                            :job/initial-delay [2 :seconds]}
+                   :job/sync-members       {:job/frequency     [1 :hours]
+                                            :job/initial-delay [3 :seconds]}
+                   :job/update-airtable    {:job/frequency     [1 :hours]
+                                            :job/initial-delay [2 :seconds]}
                    :job/probe-housekeeping {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}}}

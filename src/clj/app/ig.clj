@@ -111,3 +111,7 @@
 (defmethod ig/halt-key! ::webdav-sardine
   [_ {:keys [client]}]
   (sardine/shutdown client))
+
+(defmethod ig/init-key ::mailgun
+  [_ {:keys [env]}]
+  (:mailgun env))
