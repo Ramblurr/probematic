@@ -54,7 +54,9 @@
           {:error (:status resp)
            :retry? (retryable-errors (:status resp))
            :message (get (j/read-value (:body resp)) "message")})))
-    {:result :email-sent :mode :demo-mode}))
+    (do
+      (tap> {:email-send-request req})
+      {:result :email-sent :mode :demo-mode})))
 
 (defn send-email!
   "Sends the email"

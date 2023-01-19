@@ -4,19 +4,19 @@
    [app.auth :as auth]
    [app.controllers.common :as common]
    [app.datomic :as d]
-   [app.debug :as debug]
+   [app.email :as email]
    [app.gigs.domain :as domain]
    [app.probeplan.domain :as probeplan.domain]
+   [app.probeplan.stats :as stats]
    [app.queries :as q]
    [app.schemas :as s]
    [app.util :as util]
    [clojure.data :as clojure.data]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
-   [datomic.client.api :as datomic]
-   [tick.core :as t]
    [ctmx.rt :as rt]
-   [app.probeplan.stats :as stats]))
+   [datomic.client.api :as datomic]
+   [tick.core :as t]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -230,7 +230,8 @@
 
 (defn transact-gig! [datomic-conn gig-txs gig-id]
   (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
-    {:gig (q/retrieve-gig (:db-after result) gig-id)}))
+    {:gig (q/retrieve-gig (:db-after result) gig-id)
+     :gig-before (q/retrieve-gig (:db-before result) gig-id)}))
 
 (defn post-comment! [{:keys [datomic-conn] :as req}]
   (let [{:keys [body]} (common/unwrap-params req)
@@ -268,8 +269,10 @@
     [:post-gig-plans {:optional true} :string]]))
 
 (defn update-gig! [{:keys [datomic-conn] :as req}]
+
   (let [gig-id (common/path-param req :gig/gig-id)
         params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id))
+        notify? (rt/parse-boolean (:notify? params))
         decoded  (util/remove-nils (s/decode UpdateGig params))]
     (if (s/valid? UpdateGig decoded)
       (let [tx (-> decoded
@@ -277,9 +280,12 @@
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
                    (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
-                   (domain/gig->db))]
-        ;; (tap> {:params params :decoded decoded :tx tx :expl (s/explain-human UpdateGig decoded)})
-        (transact-gig! datomic-conn [tx] gig-id))
+                   (domain/gig->db))
+            result (transact-gig! datomic-conn [tx] gig-id)]
+        (when notify?
+          (email/send-gig-updated! req gig-id
+                                   (keys (second (clojure.data/diff (:gig-before result) (:gig result))))))
+        result)
       (s/throw-error "Cannot update the gig. The gig data is invalid." nil  UpdateGig decoded))))
 
 (defn create-gig! [{:keys [datomic-conn] :as req}]
@@ -292,7 +298,9 @@
                (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
                (domain/gig->db))]
     (if (s/valid? UpdateGig decoded)
-      (transact-gig! datomic-conn [tx] gig-id)
+      (let [result (transact-gig! datomic-conn [tx] gig-id)]
+        (email/send-gig-created! req gig-id)
+        result)
       (s/throw-error "Cannot create the gig. The gig data is invalid." nil  UpdateGig decoded))))
 
 (defn reconcile-setlist [eid new-song-tuples current-song-tuples]

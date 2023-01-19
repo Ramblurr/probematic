@@ -25,9 +25,9 @@
                    :twilio-token   #ref [:secrets :twilio :twilio-token]}
  :mailgun         {;;  test mode hits the mailgun API but mailgun does not send the message.
                    ;;  this still costs money
-                   :test-mode?     false
-                   ;; demo mode does not hit the mailgun API.. it marks mails as sent automatically
-                   :demo-mode?     false
+                   :test-mode?     true
+                   ;; demo mode does not hit the mailgun API.. it just taps the emails instead of sending
+                   :demo-mode?     true
                    :api-key        #ref [:secrets :mailgun :api-key]
                    :from           #ref [:secrets :mailgun :from]
                    :send-domain    #ref [:secrets :mailgun :send-domain]
@@ -65,7 +65,8 @@
                                              :i18n-langs #ig/ref :app.ig/i18n-langs
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :webdav     #ig/ref :app.ig/webdav-sardine
-                                             :env        #ig/ref :app.ig/env}
+                                             :env        #ig/ref :app.ig/env
+                                             :redis      #ig/ref :app.ig/redis}
                    :ol.ig/jobs              {:job-defs #ig/ref :app.ig.jobs/definitions
                                              :env      #ig/ref :app.ig/env}
                    :app.ig/gigo-client      {:env #ig/ref :app.ig/env}

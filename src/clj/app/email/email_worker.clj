@@ -11,11 +11,12 @@
 
 (defn track-email-error!  [email attempt result throwable]
   (sentry/send-event
-   {:message (or (:message result) (ex-message throwable) "Error occured in email-worker")
-    :extra {:email email
-            :attempt attempt
-            :result result}
-    :throwable throwable}))
+   (doto
+    {:message (or (:message result) (ex-message throwable) "Error occured in email-worker")
+     :extra {:email email
+             :attempt attempt
+             :result result}
+     :throwable throwable} tap>)))
 
 (defn handler
   "Has strict return contract with carmine. See http://ptaoussanis.github.io/carmine/taoensso.carmine.message-queue.html#var-worker"
@@ -59,7 +60,7 @@
 (defn stop! [worker]
   (car-mq/stop worker))
 
-(defn enqueue-mail! [redis-opts email]
+(defn queue-mail! [redis-opts email]
   (car/wcar redis-opts
             (car-mq/enqueue email-queue-name email)))
 
@@ -75,18 +76,18 @@
     (def recipient2 "me+test@***REMOVED***") ;; rcf
     (def redis-opts (-> state/system :app.ig/redis))) ;; rcf
 
-  (enqueue-mail! redis-opts
-                 {:email/batch? true
-                  :email/email-id "foo"
-                  :email/tos []
-                  :email/subject "Hello from probematic"
-                  :email/body-plain  "Hello world, %recipient.foobar%"
-                  :email/body-html (str
-                                    (html [:div [:h1 "Hello world!"]
-                                           [:p " and it is '%recipient.foobar%'"]
-                                           [:p [:a {:href "https://streetnoise.at/%recipient.foobar%"} "streetnoise.at"]]
-                                           [:p "Things and stuff!"]]))
-                  :email/recipient-variables {recipient2 {:foobar "FOOBARRECIPIENT2"} recipient1 {:foobar "FOOBARRECIPIENT1"}}})
+  (queue-mail! redis-opts
+               {:email/batch? true
+                :email/email-id "foo"
+                :email/tos []
+                :email/subject "Hello from probematic"
+                :email/body-plain  "Hello world, %recipient.foobar%"
+                :email/body-html (str
+                                  (html [:div [:h1 "Hello world!"]
+                                         [:p " and it is '%recipient.foobar%'"]
+                                         [:p [:a {:href "https://streetnoise.at/%recipient.foobar%"} "streetnoise.at"]]
+                                         [:p "Things and stuff!"]]))
+                :email/recipient-variables {recipient2 {:foobar "FOOBARRECIPIENT2"} recipient1 {:foobar "FOOBARRECIPIENT1"}}})
 
   ;;
   )

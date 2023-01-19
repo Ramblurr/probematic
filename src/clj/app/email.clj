@@ -4,12 +4,14 @@
    [app.email.email-worker :as email-worker]
    [app.email.templates :as tmpl]
    [app.i18n :as i18n]
+   [app.queries :as q]
    [app.util :as util]
    [com.yetanalytics.squuid :as sq]
+   [datomic.client.api :as datomic]
    [tick.core :as t]))
 
 (defn queue-email! [sys email]
-  (email-worker/enqueue-mail! (:redis sys) email))
+  (email-worker/queue-mail! (:redis sys) email))
 
 (defn build-email [to subject body-html body-plain]
   (util/remove-nils
@@ -47,6 +49,26 @@
    (tmpl/gig-updated-email-html sys gig edited-attrs)
    (tmpl/gig-updated-email-plain sys gig edited-attrs)
    (tmpl/gig-updated-recipient-variables sys gig members)))
+
+(defn- sys-from-req [req]
+  {:tr (:tempura/tr req)
+   :env (-> req :system :env)
+   :redis (-> req :system :redis)})
+
+(defn send-gig-created! [req gig-id]
+  (let [db (datomic/db (:datomic-conn req))
+        gig (q/retrieve-gig  db gig-id)
+        members (q/active-members db)
+        sys (sys-from-req req)]
+    (queue-email! sys  (build-gig-created-email sys gig members))))
+
+(defn send-gig-updated! [req gig-id edited-attrs]
+  (when (>  (count edited-attrs) 0)
+    (let [db (datomic/db (:datomic-conn req))
+          gig (q/retrieve-gig  db gig-id)
+          members (q/active-members db)
+          sys (sys-from-req req)]
+      (queue-email! sys  (build-gig-updated-email sys gig members edited-attrs)))))
 
 (comment
 

@@ -233,7 +233,7 @@
                 :in $ pattern
                 :where
                 [?member :member/active? true]]
-              db [:member/name :member/gigo-key :member/nick {:member/section [:section/name]}])
+              db [:member/name :member/gigo-key :member/nick {:member/section [:section/name]} :member/email])
    (map first)
    (map #(update % :member/section :section/name))))
 

@@ -10,9 +10,9 @@
 
 (def EmailAddress (m/-simple-schema {:type            :email-address
                                      :pred            #(and (string? %)
-                                                            (re-matches #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$" %))
+                                                            (re-matches #"^.+\@.+\..+$" %))
                                      :type-properties {:error/fn           '(fn [{:keys [schema value]} _]
-                                                                              (str value " does not match regex " #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$"))
+                                                                              (str value " does not match regex " #"^.+\@.+\..+$"))
                                                        :decode/string      string/lower-case
                                                        :encode/string      string/lower-case
                                                        :decode/json        string/lower-case
