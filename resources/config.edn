@@ -1,6 +1,6 @@
 {:name            "probematic"
  :secrets         #include "../secrets.edn"
- :absolute-url    #ref [:secrets :absolute-url]
+ :app-base-url    #ref [:secrets :app-base-url]
  :app-secret-key  #ref [:secrets :app-secret-key]
  :environment     #profile {:prod #or [#env APP_ENVIRONMENT "prod"]
                             :dev  "dev"

@@ -1,5 +1,6 @@
 (ns app.urls
-  (:import [java.net URLEncoder URLDecoder]))
+  (:import [java.net URLEncoder])
+  (:require [app.config :as config]))
 
 (defn link-helper
   ([prefix id-key maybe-id]
@@ -28,16 +29,12 @@
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))
 
-(defn base-url [env]
-  (:absolute-url env))
-
 (defn absolute-link-gig [env gig-id]
-  (str (base-url env) "/gig/" gig-id))
+  (str (config/app-base-url env) "/gig/" gig-id))
 
-(defn absolute-link-gig-coming-template [env gig-id]
-  (str
-   (absolute-link-gig env gig-id) "/answer-link/%recipient.%"))
+(defn absolute-gig-answer-link-base [env]
+  (str (config/app-base-url env) "/gig/answer-link"))
 
-(defn absolute-link-gig-not-coming-template [env gig-id])
-
-(defn absolute-link-gig-reminder-template [env gig-id])
+(comment
+  ;;
+  )

@@ -17,3 +17,9 @@
 
 (defn non-prod? [env]
   (some?  (#{"qa" "dev" "test"} (-> env :environment))))
+
+(defn app-secret-key [env]
+  (:app-secret-key env))
+
+(defn app-base-url [env]
+  (:app-base-url env))
