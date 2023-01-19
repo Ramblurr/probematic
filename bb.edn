@@ -21,6 +21,14 @@
                 :requires ([babashka.process :refer [sh]])
                 :task
                 (do
-                  (shell (format "podman build -f ./docker/Dockerfile -t probematic-test --build-arg GIT_HASH=%s --build-arg BUILD_DATE=%s ."
-                                 (:out (sh "git rev-parse --short HEAD"))
-                                 (:out (sh "date -u +%Y%m%dT%H%M%S")))))}}}
+                  (let [repo "ghcr.io"
+                        hash (:out (sh "git rev-parse --short HEAD"))
+                        branch (:out (sh "git rev-parse --abbrev-ref"))
+                        build-date (:out (sh "date -u +%Y%m%dT%H%M%S"))
+                        image (str "ghcr.io/ramblurr/probematic")
+                        tag (str branch "-" hash)]
+
+                    (shell (format "podman build -f ./docker/Dockerfile -t %s:latest-local --build-arg GIT_HASH=%s --build-arg BUILD_DATE=%s ."
+                                   image hash build-date))
+                    (shell (format "podman tag %s:latest-local %s:%s" image image tag))
+                    (shell (format "podman push %s:%s" image tag))))}}}

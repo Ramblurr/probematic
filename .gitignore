@@ -28,3 +28,4 @@ resources/public/css/compiled/*
 *.data
 gigo-members.json
 redis-dev
+secrets/
