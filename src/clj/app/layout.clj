@@ -17,9 +17,10 @@
    {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
 
 (defn user-menu-sections [req tr]
-  [{:items [{:label (tr [:nav/profile]) :href "#"}
-            {:label (tr [:nav/settings]) :href "#"}
-            {:label (tr [:nav/notifications]) :href "#"}]}
+  [{:items [;; {:label (tr [:nav/profile]) :href "#"}
+            ;; {:label (tr [:nav/settings]) :href "#"}
+            ;; {:label (tr [:nav/notifications]) :href "#"}
+            ]}
    {:items [{:label (tr [:nav/logout]) :href (url/sso-logout-url req)}]}])
 
 (defn user-menu-item [idx {:keys [label href]}]
