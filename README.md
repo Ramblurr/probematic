@@ -1,8 +1,8 @@
 # probematic
 
-> "probe" = "rehersal" in German. Pronounced PRO-beh ([listen](https://upload.wikimedia.org/wikipedia/commons/f/f9/De-probe.ogg))
+> "Probe" = "rehearsal" in German. Pronounced PRO-beh ([listen](https://upload.wikimedia.org/wikipedia/commons/f/f9/De-probe.ogg))
 
-Making probes automatic... and so much more.
+Canonical repo: https://github.com/Ramblurr/probematic
 
 ### Pre-req
 
