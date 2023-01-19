@@ -1,5 +1,7 @@
 # probematic
 
+[![AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--v3--or--later-blue)](./LICENSE)
+
 > "Probe" = "rehearsal" in German. Pronounced PRO-beh ([listen](https://upload.wikimedia.org/wikipedia/commons/f/f9/De-probe.ogg))
 
 Canonical repo: https://github.com/Ramblurr/probematic
@@ -29,7 +31,7 @@ Then visit [http://localhost:6160]
 
 ### Run in repl
 
-Jack-in using your favorite editor. Be sure to supply `-A:dev` to set the dev proflie
+Jack-in using your favorite editor. Be sure to supply `-A:dev` to set the dev profile
 
 1. from the `user` ns run `(dev)`
    this loads the app code and switches you into the `dev` ns
@@ -52,3 +54,25 @@ bb watch-css
 # (go)
 ```
 
+
+## License
+
+This software is licensed under the GNU AGPL v3.0 or later.
+
+```
+probematic
+Copyright (C) 2022-2023 Casey Link
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+```
