@@ -1,5 +1,6 @@
 {:deps {local/deps {:local/root "."}}
 
+ :paths ["scripts"]
  :tasks
  {; backend
   repl  (shell "clojure -A:dev -M:inspect/reveal-cider")
@@ -17,18 +18,6 @@
   clean (shell "clojure -T:build clean")
   uberjar (shell "clojure -T:build uberjar")
   test (shell "./bin/kaocha")
-  podman-build {:depends []
-                :requires ([babashka.process :refer [sh]])
-                :task
-                (do
-                  (let [repo "ghcr.io"
-                        hash (:out (sh "git rev-parse --short HEAD"))
-                        branch (:out (sh "git rev-parse --abbrev-ref"))
-                        build-date (:out (sh "date -u +%Y%m%dT%H%M%S"))
-                        image (str "ghcr.io/ramblurr/probematic")
-                        tag (str branch "-" hash)]
-
-                    (shell (format "podman build -f ./docker/Dockerfile -t %s:latest-local --build-arg GIT_HASH=%s --build-arg BUILD_DATE=%s ."
-                                   image hash build-date))
-                    (shell (format "podman tag %s:latest-local %s:%s" image image tag))
-                    (shell (format "podman push %s:%s" image tag))))}}}
+  container-build {:task (exec 'container/build)}
+  container-publish {:task (exec 'container/publish)}
+  container-publish-latest {:task (exec 'container/publish-latest)}}}

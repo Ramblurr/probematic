@@ -19,10 +19,10 @@ services:
     secrets:
       - app_secrets
   app:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile
+    image: ghcr.io/ramblurr/probematic:latest
     restart: always
+    depends_on:
+      - redis
     environment:
       REDIS_PASS_FILE: /run/secrets/redis_pass
       APP_SECRETS_FILE: /run/secrets/app_secrets
