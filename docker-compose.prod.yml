@@ -9,7 +9,7 @@ services:
   redis:
     image: docker.io/library/redis:7
     restart: always
-    command: [bash, -c, 'docker-entrypoint.sh --appendonly yes --save 60 1 --notify-keyspace-events AKE --requirepass "$$(cat $$REDIS_PASS_FILE)"devpassword123']
+    command: [bash, -c, 'docker-entrypoint.sh --appendonly yes --save 60 1 --notify-keyspace-events AKE --requirepass "$$(cat $$REDIS_PASS_FILE)"']
     environment:
       REDIS_PASS_FILE: /run/secrets/redis_pass
     volumes:
@@ -17,7 +17,7 @@ services:
     labels:
       io.containers.autoupdate: registry
     secrets:
-      - app_secrets
+      - redis_pass
   app:
     image: ghcr.io/ramblurr/probematic:latest
     restart: always
