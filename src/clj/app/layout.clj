@@ -16,11 +16,11 @@
    {:label (tr [:nav/members]) :icon icon/users-outline :href "/members" :route-name :app/members}
    {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
 
-(defn user-menu-sections [tr]
+(defn user-menu-sections [req tr]
   [{:items [{:label (tr [:nav/profile]) :href "#"}
             {:label (tr [:nav/settings]) :href "#"}
             {:label (tr [:nav/notifications]) :href "#"}]}
-   {:items [{:label (tr [:nav/logout]) :href "#"}]}])
+   {:items [{:label (tr [:nav/logout]) :href (url/sso-logout-url req)}]}])
 
 (defn user-menu-item [idx {:keys [label href]}]
   [:a {:href href :class "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id (str "user-menu-item-" idx)}
@@ -51,7 +51,7 @@
          (ui/avatar-img member :class "h-8 w-8 rounded-full")]]
        [:div {:id "user-menu" :data-action-menu true
               :class "hidden absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
-        (map user-menu-section (user-menu-sections (i18n/tr-from-req req)))]]]]]
+        (map user-menu-section (user-menu-sections req (i18n/tr-from-req req)))]]]]]
    [:main {:class "flex-1"}
     body]])
 
@@ -74,7 +74,7 @@
           :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           ;; :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           :role "menu" :aria-orientation "vertical" :aria-labelledby "options-menu-button" :tabindex "-1"}
-    (map user-menu-section (user-menu-sections (i18n/tr-from-req req)))]])
+    (map user-menu-section (user-menu-sections req (i18n/tr-from-req req)))]])
 
 (defn secondary-navigation []
   [:div {:class "mt-8"}

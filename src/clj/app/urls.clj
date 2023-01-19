@@ -1,6 +1,8 @@
 (ns app.urls
   (:import [java.net URLEncoder])
-  (:require [app.config :as config]))
+  (:require [app.config :as config]
+            [clojure.string :as str]
+            [app.auth :as auth]))
 
 (defn link-helper
   ([prefix id-key maybe-id]
@@ -34,6 +36,21 @@
 
 (defn absolute-gig-answer-link-base [env]
   (str (config/app-base-url env) "/gig/answer-link"))
+
+(defn sso-logout-url
+  "Return the url that can be used for single sign-out.
+  Docs:
+   * oauth2 proxy: https://oauth2-proxy.github.io/oauth2-proxy/docs/features/endpoints/#sign-out
+   * spec:  https://openid.net/specs/openid-connect-rpinitiated-1_0.html"
+  [req]
+  (let [env (-> req :system :env)
+        idp-url (url-encode
+                 (format
+                  "%s?id_token_hint=%s"
+                  (config/app-idp-logout-url env)
+                  (auth/get-id-token req)))
+        rp-url (config/app-rp-logout-path env)]
+    (format "%s?rd=%s" rp-url  idp-url)))
 
 (comment
   ;;

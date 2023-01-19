@@ -23,3 +23,9 @@
 
 (defn app-base-url [env]
   (:app-base-url env))
+
+(defn app-idp-logout-url [env]
+  (:app-idp-logout-url env))
+
+(defn app-rp-logout-path [env]
+  (:app-rp-logout-path env))

@@ -185,8 +185,8 @@
                     service-error-handler
                     (cond (config/demo-mode? (:env system))
                           auth/demo-auth-interceptor
-                          (config/dev-mode? (:env system))
-                          (auth/dev-auth-interceptor (-> system :env :secrets :dev-session))
+                          ;; (config/dev-mode? (:env system))
+                          ;; (auth/dev-auth-interceptor (-> system :env :secrets :dev-session))
                           :else (auth/auth-interceptor (-> system :env :auth :cert-filename)
                                                        (-> system :env :auth :known-roles)))
 

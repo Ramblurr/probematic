@@ -662,59 +662,6 @@
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
 
-   {:db/ident :email/email-id
-    :db/doc "The id of this email"
-    :db/unique :db.unique/identity
-    :db/valueType :db.type/uuid
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/to
-    :db/doc "The to email address"
-    :db/valueType :db.type/string
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/member-recipient
-    :db/doc "A ref to the member entity that received this email"
-    :db/valueType :db.type/ref
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/from
-    :db/doc "The from email address"
-    :db/valueType :db.type/string
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/body-html
-    :db/doc "The html body of the email"
-    :db/valueType :db.type/string
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/body-plain
-    :db/doc "The plain body of the email"
-    :db/valueType :db.type/string
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/sent-status
-    :db/doc "The sent status of the email"
-    :db/valueType :db.type/keyword
-    :db/noHistory true
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/created-at
-    :db/doc "The time the email was created"
-    :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one}
-
-   {:db/ident :email/sent-at
-    :db/doc "The time the email was sent"
-    :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one}
-
    ;;
    ]
 

@@ -2,6 +2,8 @@
  :secrets         #include #or [#env APP_SECRETS_FILE "../secrets.edn"]
  :app-base-url    #ref [:secrets :app-base-url]
  :app-secret-key  #ref [:secrets :app-secret-key]
+ :app-idp-logout-url #ref [:secrets :app-idp-logout-url]
+ :app-rp-logout-path #ref [:secrets :app-rp-logout-path]
  :environment     #profile {:prod #or [#env APP_ENVIRONMENT "prod"]
                             :dev  "dev"
                             :demo "demo"
@@ -36,7 +38,7 @@
  :redis           {:conn-spec #ref [:secrets :redis :conn-spec]}
  :auth            {:cert-filename "keycloak-realm.crt"
                    :known-roles   #{:admin :Mitglieder}}
- :max-header-size 10000
+ :max-header-size 12000
  :ig/system       {:app.ig/profile          #profile {:prod :prod
                                                       :dev  :dev
                                                       :demo :demo

@@ -36,6 +36,13 @@
   [req]
   (:app.auth/session req))
 
+(defonce BEARER_LENGTH (count "Bearer "))
+
+(defn get-id-token
+  "Fetch the OIDC id token from the request map"
+  [req]
+  (subs (get-in req [:headers "authorization"]) BEARER_LENGTH))
+
 (defn get-current-member
   "Fetch the user's member record from the request map"
   [req]

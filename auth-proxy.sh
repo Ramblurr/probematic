@@ -18,7 +18,12 @@
       --cookie-refresh="1m" \
       --cookie-expire="720m" \
       --skip-provider-button=true \
+      --pass-authorization-header=true \
+      --whitelist-domain=.streetnoise.at,streetnoise.at,localhost:4180 \
       --pass-host-header=true \
       --pass-user-headers=true \
       --pass-access-token=true \
+      --session-store-type=redis \
+      --redis-connection-url=redis://localhost \
+      --redis-password=devpassword123 \
       --upstream=http://localhost:6161
