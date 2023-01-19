@@ -16,4 +16,11 @@
 
   clean (shell "clojure -T:build clean")
   uberjar (shell "clojure -T:build uberjar")
-  test (shell "./bin/kaocha")}}
+  test (shell "./bin/kaocha")
+  podman-build {:depends []
+                :requires ([babashka.process :refer [sh]])
+                :task
+                (do
+                  (shell (format "podman build -f ./docker/Dockerfile -t probematic-test --build-arg GIT_HASH=%s --build-arg BUILD_DATE=%s ."
+                                 (:out (sh "git rev-parse --short HEAD"))
+                                 (:out (sh "date -u +%Y%m%dT%H%M%S")))))}}}
