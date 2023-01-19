@@ -26,6 +26,7 @@
          luminus-transit/luminus-transit  {:mvn/version "0.1.3" :exclusions [com.cognitect/transit-clj]}
          metosin/muuntaja                 {:mvn/version "0.6.8"}
          org.babashka/sci                 {:mvn/version "0.2.8"}
+         com.taoensso/nippy               {:mvn/version "3.2.0"}
 ;;;; Nextcloud WebDAV
          com.github.lookfirst/sardine     {:mvn/version "5.10"}
 ;;;; Error reporting & Logging

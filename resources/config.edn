@@ -1,9 +1,11 @@
 {:name            "probematic"
+ :secrets         #include "../secrets.edn"
+ :absolute-url    #ref [:secrets :absolute-url]
+ :app-secret-key  #ref [:secrets :app-secret-key]
  :environment     #profile {:prod #or [#env APP_ENVIRONMENT "prod"]
                             :dev  "dev"
                             :demo "demo"
                             :test "test"}
- :secrets         #include "../secrets.edn"
  :discourse       {:api-key  #ref [:secrets :discourse :api-key]
                    :username #ref [:secrets :discourse :username]}
  :nextcloud       {:password         #ref [:secrets :nextcloud :password]
