@@ -1,18 +1,19 @@
 (ns app.email
   (:require
-   [app.email.templates :as tmpl]
+   [app.debug :as debug]
    [app.email.email-worker :as email-worker]
+   [app.email.templates :as tmpl]
    [app.i18n :as i18n]
    [app.util :as util]
    [com.yetanalytics.squuid :as sq]
    [tick.core :as t]))
 
 (defn queue-email! [sys email]
-  (email-worker/enqueue-mail! sys email))
+  (email-worker/enqueue-mail! (:redis sys) email))
 
 (defn build-email [to subject body-html body-plain]
   (util/remove-nils
-   {:email/bulk? false
+   {:email/batch? false
     :email/email-id (sq/generate-squuid)
     :email/tos [to]
     :email/subject subject
@@ -20,9 +21,9 @@
     :email/body-html body-html
     :email/created-at (t/inst)}))
 
-(defn build-bulk-emails [tos subject body-html body-plain recipient-variables]
+(defn build-batch-emails [tos subject body-html body-plain recipient-variables]
   (util/remove-nils
-   {:email/bulk? true
+   {:email/batch? true
     :email/recipient-variables recipient-variables
     :email/email-id (sq/generate-squuid)
     :email/tos tos
@@ -32,7 +33,7 @@
     :email/created-at (t/inst)}))
 
 (defn build-gig-created-email [{:keys [tr] :as sys} gig members]
-  (build-bulk-emails
+  (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-created] [(:gig/title gig)])
    (tmpl/gig-created-email-html sys gig)
@@ -40,7 +41,7 @@
    (tmpl/gig-created-recipient-variables sys gig members)))
 
 (defn build-gig-updated-email [{:keys [tr] :as sys} gig members edited-attrs]
-  (build-bulk-emails
+  (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-updated] [(:gig/title gig)])
    (tmpl/gig-updated-email-html sys gig edited-attrs)
@@ -50,6 +51,8 @@
 (comment
 
   (do
+
+    (require '[integrant.repl.state :as state])
     (def gig {:gig/pay-deal "Unterkunft, Verpflegung kostet nix, wir bekommen auch einen kräftigen Fahrtkostenzuschuss, und weitgehend Essen&trinken. die bandkassa nehmen wir mit für noch mehr Essen&Trinken."
               :gig/status :gig.status/confirmed
               :gig/title "Skappa’nabanda!"
@@ -71,11 +74,13 @@
                :gig/date  (t/date "2023-01-18")
                :gig/location "Proberaum in den Bögen"})
 
-    (def member {:member/email "alice@example.com"
+    (def member {:member/email "me@***REMOVED***"
                  :member/gigo-key "abcd123u"})
 
-    (def member2 {:member/email "bob@example.com"
+    (def member2 {:member/email "me+test@***REMOVED***"
                   :member/gigo-key "zxcysdf"})
+
+    (def redis-opts (-> state/system :app.ig/redis)) ;; rcf
 
     (def tr (i18n/tr-with (i18n/read-langs) ["en"]))
     (def sys {:tr tr :env {:app-secret-key "hunter2" :app-base-url "https://foobar.com"}})) ;; rcf
@@ -96,6 +101,9 @@
 
   (build-gig-created-email sys gig [member member2])
   (build-gig-updated-email sys gig [member member2] [:gig/status])
+
+  (queue-email! {:redis redis-opts} (debug/xxx (build-gig-created-email sys gig2 [member2])))
+  (queue-email! {:redis redis-opts} (debug/xxx (build-gig-updated-email sys gig2 [member2] [:gig/status :gig/location])))
 
   ;;
   )

@@ -55,24 +55,24 @@
   [:div
    [:p [:strong title]]
    [:ul
-    [:li (tr [:gig/date]) ": " date]
+    [:li (tr [:gig/gig-type]) ": " (tr [gig-type])]
+    [:li (tr [:gig/status]) ": " (tr [status])]
+    [:li (tr [:gig/date]) ": " (ui/format-dt date)]
     (when end-date
-      [:li (tr [:gig/end-date]) ": " end-date])
+      [:li (tr [:gig/end-date]) ": " (ui/format-dt end-date)])
     (when call-time
-      [:li (tr [:gig/call-time]) ": " call-time])
+      [:li (tr [:gig/call-time]) ": " (ui/format-time call-time)])
     (when set-time
-      [:li (tr [:gig/set-time]) ": " set-time])
+      [:li (tr [:gig/set-time]) ": " (ui/format-time set-time)])
     (when end-time
-      [:li (tr [:gig/end-time]) ": " end-time])
+      [:li (tr [:gig/end-time]) ": " (ui/format-time end-time)])
     (when location
-      [:li (tr [:gig/location]) location])
-    [:li (tr [:gig/status]) (tr [status])]
-    [:li (tr [:gig/gig-type]) (tr [gig-type])]
+      [:li (tr [:gig/location]) ": " location])
     (when pay-deal
-      [:li (tr [:gig/pay-deal]) pay-deal])]
+      [:li (tr [:gig/pay-deal]) ": " pay-deal])]
 
    (when more-details
-     [:p more-details])])
+     [:p (tr [:gig/more-details]) ": " [:br] more-details])])
 
 (defn template-snippet-gig-details-plain [{:keys [tr env]} {:gig/keys [date end-date title set-time call-time end-time status location more-details pay-deal gig-type]}]
   (selmer/render
@@ -80,11 +80,14 @@
 
 {% for item in gig-details %}* {{item.name}}: {{item.value}}
 {% endfor %}
-{% if not more-details|empty? %}More details:
+{% if not more-details|empty? %}{{more-details-label}}:
 {{more-details}}{% endif %}"
    {:title title
     :more-details more-details
+    :more-details-label (tr [:gig/more-details])
     :gig-details (util/remove-nils [;
+                                    {:name (tr [:gig/gig-type]) :value (tr [gig-type])}
+                                    {:name (tr [:gig/status]) :value (tr [status])}
                                     {:name (tr [:gig/date]) :value  (ui/format-dt date)}
                                     (when end-date
                                       {:name (tr [:gig/end-date]) :value (ui/format-dt end-date)})
@@ -96,8 +99,6 @@
                                       {:name (tr [:gig/end-time]) :value (ui/format-time end-time)})
                                     (when location
                                       {:name (tr [:gig/location]) :value location})
-                                    {:name (tr [:gig/status]) :value (tr [status])}
-                                    {:name (tr [:gig/gig-type]) :value (tr [gig-type])}
                                     (when pay-deal
                                       {:name (tr [:gig/pay-deal]) :value pay-deal})
                                     ;;
@@ -144,7 +145,9 @@
 {{can-you-make-it}}
 
 {{can-make-it}}: {{can-make-it-link}}
+
 {{cannot-make-it}}: {{cannot-make-it-link}}
+
 {{want-reminder}}: {{want-reminder-link}}
 
 {{gig-info-page}}:  {{gig-info-page-link}}
@@ -185,13 +188,12 @@
           (tr [:email/greeting])]
          [:p (tr [:email/gig-edited])]
          [:p]
-         [:p (tr [:email/gig-edit-type]) (str/join ", " (map #(tr [%]) edited-attrs))]
+         [:p (tr [:email/gig-edit-type]) ": " (str/join ", " (map #(tr [%]) edited-attrs))]
          [:p]
          (template-snippet-gig-details sys gig)
          [:p]
          [:hr]
-         [:p [:strong (tr [:email/need-to-change-availability?])]]
-         [:p [:a {:href (url/absolute-link-gig  env (:gig/gig-id gig))} (tr [:email/gig-info-page])]]
+         [:p [:a {:href (url/absolute-link-gig  env (:gig/gig-id gig))} (tr [:email/need-to-change-availability?])]]
          [:p]
          [:p (tr [:email/sign-off])]])))
 

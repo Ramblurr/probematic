@@ -9,7 +9,7 @@
 (def QueuedEmailMessage
   (s/schema
    [:map {:name :app.entity/queued-email}
-    [:email/email-id ::s/non-blank-string]
+    [:email/email-id :uuid]
     [:email/tos [:vector ::s/email-address]]
     [:email/subject ::s/non-blank-string]
     [:email/body-html ::s/non-blank-string]

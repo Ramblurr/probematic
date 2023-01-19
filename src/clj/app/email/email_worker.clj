@@ -1,12 +1,11 @@
 (ns app.email.email-worker
   (:require
-   [app.schemas :as s]
-   [app.email.mailgun :as mailgun]
    [app.email.domain :refer [QueuedEmailMessage]]
-   [taoensso.carmine :as car]
-   [taoensso.carmine.message-queue :as car-mq]
+   [app.email.mailgun :as mailgun]
+   [app.schemas :as s]
    [sentry-clj.core :as sentry]
-   [app.debug :as debug]))
+   [taoensso.carmine :as car]
+   [taoensso.carmine.message-queue :as car-mq]))
 
 (def email-queue-name "email-send-queue")
 
