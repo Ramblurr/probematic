@@ -392,6 +392,8 @@
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db  (datomic/db conn))) ;; rcf
 
+  (q/gigs-after db (q/date-midnight-today!) q/gig-detail-pattern)
+
   (q/attendances-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw")
   (q/attendances-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCAw")
   (tap> {:result

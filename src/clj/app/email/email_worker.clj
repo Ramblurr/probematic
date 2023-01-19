@@ -1,29 +1,12 @@
-(ns app.email-worker
+(ns app.email.email-worker
   (:require
    [app.schemas :as s]
-   [app.mailgun :as mailgun]
+   [app.email.mailgun :as mailgun]
+   [app.email.domain :refer [QueuedEmailMessage]]
    [taoensso.carmine :as car]
    [taoensso.carmine.message-queue :as car-mq]
    [sentry-clj.core :as sentry]
    [app.debug :as debug]))
-
-(def sent-statuses #{:email-status/not-sent
-                     :email-status/sent
-                     :email-status/send-error})
-
-(def QueuedEmailMessage
-  (s/schema
-   [:map {:name :app.entity/queued-email}
-    [:email/batch? :boolean]
-    [:email/recipient-variables {:optional true} :map]
-    [:email/email-id ::s/non-blank-string]
-    [:email/tos [:vector ::s/email-address]]
-    [:email/subject ::s/non-blank-string]
-    [:email/member-id {:optional true} ::s/non-blank-string]
-    [:email/body-html ::s/non-blank-string]
-    [:email/body-plain ::s/non-blank-string]
-    ;; [:email/sent-status (s/enum-from sent-statuses)]
-    [:email/created-at {:optional true} ::s/inst]]))
 
 (def email-queue-name "email-send-queue")
 

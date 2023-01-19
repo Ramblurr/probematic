@@ -188,7 +188,7 @@
          :want-reminder "Remind me in a few days"
          :can-you-make-it? "Can you make it?"
          :can-make-it "I can make it!"
-         :cannot-make-it "I cannot make it."
+         :cannot-make-it "I cannot make it"
          :gig-info-page "Take me to the Gig Info page"
          :sign-off "Much love — SNObot"}
 

@@ -136,13 +136,16 @@
                          [?e :gig/date ?date]
                          [(< ?date ?time)]] db instant gig-pattern)))
 
-(defn gigs-after [db instant]
-  (results->gigs (d/q '[:find (pull ?e pattern)
-                        :in $ ?reference-time pattern
-                        :where
-                        [?e :gig/gig-id _]
-                        [?e :gig/date ?date]
-                        [(>= ?date ?reference-time)]] db instant gig-pattern)))
+(defn gigs-after
+  ([db instant]
+   (gigs-after db instant gig-pattern))
+  ([db instant pattern]
+   (results->gigs (d/q '[:find (pull ?e pattern)
+                         :in $ ?reference-time pattern
+                         :where
+                         [?e :gig/gig-id _]
+                         [?e :gig/date ?date]
+                         [(>= ?date ?reference-time)]] db instant pattern))))
 
 (defn gigs-between [db instant-start instant-end]
   (results->gigs (d/q '[:find (pull ?e pattern)

@@ -2,7 +2,7 @@
   "This namespace contains our application's integrant system implementations"
   (:require
    [taoensso.carmine :as car]
-   [app.email-worker :as email-worker]
+   [app.email.email-worker :as email-worker]
    [app.config :as config]
    [app.datomic :as datomic]
    [app.i18n :as i18n]

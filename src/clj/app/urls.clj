@@ -27,3 +27,17 @@
 
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))
+
+(defn base-url [env]
+  (:absolute-url env))
+
+(defn absolute-link-gig [env gig-id]
+  (str (base-url env) "/gig/" gig-id))
+
+(defn absolute-link-gig-coming-template [env gig-id]
+  (str
+   (absolute-link-gig env gig-id) "/answer-link/%recipient.%"))
+
+(defn absolute-link-gig-not-coming-template [env gig-id])
+
+(defn absolute-link-gig-reminder-template [env gig-id])

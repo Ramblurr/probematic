@@ -1,4 +1,4 @@
-(ns app.mailgun
+(ns app.email.mailgun
   (:require
    [jsonista.core :as j]
    [org.httpkit.client :as client]))

@@ -759,7 +759,12 @@
     (icon {:class (str " h-5 w-5 inline " color)})))
 
 (defn format-dt [dt]
-  (t/format (t/formatter "dd-MMM-yyyy") dt))
+  (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
+    (t/format (t/formatter "dd-MMM-yyyy") norm-dt)))
+
+(defn format-time [dt]
+  (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
+    (t/format (t/formatter "HH:mm") norm-dt)))
 
 (defn gig-date-all [{:gig/keys [date call-time]}]
   (cond

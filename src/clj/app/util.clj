@@ -56,7 +56,16 @@
 (defn remove-nils
   "Returns the map less any keys that have nil values"
   [m]
-  (into {} (filter #(not (nil? (val %))) m)))
+  (cond (map? m)
+        (into {} (filter #(not (nil? (val %))) m))
+        (list? m)
+        (remove #(nil? %) m)
+        (vector? m)
+        (filterv #(some? %) m)
+        (sequential? m)
+        (remove #(nil? %) m)
+        :else
+        (throw "remove-nils: Not implemented")))
 
 (defn remove-empty-strings
   "Returns the map less any keys that have empty-strings as values values"
