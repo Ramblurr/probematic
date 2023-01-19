@@ -10,7 +10,7 @@ check_vars()
     return 0
 }
 
-check_vars APP_SECRETS_FILE REDIS_PASS_FILE
+check_vars APP_SECRETS_FILE
 
 JAVA_AGENT=""
 
