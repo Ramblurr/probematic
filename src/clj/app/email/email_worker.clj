@@ -71,9 +71,6 @@
 
     (def recipient1 "foo@example.com")
     (def recipient2 "foo+test@example.com") ;; rcf
-
-    (def recipient1 "me@***REMOVED***")
-    (def recipient2 "me+test@***REMOVED***") ;; rcf
     (def redis-opts (-> state/system :app.ig/redis))) ;; rcf
 
   (queue-mail! redis-opts

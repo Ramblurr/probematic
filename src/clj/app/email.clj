@@ -96,10 +96,10 @@
                :gig/date  (t/date "2023-01-18")
                :gig/location "Proberaum in den Bögen"})
 
-    (def member {:member/email "me@***REMOVED***"
+    (def member {:member/email "me@example.com"
                  :member/gigo-key "abcd123u"})
 
-    (def member2 {:member/email "me+test@***REMOVED***"
+    (def member2 {:member/email "me+test@example.com"
                   :member/gigo-key "zxcysdf"})
 
     (def redis-opts (-> state/system :app.ig/redis)) ;; rcf
