@@ -31,7 +31,7 @@
                              (util/comp-namer #'gig-attendance-person-comment)
                              gig-id gigo-key comment edit?))
 
-(ctmx/defcomponent ^:endpoint gig-attendance [{:keys [db] :as req} idx gig]
+(defn gig-attendance-endpoint [{:keys [db] :as req} id idx gig]
   (let [attendance (:attendance gig)
         gig-id (:gig/gig-id gig)
         {:member/keys [gigo-key]} (:attendance/member attendance)]
@@ -53,6 +53,18 @@
       [:div (gig-attendance-person-motivation req gig-id gigo-key (:attendance/motivation attendance))]
       [:div (gig-attendance-person-comment req gig-id gigo-key (:attendance/comment attendance) false)]]]))
 
+(ctmx/defcomponent ^:endpoint gig-attendance-upcoming [req idx gig]
+  gig-attendance-person-comment
+  gig-attendance-person-motivation
+  gig-attendance-person-plan
+  (gig-attendance-endpoint req id idx gig))
+
+(ctmx/defcomponent ^:endpoint gig-attendance-unanswered [req idx gig]
+  gig-attendance-person-comment
+  gig-attendance-person-motivation
+  gig-attendance-person-plan
+  (gig-attendance-endpoint req id idx gig))
+
 (ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db] :as req}]
   (let [member (auth/get-current-member req)
         gigs-planned (gig.controller/gigs-planned-for db member)
@@ -73,12 +85,12 @@
      (when (seq need-answer-gigs)
        [:div {:class "mt-6 sm:px-6 lg:px-8"}
         (ui/divider-left (tr [:dashboard/unanswered]))
-        (rt/map-indexed gig-attendance req need-answer-gigs)])
+        (rt/map-indexed gig-attendance-unanswered req need-answer-gigs)])
 
      (when (seq gigs-planned)
        [:div {:class "mt-6 sm:px-6 lg:px-8"}
         (ui/divider-left (tr [:dashboard/upcoming]))
-        (rt/map-indexed gig-attendance req gigs-planned)])
+        (rt/map-indexed gig-attendance-upcoming req gigs-planned)])
      (when-not (or (seq gigs-planned) (seq need-answer-gigs))
        [:div {:class "mt-6 sm:px-6 lg:px-8"}
         "You have no upcoming gigs or probes. Why don't you create one?"])]))
