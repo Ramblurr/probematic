@@ -7,7 +7,6 @@
 ** Optionally notify members on gig creation
 ** Gig creation confirmation page
 ** Delete gig
-** setlist choose songs "continue" not save
 ** Insurance edit coverage value
 
 * Production Checklist
