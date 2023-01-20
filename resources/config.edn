@@ -27,9 +27,9 @@
                    :twilio-token   #ref [:secrets :twilio :twilio-token]}
  :mailgun         {;;  test mode hits the mailgun API but mailgun does not send the message.
                    ;;  this still costs money
-                   :test-mode?     true
+                   :test-mode?     #ref [:secrets :mailgun :test-mode?]
                    ;; demo mode does not hit the mailgun API.. it just taps the emails instead of sending
-                   :demo-mode?     true
+                   :demo-mode?     #ref [:secrets :mailgun :demo-mode?]
                    :api-key        #ref [:secrets :mailgun :api-key]
                    :from           #ref [:secrets :mailgun :from]
                    :send-domain    #ref [:secrets :mailgun :send-domain]
