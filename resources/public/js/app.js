@@ -99,3 +99,19 @@ function checkboxLimitReached(event) {
 }
 
 window.checkboxLimitReached = checkboxLimitReached;
+
+function pageDirtyHandler(event) {
+    event.returnValue = "Are you sure you want to leave? You have unsaved changes.";
+}
+
+function setPageDirty() {
+  document.addEventListener('beforeunload', pageDirtyHandler);
+}
+
+function unsetPageDirty() {
+  document.removeEventListener('beforeunload', pageDirtyHandler);
+}
+
+document.addEventListener('setPageDirty', function(evt) {
+  setPageDirty();
+});

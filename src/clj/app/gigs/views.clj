@@ -422,12 +422,13 @@
         tr (i18n/tr-from-req req)]
     (if (util/put? req)
       (gig-setlist-sort req (util/unwrap-params req))
-      (let [selected-songs (util/unwrap-params req)]
-        (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
-                   :buttons (ui/button :class "pulse-delay" :label (tr [:action/save]) :priority :primary :form id)}
-                  [:form {:hx-target "#setlist-container" :hx-put (comp-name) :id id}
-                   [:ul {:class "p-0 m-0 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-y-0 md:gap-x-2"}
-                    (map-indexed (partial setlist-song-checkbox selected-songs) all-songs)]])))))
+      (ui/trigger-response "setPageDirty"
+                           (let [selected-songs (util/unwrap-params req)]
+                             (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
+                                        :buttons (ui/button :class "pulse-delay" :label (tr [:action/continue]) :priority :primary :form id)}
+                                       [:form {:hx-target "#setlist-container" :hx-put (comp-name) :id id}
+                                        [:ul {:class "p-0 m-0 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-y-0 md:gap-x-2"}
+                                         (map-indexed (partial setlist-song-checkbox selected-songs) all-songs)]]))))))
 
 (ctmx/defcomponent ^:endpoint  gig-setlist-sort [{:keys [db] :as req} ^:array selected-songs]
   (let [tr (i18n/tr-from-req req)
@@ -438,7 +439,7 @@
                        (map util/ensure-uuid))
         songs (util/index-sort-by song-ids :song/song-id (q/find-songs db song-ids))]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
-               :buttons (ui/button :class "pulse-delay" :label (tr [:action/done]) :priority :primary :form id)}
+               :buttons (ui/button :class "pulse-delay" :label (tr [:action/save]) :priority :primary :form id)}
               [:form {:class "w-full" :hx-post (util/comp-name #'gigs-detail-page-setlist) :hx-target "#setlist-container" :id id}
                [:p "Drag the songs into setlist order."]
                [:div {:class "htmx-indicator pulsate"} (tr [:updating])]

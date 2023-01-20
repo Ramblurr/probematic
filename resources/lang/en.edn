@@ -130,6 +130,7 @@
           :comment "Comment"
           :add "Add"
           :create "Create"
+          :continue "Continue"
           :duplicate "Duplicate"
           :confirm-generic "Are you sure?"}
  :motivation {:none "-"
