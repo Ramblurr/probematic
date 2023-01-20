@@ -32,6 +32,7 @@ export function ActionMenu(event, dropdownTrigger) {
 
 export async function Flyout(event, flyoutTrigger) {
     const selector = $(flyoutTrigger.getAttribute("data-flyout-trigger"))
+    const flyoutType =  selector.getAttribute("data-flyout-type") || "flyout-menu";
     const backdrop = $("[data-flyout-backdrop]", selector)
     const menu = $("[data-flyout-menu]", selector)
     const closeButtonContainer = $("[data-flyout-close-button]", selector)
@@ -43,14 +44,14 @@ export async function Flyout(event, flyoutTrigger) {
     selector.classList.remove('hidden');
     await Promise.all([
         enter(backdrop, 'flyout-backdrop'),
-        enter(menu, 'flyout-menu'),
+        enter(menu, flyoutType),
         enter(closeButtonContainer, 'flyout-closeButton')
     ])
 
     const close = async () => {
         await Promise.all([
             leave(backdrop, 'flyout-backdrop'),
-            leave(menu, 'flyout-menu'),
+            leave(menu, flyoutType),
             leave(closeButtonContainer, 'flyout-closeButton'),
         ])
         selector.classList.add('hidden');

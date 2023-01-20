@@ -346,6 +346,26 @@ body {
   @apply -translate-x-full;
 }
 
+/* ANIMATION: flyout-panel */
+.flyout-panel-enter {
+  @apply transform transition ease-in-out duration-500 sm:duration-700;
+}
+.flyout-panel-enter-start {
+  @apply translate-x-full;
+}
+.flyout-panel-enter-end {
+  @apply translate-x-0;
+}
+.flyout-panel-leave {
+  @apply transform transition ease-in-out duration-500 sm:duration-700;
+}
+.flyout-panel-leave-start {
+  @apply translate-x-0;
+}
+.flyout-panel-leave-end {
+  @apply translate-x-full;
+}
+
 /* ANIMATION: flyout-closeButton */
 .flyout-closeButton-enter {
   @apply ease-in-out duration-300;

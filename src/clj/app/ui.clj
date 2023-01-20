@@ -326,6 +326,8 @@
                               "border-red-300 bg-white px-4 py-2 text-sm  text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary
                               "border-transparent bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              :primary-orange
+                              "border-transparent bg-orange-600 text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
 
 (def button-sizes-classes {:2xsmall "px-1.5 py-0.5 text-xs"
@@ -341,7 +343,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals form]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm form]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -349,7 +351,7 @@
                         tag :button}}]
 
   [tag (merge
-        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :form form})
+        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :hx-confirm hx-confirm :form form})
         {:class
          (cs
           "inline-flex items-center rounded-md border font-medium"
@@ -617,14 +619,16 @@
     [:span
      [:span (money-format value currency)]]))
 
-(defn money-input [& {:keys [label required? id]
-                      :or {required? true}}]
+(defn money-input [& {:keys [label required? id value extra-attrs]
+                      :or {required? true extra-attrs {}}}]
   [:div
-   [:label {:for "price", :class "block text-sm font-medium text-gray-700"} label]
+   [:label {:for "price", :class "block text-sm font-medium"} label]
    [:div {:class "relative mt-1 rounded-md shadow-sm"}
     [:div {:class "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"}
      [:span {:class "text-gray-500 sm:text-sm"} (:EUR currency-symbols)]]
-    [:input {:type "text" :required required? :name id :id id :class "block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" :placeholder "0.00"}]
+    [:input (merge
+             {:type "number" :min 0.01 :step 0.01 :value value :required required? :name id :id id :class "block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" :placeholder "0.00"}
+             extra-attrs)]
     [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
      [:span {:class "text-gray-500 sm:text-sm"} "EUR"]]]])
 
@@ -854,3 +858,53 @@
 (defn rich-ul [_ & items]
   [:ul {:role "list", :class "divide-y divide-gray-200 rounded-md border border-gray-200"}
    items])
+
+(defn slideover-panel
+  [{:keys [id title subtitle buttons]} body]
+  [:div {:class "hidden relative z-10", :aria-labelledby "slide-over-title", :role "dialog", :aria-modal "true" :id id :data-flyout-type "flyout-panel"}
+   [:div {:class "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"  :data-flyout-backdrop true}]
+   [:div {:class "fixed inset-0 overflow-hidden"}
+    [:div {:class "absolute inset-0 overflow-hidden"}
+     [:div {:class "pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"}
+      [:div {:class "pointer-events-auto w-screen max-w-md" :data-flyout-menu true}
+       [:div {:class "flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl"}
+        [:div {:class "px-4 sm:px-6"}
+         [:div {:class "flex items-start justify-between"}
+          [:h2 {:class "text-lg font-medium text-gray-900", :id "slide-over-title"} title]
+          [:div {:class "ml-3 flex h-7 items-center" :data-flyout-close-button true}
+           [:button {:type "button", :class "rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+            [:span {:class "sr-only"} "Close panel"]
+            (icon/xmark-thin {:class "h-6 w-6"})]]]]
+        [:div {:class "relative mt-6 flex-1 px-4 sm:px-6"}
+         body]]]]]]])
+[:div {:class "absolute inset-0 px-4 sm:px-6"}
+ [:div {:class "h-full border-2 border-dashed border-gray-200", :aria-hidden "true"}]]
+
+(defn slideover-extra-close-script [id]
+  (format "on click trigger click on <#%s [data-flyout-close-button] button/>" id))
+
+(defn slideover-panel-form
+  [{:keys [id title subtitle buttons form-attrs]} body]
+  [:div {:class "hidden relative z-10", :aria-labelledby (str id "slide-over-title"), :role "dialog", :aria-modal "true"  :data-flyout-type "flyout-panel" :id id}
+   [:div {:class "fixed inset-0"  :data-flyout-backdrop true}]
+   [:div {:class "fixed inset-0 overflow-hidden"}
+    [:div {:class "absolute inset-0 overflow-hidden"}
+     [:div {:class "pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16"}
+      [:div {:class "pointer-events-auto w-screen max-w-md"  :data-flyout-menu true}
+       [:form (merge {:class "flex h-full flex-col divide-y divide-gray-200 bg-white shadow-xl"} form-attrs)
+        [:div {:class "h-0 flex-1 overflow-y-auto"}
+         [:div {:class "bg-orange-600 py-6 px-4 sm:px-6"}
+          [:div {:class "flex items-center justify-between"}
+           [:h2 {:class "text-lg font-medium text-white", :id (str id "slide-over-title")} title]
+           [:div {:class "ml-3 flex h-7 items-center"  :data-flyout-close-button true}
+            [:button {:type "button", :class "rounded-md bg-orange-700 text-orange-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"}
+             [:span {:class "sr-only"} "Close panel"]
+             (icon/xmark-thin {:class "h-6 w-6"})]]]
+          [:div {:class "mt-1"}
+           (when subtitle
+             [:p {:class "text-sm text-orange-300"} subtitle])]]
+         body]
+
+        (when buttons
+          [:div {:class "flex flex-shrink-0 justify-end px-4 py-4 space-x-3"}
+           buttons])]]]]]])

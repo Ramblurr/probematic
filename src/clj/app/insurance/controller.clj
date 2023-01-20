@@ -4,6 +4,7 @@
    [app.datomic :as d]
    [app.queries :as q]
    [app.util :as util]
+   [clojure.data :as clojure.data]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [medley.core :as m]
@@ -302,24 +303,47 @@
     (if (d/db-ok? result)
       {:policy (retrieve-policy (:db-after result) (-> req :policy :insurance.policy/policy-id))}
       result)))
+(defn retrieve-coverage [db coverage-id]
+  (d/find-by db :instrument.coverage/coverage-id (common/ensure-uuid coverage-id) q/instrument-coverage-detail-pattern))
 
 (defn create-instrument-coverage! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (-> (common/unwrap-params req))
         policy-id (common/ensure-uuid policy-id)
         instrument-id (parse-uuid (:instrument-id params))
-        tx-data [{:instrument.coverage/coverage-id (sq/generate-squuid)
-                  :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
-                  :instrument.coverage/value (bigdec (:value params))
-                  :instrument.coverage/private? (common/check->bool (:private? params))
-                  :db/id "covered_instrument"}
-                 [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]]
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if (d/db-ok? result)
-      {:policy (retrieve-policy (:db-after result) policy-id)}
-      result)))
+        coverage-types (mapv common/ensure-uuid  (util/ensure-coll (:coverage-types params)))
+        coverage-types-tx (mapv (fn [coverage-type-id]
+                                  [:db/add "covered_instrument" :instrument.coverage/types [:insurance.coverage.type/type-id coverage-type-id]]) coverage-types)
+        tx-data (concat coverage-types-tx  [{:instrument.coverage/coverage-id (sq/generate-squuid)
+                                             :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
+                                             :instrument.coverage/value (bigdec (:value params))
+                                             :instrument.coverage/private? (= "private" (:band-or-private params))
+                                             :db/id "covered_instrument"}
+                                            [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])
 
-(defn retrieve-coverage [db coverage-id]
-  (d/find-by db :instrument.coverage/coverage-id (common/ensure-uuid coverage-id) q/instrument-coverage-detail-pattern))
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+    {:policy (retrieve-policy (:db-after result) policy-id)}))
+
+(defn reconcile-coverage-types [eid existing-types new-types]
+  (let [[added removed] (clojure.data/diff (set existing-types)  (set new-types))
+        ;; _ (tap> {:added added :removed removed})
+        add-tx (map #(-> [:db/add eid :instrument.coverage/types [:insurance.coverage.type/type-id  %]]) (filter some? added))
+        remove-tx (map #(-> [:db/retract eid :instrument.coverage/types [:insurance.coverage.type/type-id  %]]) (filter some? removed))]
+    (concat add-tx remove-tx)))
+
+(defn update-instrument-coverage! [{:keys [datomic-conn db] :as req}]
+  (let [{:keys [value coverage-types coverage-id band-or-private]} (:params req)
+        coverage-id (common/ensure-uuid coverage-id)
+        coverage (retrieve-coverage db coverage-id)
+        coverage-ref [:instrument.coverage/coverage-id coverage-id]
+        before-types (mapv :insurance.coverage.type/type-id  (:instrument.coverage/types coverage))
+        after-types (mapv common/ensure-uuid  (util/ensure-coll coverage-types))
+        txs (reconcile-coverage-types coverage-ref after-types before-types)
+        tx-data (concat txs
+                        [[:db/add coverage-ref :instrument.coverage/value (bigdec value)]
+                         [:db/add coverage-ref :instrument.coverage/private? (= "private" band-or-private)]])
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+
+    (retrieve-coverage (:db-after result) coverage-id)))
 
 (defn get-coverage-type-from-coverage [instrument-coverage type-id]
   (m/find-first #(= type-id (:insurance.coverage.type/type-id %))
@@ -331,10 +355,8 @@
         coverage (retrieve-coverage db coverage-id)
         operation (if (get-coverage-type-from-coverage coverage type-id) :db/retract :db/add)
         tx-data [[operation [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/types [:insurance.coverage.type/type-id (common/ensure-uuid type-id)]]]
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if (d/db-ok? result)
-      {:coverage (retrieve-coverage (:db-after result) coverage-id)}
-      result)))
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+    {:coverage (retrieve-coverage (:db-after result) coverage-id)}))
 
 (defn ->instrument [query-result]
   query-result)

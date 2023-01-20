@@ -1,17 +1,17 @@
 (ns app.insurance.views
   (:require
-   [app.util :as util]
-   [app.urls :as url]
-   [app.ui :as ui]
-   [app.insurance.controller :as controller]
-   [ctmx.response :as response]
+   [app.i18n :as i18n]
    [app.icons :as icon]
-   [ctmx.core :as ctmx]
-   [tick.core :as t]
-   [ctmx.rt :as rt]
-   [medley.core :as m]
+   [app.insurance.controller :as controller]
    [app.queries :as q]
-   [app.i18n :as i18n]))
+   [app.ui :as ui]
+   [app.urls :as url]
+   [app.util :as util]
+   [clojure.string :as str]
+   [ctmx.core :as ctmx]
+   [ctmx.response :as response]
+   [ctmx.rt :as rt]
+   [tick.core :as t]))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -330,11 +330,6 @@
    [{:label "Total Cost" :priority :medium :key :value :variant :number}]
    [{:label "Edit" :variant :action :key :action}]))
 
-(defn get-coverage [policy coverage-id]
-  (->> policy
-       :insurance.policy/covered-instruments
-       (m/find-first #(= coverage-id (:instrument.coverage/coverage-id %)))))
-
 (defn shared-static-columns [coverage]
   (let [{:instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
     (list
@@ -357,98 +352,168 @@
       ;;
      )))
 
-(ctmx/defcomponent ^:endpoint coverage-table-row-rw [{:keys [db] :as req} idx coverage-id]
+(defn coverage-create-form [{:keys [tr]} non-covered-instruments coverage-types]
+  [:div {:class "flex flex-1 flex-col justify-between"}
+   [:div {:class "divide-y divide-gray-200 px-4 sm:px-6"}
+    [:div {:class "space-y-6 pt-6 pb-5"}
+     [:div
+      (ui/instrument-select :id "instrument-id" :instruments non-covered-instruments)]
+
+     [:div
+      (ui/money-input :id "value" :label "Value" :required? true)]
+
+     [:fieldset
+      [:legend {:class "text-sm font-medium text-gray-900"} (tr [:insurance/coverage-types])]
+      [:div {:class "mt-2 space-y-5"}
+       (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
+                      [:div {:class "relative flex items-start"}
+                       [:div {:class "absolute flex h-5 items-center"}
+                        [:input {:id type-id :name "coverage-types" :type "checkbox"
+                                 :value type-id
+                                 :class "h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+                       [:div {:class "pl-7 text-sm"}
+                        [:label {:for type-id :class "font-medium text-gray-900"} name]
+                        [:p {:class "text-gray-500"} ""]]])
+
+                    coverage-types)]]
+
+     [:fieldset
+      [:legend {:class "text-sm font-medium text-gray-900"} (tr [:band-private])]
+      [:div {:class "mt-2 space-y-5"}
+       [:div {:class "relative flex items-start"}
+        [:div {:class "absolute flex h-5 items-center"}
+         [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+        [:div {:class "pl-7 text-sm"}
+         [:label {:for "bandprivate-band" :class "font-medium text-gray-900"} (tr [:band-instrument])]
+         [:p {:class "text-gray-500"} (tr [:band-instrument-description])]]]
+       [:div
+        [:div {:class "relative flex items-start"}
+         [:div {:class "absolute flex h-5 items-center"}
+          [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+         [:div {:class "pl-7 text-sm"}
+          [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
+          [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]])
+
+(defn coverage-edit-form [{:keys [tr]} coverage-types coverage]
+  (let [{:instrument/keys [name make model build-year serial-number] :as instrument} (:instrument.coverage/instrument coverage)]
+    [:div {:class "flex flex-1 flex-col justify-between"}
+     [:div {:class "divide-y divide-gray-200 px-4 sm:px-6"}
+      [:div {:class "space-y-6 pt-6 pb-5"}
+       [:div
+        [:label {:class "block text-sm font-medium text-gray-900"} (tr [:instrument/name])]
+        [:div {:class "mt-2 space-y-5"}
+         (str/join ", "
+                   (util/remove-nils
+                    [name
+                     make
+                     model
+                     build-year
+                     serial-number]))]]
+
+       [:div
+        [:label {:class "block text-sm font-medium text-gray-900"} (tr [:instrument/owner])]
+        [:div {:class "mt-2 space-y-5"}
+         (-> instrument :instrument/owner :member/name)]]
+
+       [:div
+        (ui/money-input :id "value" :label "Value" :required? true :value (:instrument.coverage/value coverage))]
+
+       [:fieldset
+        [:legend {:class "text-sm font-medium text-gray-900"} (tr [:insurance/coverage-types])]
+        [:div {:class "mt-2 space-y-5"}
+         [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
+         (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
+                        [:div {:class "relative flex items-start"}
+                         [:div {:class "absolute flex h-5 items-center"}
+                          [:input {:id type-id :name "coverage-types" :type "checkbox"
+                                   :value type-id
+                                   :checked (some? (controller/get-coverage-type-from-coverage coverage type-id))
+                                   :class "h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+                         [:div {:class "pl-7 text-sm"}
+                          [:label {:for type-id :class "font-medium text-gray-900"} name]
+                          [:p {:class "text-gray-500"} ""]]])
+
+                      coverage-types)]]
+
+       [:fieldset
+        [:legend {:class "text-sm font-medium text-gray-900"} (tr [:band-private])]
+        [:div {:class "mt-2 space-y-5"}
+         [:div {:class "relative flex items-start"}
+          [:div {:class "absolute flex h-5 items-center"}
+           [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"
+                    :checked (not (:instrument.coverage/private? coverage))}]]
+          [:div {:class "pl-7 text-sm"}
+           [:label {:for "bandprivate-band" :class "font-medium text-gray-900"} (tr [:band-instrument])]
+           [:p {:class "text-gray-500"} (tr [:band-instrument-description])]]]
+         [:div
+          [:div {:class "relative flex items-start"}
+           [:div {:class "absolute flex h-5 items-center"}
+            [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"
+                     :checked (:instrument.coverage/private? coverage)}]]
+           [:div {:class "pl-7 text-sm"}
+            [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
+            [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]]))
+
+(ctmx/defcomponent ^:endpoint coverage-table-row [{:keys [db] :as req} idx coverage-id]
   (let [policy (:policy req)
+        tr (i18n/tr-from-req req)
         post? (util/post? req)
         delete? (util/delete? req)
+        comp-name (util/comp-namer #'coverage-table-row)
         coverage-types (:insurance.policy/coverage-types policy)
         coverage (cond post?
-                       (:coverage (controller/toggle-instrument-coverage-type! req coverage-id (-> req :params :type-id)))
-                       delete?
-                       (:policy (controller/remove-instrument-coverage! req coverage-id))
-
+                       (controller/update-instrument-coverage! req)
                        :else
-                       (controller/retrieve-coverage db coverage-id))]
-    (if (and delete? coverage)
-      ""
+                       (controller/retrieve-coverage db coverage-id))
+        coverage (controller/update-total-coverage-price policy coverage)]
+    (if delete?
+      (do (controller/remove-instrument-coverage! req coverage-id)
+          "")
       (into [] (concat
+
                 [:tr {:id id}
                  (shared-static-columns coverage)
+
                  [:td {:class "px-3 py-4"}
+                  (ui/slideover-panel-form {:title "Edit Instrument Coverage" :id (path "slideover")
+                                            :form-attrs {:hx-post (comp-name) :hx-target (hash ".")}
+                                            :buttons (list
+                                                      (ui/button {:label (tr [:action/delete]) :priority :white-destructive :hx-delete (comp-name) :hx-target (hash ".") :hx-confirm (tr [:action/confirm-generic])})
+                                                      (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
+                                                      (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
+                                           (coverage-edit-form {:tr tr :path path} coverage-types coverage))
                   (if (:instrument.coverage/private? coverage)
                     "private"
                     "band")]
                  [:td {:class "px-3 py-4 text-right"}
                   (ui/money (:instrument.coverage/value coverage) :EUR)]]
-                (map-indexed  (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
-                                [:td {:class "px-3 py-4" :hx-include (str "#coverage" idx "type" type-idx  " input") :id (str "coverage" idx "type" type-idx)}
-                                 [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
-                                 [:input {:type "hidden" :name "type-id" :value type-id}]
-                                 (let [has? (controller/get-coverage-type-from-coverage coverage type-id)
-                                       icon (if has? icon/xmark icon/plus)
-                                       class (if has? "text-red-500" "text-green-500")]
-                                   (ui/button :icon icon :size :small
-                                              :class class
-                                              :attr {:hx-post "coverage-table-row-rw" :hx-target (hash ".")}))])
-                              coverage-types)
+                (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                        [:td {:class "px-3 py-4 text-right"}
+                         (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
+                           [:div (ui/money (:insurance.coverage.type/cost coverage-type) :EUR)]
+                           (icon/xmark {:class "w-5 h-5 inline"}))])
+
+                      coverage-types)
+
                 (shared-static-columns-end coverage)
                 (list
                  [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
-                  [:form {:hx-delete "coverage-table-row-rw" :hx-target (hash ".") :hx-confirm "Are you sure?"}
-                   [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
-                   [:span {:class "flex flex-row space-x-2"}
-                    [:button {:type "submit" :class "text-red-600 hover:text-indigo-900 cursor-pointer"} "Delete"]]]]))))))
+                  [:span {:class "flex flex-row space-x-2"}
+                   [:button {:type "submit" :class "text-blue-600 hover:text-indigo-900 cursor-pointer"
+                             :data-flyout-trigger (hash "slideover")} "Edit"]]]))))))
 
-(ctmx/defcomponent ^:endpoint coverage-table-row-ro [{:keys [db] :as req} idx coverage-id]
-  (let [policy (:policy req)
-        coverage-types (:insurance.policy/coverage-types policy)
-        coverage (controller/retrieve-coverage db coverage-id)
-        coverage (controller/update-total-coverage-price policy coverage)]
-    (into [] (concat
-              [:tr {:id id}
-               (shared-static-columns coverage)
-
-               [:td {:class "px-3 py-4"}
-                (if (:instrument.coverage/private? coverage)
-                  "private"
-                  "band")]
-               [:td {:class "px-3 py-4 text-right"}
-                (ui/money (:instrument.coverage/value coverage) :EUR)]]
-              (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                      [:td {:class "px-3 py-4 text-right"}
-                       (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
-                         [:div (ui/money (:insurance.coverage.type/cost coverage-type) :EUR)]
-                         (icon/xmark {:class "w-5 h-5 inline"}))])
-
-                    coverage-types)
-
-              (shared-static-columns-end coverage)
-              (list
-               [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
-                [:span {:class "flex flex-row space-x-2"}
-                 [:button {:type "submit" :class "text-white hover:text-indigo-900 cursor-pointer"} "Delete"]]])))))
-
-(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table-rw [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db] :as req}]
   (let [policy (:policy req)
         instrument-coverages (:insurance.policy/covered-instruments policy)
         table-headers (coverage-table-headers policy)]
 
     (list
+
      (ui/table-row-head table-headers)
      (ui/table-body
-      (rt/map-indexed coverage-table-row-rw req (map :instrument.coverage/coverage-id instrument-coverages))))))
+      (rt/map-indexed coverage-table-row req (map :instrument.coverage/coverage-id instrument-coverages))))))
 
-(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table-ro [{:keys [db] :as req}]
-  (let [policy (:policy req)
-        instrument-coverages (:insurance.policy/covered-instruments policy)
-        table-headers (coverage-table-headers policy)]
-
-    (list
-     (ui/table-row-head table-headers)
-     (ui/table-body
-      (rt/map-indexed coverage-table-row-ro req (map :instrument.coverage/coverage-id instrument-coverages))))))
-
-(ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req} ^:boolean edit? ^:boolean add?]
+(ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req}]
   (let [policy-id (-> req :policy :insurance.policy/policy-id)
         comp-name (util/comp-namer #'insurance-instrument-coverage)
         post? (util/post? req)
@@ -467,6 +532,14 @@
     (if (and put? policy)
       ctmx.response/hx-refresh
       [:div {:id id :hx-trigger "refreshCoverages from:body" :hx-get (comp-name)}
+       (ui/slideover-panel-form {:title "Edit Instrument Coverage" :id (path "slideover")
+                                 :form-attrs {:hx-put (comp-name) :hx-target (hash ".")}
+                                 :buttons (list
+                                           (ui/button {:label (tr [:action/delete]) :priority :white-destructive :hx-delete (comp-name) :hx-target (hash ".") :hx-confirm (tr [:action/confirm-generic])})
+                                           (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
+                                           (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
+                                (coverage-create-form {:tr tr :path path}  non-covered-instruments (:insurance.policy/coverage-types policy)))
+
        [:div {:class "mt-2"}
         [:div {:class "px-4 sm:px-6 lg:px-8"}
          [:div {:class "sm:flex sm:items-center"}
@@ -474,26 +547,15 @@
            [:h1 {:class "text-2xl font-semibold text-gray-900"} (tr [:insurance/covered-instruments])]
            [:p {:class "mt-2 text-sm text-gray-700"} ""]]
           [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}
-           (ui/toggle :label "Edit" :active? edit? :id "instrument-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {:edit? (not edit?)})
-           (ui/button :label "Add" :priority :white :class "" :icon icon/plus :centered? true
-                      :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:add? true}})]]
-         (when add?
-           [:div {:class "w-96"}
-            [:form
-             (ui/instrument-select :id (path "instrument-id") :instruments non-covered-instruments :variant :inline)
-             (ui/money-input :id (path "value") :label "Value" :required? true)
-             (ui/checkbox :id (path "private?") :label "Private?")
+           (ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
+                      :attr {:data-flyout-trigger (hash "slideover")})]]
 
-             (ui/button :label "Cancel" :priority :white :icon icon/plus :attr {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:add? false}})
-             (ui/button :label "Add" :priority :primary :attr {:hx-target (hash ".") :hx-put (comp-name)})]])
          [:div {:class "-mx-4 mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:-mx-6 md:mx-0 md:rounded-lg"}
           [:table {:class "min-w-full divide-y divide-gray-300"}
-           (if edit?
-             (insurance-instrument-coverage-table-rw req)
-             (insurance-instrument-coverage-table-ro req))]]]
+           (insurance-instrument-coverage-table req)]]]
 
         [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
-         (when (and (not add?) (empty? instrument-coverages))
+         (when (empty? instrument-coverages)
            [:div
             [:div
              "You should add a coverage to an instrument"]
@@ -505,7 +567,7 @@
    (insurance-detail-page-header req false)
    (insurance-coverage-types req false false)
    (insurance-category-factors req false false)
-   (insurance-instrument-coverage req false false)])
+   (insurance-instrument-coverage req)])
 
 (ctmx/defcomponent ^:endpoint insurance-create-page [{:keys [db] :as req}]
   (let [this-year (t/year (t/now))

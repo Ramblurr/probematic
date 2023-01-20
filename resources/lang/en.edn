@@ -107,8 +107,13 @@
        :settings "Settings"
        :notifications "Notifications"
        :logout "Logout"}
+ :band-private "Band/Private"
  :band-instruments "Band Instruments"
+ :band-instrument "Band Instrument"
+ :band-instrument-description "A band instrument is an instrument that was played at a SNO gig in the past year."
+ :private-instrument "Private Instrument"
  :private-instruments "Private Instruments"
+ :private-instrument-description "A private instrument is an instrument that the owner will insure at their own expense."
  :outstanding-payments "Outstanding Payments"
  :instruments "Instruments"
  :none "None"
@@ -125,7 +130,8 @@
           :comment "Comment"
           :add "Add"
           :create "Create"
-          :duplicate "Duplicate"}
+          :duplicate "Duplicate"
+          :confirm-generic "Are you sure?"}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"
               :high "Motiviert"
