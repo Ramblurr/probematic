@@ -295,16 +295,17 @@
         has-comment? (:attendance/comment attendance)]
     [:div {:id id}
      ;; for mobile < sm
-     [:div {:class (ui/cs "sm:hidden grid grid-rows-auto  grid-cols-3")}
-      [:div {:class (ui/cs "grid gap-x-2 grid-cols-6 col-span-3")}
-       [:div {:class "col-span-2 align-middle"} [:a {:href (url/link-member gigo-key) :class "link-blue align-middle"} (ui/member-nick member)]]
-       [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
-       [:div {:class "col-span-2"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
-       (when-not has-comment? [:div {:class "col-span-1 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])]
-      (when has-comment?
-        [:div {:class "col-start-2 col-span-2 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])]
+     (clojure.core/comment
+       [:div {:class (ui/cs "sm:hidden grid grid-rows-auto  grid-cols-3")}
+        [:div {:class (ui/cs "grid gap-x-2 grid-cols-6 col-span-3")}
+         [:div {:class "col-span-2 align-middle"} [:a {:href (url/link-member gigo-key) :class "link-blue align-middle"} (ui/member-nick member)]]
+         [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
+         [:div {:class "col-span-2"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
+         (when-not has-comment? [:div {:class "col-span-1 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])]
+        (when has-comment?
+          [:div {:class "col-start-2 col-span-2 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])])
      ;; for > sm
-     [:div {:class "hidden sm:grid sm:grid-cols sm:grid-cols-6 sm:gap-x-2"}
+     [:div {:class "grid grid-cols grid-cols-6 gap-x-2"}
       [:div {:class "col-span-2 align-middle"}
        [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
         (ui/member-nick member)]]
