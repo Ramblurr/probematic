@@ -52,7 +52,8 @@ const initSortable = (target) => {
       new Sortable(sortable, {
         animation: 150,
         ghostClass: 'bg-blue-300',
-        handle: '.drag-handle',
+        // no handle makes it easier to drag
+        //handle: '.drag-handle',
         onUpdate: (evt) => {
           sortable.querySelectorAll("input[data-sort-order]").forEach((el, i) => {
             //console.log("setting", el, i);
