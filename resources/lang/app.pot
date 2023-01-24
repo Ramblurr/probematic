@@ -6,986 +6,1231 @@ Content-Type: text/plain; charset=UTF-8
 msgctxt ":motivation/none"
 msgid "-"
 msgstr ""
+
 #: :motivation/very-high
 #, ycp-format
 msgctxt ":motivation/very-high"
 msgid "Sehr motiviert!"
 msgstr ""
+
 #: :motivation/high
 #, ycp-format
 msgctxt ":motivation/high"
 msgid "Motiviert"
 msgstr ""
+
 #: :motivation/medium
 #, ycp-format
 msgctxt ":motivation/medium"
 msgid "Ambivalent"
 msgstr ""
+
 #: :motivation/low
 #, ycp-format
 msgctxt ":motivation/low"
 msgid "Nicht Motiviert"
 msgstr ""
+
 #: :motivation/very-low
 #, ycp-format
 msgctxt ":motivation/very-low"
 msgid "Gar nicht Motiviert!"
 msgstr ""
+
 #: :private-instruments
 #, ycp-format
 msgctxt ":private-instruments"
 msgid "Private Instruments"
 msgstr ""
+
 #: :insurance/policies
 #, ycp-format
 msgctxt ":insurance/policies"
 msgid "Policies"
 msgstr ""
+
 #: :insurance/insurance-policy
 #, ycp-format
 msgctxt ":insurance/insurance-policy"
 msgid "Insurance Policy"
 msgstr ""
+
 #: :insurance/name
 #, ycp-format
 msgctxt ":insurance/name"
 msgid "Policy Name"
 msgstr ""
+
 #: :insurance/effective-at
 #, ycp-format
 msgctxt ":insurance/effective-at"
 msgid "Effective At"
 msgstr ""
+
 #: :insurance/title
 #, ycp-format
 msgctxt ":insurance/title"
 msgid "Insurance & Instruments"
 msgstr ""
+
 #: :insurance/create-title
 #, ycp-format
 msgctxt ":insurance/create-title"
 msgid "New Insurance Policy"
 msgstr ""
+
 #: :insurance/coverage-types
 #, ycp-format
 msgctxt ":insurance/coverage-types"
 msgid "Coverage Types"
 msgstr ""
+
 #: :insurance/category-factors
 #, ycp-format
 msgctxt ":insurance/category-factors"
 msgid "Category Factors"
 msgstr ""
+
 #: :insurance/premium-base-factor
 #, ycp-format
 msgctxt ":insurance/premium-base-factor"
 msgid "Premium Base Factor"
 msgstr ""
+
 #: :insurance/premium-factor
 #, ycp-format
 msgctxt ":insurance/premium-factor"
 msgid "Premium Factor"
 msgstr ""
+
 #: :insurance/instrument-coverage
 #, ycp-format
 msgctxt ":insurance/instrument-coverage"
 msgid "Instrument Coverage"
 msgstr ""
+
 #: :insurance/coverage-name
 #, ycp-format
 msgctxt ":insurance/coverage-name"
 msgid "Coverage Name"
 msgstr ""
+
 #: :insurance/create-subtitle
 #, ycp-format
 msgctxt ":insurance/create-subtitle"
 msgid "Enter details for the new policy."
 msgstr ""
+
 #: :insurance/effective-until
 #, ycp-format
 msgctxt ":insurance/effective-until"
 msgid "Effective Until"
 msgstr ""
+
 #: :insurance/covered-instruments
 #, ycp-format
 msgctxt ":insurance/covered-instruments"
 msgid "Covered Instruments"
 msgstr ""
+
 #: :email/gig-edit-type
 #, ycp-format
 msgctxt ":email/gig-edit-type"
 msgid "EDITED"
 msgstr ""
+
 #: :email/gig-info-page
 #, ycp-format
 msgctxt ":email/gig-info-page"
 msgid "Take me to the Gig Info page"
 msgstr ""
+
 #: :email/want-reminder
 #, ycp-format
 msgctxt ":email/want-reminder"
 msgid "Remind me in a few days"
 msgstr ""
+
 #: :email/sign-off
 #, ycp-format
 msgctxt ":email/sign-off"
 msgid "Mit groovigen Grüßen — SNObot"
 msgstr ""
+
 #: :email/gig-edited
 #, ycp-format
 msgctxt ":email/gig-edited"
 msgid "Something has changed about a gig!"
 msgstr ""
+
 #: :email/cannot-make-it
 #, ycp-format
 msgctxt ":email/cannot-make-it"
 msgid "I cannot make it"
 msgstr ""
+
 #: :email/new-probe-added
 #, ycp-format
 msgctxt ":email/new-probe-added"
 msgid "A new probe is coming up!"
 msgstr ""
+
 #: :email/need-to-change-availability?
 #, ycp-format
 msgctxt ":email/need-to-change-availability?"
 msgid "I need to change my availability"
 msgstr ""
+
 #: :email/can-you-make-it?
 #, ycp-format
 msgctxt ":email/can-you-make-it?"
 msgid "Can you make it?"
 msgstr ""
+
 #: :email/can-make-it
 #, ycp-format
 msgctxt ":email/can-make-it"
 msgid "I can make it!"
 msgstr ""
+
 #: :email/new-extra-probe-added
 #, ycp-format
 msgctxt ":email/new-extra-probe-added"
 msgid "A new extra-probe is coming up!"
 msgstr ""
+
 #: :email/greeting
 #, ycp-format
 msgctxt ":email/greeting"
 msgid "Hello!"
 msgstr ""
+
 #: :email/new-meeting-added
 #, ycp-format
 msgctxt ":email/new-meeting-added"
 msgid "A new meeting is coming up!"
 msgstr ""
+
 #: :email/new-gig-added
 #, ycp-format
 msgctxt ":email/new-gig-added"
 msgid "A new gig is coming up!"
 msgstr ""
+
 #: :gig.type/probe
 #, ycp-format
 msgctxt ":gig.type/probe"
 msgid "Probe"
 msgstr ""
+
 #: :gig.type/extra-probe
 #, ycp-format
 msgctxt ":gig.type/extra-probe"
 msgid "Extra Probe"
 msgstr ""
+
 #: :gig.type/meeting
 #, ycp-format
 msgctxt ":gig.type/meeting"
 msgid "Meeting"
 msgstr ""
+
 #: :gig.type/gig
 #, ycp-format
 msgctxt ":gig.type/gig"
 msgid "Gig"
 msgstr ""
+
 #: :instrument/category
 #, ycp-format
 msgctxt ":instrument/category"
 msgid "Category"
 msgstr ""
+
 #: :instrument/build-year
 #, ycp-format
 msgctxt ":instrument/build-year"
 msgid "Build Year"
 msgstr ""
+
 #: :instrument/serial-number
 #, ycp-format
 msgctxt ":instrument/serial-number"
 msgid "Serial Number"
 msgstr ""
+
 #: :instrument/make
 #, ycp-format
 msgctxt ":instrument/make"
 msgid "Make"
 msgstr ""
+
 #: :instrument/instrument
 #, ycp-format
 msgctxt ":instrument/instrument"
 msgid "Instrument"
 msgstr ""
+
 #: :instrument/name
 #, ycp-format
 msgctxt ":instrument/name"
 msgid "Instrument Name"
 msgstr ""
+
 #: :instrument/create-title
 #, ycp-format
 msgctxt ":instrument/create-title"
 msgid "New Instrument"
 msgstr ""
+
 #: :instrument/create-subtitle
 #, ycp-format
 msgctxt ":instrument/create-subtitle"
 msgid "Enter details for the Instrument"
 msgstr ""
+
 #: :instrument/owner
 #, ycp-format
 msgctxt ":instrument/owner"
 msgid "Owner"
 msgstr ""
+
 #: :instrument/model
 #, ycp-format
 msgctxt ":instrument/model"
 msgid "Model"
 msgstr ""
+
 #: :play-log/not-played
 #, ycp-format
 msgctxt ":play-log/not-played"
 msgid "Not Played"
 msgstr ""
+
 #: :play-log/nice
 #, ycp-format
 msgctxt ":play-log/nice"
 msgid "Nice!"
 msgstr ""
+
 #: :play-log/okay
 #, ycp-format
 msgctxt ":play-log/okay"
 msgid "Okay"
 msgstr ""
+
 #: :play-log/bad
 #, ycp-format
 msgctxt ":play-log/bad"
 msgid "Uh-oh"
 msgstr ""
+
 #: :play-log/intensive
 #, ycp-format
 msgctxt ":play-log/intensive"
 msgid "Intensive focus"
 msgstr ""
+
 #: :play-log/diagram-legend
 #, ycp-format
 msgctxt ":play-log/diagram-legend"
 msgid "Legend"
 msgstr ""
+
 #: :gig.status/confirmed
 #, ycp-format
 msgctxt ":gig.status/confirmed"
 msgid "Confirmed!"
 msgstr ""
+
 #: :gig.status/unconfirmed
 #, ycp-format
 msgctxt ":gig.status/unconfirmed"
 msgid "Unconfirmed"
 msgstr ""
+
 #: :gig.status/cancelled
 #, ycp-format
 msgctxt ":gig.status/cancelled"
 msgid "Cancelled"
 msgstr ""
+
 #: :now
 #, ycp-format
 msgctxt ":now"
 msgid "now"
 msgstr ""
+
 #: :private-instrument-description
 #, ycp-format
 msgctxt ":private-instrument-description"
 msgid "A private instrument is an instrument that the owner will insure at their own expense."
 msgstr ""
+
 #: :band-private
 #, ycp-format
 msgctxt ":band-private"
 msgid "Band/Private"
 msgstr ""
+
 #: :Contact-Information
 #, ycp-format
 msgctxt ":Contact-Information"
 msgid "Contact Information"
 msgstr ""
+
 #: :outstanding-payments
 #, ycp-format
 msgctxt ":outstanding-payments"
 msgid "Outstanding Payments"
 msgstr ""
+
 #: :section-none
 #, ycp-format
 msgctxt ":section-none"
 msgid "No Section"
 msgstr ""
+
 #: :Email
 #, ycp-format
 msgctxt ":Email"
 msgid "E-Mail"
 msgstr ""
+
 #: :section
 #, ycp-format
 msgctxt ":section"
 msgid "Section"
 msgstr ""
+
 #: :file/choose-file
 #, ycp-format
 msgctxt ":file/choose-file"
 msgid "Choose a File"
 msgstr ""
+
 #: :file/name
 #, ycp-format
 msgctxt ":file/name"
 msgid "Filename"
 msgstr ""
+
 #: :file/size
 #, ycp-format
 msgctxt ":file/size"
 msgid "Size"
 msgstr ""
+
 #: :dashboard/welcome
 #, ycp-format
 msgctxt ":dashboard/welcome"
 msgid "Welcome %1!"
 msgstr ""
+
 #: :dashboard/morning
 #, ycp-format
 msgctxt ":dashboard/morning"
 msgid "Good morning, %1"
 msgstr ""
+
 #: :dashboard/afternoon
 #, ycp-format
 msgctxt ":dashboard/afternoon"
 msgid "Good afternoon, %1"
 msgstr ""
+
 #: :dashboard/evening
 #, ycp-format
 msgctxt ":dashboard/evening"
 msgid "Good evening, %1"
 msgstr ""
+
 #: :dashboard/nightowl
 #, ycp-format
 msgctxt ":dashboard/nightowl"
 msgid "Hi there nightowl, %1"
 msgstr ""
+
 #: :dashboard/unanswered
 #, ycp-format
 msgctxt ":dashboard/unanswered"
 msgid "Need Attention!"
 msgstr ""
+
 #: :dashboard/upcoming
 #, ycp-format
 msgctxt ":dashboard/upcoming"
 msgid "All Upcoming Gigs"
 msgstr ""
+
 #: :Active
 #, ycp-format
 msgctxt ":Active"
 msgid "Active?"
 msgstr ""
+
 #: :band-instruments
 #, ycp-format
 msgctxt ":band-instruments"
 msgid "Band Instruments"
 msgstr ""
+
 #: :member/insurance-title
 #, ycp-format
 msgctxt ":member/insurance-title"
 msgid "Insurance & Instruments"
 msgstr ""
+
 #: :member/insurance-subtitle
 #, ycp-format
 msgctxt ":member/insurance-subtitle"
 msgid "Instruments and other items registered with the band for insurance purposes."
 msgstr ""
+
 #: :member/name
 #, ycp-format
 msgctxt ":member/name"
 msgid "Name"
 msgstr ""
+
 #: :member/nick
 #, ycp-format
 msgctxt ":member/nick"
 msgid "Nickname"
 msgstr ""
+
+#: :member/gigs-attended
+#, ycp-format
+msgctxt ":member/gigs-attended"
+msgid "Gigs Attended"
+msgstr ""
+
+#: :member/probes-attended
+#, ycp-format
+msgctxt ":member/probes-attended"
+msgid "Probes Attended"
+msgstr ""
+
 #: :instruments
 #, ycp-format
 msgctxt ":instruments"
 msgid "Instruments"
 msgstr ""
+
 #: :Phone
 #, ycp-format
 msgctxt ":Phone"
 msgid "Phone"
 msgstr ""
+
 #: :band-instrument-description
 #, ycp-format
 msgctxt ":band-instrument-description"
 msgid "A band instrument is an instrument that was played at a SNO gig in the past year."
 msgstr ""
+
 #: :updating
 #, ycp-format
 msgctxt ":updating"
 msgid "Updating..."
 msgstr ""
+
 #: :action/duplicate
 #, ycp-format
 msgctxt ":action/duplicate"
 msgid "Duplicate"
 msgstr ""
+
 #: :action/remove
 #, ycp-format
 msgctxt ":action/remove"
 msgid "Remove"
 msgstr ""
+
 #: :action/done
 #, ycp-format
 msgctxt ":action/done"
 msgid "Done"
 msgstr ""
+
 #: :action/continue
 #, ycp-format
 msgctxt ":action/continue"
 msgid "Continue"
 msgstr ""
+
 #: :action/create
 #, ycp-format
 msgctxt ":action/create"
 msgid "Create"
 msgstr ""
+
 #: :action/edit
 #, ycp-format
 msgctxt ":action/edit"
 msgid "Edit"
 msgstr ""
+
 #: :action/delete
 #, ycp-format
 msgctxt ":action/delete"
 msgid "Delete"
 msgstr ""
+
 #: :action/save
 #, ycp-format
 msgctxt ":action/save"
 msgid "Save"
 msgstr ""
+
 #: :action/reorder
 #, ycp-format
 msgctxt ":action/reorder"
 msgid "Reorder"
 msgstr ""
+
 #: :action/comment
 #, ycp-format
 msgctxt ":action/comment"
 msgid "Comment"
 msgstr ""
+
 #: :action/confirm-generic
 #, ycp-format
 msgctxt ":action/confirm-generic"
 msgid "Are you sure?"
 msgstr ""
+
 #: :action/confirm-delete-gig
 #, ycp-format
 msgctxt ":action/confirm-delete-gig"
 msgid "Are you sure you want to delete the gig %1? "
 msgstr ""
+
 #: :action/cancel
 #, ycp-format
 msgctxt ":action/cancel"
 msgid "Cancel"
 msgstr ""
+
 #: :action/add
 #, ycp-format
 msgctxt ":action/add"
 msgid "Add"
 msgstr ""
+
 #: :action/download
 #, ycp-format
 msgctxt ":action/download"
 msgid "Download"
 msgstr ""
+
+#: :action/confirm-delete-song
+#, ycp-format
+msgctxt ":action/confirm-delete-song"
+msgid "Are you sure you want to delete the song %1?"
+msgstr ""
+
+#: :action/view
+#, ycp-format
+msgctxt ":action/view"
+msgid "View"
+msgstr ""
+
 #: :error/unknown-title
 #, ycp-format
 msgctxt ":error/unknown-title"
 msgid "Something went wrong"
 msgstr ""
+
 #: :error/unknown-message
 #, ycp-format
 msgctxt ":error/unknown-message"
 msgid "Sorry about this. It's not your fault. Please contact Casey and tell him this error code:"
 msgstr ""
+
 #: :error/not-found-title
 #, ycp-format
 msgctxt ":error/not-found-title"
 msgid "Not Found"
 msgstr ""
+
 #: :error/not-found-message
 #, ycp-format
 msgctxt ":error/not-found-message"
 msgid "The thing you were looking for wasn't found. If you think it should exist, please contact and tell him this error code:"
 msgstr ""
+
 #: :error/unauthorized-title
 #, ycp-format
 msgctxt ":error/unauthorized-title"
 msgid "Authentication failed"
 msgstr ""
+
 #: :error/unauthorized-message
 #, ycp-format
 msgctxt ":error/unauthorized-message"
 msgid "Your identity is unknown to the system.. something probably went wrong. Please contact Casey and tell him this error code:"
 msgstr ""
+
 #: :error/go-home
 #, ycp-format
 msgctxt ":error/go-home"
 msgid "Go Home"
 msgstr ""
+
 #: :error/notify
 #, ycp-format
 msgctxt ":error/notify"
 msgid "Click to notify Casey"
 msgstr ""
+
 #: :missing
 #, ycp-format
 msgctxt ":missing"
 msgid ":en missing text"
 msgstr ""
+
 #: :gigs/title
 #, ycp-format
 msgctxt ":gigs/title"
 msgid "Gigs & Probes"
 msgstr ""
+
 #: :gigs/upcoming
 #, ycp-format
 msgctxt ":gigs/upcoming"
 msgid "Upcoming"
 msgstr ""
+
 #: :gigs/past
 #, ycp-format
 msgctxt ":gigs/past"
 msgid "Past"
 msgstr ""
+
 #: :gigs/no-past
 #, ycp-format
 msgctxt ":gigs/no-past"
 msgid "No gigs/probes in the past 2 weeks"
 msgstr ""
+
 #: :gigs/no-future
 #, ycp-format
 msgctxt ":gigs/no-future"
 msgid "No upcoming gigs/probes"
 msgstr ""
+
 #: :orange-and-green
 #, ycp-format
 msgctxt ":orange-and-green"
 msgid "orange and green"
 msgstr ""
+
 #: :email-subject/gig-created
 #, ycp-format
 msgctxt ":email-subject/gig-created"
 msgid "New Gig: %1"
 msgstr ""
+
 #: :email-subject/gig-updated
 #, ycp-format
 msgctxt ":email-subject/gig-updated"
 msgid "Gig Edit: %1"
 msgstr ""
+
 #: :plan/definitely
 #, ycp-format
 msgctxt ":plan/definitely"
 msgid "Definitely"
 msgstr ""
+
 #: :plan/probably
 #, ycp-format
 msgctxt ":plan/probably"
 msgid "Probably"
 msgstr ""
+
 #: :plan/unknown
 #, ycp-format
 msgctxt ":plan/unknown"
 msgid "Don't Know"
 msgstr ""
+
 #: :plan/probably-not
 #, ycp-format
 msgctxt ":plan/probably-not"
 msgid "Probably Not"
 msgstr ""
+
 #: :plan/definitely-not
 #, ycp-format
 msgctxt ":plan/definitely-not"
 msgid "Can't Do It"
 msgstr ""
+
 #: :plan/not-interested
 #, ycp-format
 msgctxt ":plan/not-interested"
 msgid "Not Interested"
 msgstr ""
+
 #: :plan/no-response
 #, ycp-format
 msgctxt ":plan/no-response"
 msgid "No Response"
 msgstr ""
+
 #: :private-instrument
 #, ycp-format
 msgctxt ":private-instrument"
 msgid "Private Instrument"
 msgstr ""
+
 #: :gig/description
 #, ycp-format
 msgctxt ":gig/description"
 msgid "Public Gig Description"
 msgstr ""
+
 #: :gig/no-comments
 #, ycp-format
 msgctxt ":gig/no-comments"
 msgid "No comments."
 msgstr ""
+
 #: :gig/email-about-change?
 #, ycp-format
 msgctxt ":gig/email-about-change?"
 msgid "Email members about change?"
 msgstr ""
+
 #: :gig/date
 #, ycp-format
 msgctxt ":gig/date"
 msgid "Date"
 msgstr ""
+
 #: :gig/attendance
 #, ycp-format
 msgctxt ":gig/attendance"
 msgid "Attendance"
 msgstr ""
+
 #: :gig/end-date
 #, ycp-format
 msgctxt ":gig/end-date"
 msgid "End Date"
 msgstr ""
+
 #: :gig/show-committed
 #, ycp-format
 msgctxt ":gig/show-committed"
 msgid "Show Committed"
 msgstr ""
+
 #: :gig/description-help
 #, ycp-format
 msgctxt ":gig/description-help"
 msgid "This text will be used on the website under upcoming gigs."
 msgstr ""
+
 #: :gig/pay-deal
 #, ycp-format
 msgctxt ":gig/pay-deal"
 msgid "Pay Deal"
 msgstr ""
+
 #: :gig/comment-placeholder
 #, ycp-format
 msgctxt ":gig/comment-placeholder"
 msgid "Say your piece!"
 msgstr ""
+
 #: :gig/end-time
 #, ycp-format
 msgctxt ":gig/end-time"
 msgid "End Time"
 msgstr ""
+
 #: :gig/probe-info
 #, ycp-format
 msgctxt ":gig/probe-info"
 msgid "Probe Info"
 msgstr ""
+
 #: :gig/call-time
 #, ycp-format
 msgctxt ":gig/call-time"
 msgid "Call Time"
 msgstr ""
+
 #: :gig/probeplan-sort
 #, ycp-format
 msgctxt ":gig/probeplan-sort"
 msgid "Drag the songs into probeplan order, and mark a couple as intensive."
 msgstr ""
+
 #: :gig/play-log-subtitle
 #, ycp-format
 msgctxt ":gig/play-log-subtitle"
 msgid "Here you can record what was played at this gig/probe."
 msgstr ""
+
 #: :gig/title
 #, ycp-format
 msgctxt ":gig/title"
 msgid "Title"
 msgstr ""
+
 #: :gig/probeplan-choose
 #, ycp-format
 msgctxt ":gig/probeplan-choose"
 msgid "Choose 5 songs."
 msgstr ""
+
 #: :gig/gig-type
 #, ycp-format
 msgctxt ":gig/gig-type"
 msgid "Type"
 msgstr ""
+
 #: :gig/more-details
 #, ycp-format
 msgctxt ":gig/more-details"
 msgid "More Details"
 msgstr ""
+
 #: :gig/create-title
 #, ycp-format
 msgctxt ":gig/create-title"
 msgid "Create Gig"
 msgstr ""
+
 #: :gig/probeplan
 #, ycp-format
 msgctxt ":gig/probeplan"
 msgid "Probeplan"
 msgstr ""
+
 #: :gig/leader
 #, ycp-format
 msgctxt ":gig/leader"
 msgid "Leader"
 msgstr ""
+
 #: :gig/status
 #, ycp-format
 msgctxt ":gig/status"
 msgid "Status"
 msgstr ""
+
 #: :gig/setlist
 #, ycp-format
 msgctxt ":gig/setlist"
 msgid "Set List"
 msgstr ""
+
 #: :gig/end-day
 #, ycp-format
 msgctxt ":gig/end-day"
 msgid "End Day"
 msgstr ""
+
 #: :gig/post-gig-plans
 #, ycp-format
 msgctxt ":gig/post-gig-plans"
 msgid "Post Gig Plans"
 msgstr ""
+
 #: :gig/set-time
 #, ycp-format
 msgctxt ":gig/set-time"
 msgid "Set Time"
 msgstr ""
+
 #: :gig/outfit
 #, ycp-format
 msgctxt ":gig/outfit"
 msgid "What To Wear"
 msgstr ""
+
 #: :gig/gig-info
 #, ycp-format
 msgctxt ":gig/gig-info"
 msgid "Gig Info"
 msgstr ""
+
 #: :gig/create-probeplan
 #, ycp-format
 msgctxt ":gig/create-probeplan"
 msgid "Make Probeplan"
 msgstr ""
+
 #: :gig/show-all
 #, ycp-format
 msgctxt ":gig/show-all"
 msgid "Show All"
 msgstr ""
+
 #: :gig/location
 #, ycp-format
 msgctxt ":gig/location"
 msgid "Location"
 msgstr ""
+
 #: :gig/contact
 #, ycp-format
 msgctxt ":gig/contact"
 msgid "Contact"
 msgstr ""
+
 #: :gig/email-about-new?
 #, ycp-format
 msgctxt ":gig/email-about-new?"
 msgid "Email members about this new gig?"
 msgstr ""
+
 #: :gig/more-details-placeholder
 #, ycp-format
 msgctxt ":gig/more-details-placeholder"
 msgid "who? what? where? when? why?"
 msgstr ""
+
 #: :gig/create-setlist
 #, ycp-format
 msgctxt ":gig/create-setlist"
 msgid "Make Setlist"
 msgstr ""
+
 #: :nav/insurance
 #, ycp-format
 msgctxt ":nav/insurance"
 msgid "Insurance"
 msgstr ""
+
 #: :nav/home
 #, ycp-format
 msgctxt ":nav/home"
 msgid "Home"
 msgstr ""
+
 #: :nav/songs
 #, ycp-format
 msgctxt ":nav/songs"
 msgid "Repertoire"
 msgstr ""
+
 #: :nav/logout
 #, ycp-format
 msgctxt ":nav/logout"
 msgid "Logout"
 msgstr ""
+
 #: :nav/settings
 #, ycp-format
 msgctxt ":nav/settings"
 msgid "Settings"
 msgstr ""
+
 #: :nav/notifications
 #, ycp-format
 msgctxt ":nav/notifications"
 msgid "Notifications"
 msgstr ""
+
 #: :nav/probeplan
 #, ycp-format
 msgctxt ":nav/probeplan"
 msgid "Probenplan"
 msgstr ""
+
 #: :nav/members
 #, ycp-format
 msgctxt ":nav/members"
 msgid "Members"
 msgstr ""
+
 #: :nav/gigs
 #, ycp-format
 msgctxt ":nav/gigs"
 msgid "Gigs & Probes"
 msgstr ""
+
 #: :nav/profile
 #, ycp-format
 msgctxt ":nav/profile"
 msgid "Profile"
 msgstr ""
+
 #: :band-instrument
 #, ycp-format
 msgctxt ":band-instrument"
 msgid "Band Instrument"
 msgstr ""
+
 #: :none
 #, ycp-format
 msgctxt ":none"
 msgid "None"
 msgstr ""
+
+#: :song/last-played
+#, ycp-format
+msgctxt ":song/last-played"
+msgid "Last Played"
+msgstr ""
+
 #: :song/other-sheet-music
 #, ycp-format
 msgctxt ":song/other-sheet-music"
 msgid "Musescore, etc"
 msgstr ""
+
 #: :song/last-played-gig
 #, ycp-format
 msgctxt ":song/last-played-gig"
 msgid "Last Played Gig"
 msgstr ""
+
 #: :song/composition-credits
 #, ycp-format
 msgctxt ":song/composition-credits"
 msgid "Composition By"
 msgstr ""
+
 #: :song/probe-count
 #, ycp-format
 msgctxt ":song/probe-count"
 msgid "Probe Count"
 msgstr ""
+
 #: :song/choose-sheet-music-subtitle
 #, ycp-format
 msgctxt ":song/choose-sheet-music-subtitle"
 msgid "For section: %1"
 msgstr ""
+
 #: :song/choose-sheet-music-title
 #, ycp-format
 msgctxt ":song/choose-sheet-music-title"
 msgid "Choose Sheet Music File"
 msgstr ""
+
 #: :song/total-plays
 #, ycp-format
 msgctxt ":song/total-plays"
 msgid "Total Play Count"
 msgstr ""
+
 #: :song/solo-count
 #, ycp-format
 msgctxt ":song/solo-count"
 msgid "# Solos"
 msgstr ""
+
 #: :song/log-play
 #, ycp-format
 msgctxt ":song/log-play"
 msgid "Log Play"
 msgstr ""
+
 #: :song/last-played-probe
 #, ycp-format
 msgctxt ":song/last-played-probe"
 msgid "Last Played Probe"
 msgstr ""
+
 #: :song/total-rehearsals
 #, ycp-format
 msgctxt ":song/total-rehearsals"
 msgid "Total Probes"
 msgstr ""
+
+#: :song/search
+#, ycp-format
+msgctxt ":song/search"
+msgid "Search Songs"
+msgstr ""
+
 #: :song/gig-count
 #, ycp-format
 msgctxt ":song/gig-count"
 msgid "Gig Count"
 msgstr ""
+
 #: :song/title
 #, ycp-format
 msgctxt ":song/title"
 msgid "Song Title"
 msgstr ""
+
 #: :song/create-title
 #, ycp-format
 msgctxt ":song/create-title"
 msgid "Add Song"
 msgstr ""
+
 #: :song/active
 #, ycp-format
 msgctxt ":song/active"
 msgid "Active?"
 msgstr ""
+
+#: :song/score
+#, ycp-format
+msgctxt ":song/score"
+msgid "Score"
+msgstr ""
+
 #: :song/total-performances
 #, ycp-format
 msgctxt ":song/total-performances"
 msgid "Total Performances"
 msgstr ""
+
 #: :song/arrangement-notes
 #, ycp-format
 msgctxt ":song/arrangement-notes"
 msgid "Arrangement Info"
 msgstr ""
+
 #: :song/origin
 #, ycp-format
 msgctxt ":song/origin"
 msgid "Origin"
 msgstr ""
+
 #: :song/arrangement-credits
 #, ycp-format
 msgctxt ":song/arrangement-credits"
 msgid "Arranged By"
 msgstr ""
+
+#: :song/search-empty
+#, ycp-format
+msgctxt ":song/search-empty"
+msgid "No songs found"
+msgstr ""
+
 #: :song/play-stats-title
 #, ycp-format
 msgctxt ":song/play-stats-title"
 msgid "Play Stats"
 msgstr ""
+
 #: :song/sheet-music-title
 #, ycp-format
 msgctxt ":song/sheet-music-title"
 msgid "Sheet Music"
 msgstr ""
+
 #: :song/background-title
 #, ycp-format
 msgctxt ":song/background-title"
 msgid "Background"
 msgstr ""
+
 #: :song/list-title
 #, ycp-format
 msgctxt ":song/list-title"

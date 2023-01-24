@@ -196,7 +196,7 @@ Content-Type: text/plain; charset=UTF-8
         entries (map ->po-entry (locale->seq m))]
     (spit (str "resources/" dname)
           (str pot-header
-               (str/join "\n" entries)))))
+               (str/join "\n\n" entries)))))
 
 (defn convert-po [locale]
   (let [fname (str "resources/lang/" locale ".po")

@@ -90,13 +90,15 @@
  :member
  {:insurance-title "Versicherung & Instrumente",
   :insurance-subtitle
-  "Band angemeldet sind.Instrumente und andere Gegenstände, die zu Versicherungszwecken bei der ",
+  "angemeldet sind.Instrumente und andere Gegenstände, die zu Versicherungszwecken bei der Band ",
   :name "Name",
-  :nick "Spitzname"},
+  :nick "Spitzname",
+  :gigs-attended "Gigs besucht",
+  :probes-attended "Proben besucht"},
  :instruments "Instrumente",
  :Phone "Telefon",
  :band-instrument-description
- "SNO-Auftritt gespielt wurde.Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem ",
+ "Auftritt gespielt wurde.Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-",
  :updating "Aktualisierung...",
  :action
  {:duplicate "Duplikat",
@@ -113,7 +115,9 @@
   :confirm-delete-gig "Möchten Sie den Gig %1 wirklich löschen?",
   :cancel "Absagen",
   :add "Hinzufügen",
-  :download "Herunterladen"},
+  :download "Herunterladen",
+  :confirm-delete-song "Möchten Sie das Lied %1 wirklich löschen?",
+  :view "Sehen"},
  :error
  {:unknown-title "Ein Fehler ist aufgetreten",
   :unknown-message
@@ -161,7 +165,7 @@
   :probe-info "Probeninfos",
   :call-time "Beginn",
   :probeplan-sort
-  "Paar als intensiv.Ziehen Sie die Songs in die Probeplan-Reihenfolge und markieren Sie ein ",
+  "als intensiv.Ziehen Sie die Songs in die Probeplan-Reihenfolge und markieren Sie ein Paar ",
   :play-log-subtitle
   "Hier kannst du aufnehmen, was bei diesem Gig/Probe gespielt wurde.",
   :title "Titel",
@@ -200,7 +204,8 @@
  :band-instrument "Band-Instrument",
  :none "Keiner",
  :song
- {:other-sheet-music "Musescore, etc",
+ {:last-played "Zuletzt gespielter Gig",
+  :other-sheet-music "Musescore, etc",
   :last-played-gig "Zuletzt gespielter Gig",
   :composition-credits "Komposition von",
   :probe-count "Probe zählen",
@@ -211,14 +216,17 @@
   :log-play "Log-Play",
   :last-played-probe "Zuletzt gespielte Probe",
   :total-rehearsals "Insgesamt Proben",
+  :search "Lieder suchen",
   :gig-count "Anzahl der Gigs",
   :title "Song Titel",
   :create-title "Lied hinzufügen",
   :active "Aktiv?",
+  :score "Punktzahl",
   :total-performances "Gesamtleistungen",
   :arrangement-notes "Arrangement-Info",
   :origin "Herkunft",
   :arrangement-credits "Arrangiert von",
+  :search-empty "Keine Lieder gefunden",
   :play-stats-title "Statistiken spielen",
   :sheet-music-title "Noten",
   :background-title "Hintergrund",
