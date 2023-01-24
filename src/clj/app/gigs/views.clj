@@ -646,7 +646,10 @@
                           :value (when status (name status))
                           :size :small
                           :required? true
-                          :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/statuses))
+                          :options (map (fn [m] {:label (tr [m]) :value (name m)})
+                                        (if gig
+                                          domain/statuses
+                                          domain/create-statuses)))
                          (ui/select
                           :id (path "gig-type")
                           :label (tr [:gig/gig-type])
@@ -658,7 +661,9 @@
                             (concat [{:label "-" :value ""}]
                                     (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
                             (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types)))
-                         (ui/checkbox :label (tr [:gig/email-about-change?]) :id (path "notify?")))
+                         (ui/checkbox :label (tr [(if gig
+                                                    :gig/email-about-change?
+                                                    :gig/email-about-new?)]) :id (path "notify?")))
 
                         :buttons (when-not archived?
                                    (list
@@ -690,17 +695,18 @@
                       (if (nil? gig)
                         (ui/date :value date :name (path "end-date") :required? false :min (str (t/tomorrow)))
                         (ui/date :value date :name (path "end-date") :required? false)))
-          (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members member-select-vals))
+          (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members member-select-vals :with-empty-opt? true))
           (ui/dl-item (tr [:gig/call-time]) (ui/input-time :value call-time :name (path "call-time") :required? true))
           (ui/dl-item (tr [:gig/set-time]) (ui/input-time :value set-time :name (path "set-time") :required? false))
           (ui/dl-item (tr [:gig/end-time]) (ui/input-time :value end-time :name (path "end-time") :required? false))
           (ui/dl-item (tr [:gig/location]) (ui/text :value location :name (path "location")))
-          (ui/dl-item (tr [:gig/outfit]) (ui/text :value outfit :name (path "outfit") :required? false))
+          (ui/dl-item (tr [:gig/outfit]) (ui/text :value (or  outfit (tr [:orange-and-green])) :name (path "outfit") :required? false))
           (ui/dl-item (tr [:gig/pay-deal]) (ui/text :value pay-deal :name (path "pay-deal") :required? false))
           (ui/dl-item (tr [:gig/leader]) (ui/text :label "" :value leader :name (path "leader") :required? false))
           (ui/dl-item (tr [:gig/post-gig-plans]) (ui/text :value post-gig-plans :name (path "post-gig-plans") :required? false) "sm:col-span-2")
           (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name (path "more-details") :required? false :placeholder (tr [:gig/more-details-placeholder])) "sm:col-span-3")
-          (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3")
+          (when false
+            (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3"))
           (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
           ;;
           )]]]]]]])

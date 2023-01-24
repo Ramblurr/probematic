@@ -9,6 +9,8 @@
 (def statuses [:gig.status/unconfirmed
                :gig.status/confirmed
                :gig.status/cancelled])
+(def create-statuses [:gig.status/unconfirmed
+                      :gig.status/confirmed])
 
 (def plans [:plan/no-response
             :plan/definitely

@@ -421,13 +421,17 @@
     (:section/name section)
     "No Section"))
 
-(defn member-select [& {:keys [id value label members variant]
+(defn member-select [& {:keys [id value label members variant with-empty-opt?]
                         :or {label "Member"
-                             variant :inline}}]
+                             variant :inline
+                             with-empty-opt? false}}]
   (let [options
-        (->> members
-             (map (fn [m] {:value (:member/gigo-key m) :label (member-nick m)}))
-             (sort-by :label))]
+        (concat
+         (if with-empty-opt?
+           [{:value "" :label " - "}] [])
+         (->> members
+              (map (fn [m] {:value (:member/gigo-key m) :label (member-nick m)}))
+              (sort-by :label)))]
     (condp = variant
       :inline (select :id id
                       :label label

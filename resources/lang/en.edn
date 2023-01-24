@@ -53,6 +53,7 @@
        :email-about-new? "Email members about this new gig?"
        :setlist "Set List"
        :description "Public Gig Description"
+       :description-help "This text will be used on the website under upcoming gigs."
        :post-gig-plans "Post Gig Plans"
        :gig-info "Gig Info"
        :probe-info "Probe Info"
@@ -66,6 +67,7 @@
        :create-setlist "Make Setlist"
        :create-title "Create Gig"
        :create-subtitle ""}
+ :orange-and-green "orange and green"
 
  :gigs {:title "Gigs & Probes"
         :upcoming "Upcoming"

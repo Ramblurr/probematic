@@ -1,6 +1,7 @@
 (ns app.gigs.controller
   (:refer-clojure :exclude [comment])
   (:require
+   [medley.core :as m]
    [app.auth :as auth]
    [app.controllers.common :as common]
    [app.datomic :as d]
@@ -290,18 +291,19 @@
 
 (defn create-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (str (sq/generate-squuid))
+        _ (tap> {:r (:params req) :p (util/unwrap-params req)})
         params (-> req util/unwrap-params util/remove-empty-strings util/remove-nils (assoc :gig-id gig-id))
+        notify? (:notify? params)
         decoded (util/remove-nils (s/decode UpdateGig params))
         tx (-> decoded (common/ns-qualify-key :gig)
                (update :gig/status str->status)
                (update :gig/gig-type str->gig-type)
-               (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
+               (m/update-existing :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
                (domain/gig->db))]
-    (if (s/valid? UpdateGig decoded)
-      (let [result (transact-gig! datomic-conn [tx] gig-id)]
-        (email/send-gig-created! req gig-id)
-        result)
-      (s/throw-error "Cannot create the gig. The gig data is invalid." nil  UpdateGig decoded))))
+    (let [result (transact-gig! datomic-conn [tx] gig-id)]
+      (when notify?
+        (email/send-gig-created! req gig-id))
+      result)))
 
 (defn reconcile-setlist [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
