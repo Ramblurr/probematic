@@ -46,7 +46,7 @@
      [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
       [:div {:class "mx-auto max-w-max"}
        [:main {:class "sm:flex"}
-        [:p {:class "text-4xl font-bold tracking-tight text-indigo-600 sm:text-5xl"} "401"]
+        [:p {:class "text-4xl font-bold tracking-tight text-sno-orange-600 sm:text-5xl"} "401"]
         [:div {:class "sm:ml-6"}
          [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
           [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
@@ -63,7 +63,7 @@
        [:main {:class "sm:flex"}
         [:div {:class "sm:ml-6"}
          [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
-          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
            (tr [:error/go-home])]]]]]]
      (render/body-end)]))
 (defn not-found-error-body [req]
@@ -73,7 +73,7 @@
      [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
       [:div {:class "mx-auto max-w-max"}
        [:main {:class "sm:flex"}
-        [:p {:class "text-4xl font-bold tracking-tight text-indigo-600 sm:text-5xl"} "404"]
+        [:p {:class "text-4xl font-bold tracking-tight text-sno-orange-600 sm:text-5xl"} "404"]
         [:div {:class "sm:ml-6"}
          [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
           [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
@@ -90,9 +90,9 @@
        [:main {:class "sm:flex"}
         [:div {:class "sm:ml-6"}
          [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
-          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
            (tr [:error/go-home])]
-          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-100 px-4 py-2 text-sm font-medium text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
            (tr [:error/notify])]]]]]]
      (render/body-end)]))
 (defn unknown-error-body [req]
@@ -120,9 +120,9 @@
        [:main {:class "sm:flex"}
         [:div {:class "sm:ml-6"}
          [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
-          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
            (tr [:error/go-home])]
-          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-100 px-4 py-2 text-sm font-medium text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
            (tr [:error/notify])]]]]]]
      (render/body-end)]))
 
@@ -179,7 +179,7 @@
      [:label {:for id :class (cs (get select-label-size size) "block font-medium text-gray-700")} label]
      [:select (merge {:name id :class
                       (cs  (get select-size size)
-                           "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500")
+                           "block w-full rounded-md border-gray-300 focus:border-sno-orange-500 focus:outline-none focus:ring-sno-orange-500")
                       :required required?}
 
                      extra-attrs)
@@ -198,7 +198,7 @@
    [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
     [:select {:id id :name id
               :required required?
-              :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}
+              :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}
      (for [{:keys [value label selected?]} options]
        [:option {:selected selected? :value value} label])]]])
 
@@ -206,8 +206,8 @@
                  :normal "h-5 w-5"
                  :large "h-10 w-10"})
 
-(def radio-option-state {:active "ring-2 ring-offset-2 ring-indigo-500"
-                         :checked "bg-indigo-600 border-transparent text-white hover:bg-indigo-700"
+(def radio-option-state {:active "ring-2 ring-offset-2 ring-sno-orange-500"
+                         :checked "bg-sno-orange-600 border-transparent text-white hover:bg-sno-orange-700"
                          :not-checked "bg-white border-gray-200 text-gray-900 hover:bg-gray-50"})
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required?]
@@ -264,7 +264,7 @@
    [:div {:class "mt-1"}
     [:textarea {:id id :name name :rows rows
                 :placeholder placeholder
-                :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}
+                :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}
      (when value value)]]
    (when hint
      [:p {:class "mt-2 text-sm text-gray-500"}
@@ -282,7 +282,7 @@
                      required? true}}]
   [:div {:class (cs class (get input-label-size size)
                     (get input-container-size size)
-                    "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600")}
+                    "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600")}
    [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white font-medium text-gray-900"}
     label]
    [:input (util/remove-nils (merge (or extra-attrs {})
@@ -302,7 +302,7 @@
   [:input {:type "datetime-local" :name name
            :value (when value (t/date-time value))
            :required required?
-           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
+           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
 (defn date [& {:keys [value name required? min max]}]
   [:input {:type "date" :name name
@@ -310,22 +310,22 @@
            :required required?
            :min min
            :max max
-           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
+           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
 (defn input-time [& {:keys [value name required?]}]
   [:input {:type "time" :name name
            :value (when value (t/time value))
            :required required?
-           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"}])
+           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
 (def button-priority-classes {:secondary
-                              "border-transparent bg-indigo-100 px-4 py-2  text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                              "border-transparent bg-sno-orange-100 px-4 py-2  text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"
                               :white
                               "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-destructive
                               "border-red-300 bg-white px-4 py-2 text-sm  text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary
-                              "border-transparent bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              "border-transparent bg-sno-orange-600 text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary-orange
                               "border-transparent bg-orange-600 text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
@@ -518,7 +518,7 @@
              :value value
              :placeholder placeholder
              :required required?
-             :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]])
+             :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]]])
 
 (defn factor-input [& {:keys [name value required? label]
                        :or {required? true}}]
@@ -627,7 +627,7 @@
     [:div {:class "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"}
      [:span {:class "text-gray-500 sm:text-sm"} (:EUR currency-symbols)]]
     [:input (merge
-             {:type "number" :min 0.01 :step 0.01 :value value :required required? :name id :id id :class "block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" :placeholder "0.00"}
+             {:type "number" :min 0.01 :step 0.01 :value value :required required? :name id :id id :class "block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm" :placeholder "0.00"}
              extra-attrs)]
     [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
      [:span {:class "text-gray-500 sm:text-sm"} "EUR"]]]])
@@ -635,15 +635,15 @@
 (defn checkbox [& {:keys [label id]}]
   [:div {:class "mt-2 relative flex items-start"}
    [:div {:class "flex h-5 items-center"}
-    [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
+    [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
    [:div {:class "ml-3 text-sm"}
     [:label {:for id :class "font-medium text-gray-700"} label]]])
 
 (defn toggle [& {:keys [label hx-target hx-get hx-vals active? id]}]
   [:div {:class "flex items-center"}
    [:button {:type "button" :hx-target hx-target :hx-get hx-get :hx-vals hx-vals
-             :class (cs (if active? "bg-indigo-600" "bg-gray-200") "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2")
-             :_ "on click toggle between .bg-gray-200 and .bg-indigo-600 end
+             :class (cs (if active? "bg-sno-orange-600" "bg-gray-200") "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2")
+             :_ "on click toggle between .bg-gray-200 and .bg-sno-orange-600 end
                  on click toggle between .translate-x-5 and .translate-x-0 on <span/> in me end "
              :role "switch"}
     [:span {:aria-hidden "true"
@@ -655,10 +655,10 @@
   [:label {:for name :class "inline-flex relative items-center cursor-pointer"}
    [:input {:type "checkbox" :checked checked? :class "sr-only peer" :name name :id name}]
    [:div {:class  (cs
-                   "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer"
+                   "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sno-orange-300 dark:peer-focus:ring-sno-orange-800 rounded-full peer"
                    "dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]"
                    "after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                   "dark:border-gray-600 peer-checked:bg-indigo-600")}]
+                   "dark:border-gray-600 peer-checked:bg-sno-orange-600")}]
    [:span {:class "ml-3 text-sm font-medium text-gray-900 dark:text-gray-300"} label]])
 
 (defn toggle-checkbox-left [& {:keys [label checked? name id]}]
@@ -669,12 +669,12 @@
     [:label {:for name :class "inline-flex relative items-center cursor-pointer"}
      [:input {:type "checkbox" :checked checked? :class "sr-only peer" :name name :id id}]
      [:div {:class  (cs
-                     "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer"
+                     "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sno-orange-300 dark:peer-focus:ring-sno-orange-800 rounded-full peer"
                      "dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]"
                      "after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                     "dark:border-gray-600 peer-checked:bg-indigo-600")}]
+                     "dark:border-gray-600 peer-checked:bg-sno-orange-600")}]
 
-             ;; :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
+             ;; :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"
      [:span {:class "ml-3 text-sm font-medium text-gray-900 dark:text-gray-300"}]]]])
 
 (defn avatar-img [member & {:keys [class]}]
@@ -735,9 +735,9 @@
 
 (def gig-status-icons
   {:gig.status/confirmed {:icon icon/circle-check
-                          :color "text-green-500"}
+                          :color "text-sno-green-500"}
    :gig.status/unconfirmed {:icon icon/circle-question
-                            :color "text-orange-500"}
+                            :color "text-sno-orange-500"}
    :gig.status/cancelled {:icon icon/circle-xmark
                           :color "text-red-500"}})
 
@@ -872,7 +872,7 @@
          [:div {:class "flex items-start justify-between"}
           [:h2 {:class "text-lg font-medium text-gray-900", :id "slide-over-title"} title]
           [:div {:class "ml-3 flex h-7 items-center" :data-flyout-close-button true}
-           [:button {:type "button", :class "rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+           [:button {:type "button", :class "rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
             [:span {:class "sr-only"} "Close panel"]
             (icon/xmark-thin {:class "h-6 w-6"})]]]]
         [:div {:class "relative mt-6 flex-1 px-4 sm:px-6"}

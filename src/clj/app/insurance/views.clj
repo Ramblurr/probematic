@@ -18,7 +18,7 @@
     [:a {:href  (url/link-instrument instrument-id) , :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:p {:class "truncate text-sm font-medium text-indigo-600"}
+       [:p {:class "truncate text-sm font-medium text-sno-orange-600"}
         name]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
@@ -39,7 +39,7 @@
     [:a {:href  (url/link-policy policy-id) , :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:p {:class "truncate text-sm font-medium text-indigo-600"}
+       [:p {:class "truncate text-sm font-medium text-sno-orange-600"}
         name]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
@@ -74,7 +74,7 @@
     [:div {:class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:p {:class "truncate text-sm font-medium text-indigo-600"}
+       [:p {:class "truncate text-sm font-medium text-sno-orange-600"}
         name]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
@@ -118,14 +118,14 @@
                                   [:input {:type "date" :name "effective-at" :id "effective-at"
                                            :value (t/date effective-at)
                                            :required true
-                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
+                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]
                                   (ui/datetime effective-at)))
                     (ui/dl-item (tr [:insurance/effective-until])
                                 (if edit?
                                   [:input {:type "date" :name "effective-until" :id "effective-until"
                                            :value (t/date effective-until)
                                            :required true
-                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
+                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]
                                   (ui/datetime effective-until)))
                     (ui/dl-item (tr [:insurance/premium-base-factor])
                                 (if edit?
@@ -133,7 +133,7 @@
                                            :value premium-factor
                                            :step "0.00000001" :min "0" :max "2.0"
                                            :required true
-                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]
+                                           :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]
                                   premium-factor))))]))))
 
 (ctmx/defcomponent  insurance-coverage-types-item-ro [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
@@ -149,7 +149,7 @@
         [:div {:class "mt-2 relative flex items-start"}
          [:input {:type "hidden" :value type-id :name (path "type-id")}]
          [:div {:class "flex h-5 items-center"}
-          [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
+          [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
          [:div {:class "ml-3 text-sm"}
           [:label {:for delete-id :class "font-medium text-gray-700"} (tr [:action/delete])]]])])))
 
@@ -234,7 +234,7 @@
         [:div {:class "mt-2 relative flex items-start"}
          [:input {:type "hidden" :value category-factor-id :name (path "category-id")}]
          [:div {:class "flex h-5 items-center"}
-          [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"}]]
+          [:input {:name delete-id :id delete-id :type "checkbox" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
          [:div {:class "ml-3 text-sm"}
           [:label {:for delete-id :class "font-medium text-gray-700"} (tr [:action/delete])]]])])))
 
@@ -370,7 +370,7 @@
                        [:div {:class "absolute flex h-5 items-center"}
                         [:input {:id type-id :name "coverage-types" :type "checkbox"
                                  :value type-id
-                                 :class "h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+                                 :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
                        [:div {:class "pl-7 text-sm"}
                         [:label {:for type-id :class "font-medium text-gray-900"} name]
                         [:p {:class "text-gray-500"} ""]]])
@@ -382,14 +382,14 @@
       [:div {:class "mt-2 space-y-5"}
        [:div {:class "relative flex items-start"}
         [:div {:class "absolute flex h-5 items-center"}
-         [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+         [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
         [:div {:class "pl-7 text-sm"}
          [:label {:for "bandprivate-band" :class "font-medium text-gray-900"} (tr [:band-instrument])]
          [:p {:class "text-gray-500"} (tr [:band-instrument-description])]]]
        [:div
         [:div {:class "relative flex items-start"}
          [:div {:class "absolute flex h-5 items-center"}
-          [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+          [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
          [:div {:class "pl-7 text-sm"}
           [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
           [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]])
@@ -428,7 +428,7 @@
                           [:input {:id type-id :name "coverage-types" :type "checkbox"
                                    :value type-id
                                    :checked (some? (controller/get-coverage-type-from-coverage coverage type-id))
-                                   :class "h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"}]]
+                                   :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
                          [:div {:class "pl-7 text-sm"}
                           [:label {:for type-id :class "font-medium text-gray-900"} name]
                           [:p {:class "text-gray-500"} ""]]])
@@ -440,7 +440,7 @@
         [:div {:class "mt-2 space-y-5"}
          [:div {:class "relative flex items-start"}
           [:div {:class "absolute flex h-5 items-center"}
-           [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"
+           [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
                     :checked (not (:instrument.coverage/private? coverage))}]]
           [:div {:class "pl-7 text-sm"}
            [:label {:for "bandprivate-band" :class "font-medium text-gray-900"} (tr [:band-instrument])]
@@ -448,7 +448,7 @@
          [:div
           [:div {:class "relative flex items-start"}
            [:div {:class "absolute flex h-5 items-center"}
-            [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-orange-600 focus:ring-orange-500"
+            [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
                      :checked (:instrument.coverage/private? coverage)}]]
            [:div {:class "pl-7 text-sm"}
             [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
@@ -499,7 +499,7 @@
                 (list
                  [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
                   [:span {:class "flex flex-row space-x-2"}
-                   [:button {:type "submit" :class "text-blue-600 hover:text-indigo-900 cursor-pointer"
+                   [:button {:type "submit" :class "text-blue-600 hover:text-sno-orange-900 cursor-pointer"
                              :data-flyout-trigger (hash "slideover")} "Edit"]]]))))))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db] :as req}]
@@ -593,7 +593,7 @@
                        [:input {:type "text" :name "name" :id "name"
                                 :value (str "Band Instruments " this-year " - " next-year)
                                 :required true
-                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
+                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]]]
                      [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
                       [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
                        (tr [:insurance/effective-at])]
@@ -601,7 +601,7 @@
                        [:input {:type "date" :name "effective-at" :id "effective-at"
                                 :value (str this-year "-05-01")
                                 :required true
-                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
+                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]]]
                      [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
                       [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
                        (tr [:insurance/effective-until])]
@@ -609,7 +609,7 @@
                        [:input {:type "date" :name "effective-until" :id "effective-until"
                                 :value (str next-year "-04-30")
                                 :required true
-                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"}]]]
+                                :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]]]
                      [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
                       [:label {:for "first-name" :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
                        (tr [:insurance/premium-base-factor])]
@@ -617,9 +617,9 @@
                        (ui/factor-input :name "base-factor" :value (* (bigdec 1.07) (bigdec 0.00447)))]]]]]
                   [:div {:class "pt-5"}
                    [:div {:class "flex justify-end"}
-                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/cancel])]
-                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/create])]]]])])))
 
 (ctmx/defcomponent ^:endpoint instrument-create-page [{:keys [db] :as req}]
@@ -648,9 +648,9 @@
 
                   [:div {:class "pt-5"}
                    [:div {:class "flex justify-end"}
-                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/cancel])]
-                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/create])]]]])])))
 
 (ctmx/defcomponent ^:endpoint instrument-detail-page [{:keys [db] :as req} ^:boolean edit?]

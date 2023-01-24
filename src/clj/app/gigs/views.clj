@@ -152,7 +152,7 @@
      [:div
       [:div {:class "flex justify-end"}
        [:a {:href (url/link-gigs-home) :class "btn btn-sm btn-clear-normal"} (tr [:action/cancel])]
-       [:button {:class "ml-3 btn btn-sm btn-indigo-high" :type "submit"} (tr [:action/save])]]]]))
+       [:button {:class "ml-3 btn btn-sm btn-sno-orange-high" :type "submit"} (tr [:action/save])]]]]))
 
 (defn gig-row [{:gig/keys [status title location date gig-id] :as gig}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -161,7 +161,7 @@
       [:div {:class "flex items-center justify-between"}
        [:div {:class "flex items-center space-x-2"}
         (ui/gig-status-icon status)
-        [:p {:class "truncate text-sm font-medium text-indigo-600"} title]]]
+        [:p {:class "truncate text-sm font-medium text-sno-orange-600"} title]]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex items-center text-sm text-gray-500"}
@@ -196,7 +196,7 @@
         button-size-class-small "px-2 py-1 text-xs "]
     [:div {:class "dropdown relative inline-block text-left"}
      [:div
-      [:button {:type "button" :class (ui/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100 min-h-[25px]")  :aria-expanded "true", :aria-haspopup "true"}
+      [:button {:type "button" :class (ui/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100 min-h-[25px]")  :aria-expanded "true", :aria-haspopup "true"}
        [:input {:type "hidden" :name "gigo-key" :value gigo-key}]
        [:input {:type "hidden" :name "gig-id" :value gig-id}]
        [:input {:type "hidden" :name "plan" :value (:value current-opt) :class "item-input"}]

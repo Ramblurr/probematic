@@ -82,7 +82,7 @@
    [:h3 {:class "px-3 text-sm font-medium text-gray-500" :id "mobile-teams-headline"} "Teams"]
    [:div {:class "mt-1 space-y-1" :role "group" :aria-labelledby "mobile-teams-headline"}
     [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
-     [:span {:class "w-2.5 h-2.5 mr-4 bg-indigo-500 rounded-full" :aria-hidden "true"}]
+     [:span {:class "w-2.5 h-2.5 mr-4 bg-sno-orange-500 rounded-full" :aria-hidden "true"}]
      [:span {:class "truncate"} "Engineering"]]
     [:a {:href "#" :class "group flex items-center rounded-md px-3 py-2 text-base font-medium leading-5 text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
      [:span {:class "w-2.5 h-2.5 mr-4 bg-green-500 rounded-full" :aria-hidden "true"}]
@@ -221,7 +221,7 @@
           [:span {:class "flex-shrink-0 text-xs font-medium leading-5"} "+8"]]]
         [:td {:class "hidden whitespace-nowrap px-6 py-3 text-right text-sm text-gray-500 md:table-cell"} "March 17, 2020"]
         [:td {:class "whitespace-nowrap px-6 py-3 text-right text-sm font-medium"}
-         [:a {:href "#" :class "text-indigo-600 hover:text-indigo-900"} "Edit"]]]
+         [:a {:href "#" :class "text-sno-orange-600 hover:text-sno-orange-900"} "Edit"]]]
          ;; "<!-- More projects... -->"
        ]]]]])
 
@@ -242,4 +242,4 @@
          ;; "<!-- Heroicon name: mini/magnifying-glass -->"
      [:svg {:class "mr-3 h-4 w-4 text-gray-400" :xmlns "http://www.w3.org/2000/svg" :viewbox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
       [:path {:fill-rule "evenodd" :d "M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" :clip-rule "evenodd"}]]]
-    [:input {:type "text" :name "search" :id "search" :class "block w-full rounded-md border-gray-300 pl-9 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" :placeholder "Search"}]]])
+    [:input {:type "text" :name "search" :id "search" :class "block w-full rounded-md border-gray-300 pl-9 focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm" :placeholder "Search"}]]])

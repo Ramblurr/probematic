@@ -60,7 +60,7 @@
            [:div
             [:div {:class "flex justify-end"}
              [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-             [:button {:class "ml-3 btn btn-sm btn-indigo-high"
+             [:button {:class "ml-3 btn btn-sm btn-sno-orange-high"
                        :type "submit"} "Save"]]]])))))
 
 (declare song-sheet-music)
@@ -245,9 +245,9 @@
 
                   [:div {:class "pt-5"}
                    [:div {:class "flex justify-end"}
-                    [:a {:href "/songs" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                    [:a {:href "/songs" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/cancel])]
-                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"}
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/create])]]]])])))
 
 (defn song-row [{:song/keys [title last-played score total-plays] :as song}]
@@ -255,7 +255,7 @@
     [:a {:href (url/link-song song) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:p {:class "truncate text-sm font-medium text-indigo-600"}
+       [:p {:class "truncate text-sm font-medium text-sno-orange-600"}
         title]
        [:div {:class "ml-2 flex flex-shrink-0"}
         (ui/song-active-bubble song)]]
@@ -295,7 +295,7 @@
              (norm keyword))) all-songs))
 
 (ctmx/defcomponent ^:endpoint songs-filter [req]
-  [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"}
+  [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600"}
    [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
     "Search Songs"]
    [:input {:type "text"
