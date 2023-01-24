@@ -829,9 +829,8 @@
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
   (let [future-gigs (q/gigs-future db)
         offset 0
-        limit 100
+        limit 20
         past-gigs (controller/gigs-past-page db offset limit)
-        ;; past-gigs (controller/gigs-past-two-weeks db)
         tr (i18n/tr-from-req req)]
     [:div
      (ui/page-header :title (tr [:gigs/title])
