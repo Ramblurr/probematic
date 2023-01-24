@@ -321,9 +321,9 @@
 (def button-priority-classes {:secondary
                               "border-transparent bg-sno-orange-100 px-4 py-2  text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"
                               :white
-                              "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-green-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-destructive
-                              "border-red-300 bg-white px-4 py-2 text-sm  text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100"
+                              "border-red-300 bg-white px-4 py-2 text-sm  text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary
                               "border-transparent bg-sno-orange-600 text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :primary-orange
@@ -766,9 +766,12 @@
     ;; mr-1.5
     (icon {:class (str " h-5 w-5 inline " color)})))
 
-(defn format-dt [dt]
-  (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
-    (t/format (t/formatter "dd-MMM-yyyy") norm-dt)))
+(defn format-dt
+  ([dt]
+   (format-dt dt (t/formatter "dd-MMM-yyyy")))
+  ([dt fmt]
+   (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
+     (t/format fmt  norm-dt))))
 
 (defn format-time [dt]
   (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
@@ -798,6 +801,33 @@
     [:time {:dateetime (str dt)}
      (format-dt dt)]
     "never"))
+
+(defn daterange
+  "As per: https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Dates_and_numbers#Ranges"
+  [start end]
+  (let [same?  (= start end)
+        same-month? (= (t/month start) (t/month end))
+        same-year? (= (t/year start) (t/year end))]
+    (cond
+      same?
+      (datetime start)
+      (and same-month? same-year?)
+      [:span
+       (format-dt start (t/formatter "dd"))
+       "–"
+       (format-dt end (t/formatter "dd"))
+       " "
+       (format-dt start (t/formatter "MMM yyyy"))]
+      same-year?
+      [:span
+       (format-dt start (t/formatter "dd MMM"))
+       " – "
+       (format-dt end (t/formatter "dd MMM yyyy"))]
+      :else
+      [:span
+       (format-dt start (t/formatter "dd MMM yyyy"))
+       " – "
+       (format-dt end (t/formatter "dd MMM yyyy"))])))
 
 (defn time [t]
   (when t

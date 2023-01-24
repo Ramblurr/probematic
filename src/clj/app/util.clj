@@ -67,6 +67,13 @@
         :else
         (throw "remove-nils: Not implemented")))
 
+(defn blank->nil
+  "If arg is an empty string, returns nil. Otherwise returns arg."
+  [arg]
+  (if (and (string? arg) (str/blank? arg))
+    nil
+    arg))
+
 (defn remove-empty-strings
   "Returns the map less any keys that have empty-strings as values values"
   [m]

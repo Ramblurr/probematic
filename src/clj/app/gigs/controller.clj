@@ -119,15 +119,6 @@
         then (t/<< now (t/new-duration 14 :days))]
     (q/gigs-between db then now)))
 
-(defn query-result->play
-  [[play]]
-  play)
-
-(defn plays-by-gig [db gig-id]
-  (->> (d/find-all-by db :played/gig [:gig/gig-id gig-id] q/play-pattern)
-       (map query-result->play)
-       (sort-by #(-> % :played/song :song/title))))
-
 (defn songs-not-played [plays all-songs]
   (->> all-songs
        (remove (fn [song]
@@ -256,7 +247,7 @@
     [:date ::s/date]
     [:end-date {:optional true} ::s/date]
     [:location ::s/non-blank-string]
-    [:contact :string]
+    [:contact {:optional true} :string]
     [:gig-type (s/enum-from (map name domain/gig-types))]
     [:status (s/enum-from (map name domain/statuses))]
     [:call-time ::s/time]
@@ -272,7 +263,9 @@
 (defn update-gig! [{:keys [datomic-conn] :as req}]
 
   (let [gig-id (common/path-param req :gig/gig-id)
-        params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id))
+        params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id)
+                     (update :contact util/blank->nil)
+                     (update :end-date util/blank->nil))
         notify? (rt/parse-boolean (:notify? params))
         decoded  (util/remove-nils (s/decode UpdateGig params))]
     (if (s/valid? UpdateGig decoded)
@@ -280,7 +273,7 @@
                    (common/ns-qualify-key :gig)
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
-                   (update :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
+                   (m/update-existing :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
                    (domain/gig->db))
             result (transact-gig! datomic-conn [tx] gig-id)]
         (when notify?
@@ -291,7 +284,6 @@
 
 (defn create-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (str (sq/generate-squuid))
-        _ (tap> {:r (:params req) :p (util/unwrap-params req)})
         params (-> req util/unwrap-params util/remove-empty-strings util/remove-nils (assoc :gig-id gig-id))
         notify? (:notify? params)
         decoded (util/remove-nils (s/decode UpdateGig params))
@@ -305,30 +297,46 @@
         (email/send-gig-created! req gig-id))
       result)))
 
+(defn delete-gig! [{:keys [datomic-conn db] :as req}]
+  (let [gig-id      (common/path-param req :gig/gig-id)
+        gig-ref     [:gig/gig-id gig-id]
+        attendances (mapv (fn [{:attendance/keys [gig+member]}]
+                            [:db/retractEntity [:attendance/gig+member gig+member]])  (q/attendances-for-gig db gig-id))
+        played      (mapv (fn [{:played/keys [play-id]}]
+                            [:db/retractEntity [:played/play-id play-id]]) (q/plays-by-gig db gig-id))
+        txs         (concat attendances played
+                            [[:db/retractEntity [:setlist/gig gig-ref]]
+                             [:db/retractEntity [:probeplan/gig gig-ref]]
+                             [:db/retractEntity gig-ref]])]
+    (when (> (count played) 0)
+      (stats/calc-play-stats-in-bg! datomic-conn))
+    (datomic/transact datomic-conn {:tx-data txs})
+    true))
+
 (defn reconcile-setlist [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
-        add-tx (map #(-> [:db/add eid :setlist.v1/ordered-songs %]) (filter some? added))
-        remove-tx (map #(-> [:db/retract eid :setlist.v1/ordered-songs %]) (filter some? removed))]
+        add-tx          (map #(-> [:db/add eid :setlist.v1/ordered-songs %]) (filter some? added))
+        remove-tx       (map #(-> [:db/retract eid :setlist.v1/ordered-songs %]) (filter some? removed))]
     (concat add-tx remove-tx)))
 
 (defn update-setlist!
   "Updates the setlist for the current gig. song-ids are ordered. Returns the songs in the setlist."
   [{:keys [datomic-conn db] :as req} song-ids]
-  (let [gig-id (common/path-param req :gig/gig-id)
+  (let [gig-id      (common/path-param req :gig/gig-id)
         song-tuples (map-indexed (fn [idx sid] [[:song/song-id sid] idx]) song-ids)
-        current (q/setlist-song-tuples-for-gig db  gig-id)
-        txs (reconcile-setlist "setlist" song-tuples current)
-        tx  {:setlist/gig [:gig/gig-id gig-id]
-             :db/id "setlist"
-             :setlist/version :setlist.version/v1}
-        txs (concat [tx] txs)
-        result (datomic/transact datomic-conn {:tx-data txs})]
+        current     (q/setlist-song-tuples-for-gig db  gig-id)
+        txs         (reconcile-setlist "setlist" song-tuples current)
+        tx          {:setlist/gig     [:gig/gig-id gig-id]
+                     :db/id           "setlist"
+                     :setlist/version :setlist.version/v1}
+        txs         (concat [tx] txs)
+        result      (datomic/transact datomic-conn {:tx-data txs})]
     (q/find-songs (:db-after result) song-ids)))
 
 (defn reconcile-probeplan [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
-        add-tx (map #(-> [:db/add eid :probeplan.classic/ordered-songs %]) (filter some? added))
-        remove-tx (map #(-> [:db/retract eid :probeplan.classic/ordered-songs %]) (filter some? removed))]
+        add-tx          (map #(-> [:db/add eid :probeplan.classic/ordered-songs %]) (filter some? added))
+        remove-tx       (map #(-> [:db/retract eid :probeplan.classic/ordered-songs %]) (filter some? removed))]
     (concat add-tx remove-tx)))
 
 (defn probeplan-song-tx [{:keys [song-id emphasis position] :as s}]
@@ -341,17 +349,16 @@
 (defn update-probeplan!
   "Updates the probeplan for the current gig. song-ids are ordered. Returns the songs in the setlist."
   [{:keys [datomic-conn db] :as req} song-id-emphases]
-  (let [gig-id (common/path-param req :gig/gig-id)
+  (let [gig-id      (common/path-param req :gig/gig-id)
         song-tuples (map probeplan-song-tx song-id-emphases)
-        current (q/probeplan-song-tuples-for-gig db  gig-id)
-        ;; _ (tap> {:sides song-id-emphases :song-tups song-tuples :current current})
-        txs (reconcile-probeplan "probeplan" song-tuples current)
-        tx  {:probeplan/gig [:gig/gig-id gig-id]
-             :db/id "probeplan"
-             :probeplan/version :probeplan.version/classic}
-        txs (concat [tx] txs)
+        current     (q/probeplan-song-tuples-for-gig db  gig-id)
+        txs         (reconcile-probeplan "probeplan" song-tuples current)
+        tx          {:probeplan/gig     [:gig/gig-id gig-id]
+                     :db/id             "probeplan"
+                     :probeplan/version :probeplan.version/classic}
+        txs         (concat [tx] txs)
         ;; _ (tap> txs)
-        result (datomic/transact datomic-conn {:tx-data txs})]
+        result      (datomic/transact datomic-conn {:tx-data txs})]
     (q/probeplan-songs-for-gig (:db-after result) gig-id)))
 
 (clojure.core/comment
@@ -391,7 +398,7 @@
     (if (d/db-ok? result)
       (do
         (stats/calc-play-stats-in-bg! datomic-conn)
-        {:plays (plays-by-gig (:db-after result) gig-id)})
+        {:plays (q/plays-by-gig (:db-after result) gig-id)})
       result)))
 
 (clojure.core/comment
@@ -401,6 +408,8 @@
     (def env (:app.ig/env state/system))
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db  (datomic/db conn))) ;; rcf
+
+  (q/plays-by-gig db "0185a673-9f36-8f74-b737-1b53a510398c")
 
   (q/gigs-after db (q/date-midnight-today!) q/gig-detail-pattern)
 

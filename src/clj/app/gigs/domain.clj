@@ -44,6 +44,7 @@
     [:gig/title {:max 4096} ::s/non-blank-string]
     [:gig/status (s/enum-from statuses)]
     [:gig/date ::s/instdate]
+    [:gig/end-date {:optional true} ::s/instdate]
     [:gig/gig-type (s/enum-from gig-types)]
     [:gig/location {:optional true :max 4096} ::s/non-blank-string]
     [:gig/contact {:optional true} ::s/datomic-ref]

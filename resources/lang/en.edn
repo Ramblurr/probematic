@@ -134,7 +134,8 @@
           :create "Create"
           :continue "Continue"
           :duplicate "Duplicate"
-          :confirm-generic "Are you sure?"}
+          :confirm-generic "Are you sure?"
+          :confirm-delete-gig "Are you sure you want to delete the gig %1? "}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"
               :high "Motiviert"

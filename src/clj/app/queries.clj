@@ -410,6 +410,11 @@
     (->> (concat sections-with-no-sheets sections-with-sheets)
          (sort-by :section/position))))
 
+(defn plays-by-gig [db gig-id]
+  (->> (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)
+       (mapv first)
+       (sort-by #(-> % :played/song :song/title))))
+
 (defn load-play-stats [db]
   (->>
    (d/find-all db :song/song-id [:song/song-id
