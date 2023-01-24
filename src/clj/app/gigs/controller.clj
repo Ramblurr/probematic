@@ -308,9 +308,9 @@
                             [[:db/retractEntity [:setlist/gig gig-ref]]
                              [:db/retractEntity [:probeplan/gig gig-ref]]
                              [:db/retractEntity gig-ref]])]
+    (datomic/transact datomic-conn {:tx-data txs})
     (when (> (count played) 0)
       (stats/calc-play-stats-in-bg! datomic-conn))
-    (datomic/transact datomic-conn {:tx-data txs})
     true))
 
 (defn reconcile-setlist [eid new-song-tuples current-song-tuples]

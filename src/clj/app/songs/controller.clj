@@ -2,13 +2,16 @@
   (:require
    [app.datomic :as d]
    [app.file-utils :as fu]
+   [app.probeplan.stats :as stats]
    [app.queries :as q]
    [app.util :as util]
+   [clojure.string :as string]
    [com.yetanalytics.squuid :as sq]
-   [ctmx.rt]
-   [datomic.client.api :as datomic]
    [ctmx.rt :as rt]
-   [clojure.string :as string]))
+   [datomic.client.api :as datomic]))
+
+(defn retrieve-song [db song-id]
+  (d/find-by db :song/song-id song-id q/song-pattern-detail))
 
 (defn create-song! [req]
   (let [{:keys [title active?]} (-> req util/unwrap-params)
@@ -17,12 +20,20 @@
                            {:tx-data [{:song/title title :song/song-id song-id
                                        :song/total-plays 0
                                        :song/active? (ctmx.rt/parse-boolean active?)}]})]
-    (if (d/db-ok? result)
-      {:song result}
-      result)))
+    (retrieve-song (:db-after result) song-id)))
 
-(defn retrieve-song [db song-id]
-  (d/find-by db :song/song-id song-id q/song-pattern-detail))
+(defn delete-song! [{:keys [db datomic-conn] :as req} song-id]
+  (let [song-ref [:song/song-id song-id]
+        played      (mapv (fn [{:played/keys [play-id]}]
+                            [:db/retractEntity [:played/play-id play-id]]) (q/plays-by-song db song-id))
+
+        sheet-music      (mapv (fn [{:played/keys [sheet-id]}]
+                                 [:db/retractEntity [:sheet-music/sheet-id sheet-id]]) (q/sheet-music-by-song db song-id))
+        txs (concat played sheet-music [[:db/retractEntity song-ref]])]
+    (datomic/transact datomic-conn {:tx-data txs})
+    (when (> (count played) 0)
+      (stats/calc-play-stats-in-bg! datomic-conn))
+    true))
 
 (defn update-song! [{:keys [datomic-conn] :as req} song-id]
   (let [{:keys [title active? composition-credits arrangement-credits arrangement-notes origin solo-count] :as p} (util/unwrap-params req)

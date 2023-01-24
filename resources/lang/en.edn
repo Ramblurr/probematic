@@ -137,6 +137,7 @@
           :duplicate "Duplicate"
           :view "View"
           :confirm-generic "Are you sure?"
+          :confirm-delete-song "Are you sure you want to delete the song %1?"
           :confirm-delete-gig "Are you sure you want to delete the gig %1? "}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"
@@ -153,6 +154,8 @@
         :no-response "No Response"}
  :song {:create-title "Add Song"
         :create-subtitle ""
+        :search "Search Songs"
+        :search-empty "No songs found"
         :list-title "Repertoire"
         :title "Song Title"
         :active "Active?"
@@ -162,6 +165,8 @@
         :total-rehearsals "Total Probes"
         :probe-count "Probe Count"
         :gig-count "Gig Count"
+        :last-played "Last Played"
+        :score "Score"
         :last-played-gig "Last Played Gig"
         :last-played-probe "Last Played Probe"
         :log-play "Log Play"

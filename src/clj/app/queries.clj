@@ -385,6 +385,10 @@
    (mapv first)
    (sort-by :section/position)))
 
+(defn sheet-music-by-song [db song-id]
+  (->> (d/find-all-by db :sheet-music/song  [:song/song-id song-id] play-pattern)
+       (mapv first)))
+
 (defn sheet-music-for-song
   [db song-id]
   (let [sections-with-sheets
@@ -414,6 +418,10 @@
   (->> (d/find-all-by db :played/gig [:gig/gig-id gig-id] play-pattern)
        (mapv first)
        (sort-by #(-> % :played/song :song/title))))
+
+(defn plays-by-song [db song-id]
+  (->> (d/find-all-by db :played/song [:song/song-id song-id] play-pattern)
+       (mapv first)))
 
 (defn load-play-stats [db]
   (->>

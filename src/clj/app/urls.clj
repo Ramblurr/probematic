@@ -25,6 +25,7 @@
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
 
 (defn link-gigs-home [] "/gigs/")
+(defn link-songs-home [] "/songs/")
 (defn link-probeplan-home [] "/probeplan")
 (defn link-gig-create [] "/gigs/new/")
 

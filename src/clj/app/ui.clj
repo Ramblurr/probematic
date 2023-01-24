@@ -800,7 +800,7 @@
   (if dt
     [:time {:dateetime (str dt)}
      (format-dt dt)]
-    "never"))
+    "-"))
 
 (defn daterange
   "As per: https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Dates_and_numbers#Ranges"

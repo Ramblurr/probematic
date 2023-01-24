@@ -153,8 +153,7 @@
 
 (ctmx/defcomponent ^:endpoint song-detail-page [{:keys [db] :as req} ^:boolean edit?]
   (let [song-id                          (parse-uuid (-> req :path-params :song-id))
-        post?                            (util/post? req)
-        song                             (if post? (controller/update-song! req (parse-uuid (-> req :path-params :song-id)))
+        song                             (if (util/post? req) (controller/update-song! req (parse-uuid (-> req :path-params :song-id)))
                                              (controller/retrieve-song db song-id))
         {:song/keys [title active? composition-credits
                      arrangement-credits arrangement-notes
@@ -163,71 +162,80 @@
                      origin solo-count]} song
         tr                               (i18n/tr-from-req req)
         comp-name                        (util/comp-namer #'song-detail-page)]
-    [:form {:id id :hx-post (comp-name)}
-     (if edit?
-       (ui/page-header-full :title
-                            (ui/text :label (tr [:song/title]) :name (path "title") :value title)
-                            :subtitle [:div {:class "mt-2"}
-                                       (ui/toggle-checkbox :label (tr [:song/active]) :name (path "active?") :checked? active?)]
+    (if (util/delete? req)
+      (do
+        (controller/delete-song! req song-id)
+        (response/hx-redirect (url/link-songs-home)))
+      [:form {:id id :hx-post (comp-name)}
+       (if edit?
+         (ui/page-header-full :title
+                              (ui/text :label (tr [:song/title]) :name (path "title") :value title)
+                              :subtitle [:div {:class "mt-2"}
+                                         (ui/toggle-checkbox :label (tr [:song/active]) :name (path "active?") :checked? active?)]
 
-                            :buttons
-                            (list
-                             (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
-                                        :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})
-                             (ui/button :label (tr [:action/save]) :priority :primary  :centered? true)))
+                              :buttons
+                              (list
+                               (ui/button :label (tr [:action/delete]) :priority :white-destructive :centered? true
+                                          :hx-confirm (tr [:action/confirm-delete-song] [title])
+                                          :class "mt-10 sm:mt-0 sm:ml-8 md:ml-0 md:mr-10"
+                                          :hx-delete (comp-name) :hx-target (hash "."))
+                               (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
+                                          :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})
+                               (ui/button :label (tr [:action/save]) :priority :primary  :centered? true)))
 
-       (ui/page-header :title title
-                       :subtitle (ui/song-active-bubble song)
-                       :buttons (list
-                                 (ui/button :label (tr [:action/edit]) :priority :white :centered? true
-                                            :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
+         (ui/page-header :title title
+                         :subtitle (ui/song-active-bubble song)
+                         :buttons (list
+                                   (ui/button :label (tr [:action/edit]) :priority :white :centered? true
+                                              :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
 
-                                 (ui/button :label (tr [:song/log-play])
-                                            :priority :primary
-                                            :centered? true
-                                            :class "items-center justify-center "
-                                            :attr {:href (str "/song/log-play/" song-id "/")}))))
+                                   (ui/button :label (tr [:song/log-play])
+                                              :priority :primary
+                                              :centered? true
+                                              :class "items-center justify-center "
+                                              :attr {:href (str "/song/log-play/" song-id "/")}))))
 
-     (if edit?
-       (ui/panel {:title (tr [:song/background-title])}
+       (if edit?
+         (ui/panel {:title (tr [:song/background-title])}
+                   (ui/dl
+                    (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
+                    (ui/dl-item (tr [:song/composition-credits])
+                                (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false))
+                    (ui/dl-item (tr [:song/arrangement-credits])
+                                (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false))
+                    (ui/dl-item (tr [:song/origin])
+                                (ui/textarea :label "" :name (path "origin") :value origin :required? false)
+                                "sm:col-span-3")
+                    (ui/dl-item (tr [:song/arrangement-notes])
+                                (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false)
+                                "sm:col-span-3")))
+         (ui/panel {:title (tr [:song/background-title])}
+                   (ui/dl
+                    (ui/dl-item (tr [:song/solo-count]) solo-count)
+                    (ui/dl-item (tr [:song/composition-credits]) composition-credits)
+                    (ui/dl-item (tr [:song/arrangement-credits]) arrangement-credits)
+                    (ui/dl-item (tr [:song/origin]) origin
+                                "sm:col-span-3")
+                    (ui/dl-item (tr [:song/arrangement-notes]) arrangement-notes
+                                "sm:col-span-3"))))
+       (ui/panel {:title (tr [:song/play-stats-title])}
                  (ui/dl
-                  (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
-                  (ui/dl-item (tr [:song/composition-credits])
-                              (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false))
-                  (ui/dl-item (tr [:song/arrangement-credits])
-                              (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false))
-                  (ui/dl-item (tr [:song/origin])
-                              (ui/textarea :label "" :name (path "origin") :value origin :required? false)
-                              "sm:col-span-3")
-                  (ui/dl-item (tr [:song/arrangement-notes])
-                              (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false)
-                              "sm:col-span-3")))
-       (ui/panel {:title (tr [:song/background-title])}
-                 (ui/dl
-                  (ui/dl-item (tr [:song/solo-count]) solo-count)
-                  (ui/dl-item (tr [:song/composition-credits]) composition-credits)
-                  (ui/dl-item (tr [:song/arrangement-credits]) arrangement-credits)
-                  (ui/dl-item (tr [:song/origin]) origin
-                              "sm:col-span-3")
-                  (ui/dl-item (tr [:song/arrangement-notes]) arrangement-notes
-                              "sm:col-span-3"))))
-     (ui/panel {:title (tr [:song/play-stats-title])}
-               (ui/dl
-                (ui/dl-item (tr [:song/total-plays]) total-plays)
-                (ui/dl-item (tr [:song/gig-count]) total-performances)
-                (ui/dl-item (tr [:song/probe-count]) total-rehearsals)
-                (ui/dl-item (tr [:song/last-played-gig]) [:a {:class "link-blue" :href (url/link-gig last-performance)} (:gig/title last-performance)])
-                (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href (url/link-gig last-rehearsal)}
-                                                            (ui/gig-date last-rehearsal) " "
-                                                            (:gig/title last-rehearsal)])))
-     (song-sheet-music req)]))
+                  (ui/dl-item (tr [:song/total-plays]) total-plays)
+                  (ui/dl-item (tr [:song/gig-count]) total-performances)
+                  (ui/dl-item (tr [:song/probe-count]) total-rehearsals)
+                  (ui/dl-item (tr [:song/last-played-gig]) [:a {:class "link-blue" :href (url/link-gig last-performance)} (:gig/title last-performance)])
+                  (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href (url/link-gig last-rehearsal)}
+                                                              (ui/gig-date last-rehearsal) " "
+                                                              (:gig/title last-rehearsal)])))
+       (song-sheet-music req)])))
 
 (ctmx/defcomponent ^:endpoint song-new [req]
   (let [tr (i18n/tr-from-req req)]
     (if (util/post? req)
       (do
-        (controller/create-song! req)
-        (response/hx-redirect "/songs/"))
+
+        (response/hx-redirect (url/link-song
+                               (controller/create-song! req))))
       [:div
        (ui/page-header :title (tr [:song/create-title])
                        :subtitle (tr [:song/create-subtitle]))
@@ -250,7 +258,7 @@
                     [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/create])]]]])])))
 
-(defn song-row [{:song/keys [title last-played score total-plays] :as song}]
+(defn song-row [tr {:song/keys [title last-played score total-plays] :as song}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
     [:a {:href (url/link-song song) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
@@ -263,25 +271,27 @@
        [:div {:class "flex"}
         [:p {:class "flex items-center text-sm text-gray-500"}
          (icon/hashtag {:class style-icon})
-         "Played "
+         (tr [:song/total-plays])
+         " "
          total-plays]
         [:p {:class "mt-2 flex items-center text-sm text-gray-500 mt-0 ml-6"}
 
          (icon/star-outline {:class style-icon})
-         "Score "
+         (tr [:song/score])
+         " "
          score]]
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
         (icon/calendar {:class style-icon})
-        [:p "Last Played "
+        [:p (tr [:song/last-played]) " "
          (ui/datetime last-played)]]]]]))
 
-(defn song-list [songs]
+(defn song-list [tr songs]
   (if (empty? songs)
-    "Songs not found"
+    (tr [:song/search-empty])
     [:ul {:role "list", :class "divide-y divide-gray-200"}
      (map (fn [song]
             [:li
-             (song-row song)]) songs)]))
+             (song-row tr song)]) songs)]))
 
 (defn norm [s]
   (-> s
@@ -295,25 +305,27 @@
              (norm keyword))) all-songs))
 
 (ctmx/defcomponent ^:endpoint songs-filter [req]
-  [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600"}
-   [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
-    "Search Songs"]
-   [:input {:type "text"
-            :name "song"
-            :id id
-            :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
-            :placeholder "Watermelon Man"
-            :hx-get "songs-list"
-            ;; :hx-push-url "true"
-            :hx-trigger "keyup changed delay:500ms"
-            :hx-target (hash "../songs-list")}]])
+  (let [tr (i18n/tr-from-req req)]
+    [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600"}
+     [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
+      (tr [:song/search])]
+     [:input {:type "text"
+              :name "song"
+              :id id
+              :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+              :placeholder "Watermelon Man"
+              :hx-get "songs-list"
+              ;; :hx-push-url "true"
+              :hx-trigger "keyup changed delay:500ms"
+              :hx-target (hash "../songs-list")}]]))
 
 (ctmx/defcomponent ^:endpoint songs-list [{:keys [db] :as req} song]
   (let [all-songs (q/find-all-songs db)
+        tr (i18n/tr-from-req req)
         filtered-songs (search-songs song all-songs)]
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
            :id id}
-     (song-list filtered-songs)]))
+     (song-list tr filtered-songs)]))
 
 (ctmx/defcomponent songs-page [req]
   (let [tr (i18n/tr-from-req req)]
