@@ -15,8 +15,8 @@
    [medley.core :as m]
    [app.i18n :as i18n]))
 
-(defn member-table-headers [members]
-  [{:label "Name" :priority :normal :key :name
+(defn member-table-headers [tr members]
+  [{:label (tr [:member/name]) :priority :normal :key :name
     :render-fn (fn [_ instrument]
                  (list
                   (:name instrument)
@@ -24,10 +24,10 @@
                    [:dt {:class "sr-only"} (:name instrument)]
                    [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
 
-   {:label "Email" :priority :medium :key :owner}
-   {:label "Phone" :priority :medium :key :value}
-   {:label "Section" :priority :medium :key :value}
-   {:label "Active?" :priority :medium :key :value}
+   {:label (tr [:Email]) :priority :medium :key :owner}
+   {:label (tr [:Phone]) :priority :medium :key :value}
+   {:label (tr [:section]) :priority :medium :key :value}
+   {:label (tr [:Active]) :priority :medium :key :value}
    ;;
    ])
 
@@ -116,13 +116,14 @@
                                                                                   (ui/rich-li-text {} (:instrument.category/name category))
                                                                                   (ui/rich-li-text {} (ui/money value :EUR))
                                                                                   (ui/rich-li-text {} (ui/bool-bubble (not private?) {false "Private" true "Band"}))
-                                                                                  (ui/rich-li-action-a :href "#" :label "View")))
+                                                                                  (ui/rich-li-action-a :href "#" :label
+                                                                                                       (tr [:action/view]))))
                                                                     coverages))) "sm:col-span-3")))
       (ui/panel {:title (tr ["Gigs & Probes"])
                  :subtitle (tr ["Fun stats!"])}
                 (ui/dl
-                 (ui/dl-item (tr ["Gigs Attended"]) "coming soon")
-                 (ui/dl-item (tr ["Probes Attended"]) "coming soon")))]]))
+                 (ui/dl-item (tr [:member/gigs-attended]) "coming soon")
+                 (ui/dl-item (tr [:member/probes-attended]) "coming soon")))]]))
 
 (ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
   (let [td-class "px-3 py-4"
@@ -169,39 +170,38 @@
       )]))
 
 (ctmx/defcomponent ^:endpoint member-table-rw [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [members (-> req :members)
-          table-headers (member-table-headers members)]
-      (list
-       (ui/table-row-head table-headers)
-       (ui/table-body
-        (rt/map-indexed member-row-rw req (map :member/gigo-key members)))))))
+  (let [members (-> req :members)
+        tr (i18n/tr-from-req req)
+        table-headers (member-table-headers tr members)]
+    (list
+     (ui/table-row-head table-headers)
+     (ui/table-body
+      (rt/map-indexed member-row-rw req (map :member/gigo-key members))))))
 
 (ctmx/defcomponent ^:endpoint member-table-ro [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [members (-> req :members)
-          table-headers (member-table-headers members)]
-      (list
-       (ui/table-row-head table-headers)
-       (ui/table-body
-        (rt/map-indexed member-row-ro req (map :member/gigo-key members)))))))
+  (let [members (-> req :members)
+        table-headers (member-table-headers (i18n/tr-from-req req) members)]
+    (list
+     (ui/table-row-head table-headers)
+     (ui/table-body
+      (rt/map-indexed member-row-ro req (map :member/gigo-key members))))))
 
 (ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req} ^:boolean edit?]
-  (ctmx/with-req req
-    (let [add? (util/qp-bool req :add)
-          comp-name (util/comp-namer #'members-index-page)]
-      [:div {:id id}
-       (ui/page-header :title "Member Admin")
-       [:div {:class "mt-2"}
-        [:div {:class "px-4 sm:px-6 lg:px-8"}
-         [:div {:class "flex items-center justify-end"}
-          [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
-           (ui/toggle :label "Edit" :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
-           (ui/button :label "Add" :priority :white :class "" :icon icon/plus :centered? true
+  (let [add? (util/qp-bool req :add)
+        tr (i18n/tr-from-req req)
+        comp-name (util/comp-namer #'members-index-page)]
+    [:div {:id id}
+     (ui/page-header :title "Member Admin")
+     [:div {:class "mt-2"}
+      [:div {:class "px-4 sm:px-6 lg:px-8"}
+       [:div {:class "flex items-center justify-end"}
+        [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
+         (ui/toggle :label (tr [:action/edit]) :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
+         #_(ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
                       :attr {:hx-target (hash ".") :hx-get (comp-name "?add=true")})]]
 
-         [:div {:class "mt-4"}
-          [:table {:class "min-w-full divide-y divide-gray-300"}
-           (if edit?
-             (member-table-rw req)
-             (member-table-ro req))]]]]])))
+       [:div {:class "mt-4"}
+        [:table {:class "min-w-full divide-y divide-gray-300"}
+         (if edit?
+           (member-table-rw req)
+           (member-table-ro req))]]]]]))

@@ -14,7 +14,9 @@
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
-          :nick "Nickname"}
+          :nick "Nickname"
+          :gigs-attended "Gigs Attended"
+          :probes-attended "Probes Attended"}
  :gig.status {:confirmed "Confirmed!"
               :unconfirmed "Unconfirmed"
               :cancelled "Cancelled"}
@@ -133,6 +135,7 @@
           :create "Create"
           :continue "Continue"
           :duplicate "Duplicate"
+          :view "View"
           :confirm-generic "Are you sure?"
           :confirm-delete-gig "Are you sure you want to delete the gig %1? "}
  :motivation {:none "-"
