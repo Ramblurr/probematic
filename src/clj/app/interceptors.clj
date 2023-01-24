@@ -1,5 +1,4 @@
 (ns app.interceptors
-  (:import (org.eclipse.jetty.server HttpConfiguration))
   (:require
    [app.auth :as auth]
    [app.config :as config]
@@ -19,8 +18,9 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [ring.middleware.keyword-params :as keyword-params]
-   [clojure.tools.logging :as log]))
+   [ring.middleware.keyword-params :as keyword-params])
+  (:import
+   (org.eclipse.jetty.server HttpConfiguration)))
 
 (defn current-user-interceptor
   "Fetches the current user from the request (see app.auth/auth-interceptor),
@@ -141,20 +141,19 @@
                                  (i18n/read-langs)
                                  lang-dicts)
                     request (:request ctx)
-                    headers (:headers request)
                     query-string (:query-string request)
                     lang-qr (query-string-lang query-string)
                     lang-cookie (cookie-lang (:cookies request))
-                    lang (or lang-qr lang-cookie (name i18n/default-locale))
+                    lang-browser (i18n/browser-lang (:headers request))
+                    all-accepted-langs (filterv some? (concat  [lang-qr lang-cookie] lang-browser [(name i18n/default-locale)]))
                     both-set (and lang-qr lang-cookie)
-
                     change-lang (or
                                  (and both-set (not (= lang-qr lang-cookie)))
                                  (and (not both-set) lang-qr))
                     tempura-accepted (if (:tempura/accept-langs request)
                                        (:tempura/accept-langs request)
                                        [])
-                    accepted (if lang (into [lang] tempura-accepted) tempura-accepted)
+                    accepted (if all-accepted-langs (into [] (concat all-accepted-langs tempura-accepted)) tempura-accepted)
                     current-locale (i18n/supported-lang lang-dicts accepted)
                     tr (i18n/tr-with lang-dicts accepted)
                     req (if tr

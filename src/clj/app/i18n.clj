@@ -1,13 +1,12 @@
 (ns app.i18n
   (:require
-   [clojure.pprint :as clojure.pprint]
    [clojure.edn :as edn]
-   [medley.core :as m]
-   [clojure.string :as str]
-   [clojure.set      :refer [intersection]]
    [clojure.java.io :as clojure.java.io]
-   [taoensso.tempura :as tempura :refer [tr]]
-   [taoensso.encore  :as enc]))
+   [clojure.pprint :as clojure.pprint]
+   [clojure.set :refer [intersection]]
+   [clojure.string :as str]
+   [taoensso.encore :as enc]
+   [taoensso.tempura :as tempura :refer [tr]]))
 
 (def default-locale :en)
 
@@ -56,6 +55,30 @@
 
 (defn tr-from-req [req]
   (:tempura/tr req))
+
+(defn parse-http-accept-header
+  "Parses HTTP Accept header and returns sequence of [choice weight] pairs
+  sorted by weight."
+  [header]
+  (sort-by second enc/rcompare
+           (for [choice (remove str/blank? (str/split (str header) #","))]
+             (let [[lang q] (str/split choice #";")]
+               [(str/trim lang)
+                (or (when q (enc/as-?float (get (str/split q #"=") 1)))
+                    1)]))))
+(comment (parse-http-accept-header nil)
+         (parse-http-accept-header "en-GB")
+         (parse-http-accept-header "en-GB,en;q=0.8,en-US;q=0.6")
+         (parse-http-accept-header "en-GB  ,  en; q=0.8, en-US;  q=0.6")
+         (parse-http-accept-header "a,")
+         (parse-http-accept-header "es-ES, en-US"))
+
+(defn browser-lang [headers]
+  (->> (get headers "accept-language")
+       (parse-http-accept-header)
+       (mapv first)))
+
+;;;;;;  EDN <-> PO/POT
 
 (def ^:private remove-empty-lines
   "Transducer that remove groups of empty lines."
