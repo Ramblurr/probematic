@@ -37,12 +37,12 @@
                                         ;:body (pretty-print-html body)
     :body  body}))
 
-(defn head []
+(defn head [title]
   [:head
    [:meta {:charset "utf-8"}]
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
-
+   [:title (or title "Probematic")]
    ;; [:link {:rel "stylesheet" :href "https://rsms.me/inter/inter.css"}]
    [:link {:rel "stylesheet" :href "/font/inter/inter.css"}]
    [:link {:rel "stylesheet" :href "/css/compiled/main.css"}]])
@@ -61,10 +61,10 @@
 
 (defn html5-response
   ([body] (html5-response nil body))
-  ([js body]
+  ([{:keys [js title]} body]
    (html-response
     (html5-safe
-     (head)
+     (head title)
      [:body (ctmx.render/walk-attrs body)
       (body-end)]
      (when js [:script {:src (str "/js" js)}])))))
@@ -79,6 +79,7 @@
    :cookies cookies
    :body  (html5-safe
            [:head
+            [:title "Probematic"]
             [:style
              (hiccup.util/raw-string (-> (io/resource "public/css/login-interstitial.css") slurp))]
             [:meta {:http-equiv "refresh" :content (str "0;URL='" relative-uri "'")}]]

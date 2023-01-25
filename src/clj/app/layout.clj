@@ -227,11 +227,11 @@
 
 (defn app-shell [req body]
   (let [member (auth/get-current-member req)]
-    (render/html5-response
-     [:div {:class "min-h-full"}
-      (mobile-menu req)
-      (desktop-menu req member)
-      (app-container req member body)])))
+    (render/html5-response {:title "Probematic"}
+                           [:div {:class "min-h-full"}
+                            (mobile-menu req)
+                            (desktop-menu req member)
+                            (app-container req member body)])))
 
 (defn sidebar-search []
       ;; "<!-- Sidebar Search -->"
