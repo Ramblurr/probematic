@@ -12,3 +12,5 @@
   Interceptor
   (into-interceptor [this data opts]
     (interceptor/into-interceptor (into {} this) data opts)))
+
+(defn nop "Does nothing. It is here to prevent tools from cleaning up an unused ns" [])

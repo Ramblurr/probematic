@@ -1,5 +1,6 @@
 (ns app.routes
   (:require
+   [app.routes.pedestal-reitit :as pedestal-reitit]
    [app.auth :as auth]
    [app.dashboard.routes :refer [dashboard-routes]]
    [app.file-browser.routes :refer [file-browser-routes]]
@@ -13,6 +14,8 @@
    [reitit.coercion.malli :as rcm]
    [reitit.ring :as ring]))
 
+(pedestal-reitit/nop)
+
 (defn routes [system]
   ["" {:coercion     interceptors/default-coercion
        :muuntaja     interceptors/formats-instance
@@ -21,7 +24,7 @@
                             (interceptors/system-interceptor system)
                             (interceptors/datomic-interceptor system)
                             (interceptors/current-user-interceptor system)
-                             ;;
+                            ;;
                             )}
    ["/login" {:handler (fn [req] (auth/login-page-handler (:env system) (:oauth2 system) req))}]
    ["/logout" {:handler (fn [req] (auth/logout-page-handler (:env system) (:oauth2 system) req))}]

@@ -216,8 +216,6 @@
     ))
 
 (defn make-gigs-sync-job [{:keys [conn gigo df-clients env]}]
-  (tap> "MAKE GIGS")
-  (tap> gigo)
   (fn [{:job/keys [frequency initial-delay]}]
     (tap> "register gigo cache update job")
     (assert (some? gigo) "gigo creds required")
