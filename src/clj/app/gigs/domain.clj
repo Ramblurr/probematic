@@ -91,7 +91,7 @@
                                              (sort-by :comment/created-at)))))
 
 (defn in-future? [{:gig/keys [date]}]
-  (t/>= (t/date) date))
+  (t/>= date (t/date)))
 
 (defn gig-archived? [{:gig/keys [date]}]
   (when date

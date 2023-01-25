@@ -1,5 +1,6 @@
 (ns app.members.routes
   (:require
+   [app.queries :as q]
    [app.layout :as layout]
    [app.members.views :as view]
    [app.members.controller :as controller]
@@ -26,7 +27,7 @@
                                            db (d/db conn)
                                            member-gigo-key (-> ctx :request :path-params :gigo-key)]
                                        (cond-> ctx
-                                         member-gigo-key (assoc-in [:request :member] (controller/retrieve-member db member-gigo-key))
+                                         member-gigo-key (assoc-in [:request :member] (q/retrieve-member db member-gigo-key))
                                          true (assoc-in [:request :members] (controller/members db)))))}])
 
 (defn members-routes []

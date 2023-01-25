@@ -172,6 +172,9 @@
 (defn gig+member [gig-id gigo-key]
   (pr-str [gig-id gigo-key]))
 
+(defn retrieve-member [db gigo-key]
+  (d/find-by db :member/gigo-key gigo-key member-detail-pattern))
+
 (defn members-for-select
   [db]
   (mapv first

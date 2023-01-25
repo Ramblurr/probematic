@@ -5,13 +5,6 @@
             [app.controllers.common :as common]
             [datomic.client.api :as datomic]))
 
-(defn ->member [member]
-  member)
-
-(defn retrieve-member [db gigo-key]
-  (->member
-   (d/find-by db :member/gigo-key gigo-key q/member-detail-pattern)))
-
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
        (mapv first)
@@ -19,7 +12,7 @@
 
 (defn members [db]
   (->> (d/find-all db :member/gigo-key q/member-pattern)
-       (mapv #(->member (first %)))
+       (mapv #(first %))
        (sort-by (juxt :member/name :member/active))))
 
 (defn transact-member!
@@ -36,7 +29,7 @@
 (defn update-active-and-section! [{:keys [datomic-conn db] :as req}]
   (let [params (common/unwrap-params req)
         gigo-key (:gigo-key params)
-        member (retrieve-member db gigo-key)
+        member (q/retrieve-member db gigo-key)
         member-ref (d/ref member :member/gigo-key)
         tx-data [[:db/add member-ref :member/section [:section/name (:section-name params)]]
                  [:db/add member-ref :member/active? (not (:member/active? member))]]]

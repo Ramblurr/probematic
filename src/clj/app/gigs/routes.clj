@@ -40,15 +40,6 @@
                                    (cond-> ctx
                                      gig-id (assoc-in [:request :gig] (q/retrieve-gig db gig-id)))))})
 
-(defn events-routes []
-  ["" {:app.route/name :app/gigs}
-   ["/gigs"
-    (gig-create-route)
-    (gigs-list-route)]
-   ["/gig" {:interceptors [gigs-interceptors]}
-    (gig-detail-route)
-    (gig-log-play-route)]])
-
 (defn gigs-list-route []
   (ctmx/make-routes
    ""
@@ -62,7 +53,7 @@
    (fn [req]
      (layout/app-shell req (view/gigs-detail-page req false)))))
 
-(defn events-routes []
+(defn gigs-routes []
   ["" {:app.route/name :app/gigs}
    ["/gigs"
     (gig-create-route)
@@ -70,3 +61,8 @@
    ["/gig" {:interceptors [gigs-interceptors]}
     (gig-detail-route)
     (gig-log-play-route)]])
+
+(defn gig-answer-link-route []
+  ["/answer-link" {:app.route/name :app/gig-answer-link
+                   :handler  (fn [req]
+                               (view/gig-answer-link req))}])

@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [comment])
   (:require
    [app.auth :as auth]
+   [app.layout :as layout]
    [app.gigs.controller :as controller]
    [app.gigs.domain :as domain]
    [app.i18n :as i18n]
@@ -878,3 +879,14 @@
            (map (fn [gig]
                   [:li
                    (gig-row gig)]) past-gigs)])]]]]))
+
+(defn gig-answer-link [req]
+  (let [tr (i18n/tr-from-req req)
+        logged-in? (-> req :session :session/member)
+        {:keys [gig]} (controller/update-attendance-from-link! req)]
+    (if logged-in?
+      (response/redirect (url/link-gig gig))
+      (layout/centered-content req
+                               [:div
+                                [:span (tr [:gig/answer-link-submitted])]
+                                [:a {:href (url/absolute-gig-answer-link-undo (-> req :system :env))} " "]]))))

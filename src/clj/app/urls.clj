@@ -38,6 +38,9 @@
 (defn absolute-gig-answer-link-base [env]
   (str (config/app-base-url env) "/gig/answer-link"))
 
+(defn absolute-gig-answer-link-undo [env]
+  (str (config/app-base-url env) "/gig/answer-link-undo"))
+
 (defn link-logout [] "/logout")
 (defn link-login [] "/login")
 

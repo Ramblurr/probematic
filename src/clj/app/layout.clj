@@ -1,11 +1,10 @@
 (ns app.layout
   (:require
-   [app.ui :as ui]
-   [app.render :as render]
-   [app.icons :as icon]
    [app.auth :as auth]
-   [clojure.string :as str]
    [app.i18n :as i18n]
+   [app.icons :as icon]
+   [app.render :as render]
+   [app.ui :as ui]
    [app.urls :as url]))
 
 (defn navigation [tr]
@@ -232,6 +231,16 @@
                             (mobile-menu req)
                             (desktop-menu req member)
                             (app-container req member body)])))
+
+(defn centered-content [req body]
+  (render/html5-response {:title "Probematic"}
+                         [:div {:class "h-full bg-gray-50"}
+                          [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
+                           [:div {:class "sm:mx-auto sm:w-full sm:max-w-md"}
+                            (icon/logotype {:class "h-8 mx-auto h-12 w-auto text-green-500 logotype-dark"})]
+                           [:div {:class "mt-8 sm:mx-auto sm:w-full sm:max-w-md"}
+                            [:div {:class "bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"}
+                             body]]]]))
 
 (defn sidebar-search []
       ;; "<!-- Sidebar Search -->"

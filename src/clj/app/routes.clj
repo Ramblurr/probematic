@@ -1,18 +1,17 @@
 (ns app.routes
   (:require
-   [reitit.coercion.malli :as rcm]
    [app.auth :as auth]
-   [app.gigs.routes :refer [events-routes]]
+   [app.dashboard.routes :refer [dashboard-routes]]
    [app.file-browser.routes :refer [file-browser-routes]]
+   [app.gigs.routes :refer [gig-answer-link-route gigs-routes]]
    [app.insurance.routes :refer [insurance-routes]]
    [app.interceptors :as interceptors]
    [app.members.routes :refer [members-routes]]
-   [app.dashboard.routes :refer [dashboard-routes]]
-   [app.routes.pedestal-reitit]
-   [app.songs.routes :refer [songs-routes]]
    [app.probeplan.routes :refer [probeplan-routes]]
-   [reitit.ring :as ring]
-   [app.sardine :as sardine]))
+   [app.sardine :as sardine]
+   [app.songs.routes :refer [songs-routes]]
+   [reitit.coercion.malli :as rcm]
+   [reitit.ring :as ring]))
 
 (defn routes [system]
   ["" {:coercion     interceptors/default-coercion
@@ -21,21 +20,22 @@
                             (auth/session-interceptor system)
                             (interceptors/system-interceptor system)
                             (interceptors/datomic-interceptor system)
+                            (interceptors/current-user-interceptor system)
                              ;;
                             )}
    ["/login" {:handler (fn [req] (auth/login-page-handler (:env system) (:oauth2 system) req))}]
    ["/logout" {:handler (fn [req] (auth/logout-page-handler (:env system) (:oauth2 system) req))}]
    ["/oauth2"
     ["/callback" {:handler (fn [req] (auth/oauth2-callback-handler (:env system) (:oauth2 system) req))}]]
+   (gig-answer-link-route)
 
    ["" {:interceptors [auth/require-authenticated-user
-                       (interceptors/webdav-interceptor system)
-                       (interceptors/current-user-interceptor system)]}
+                       (interceptors/webdav-interceptor system)]}
 
     (members-routes)
     (dashboard-routes)
     (songs-routes)
-    (events-routes)
+    (gigs-routes)
     (probeplan-routes)
     (insurance-routes)
     (file-browser-routes)

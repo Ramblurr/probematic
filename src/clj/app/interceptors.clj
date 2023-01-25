@@ -28,15 +28,16 @@
 
 (defn current-user-interceptor
   "Fetches the current user from the request (see app.auth/auth-interceptor),
-   looks up the member and attaches the member info to the request under :session :session/member"
+   looks up the member and attaches the member info to the request under :session :session/member.
+  If there is no authed member, then does nothing."
   [system]
   {:name ::current-user-interceptor
    :enter (fn [ctx]
-            (assert (-> ctx :request :session :session/email) "no authenticated member email")
-            (let [member (q/member-by-email (d/db (-> system :datomic :conn))
-                                            (-> ctx :request :session :session/email))]
-              (assert member "no authenticated member")
-              (assoc-in ctx [:request :session :session/member] member)))})
+            (if-let [member-email (-> ctx :request :session :session/email)]
+              (if-let [member (q/member-by-email (d/db (-> system :datomic :conn)) member-email)]
+                (assoc-in ctx [:request :session :session/member] member)
+                ctx)
+              ctx))})
 
 (def keyword-params-interceptor
   "Keywordizes request parameter keys. CTMX expects this."

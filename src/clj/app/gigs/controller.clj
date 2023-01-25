@@ -1,8 +1,8 @@
 (ns app.gigs.controller
   (:refer-clojure :exclude [comment])
   (:require
-   [medley.core :as m]
    [app.auth :as auth]
+   [app.config :as config]
    [app.controllers.common :as common]
    [app.datomic :as d]
    [app.email :as email]
@@ -11,12 +11,14 @@
    [app.probeplan.stats :as stats]
    [app.queries :as q]
    [app.schemas :as s]
+   [app.secret-box :as secret-box]
    [app.util :as util]
    [clojure.data :as clojure.data]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
+   [medley.core :as m]
    [tick.core :as t]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
@@ -170,6 +172,26 @@
 
     (assert plan-kw (format  "unknown plan value: '%s'" plan))
     (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key))))
+
+(defn update-attendance-from-link! [{:keys [datomic-conn db system params] :as req}]
+  (let [answer-enc (:answer params)
+        answer (secret-box/decrypt answer-enc (config/app-secret-key (:env system)))
+        gigo-key (:member/gigo-key answer)
+        gig-id (:gig/gig-id answer)
+        gig (q/retrieve-gig db gig-id)
+        member (q/retrieve-member db gigo-key)
+        plan-kw ((set domain/plans)  (:attendance/plan answer))]
+    (assert gig)
+    (assert member)
+    (assert plan-kw)
+    (when (domain/in-future? gig)
+      (let [attendance (get-attendance db gig-id gigo-key)
+            attendance-txs (if attendance
+                             [(update-attendance-plan-tx attendance plan-kw)
+                              (touch-attendance-tx attendance)]
+                             [(create-attendance-plan-tx db  gig-id gigo-key plan-kw)])]
+        (transact-attendance! datomic-conn  attendance-txs (q/gig+member gig-id gigo-key))
+        {:gig gig :member member}))))
 
 (defn create-attendance-comment-tx [db gig-id gigo-key comment]
   (assoc (create-attendance-tx db gig-id gigo-key) :attendance/comment comment))

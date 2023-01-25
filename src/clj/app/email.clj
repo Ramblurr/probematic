@@ -75,15 +75,9 @@
   (do
 
     (require '[integrant.repl.state :as state])
-    (def gig {:gig/pay-deal "Unterkunft, Verpflegung kostet nix, wir bekommen auch einen kräftigen Fahrtkostenzuschuss, und weitgehend Essen&trinken. die bandkassa nehmen wir mit für noch mehr Essen&Trinken."
-              :gig/status :gig.status/confirmed
-              :gig/title "Skappa’nabanda!"
-              :gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgIDg4ZGXCAw"
-              :gig/gig-type :gig.type/gig
-              :gig/setlist "Programm für Donnerstag im Detail:\r"
-              :gig/more-details "FestivalOrt:\r"
-              :gig/date #inst "2015-06-03T22:00:00.000-00:00"
-              :gig/location "GRAZ"})
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db (datomic/db conn))
+    (def gig (q/retrieve-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDcytW4CQw"))
     (def gig2 {:gig/status :gig.status/confirmed
                :gig/call-time (t/time "18:47")
                :gig/title "Probe"
@@ -93,19 +87,21 @@
                              :member/nick "SNO"}
                :gig/gig-type :gig.type/probe
                :gig/set-time (t/time "19:00")
-               :gig/date  (t/date "2023-01-18")
+               :gig/date (t/date "2023-01-30")
                :gig/location "Proberaum in den Bögen"})
+    (require '[app.config :as config])
 
     (def member {:member/email "me@example.com"
-                 :member/gigo-key "abcd123u"})
+                 :member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
 
     (def member2 {:member/email "me+test@example.com"
-                  :member/gigo-key "zxcysdf"})
+                  :member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
 
-    (def redis-opts (-> state/system :app.ig/redis)) ;; rcf
+    (def redis-opts (-> state/system :app.ig/redis))
+    (def env (-> state/system :app.ig/env))
 
     (def tr (i18n/tr-with (i18n/read-langs) ["en"]))
-    (def sys {:tr tr :env {:app-secret-key "hunter2" :app-base-url "https://foobar.com"}})) ;; rcf
+    (def sys {:tr tr :env env})) ;; rcf
 
   (spit "plain-email.txt"
         (str
@@ -121,7 +117,9 @@
          "\n++++\n"
          (tmpl/gig-updated-email-plain sys gig2 [:gig/status]))) ;; rcf
 
-  (build-gig-created-email sys gig [member member2])
+  (build-gig-created-email sys gig [member])
+  :email/recipient-variables
+  (get "me@example.com")
   (build-gig-updated-email sys gig [member member2] [:gig/status])
 
   (queue-email! {:redis redis-opts} (debug/xxx (build-gig-created-email sys gig2 [member2])))
