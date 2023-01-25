@@ -2,8 +2,16 @@
  :secrets         #include #or [#env APP_SECRETS_FILE "../secrets.edn"]
  :app-base-url    #ref [:secrets :app-base-url]
  :app-secret-key  #ref [:secrets :app-secret-key]
- :app-idp-logout-url #ref [:secrets :app-idp-logout-url]
- :app-rp-logout-path #ref [:secrets :app-rp-logout-path]
+ :session-config  {:cookie-attrs  {:same-site :strict
+                                   :http-only true
+                                   :path      "/"}
+                   :session-ttl-s 1210000 ;; 14 days
+                   }
+ :oauth2          {:well-known-uri #ref [:secrets :oauth2 :well-known-uri]
+                   :client-id      #ref [:secrets :oauth2 :client-id]
+                   :client-secret  #ref [:secrets :oauth2 :client-secret]
+                   :callback-path  "/oauth2/callback"}
+ :authorization   {:known-roles   #{:admin :Mitglieder}}
  :environment     #profile {:prod #or [#env APP_ENVIRONMENT "prod"]
                             :dev  "dev"
                             :demo "demo"
@@ -36,8 +44,6 @@
                    :mailgun-domain #ref [:secrets :mailgun :mailgun-domain]}
  :sentry          {:dsn #ref [:secrets :sentry :dsn]}
  :redis           {:conn-spec #ref [:secrets :redis :conn-spec]}
- :auth            {:cert-filename "keycloak-realm.crt"
-                   :known-roles   #{:admin :Mitglieder}}
  :max-header-size 12000
  :ig/system       {:app.ig/profile          #profile {:prod :prod
                                                       :dev  :dev
@@ -68,7 +74,9 @@
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :webdav     #ig/ref :app.ig/webdav-sardine
                                              :env        #ig/ref :app.ig/env
+                                             :oauth2     #ig/ref :app.ig/oauth2
                                              :redis      #ig/ref :app.ig/redis}
+                   :app.ig/oauth2           {:env #ig/ref :app.ig/env}
                    :ol.ig/jobs              {:job-defs #ig/ref :app.ig.jobs/definitions
                                              :env      #ig/ref :app.ig/env}
                    :app.ig/gigo-client      {:env #ig/ref :app.ig/env}

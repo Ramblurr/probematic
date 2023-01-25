@@ -21,7 +21,8 @@
    [reitit.http :as http]
    [reitit.pedestal :as pedestal]
    [sentry-clj.core :as sentry]
-   [app.sardine :as sardine]))
+   [app.sardine :as sardine]
+   [app.auth :as auth]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -130,3 +131,7 @@
 (defmethod ig/halt-key! ::email-worker
   [_ sys]
   (email-worker/stop! sys))
+
+(defmethod ig/init-key ::oauth2
+  [_ sys]
+  (auth/build-oauth2-config (:env sys)))

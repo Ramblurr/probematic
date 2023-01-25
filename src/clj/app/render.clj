@@ -2,7 +2,9 @@
   (:require
    [ctmx.render :as ctmx.render]
    [hiccup.page :as hiccup.page]
-   [hiccup2.core :refer [html]]))
+   [hiccup.util :as hiccup.util]
+   [hiccup2.core :refer [html]]
+   [clojure.java.io :as io]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"
@@ -66,3 +68,27 @@
      [:body (ctmx.render/walk-attrs body)
       (body-end)]
      (when js [:script {:src (str "/js" js)}])))))
+
+(defn post-login-client-side-redirect
+  "When using a SameSite=strict session cookie, after the OAUTH2 login the session cookie will not be sent. We need to interrupt the server-side redirect
+  with this client side redirect to trigger the SameSite=strict allow policy so the session cookie will be sent."
+  [session cookies relative-uri]
+  {:status 200
+   :headers {"Content-Type" "text/html"}
+   :session session
+   :cookies cookies
+   :body  (html5-safe
+           [:head
+            [:style
+             (hiccup.util/raw-string (-> (io/resource "public/css/login-interstitial.css") slurp))]
+            [:meta {:http-equiv "refresh" :content (str "0;URL='" relative-uri "'")}]]
+           [:body
+            [:div.container
+             [:div.content
+              [:noscript
+               [:p [:a {:href relative-uri} "Continue"]]]
+              [:div.spinner
+               [:div]
+               [:div]
+               [:div]]
+              [:p "Logging in..."]]]])})

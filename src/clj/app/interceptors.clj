@@ -24,15 +24,15 @@
 
 (defn current-user-interceptor
   "Fetches the current user from the request (see app.auth/auth-interceptor),
-   looks up the member and attaches the member info to the request under :app.auth/session :session/member"
+   looks up the member and attaches the member info to the request under :session :session/member"
   [system]
   {:name ::current-user-interceptor
    :enter (fn [ctx]
-            (assert (-> ctx :request :app.auth/session :session/email) "no authenticated member email")
+            (assert (-> ctx :request :session :session/email) "no authenticated member email")
             (let [member (q/member-by-email (d/db (-> system :datomic :conn))
-                                            (-> ctx :request :app.auth/session :session/email))]
+                                            (-> ctx :request :session :session/email))]
               (assert member "no authenticated member")
-              (assoc-in ctx [:request :app.auth/session :session/member] member)))})
+              (assoc-in ctx [:request :session :session/member] member)))})
 
 (def keyword-params-interceptor
   "Keywordizes request parameter keys. CTMX expects this."
@@ -182,12 +182,12 @@
                    [human-id-interceptor
                     (i18n-interceptor system)
                     service-error-handler
-                    (cond (config/demo-mode? (:env system))
-                          auth/demo-auth-interceptor
+                    #_(cond (config/demo-mode? (:env system))
+                            auth/demo-auth-interceptor
                           ;; (config/dev-mode? (:env system))
                           ;; (auth/dev-auth-interceptor (-> system :env :secrets :dev-session))
-                          :else (auth/auth-interceptor (-> system :env :auth :cert-filename)
-                                                       (-> system :env :auth :known-roles)))
+                            :else (auth/auth-interceptor (-> system :env :authorization :cert-filename)
+                                                         (-> system :env :authorization :known-roles)))
 
                     dev-mode-interceptor
                     middlewares/cookies

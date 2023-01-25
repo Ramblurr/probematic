@@ -1,9 +1,10 @@
 (ns app.util
   (:require
-   [clojure.walk :as walk]
-   [medley.core :as m]
-   [ctmx.form :as form]
+   [clojure.pprint :as pprint]
    [clojure.string :as str]
+   [clojure.walk :as walk]
+   [ctmx.form :as form]
+   [medley.core :as m]
    [tick.core :as t]))
 
 (defn clean-number [n]
@@ -188,6 +189,15 @@
   (if (string? v)
     (parse-uuid v)
     v))
+
+(defn log-pprint
+  "A pretty-print function suitable for use with
+  `clojure.tools.logging` functions."
+  [& args]
+  (->> args
+       (apply pprint/pprint)
+       (with-out-str)
+       (str "\n")))
 
 (comment
   (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])

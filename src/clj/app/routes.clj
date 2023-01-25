@@ -15,28 +15,37 @@
    [app.sardine :as sardine]))
 
 (defn routes [system]
+  ;; (auth/login-page-handler (:oauth2 system) {})
   ["" {:coercion     interceptors/default-coercion
        :muuntaja     interceptors/formats-instance
        :interceptors (conj  (interceptors/default-interceptors system)
+                            (auth/session-interceptor system)
                             (interceptors/system-interceptor system)
                             (interceptors/datomic-interceptor system)
-                            auth/require-authenticated-user
-                            (interceptors/webdav-interceptor system)
-                            (interceptors/current-user-interceptor system))}
+                             ;;
+                            )}
+   ["/login" {:handler (fn [req] (auth/login-page-handler (:env system) (:oauth2 system) req))}]
+   ["/logout" {:handler (fn [req] (auth/logout-page-handler (:env system) (:oauth2 system) req))}]
+   ["/oauth2"
+    ["/callback" {:handler (fn [req] (auth/oauth2-callback-handler (:env system) (:oauth2 system) req))}]]
 
-   (members-routes)
-   (dashboard-routes)
-   (songs-routes)
-   (events-routes)
-   (probeplan-routes)
-   (insurance-routes)
-   (file-browser-routes)
-   ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
-                        :coercion rcm/coercion
-                        :app.route/name :app/nextcloud-fetch
-                        :handler (fn [req] (sardine/fetch-file-handler req false))}]
-     ;["/index.html" (index-route frontend-index-adapter index-csp)]
-   ])
+   ["" {:interceptors [auth/require-authenticated-user
+                       (interceptors/webdav-interceptor system)
+                       (interceptors/current-user-interceptor system)]}
+
+    (members-routes)
+    (dashboard-routes)
+    (songs-routes)
+    (events-routes)
+    (probeplan-routes)
+    (insurance-routes)
+    (file-browser-routes)
+    ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
+                         :coercion rcm/coercion
+                         :app.route/name :app/nextcloud-fetch
+                         :handler (fn [req] (sardine/fetch-file-handler req false))}]
+                                        ;["/index.html" (index-route frontend-index-adapter index-csp)]
+    ]])
 
 (defn default-handler [{:keys [] :as system}]
   (ring/routes

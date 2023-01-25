@@ -1,9 +1,21 @@
 (ns app.auth
   (:require
+   [app.config :as config]
+   [app.render :as render]
+   [app.secret-box :as secret-box]
+   [app.session :refer [redis-store]]
+   [buddy.core.codecs :as codecs]
    [buddy.core.keys :as buddy-keys]
    [buddy.sign.jwt :as jwt]
-   [clojure.java.io :as io]
-   [clojure.set :as set]))
+   [clojure.set :as set]
+   [clojure.string :as str]
+   [io.pedestal.http.ring-middlewares :as ring-middlewares]
+   [jsonista.core :as j]
+   [medley.core :as m]
+   [org.httpkit.client :as http])
+  (:import
+   (java.net URLEncoder)
+   (java.security SecureRandom)))
 
 (defn throw-unauthorized
   ([msg data]
@@ -14,6 +26,154 @@
     (ex-info msg
              (merge {:app/error-type :app.error.type/authentication-failure} data)
              cause))))
+
+(defn- url-encode [v]
+  (URLEncoder/encode v "UTF-8"))
+
+(defn- random-bytes [size]
+  (let [seed (byte-array size)]
+    (.nextBytes (SecureRandom.) seed)
+    seed))
+
+(defn- load-openid-config [well-known-uri]
+  (some->
+   @(http/get well-known-uri)
+   :body
+   (j/read-value j/keyword-keys-object-mapper)))
+
+(defn- validate-openid-config [{:keys [authorization_endpoint] :as c}]
+  (assert (not (str/blank? authorization_endpoint)) "Valid openid configuration required. authorization_endpoint is blank.")
+  c)
+
+(defn build-oauth2-config [env]
+  (let [{:keys [callback-path well-known-uri client-id client-secret]} (:oauth2 env)
+        config (validate-openid-config (load-openid-config well-known-uri))]
+    {:callback-uri (str (config/app-base-url env) callback-path)
+     :client-id client-id
+     :client-secret client-secret
+     :openid-config config}))
+
+(defn oauth2-cookie [env value]
+  {:http-only true
+   :secure (not (config/dev-mode? env))
+   :same-site :lax
+   :max-age (* 10 #_minutes 60)
+   :value (secret-box/encrypt value (config/app-secret-key env))})
+
+(defn expire-oauth2-cookie [env]
+  {:http-only true
+   :secure (not (config/dev-mode? env))
+   :same-site :lax
+   :max-age 0
+   :value "kill"})
+
+(defn login-page-handler [env {:keys [openid-config client-id callback-uri]} request]
+  (let [next          (get-in request [:params :next] false)
+        state         (codecs/bytes->str (codecs/bytes->b64u (random-bytes 16)))
+        scope         (str/join " " ["openid" "email" "profile"])
+        authorize-uri (str (:authorization_endpoint openid-config)
+                           "?response_type=code"
+                           "&client_id=" client-id
+                           "&redirect_uri=" callback-uri
+                           "&state=" state
+                           "&scope=" scope)]
+    {:status 302 :headers {"Location" authorize-uri} :body ""
+     :cookies {"oauth2" (oauth2-cookie env
+                                       {:oauth2/state state :oauth2/redirect-uri callback-uri :oauth2/post-login-uri next})}}))
+
+(defn logout-page-handler
+  "Handle single-sign-out. Clears the local session and redirects to the IDP to perform sign-out there too.
+   Docs:
+     * spec:  https://openid.net/specs/openid-connect-rpinitiated-1_0.html"
+  [env {:keys [openid-config client-id callback-uri]} request]
+  (let [id-token (-> request :session :session/id-token)
+        idp-logout-uri (str (:end_session_endpoint openid-config)
+                            "?post_logout_redirect_uri=" (url-encode (str (config/app-base-url env)))
+                            "&client_id=" client-id
+                            "&id_token_hint=" id-token)]
+    {:status 302 :headers {"Location" idp-logout-uri} :body "" :session nil}))
+
+(defn code->token [{:keys [client-id client-secret openid-config]} code original-redirect-uri]
+  (some->
+   @(http/post  (:token_endpoint openid-config)
+                {:form-params {:grant_type "authorization_code"
+                               :code code
+                               :redirect_uri original-redirect-uri
+                               :client_id client-id
+                               :client_secret client-secret}})
+   :body
+   (j/read-value j/keyword-keys-object-mapper)))
+
+(defn build-oauth2-session
+  "Given response from the IDP's token_endpoint, this function verified the token and returns a :session map containing:
+
+    :session/username - the preferred username of the authenticated user
+    :session/email - the email of the user
+    :session/groups - a set of groups in the claims (if included)
+    :session/roles - a set of roles that the user has, filtered to only include those in known-roles
+    :session/access-token - the access token
+    :session/refresh-token - the refresh token
+    :session/id-token - the id token
+
+  If the JWT is invalid then an exception will be thrown with the
+  key value :app/error-type :app.error.type/authentication-failure.
+
+  If the JWT is not present, then the interceptor does nothing.
+  "
+  [token certificate known-roles]
+  (try
+    (let [access-token-claims (jwt/unsign (:access_token token) certificate {:alg :rs256})]
+      ;; also verify the id token
+      (jwt/unsign (:id_token token) certificate {:alg :rs256})
+      {:session/username (:preferred_username access-token-claims)
+       :session/email (:email access-token-claims)
+       :session/access-token (:access_token token)
+       :session/refresh-token (:refresh_token token)
+       :session/id-token (:id_token token)
+       :session/groups (set (:groups access-token-claims))
+       :session/roles (set (->> (get-in access-token-claims [:realm_access :roles])
+                                (map keyword)
+                                (filter #(contains? known-roles  %))))})
+
+    (catch Exception e
+      (throw-unauthorized "Authentication Token Validation Failed" e
+                          {:token token
+                           :buddy-cause (-> (ex-data e) :cause)}))))
+
+(defn restart-login [env]
+  {:status 302 :headers {"location" "/login"} :body "" :cookies {"oauth2" (expire-oauth2-cookie env)}})
+
+(defn oauth2-load-certificate [{:keys [openid-config]}]
+  (->>
+   (some-> @(http/get (:jwks_uri openid-config))
+           :body
+           (j/read-value j/keyword-keys-object-mapper)
+           :keys)
+   (m/find-first #(= "RS256" (:alg %)))
+   (buddy-keys/jwk->public-key)))
+
+(defn oauth2-callback-handler [env oauth2 {:keys [session params] :as request}]
+  (let [{:keys [state code]} params
+        oauth2-cookie (secret-box/decrypt (get-in request [:cookies "oauth2" :value]) (config/app-secret-key env))
+        expected-state (:oauth2/state oauth2-cookie)]
+    (if-not (= expected-state state)
+      (restart-login env)
+      (let [original-redirect-uri (:oauth2/redirect-uri oauth2-cookie)
+            post-login-uri (or  (:oauth2/post-login-uri oauth2-cookie) "/")
+            token (code->token oauth2 code original-redirect-uri)]
+        (if (or (nil? token) (:error token))
+          (restart-login env)
+          (render/post-login-client-side-redirect
+           (build-oauth2-session token
+                                 (oauth2-load-certificate oauth2)
+                                 (config/oauth2-known-roles env))
+           {"oauth2" (expire-oauth2-cookie env)} post-login-uri))))))
+
+(defn session-interceptor
+  [{:keys [env redis]}]
+  (let [{:keys [session-ttl-s cookie-attrs]} (config/session-config env)]
+    (ring-middlewares/session {:store (redis-store redis {:expire-secs session-ttl-s})
+                               :cookie-attrs cookie-attrs})))
 
 (def roles-authorization-interceptor
   "Reitit route interceptor that mounts itself if route has `:app.auth/roles` data. Expects `:app.auth/roles`
@@ -27,91 +187,48 @@
                  :context-spec {:user {::roles #{keyword}}}
                  :enter (fn [{:keys [request] :as ctx}]
                           (if (not (set/subset? roles
-                                                (get-in request [:app.auth/session :session/roles])))
+                                                (get-in request [:session :session/roles])))
                             (throw-unauthorized "Current users lacks required roles" {:permitted-roles roles})
-                            ctx))}))})
+                            ctx)
+                          ctx)}))})
 
 (defn get-session
   "Fetch the user's session info from the request map"
   [req]
-  (:app.auth/session req))
-
-(defonce BEARER_LENGTH (count "Bearer "))
-
-(defn get-id-token
-  "Fetch the OIDC id token from the request map"
-  [req]
-  (subs (get-in req [:headers "authorization"]) BEARER_LENGTH))
+  (:session req))
 
 (defn get-current-member
   "Fetch the user's member record from the request map"
   [req]
-  (-> req :app.auth/session :session/member))
+  (-> req :session :session/member))
+
+(defn get-current-email
+  "Fetch the logged in user's email address from the request map"
+  [req]
+  (-> req :session :session/email))
 
 (def require-authenticated-user
   "Throws an unauthorized exception if the request map does not contain session information for the current user"
   {:name ::require-authenticated-user
    :enter (fn [ctx]
-            (if (nil? (get-session (:request ctx)))
-              (throw-unauthorized "Authentication Required" {})
-              ctx))})
+            (let [{:keys [uri query-string] :as req} (:request ctx)]
+              (if (get-current-email req)
+                ctx
+                (assoc ctx :response {:status 302 :headers {"location"
+                                                            (str "/login?next=" (url-encode (str uri "?" query-string)))} :body ""}))))})
 
 (defn has-roles?
   "Given a role set and a request, returns true if the current user has all the roles."
   [roles req]
   (set/subset? roles
-               (get-in req [:app.auth/session :session/roles])))
+               (get-in req [:session :session/roles])))
 
 (def demo-auth-interceptor
   {:name ::demo-auth-interceptor
-   :enter #(-> % (assoc-in [:request :app.auth/session] {:session/username "admin"
-                                                         :session/email "admin@example.com"
-                                                         :session/groups #{"/Mitglieder" "/admin"}
-                                                         :session/roles #{:Mitglieder :admin}}))})
+   :enter #(-> % (assoc-in [:request :session] {:session/username "admin"
+                                                :session/email "admin@example.com"
+                                                :session/groups #{"/Mitglieder" "/admin"}
+                                                :session/roles #{:Mitglieder :admin}}))})
 (defn dev-auth-interceptor [dev-session]
   {:name ::dev-auth-interceptor
-   :enter #(-> % (assoc-in [:request :app.auth/session] dev-session))})
-
-(defn auth-interceptor
-  "This function returns an interceptor that will extract and verify the JWT in the
-  x-forwarded-access-token header. It will be verified with the certificate contained in the certificate-filename.
-
-  This function will add a :app.auth/session key to the request map containing:
-    :session/username - the preferred username of the authenticated user
-    :session/email - the email of the user
-    :session/groups - a set of groups in the claims (if included)
-    :session/roles - a set of roles that the user has, filtered to only include those in known-roles
-
-  Additionally the entire parsed JWT will be stored in the context under :app.auth/claims.
-
-  If the JWT is invalid then an exception will be thrown with the
-  key value :app/error-type :app.error.type/authentication-failure.
-
-  If the JWT is not present, then the interceptor does nothing.
-  "
-  [certificate-filename known-roles]
-  (let [certificate (buddy-keys/str->public-key (-> (io/resource certificate-filename) slurp))]
-    {:name ::auth-interceptor
-     :enter (fn [ctx]
-              (let [headers (-> ctx :request :headers)
-                    user-email (get headers "x-forwarded-email")
-                    token (get headers "x-forwarded-access-token")]
-                (if token
-                  (try
-                    (let [claims (jwt/unsign token certificate {:alg :rs256})
-                          session {:session/username (:preferred_username claims)
-                                   :session/email (:email claims)
-                                   :session/groups (set (:groups claims))
-                                   :session/roles (set (->> (get-in claims [:realm_access :roles])
-                                                            (map keyword)
-                                                            (filter #(contains? known-roles %))))}]
-                      ;; (tap> {:headers headers :user-email user-email :token token :claims claims :session session})
-                      (-> ctx
-                          (assoc-in [:request :app.auth/session] session)
-                          (assoc :app.auth/claims claims)))
-                    (catch Exception e
-                      (throw-unauthorized "Authentication Token Validation Failed" e
-                                          {:user-email user-email
-                                           :token token
-                                           :buddy-cause (-> (ex-data e) :cause)})))
-                  ctx)))}))
+   :enter #(-> % (assoc-in [:request :session] dev-session))})

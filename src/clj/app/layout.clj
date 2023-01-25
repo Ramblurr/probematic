@@ -21,7 +21,7 @@
             ;; {:label (tr [:nav/settings]) :href "#"}
             ;; {:label (tr [:nav/notifications]) :href "#"}
             ]}
-   {:items [{:label (tr [:nav/logout]) :href (url/sso-logout-url req)}]}])
+   {:items [{:label (tr [:nav/logout]) :href (url/link-logout)}]}])
 
 (defn user-menu-item [idx {:keys [label href]}]
   [:a {:href href :class "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm" :role "menuitem" :tabindex "-1" :id (str "user-menu-item-" idx)}

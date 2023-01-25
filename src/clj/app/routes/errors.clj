@@ -17,6 +17,17 @@
     :env
     :claims
     :cookies
+    :cookie-secret
+    :session-config
+    :app-secret-key
+    :client-id
+    :client-secret
+    :oauth2
+    :secrets
+    :session
+    :access_token
+    :id_token
+    :refresh_token
     :reitit.core/match
     :muuntaja/response
     :reitit.core/router})
