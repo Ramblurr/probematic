@@ -78,6 +78,17 @@
   (when (config/prod-mode? (-> req :system :env))
     (log/error ex)))
 
+(defn report-error!
+  "Report an exception outside the normal request/response lifecycle"
+  ([ex]
+   (report-error! ex nil))
+  ([ex extra]
+   (let [event-data {:message (ex-message ex)
+                     :extra extra
+                     :throwable (unwrap-ex ex)}]
+     (sentry/send-event event-data)
+     (log/error ex))))
+
 (defn unauthorized-error [req ex]
   (log-error! req ex)
   (send-sentry! req ex)

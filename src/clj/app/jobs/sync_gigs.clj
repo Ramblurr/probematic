@@ -11,7 +11,8 @@
             [ol.jobs-util :as jobs]
             [tick.core :as t]
             [app.discourse :as discourse]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [app.routes.errors :as errors])
 
   (:import (java.time DayOfWeek)))
 
@@ -199,21 +200,22 @@
         {:created (count to-create)}))))
 
 (defn- sync-gigs [env conn gigo etc _]
-  (when (f/feature? :feat/sync-gigs)
-    (tap> "syncing gigs")
-    (log/info :job-syncing-gigs-start)
-     ;; update the cache  - the cache is stored in memory only
-    (gigo/update-cache! gigo)
-    ;; update the gig list in the db
-    ;; we don't store all of the gig data, just what is necessary to manage the dialogflow entities
-    (update-gigs-db! conn @gigo/gigs-cache)
+  (try
+    (when (f/feature? :feat/sync-gigs)
+      (tap> "syncing gigs")
+      (log/info :job-syncing-gigs-start)
+      ;; update the cache  - the cache is stored in memory only
+      (gigo/update-cache! gigo)
+      ;; update the gig list in the db
+      ;; we don't store all of the gig data, just what is necessary to manage the dialogflow entities
+      (update-gigs-db! conn @gigo/gigs-cache)
 
-    ;; update discourse avatars too
-    (discourse/sync-avatars! {:env env :conn conn})
-    (log/info :job-syncing-gigs-done)
-    :done
+      ;; update discourse avatars too
+      (discourse/sync-avatars! {:env env :conn conn})
+      (log/info :job-syncing-gigs-done)
+      :done
 
-; create new gigs in dialogflow
+                                        ; create new gigs in dialogflow
                                         ; (create-dialogflow-gig-entities! env conn etc)
 
                                         ; update dialogflow with the names of the gigs in case the names changed
@@ -221,7 +223,9 @@
 
                                         ; delete the dialogflow entities for gigs in the past
                                         ; (prune-gig-entities-before! env conn etc (t/at (t/yesterday) (t/midnight)))
-    ))
+      )
+    (catch Exception e
+      (errors/report-error! e))))
 
 (defn make-gigs-sync-job [{:keys [conn gigo df-clients env]}]
   (fn [{:job/keys [frequency initial-delay]}]
