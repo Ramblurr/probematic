@@ -38,6 +38,6 @@
     <logger name="migratus" level="INFO" />
 
     <!-- Enable some verbose logs for our namespaces -->
-    <logger name="app" level="INFO"/>
+    <logger name="app" level="${LOG_LEVEL:-INFO}"/>
 
 </configuration>
