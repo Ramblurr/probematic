@@ -1,5 +1,6 @@
 (ns app.interceptors
   (:require
+   [app.auth :as auth]
    [app.config :as config]
    [app.i18n :as i18n]
    [app.queries :as q]
@@ -7,10 +8,12 @@
    [app.routes.errors :as errors]
    [app.routes.pedestal-prone :as pedestal-prone]
    [app.schemas :as schemas]
-   [clojure.tools.logging :as log]
+   [clojure.data :as diff]
    [clojure.string :as str]
+   [clojure.tools.logging :as log]
    [datomic.client.api :as d]
    [io.pedestal.http.ring-middlewares :as middlewares]
+   [io.pedestal.interceptor.chain :as chain]
    [io.pedestal.interceptor.error :as error-int]
    [luminus-transit.time :as time]
    [muuntaja.core :as m]
@@ -19,8 +22,7 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [ring.middleware.keyword-params :as keyword-params]
-   [app.auth :as auth])
+   [ring.middleware.keyword-params :as keyword-params])
   (:import
    (org.eclipse.jetty.server HttpConfiguration)))
 
@@ -198,44 +200,6 @@
                     (assoc-in [:response :cookies "lang" :max-age] (* 3600 30)))
                 ctx))}))
 
-(defn default-interceptors [system]
-  (into [] (remove nil?
-                   [human-id-interceptor
-                    (i18n-interceptor system)
-                    log-request-interceptor
-                    service-error-handler
-                    #_(cond (config/demo-mode? (:env system))
-                            auth/demo-auth-interceptor
-                          ;; (config/dev-mode? (:env system))
-                          ;; (auth/dev-auth-interceptor (-> system :env :secrets :dev-session))
-                            :else (auth/auth-interceptor (-> system :env :authorization :cert-filename)
-                                                         (-> system :env :authorization :known-roles)))
-
-                    dev-mode-interceptor
-                    middlewares/cookies
-                    ;; query-params & form-params
-                    (parameters/parameters-interceptor)
-                    ;; content-negotiation
-                    (muuntaja/format-negotiate-interceptor)
-                    ;; encoding response body
-                    (muuntaja/format-response-interceptor)
-                    ;; exception handling
-                    ;; exception-interceptor
-                    ;; decoding request body
-                    (muuntaja/format-request-interceptor)
-                    ;; coercing response bodys
-                    (coercion/coerce-response-interceptor)
-                    ;; coercing request parameters
-                    (coercion/coerce-request-interceptor)
-                    htmx-interceptor
-                    ;; htmx reequires all params (query, form etc) to be keywordized
-                    keyword-params-interceptor
-                    ;; multipart
-                    (multipart/multipart-interceptor)])))
-
-(defn with-default-interceptors [service system]
-  (update-in service [:io.pedestal.http/interceptors] conj (default-interceptors system)))
-
 (def default-coercion
   (-> rcm/default-options
       (assoc-in [:options :registry] schemas/registry)
@@ -264,3 +228,72 @@
   [max-size]
   (doto (HttpConfiguration.)
     (.setRequestHeaderSize max-size)))
+
+(defn log-diffs [previous current]
+  (let [[deleted added] (diff/diff (dissoc previous ::chain/queue ::chain/stack ::previous-ctx)
+                                   (dissoc current ::chain/queue ::chain/stack ::previous-ctx))]
+    (when deleted (log/debug :deleted deleted))
+    (when added (log/debug :added added))))
+
+(defn handle-debug [ctx]
+  (log-diffs (::previous-ctx ctx) ctx)
+  (assoc ctx ::previous-ctx ctx))
+
+(def debug-interceptor
+  {:name :debug
+   :enter handle-debug
+   :leave handle-debug})
+
+(def inject-debug-interceptor
+  {:name :inject-debug
+   :enter
+   (fn [ctx]
+     (assoc
+      ctx
+      ::previous-ctx
+      ctx
+      ::chain/queue
+      (into clojure.lang.PersistentQueue/EMPTY
+            (cons debug-interceptor
+                  (-> ctx
+                      ::chain/queue
+                      seq
+                      (interleave (repeat debug-interceptor)))))))})
+
+(defn default-interceptors [system]
+  (into [] (remove nil?
+                   [human-id-interceptor
+                    (i18n-interceptor system)
+                    log-request-interceptor
+                    service-error-handler
+                    #_(cond (config/demo-mode? (:env system))
+                            auth/demo-auth-interceptor
+                            ;; (config/dev-mode? (:env system))
+                            ;; (auth/dev-auth-interceptor (-> system :env :secrets :dev-session))
+                            :else (auth/auth-interceptor (-> system :env :authorization :cert-filename)
+                                                         (-> system :env :authorization :known-roles)))
+
+                    dev-mode-interceptor
+                    middlewares/cookies
+                    ;; query-params & form-params
+                    (parameters/parameters-interceptor)
+                    ;; content-negotiation
+                    (muuntaja/format-negotiate-interceptor)
+                    ;; encoding response body
+                    (muuntaja/format-response-interceptor)
+                    ;; exception handling
+                    ;; exception-interceptor
+                    ;; decoding request body
+                    (muuntaja/format-request-interceptor)
+                    ;; coercing response bodys
+                    (coercion/coerce-response-interceptor)
+                    ;; coercing request parameters
+                    (coercion/coerce-request-interceptor)
+                    htmx-interceptor
+                    ;; htmx reequires all params (query, form etc) to be keywordized
+                    keyword-params-interceptor
+                    ;; multipart
+                    (multipart/multipart-interceptor)])))
+
+(defn with-default-interceptors [service system]
+  (update-in service [:io.pedestal.http/interceptors] conj (default-interceptors system)))

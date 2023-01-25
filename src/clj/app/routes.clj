@@ -15,7 +15,6 @@
    [app.sardine :as sardine]))
 
 (defn routes [system]
-  ;; (auth/login-page-handler (:oauth2 system) {})
   ["" {:coercion     interceptors/default-coercion
        :muuntaja     interceptors/formats-instance
        :interceptors (conj  (interceptors/default-interceptors system)

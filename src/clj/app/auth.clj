@@ -77,6 +77,7 @@
                            "&redirect_uri=" callback-uri
                            "&state=" state
                            "&scope=" scope)]
+
     {:status 302 :headers {"Location" authorize-uri} :body ""
      :cookies {"oauth2" (oauth2-cookie env
                                        {:oauth2/state state :oauth2/redirect-uri callback-uri :oauth2/post-login-uri next})}}))
