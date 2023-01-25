@@ -202,14 +202,12 @@
 (defn- sync-gigs [env conn gigo etc _]
   (try
     (when (f/feature? :feat/sync-gigs)
-      (tap> "syncing gigs")
       (log/info :job-syncing-gigs-start)
       ;; update the cache  - the cache is stored in memory only
       (gigo/update-cache! gigo)
       ;; update the gig list in the db
       ;; we don't store all of the gig data, just what is necessary to manage the dialogflow entities
       (update-gigs-db! conn @gigo/gigs-cache)
-
       ;; update discourse avatars too
       (discourse/sync-avatars! {:env env :conn conn})
       (log/info :job-syncing-gigs-done)
@@ -227,11 +225,11 @@
     (catch Exception e
       (errors/report-error! e))))
 
-(defn make-gigs-sync-job [{:keys [conn gigo df-clients env]}]
+(defn make-gigs-sync-job [{:keys [datomic gigo df-clients env]}]
   (fn [{:job/keys [frequency initial-delay]}]
     (tap> "register gigo cache update job")
     (assert (some? gigo) "gigo creds required")
-    (jobs/make-repeating-job (partial #'sync-gigs env conn gigo (:entity-types-client df-clients)) frequency initial-delay)))
+    (jobs/make-repeating-job (partial #'sync-gigs env (:conn datomic) gigo (:entity-types-client df-clients)) frequency initial-delay)))
 
 (comment
   (do

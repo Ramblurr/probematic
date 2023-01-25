@@ -83,11 +83,11 @@
   ([ex]
    (report-error! ex nil))
   ([ex extra]
+   (log/error ex)
    (let [event-data {:message (ex-message ex)
                      :extra extra
                      :throwable (unwrap-ex ex)}]
-     (sentry/send-event event-data)
-     (log/error ex))))
+     (sentry/send-event event-data))))
 
 (defn unauthorized-error [req ex]
   (log-error! req ex)
