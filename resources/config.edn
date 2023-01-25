@@ -17,7 +17,8 @@
                             :demo "demo"
                             :test "test"}
  :discourse       {:api-key  #ref [:secrets :discourse :api-key]
-                   :username #ref [:secrets :discourse :username]}
+                   :username #ref [:secrets :discourse :username]
+                   :forum-url "https://forum.streetnoise.at"}
  :nextcloud       {:password         #ref [:secrets :nextcloud :password]
                    :username         #ref [:secrets :nextcloud :username]
                    :token            #ref [:secrets :nextcloud :token]

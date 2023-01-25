@@ -7,7 +7,7 @@
                  :feat/sync-gigs
                  :feat/reminders})
 
-(def features (atom  #{}))
+(def features (atom  #{:feat/sync-gigs}))
 
 (defn feature?
   [kw]

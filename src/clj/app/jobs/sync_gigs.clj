@@ -9,7 +9,9 @@
             [datomic.client.api :as d]
             [integrant.repl.state :as state]
             [ol.jobs-util :as jobs]
-            [tick.core :as t])
+            [tick.core :as t]
+            [app.discourse :as discourse]
+            [clojure.tools.logging :as log])
 
   (:import (java.time DayOfWeek)))
 
@@ -55,6 +57,7 @@
     util/remove-empty-strings)))
 
 (defn update-gigs-db! [conn gigs]
+  (assert conn)
   (d/transact conn {:tx-data (map gig-tx gigs)}))
 
 (defn probe? [g]
@@ -198,21 +201,26 @@
 (defn- sync-gigs [env conn gigo etc _]
   (when (f/feature? :feat/sync-gigs)
     (tap> "syncing gigs")
-                                        ; update the cache  - the cache is stored in memory only
+    (log/info :job-syncing-gigs-start)
+     ;; update the cache  - the cache is stored in memory only
     (gigo/update-cache! gigo)
-
-                                        ; update the gig list in the db
-                                        ; we don't store all of the gig data, just what is necessary to manage the dialogflow entities
+    ;; update the gig list in the db
+    ;; we don't store all of the gig data, just what is necessary to manage the dialogflow entities
     (update-gigs-db! conn @gigo/gigs-cache)
 
+    ;; update discourse avatars too
+    (discourse/sync-avatars! {:env env :conn conn})
+    (log/info :job-syncing-gigs-done)
+    :done
+
 ; create new gigs in dialogflow
-   ; (create-dialogflow-gig-entities! env conn etc)
+                                        ; (create-dialogflow-gig-entities! env conn etc)
 
                                         ; update dialogflow with the names of the gigs in case the names changed
-    ;(update-dialogflow-gig-entities! env conn etc)
+                                        ;(update-dialogflow-gig-entities! env conn etc)
 
                                         ; delete the dialogflow entities for gigs in the past
-   ; (prune-gig-entities-before! env conn etc (t/at (t/yesterday) (t/midnight)))
+                                        ; (prune-gig-entities-before! env conn etc (t/at (t/yesterday) (t/midnight)))
     ))
 
 (defn make-gigs-sync-job [{:keys [conn gigo df-clients env]}]
