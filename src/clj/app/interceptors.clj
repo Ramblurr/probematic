@@ -1,6 +1,5 @@
 (ns app.interceptors
   (:require
-   [app.auth :as auth]
    [app.config :as config]
    [app.i18n :as i18n]
    [app.queries :as q]
@@ -8,6 +7,8 @@
    [app.routes.errors :as errors]
    [app.routes.pedestal-prone :as pedestal-prone]
    [app.schemas :as schemas]
+   [clojure.tools.logging :as log]
+   [clojure.string :as str]
    [datomic.client.api :as d]
    [io.pedestal.http.ring-middlewares :as middlewares]
    [io.pedestal.interceptor.error :as error-int]
@@ -18,7 +19,8 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [ring.middleware.keyword-params :as keyword-params])
+   [ring.middleware.keyword-params :as keyword-params]
+   [app.auth :as auth])
   (:import
    (org.eclipse.jetty.server HttpConfiguration)))
 
@@ -123,6 +125,25 @@
             (tap> (-> req :request :body-params))
             (tap> (-> req :request :form-params))
             req)})
+(def log-request-interceptor
+  "Logs all http requests with response time."
+  {:name ::log-request
+   :enter (fn [ctx]
+            (assoc-in ctx [:request :start-time] (System/currentTimeMillis)))
+   :leave (fn [ctx]
+            (let [{:keys [uri start-time request-method query-string human-id] :as req} (:request ctx)
+                  user-email (auth/get-current-email req)
+                  finish (System/currentTimeMillis)
+                  total (- finish start-time)]
+              (log/info :msg "request completed"
+                        :method (str/upper-case (name request-method))
+                        :uri uri
+                        :human-id human-id
+                        :user-email user-email
+                        :query-string  query-string
+                        :status (:status (:response ctx))
+                        :response-time total)
+              ctx))})
 
 (defn query-string-lang [query-string]
   (when query-string
@@ -181,6 +202,7 @@
   (into [] (remove nil?
                    [human-id-interceptor
                     (i18n-interceptor system)
+                    log-request-interceptor
                     service-error-handler
                     #_(cond (config/demo-mode? (:env system))
                             auth/demo-auth-interceptor
