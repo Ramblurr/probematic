@@ -189,11 +189,11 @@
                                    (ui/button :label (tr [:action/edit]) :priority :white :centered? true
                                               :attr {:hx-get (comp-name) :hx-vals {:edit? true} :hx-target (hash ".")})
 
-                                   (ui/button :label (tr [:song/log-play])
-                                              :priority :primary
-                                              :centered? true
-                                              :class "items-center justify-center "
-                                              :attr {:href (str "/song/log-play/" song-id "/")}))))
+                                   #_(ui/button :label (tr [:song/log-play])
+                                                :priority :primary
+                                                :centered? true
+                                                :class "items-center justify-center "
+                                                :attr {:href (str "/song/log-play/" song-id "/")}))))
 
        (if edit?
          (ui/panel {:title (tr [:song/background-title])}
