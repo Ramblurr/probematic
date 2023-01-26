@@ -12,7 +12,7 @@
    "/member/{gigo-key}"
    (fn [req]
      (layout/app-shell req
-                       (view/members-detail-page req)))))
+                       (view/members-detail-page req false)))))
 
 (defn members-index []
   (ctmx/make-routes

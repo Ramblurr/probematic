@@ -34,10 +34,9 @@
 (defn member-by-id [req gigo-key]
   (m/find-first #(= gigo-key (:member/gigo-key %)) (:members req)))
 
-(ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}  ^:boolean edit?]
   (let [comp-name (util/comp-namer #'members-detail-page)
         post? (util/post? req)
-        edit? (util/qp-bool req :edit)
         tr (i18n/tr-from-req req)
         member (cond post?
                      (:member (controller/update-member! req))
@@ -81,10 +80,10 @@
         (if edit?
           (list
            (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
-                      :attr {:hx-get (comp-name "?edit=false") :hx-target (hash ".")})
+                      :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? false}})
            (ui/button :label (tr [:action/save])  :priority :primary :centered? true))
           (ui/button :label (tr [:action/edit]) :priority :white :centered? true
-                     :attr {:hx-get (comp-name "?edit=true") :hx-target (hash ".")}))]]
+                     :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}}))]]
       (ui/panel {:title
                  (tr [:Contact-Information])}
                 (ui/dl
