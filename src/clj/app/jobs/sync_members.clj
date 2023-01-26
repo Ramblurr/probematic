@@ -3,13 +3,12 @@
    [clojure.set :as set]
    [clojure.string :as str]
    [datomic.client.api :as d]
-   [jsonista.core :as j]
    [ol.jobs-util :as jobs]
-   [org.httpkit.client :as client]
    [app.features :as f]
    [app.util :as util]
    [app.airtable :as airtable]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.twilio :as twilio]))
 
 ;; This job syncs the member phone numbers and gigo ids from airtable
 ;; into our local database
@@ -22,18 +21,6 @@
 ;;   - member names
 ;;   - gigo keys
 ;;   - phone numbers
-
-(defn lookup-number
-  ([twi number]
-   (lookup-number twi number ""))
-  ([twi number country-code]
-   (let [resp @(client/request {:url          (str "https://lookups.twilio.com/v1/PhoneNumbers/" (client/url-encode number))
-                                :query-params {"CountryCode" country-code}
-                                :method       :get
-                                :basic-auth   [(:twilio-account twi) (:twilio-token twi)]})]
-     (if (= 200 (:status resp))
-       (j/read-value (:body resp))
-       resp))))
 
 (defn fetch-people-data! [atc]
   (as-> (airtable/list-records! atc (:gigo-linked-people-table atc)) v
@@ -75,7 +62,7 @@
                            "fields" {"Phone Number" number}})
                         ;; proper cleanup - run it through the twilio lookup api
                         ;; this costs money though, so don't do it all the time
-                        (let [lookup (lookup-number twi number "AT")]
+                        (let [lookup (twilio/lookup-number twi number "AT")]
                           (when (contains? lookup "phone_number")
                             {"id"     id
                              "fields" {"Phone Number" (get lookup "phone_number")}}))))))

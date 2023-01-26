@@ -36,6 +36,12 @@
     :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :member/username
+    :db/doc "The username of the member"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :member/avatar-template
     :db/doc "The url path to the member's avatar with a {size} parameter "
     :db/valueType :db.type/string

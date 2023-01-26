@@ -1,19 +1,15 @@
 (ns app.members.views
   (:require
-   [app.util :as util]
-   [app.urls :as url]
-   [app.ui :as ui]
-   [app.members.controller :as controller]
-   [ctmx.response :as response]
-   [app.render :as render]
+   [app.i18n :as i18n]
    [app.icons :as icon]
+   [app.members.controller :as controller]
+   [app.ui :as ui]
+   [app.urls :as url]
+   [app.util :as util]
    [ctmx.core :as ctmx]
-   [tick.core :as t]
-   [app.debug :as debug]
-   [clojure.string :as str]
+   [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [medley.core :as m]
-   [app.i18n :as i18n]))
+   [medley.core :as m]))
 
 (defn member-table-headers [tr members]
   [{:label (tr [:member/name]) :priority :normal :key :name
@@ -42,7 +38,7 @@
                      (:member (controller/update-member! req))
                      :else
                      (:member req))
-        {:member/keys [name nick email phone active? section]} member
+        {:member/keys [name nick email username phone active? section]} member
         coverages (controller/member-current-insurance-info req member)
         private-instruments (filter :instrument.coverage/private? coverages)
         band-instruments (filter #(not (:instrument.coverage/private? %)) coverages)
@@ -87,15 +83,17 @@
       (ui/panel {:title
                  (tr [:Contact-Information])}
                 (ui/dl
-                 (ui/dl-item (tr [:Email]) (if edit?
-                                             (ui/input :name (path "email") :label "" :value email :type :email)
-                                             email))
-                 (ui/dl-item (tr [:Phone]) (if edit?
-                                             (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers")
-                                             phone))
-                 (ui/dl-item (tr [:Active]) (if edit?
-                                              (ui/toggle-checkbox  :checked? active? :name (path "active?"))
-                                              (ui/bool-bubble active?)))))
+                 (ui/dl-item (tr [:member/email]) (if edit?
+                                                    (ui/input :name (path "email") :label "" :value email :type :email)
+                                                    email))
+                 (ui/dl-item (tr [:member/phone]) (if edit?
+                                                    (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title
+                                                              (tr [:member/phone-validation]))
+                                                    phone))
+                 (ui/dl-item (tr [:member/username]) username)
+                 (ui/dl-item (tr [:member/active?]) (if edit?
+                                                      (ui/toggle-checkbox  :checked? active? :name (path "active?"))
+                                                      (ui/bool-bubble active?)))))
 
       (ui/panel {:title
                  (tr [:member/insurance-title])
@@ -203,9 +201,9 @@
         [:div {:class "mt-2 space-y-5"}
          (ui/input :id (path "email") :name "email" :label ""  :type :email  :required? true)]]
        [:div
-        [:label {:for (path "username") :class "block text-sm font-medium text-gray-900"} (tr [:member/username]) required-label]
+        [:label {:for "username" :class "block text-sm font-medium text-gray-900"} (tr [:member/username]) required-label]
         [:div {:class "mt-2 space-y-5"}
-         (ui/text :id (path "username") :name "username" :value "" :required? false)]]
+         (ui/input :name "username" :label ""  :pattern (str controller/username-regex) :title (tr [:member/username-validation]) :required? true)]]
        [:div
         [:label {:for (path "phone") :class "block text-sm font-medium text-gray-900"} (tr [:Phone]) required-label]
         [:div {:class "mt-2 space-y-5"}

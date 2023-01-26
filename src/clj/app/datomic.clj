@@ -124,9 +124,9 @@
   [env conn]
   (let [db (d/db conn)
         tx #(d/transact conn {:tx-data %})]
+    (tx (-> (io/resource "schema.edn") slurp edn/read-string))
     (when-not (ident-has-attr? db :member/name :db/ident)
       (log/info "Loading db schema")
-      (tx (-> (io/resource "schema.edn") slurp edn/read-string))
       ;; (tx (map uuid-for-seed (-> (io/resource "seeds.edn") slurp edn/read-string)))
       (tx (-> (io/resource "seeds.edn") slurp edn/read-string)))
     ;; (when-not (ident-has-attr? db :account/account-id :db.attr/preds)

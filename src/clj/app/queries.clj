@@ -16,10 +16,11 @@
                          :attendance/motivation
                          :attendance/updated])
 
-(def member-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email :member/avatar-template
+(def member-pattern [:member/gigo-key :member/username :member/name :member/nick :member/active? :member/phone :member/email :member/avatar-template
                      {:member/section [:section/name]}])
 
 (def member-detail-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
+                            :member/username
                             :member/discourse-id :member/avatar-template
                             {:member/section [:section/name]}
                             {:instrument/_owner [:instrument/name :instrument/instrument-id
