@@ -185,19 +185,88 @@
      (ui/table-body
       (rt/map-indexed member-row-ro req (map :member/gigo-key members))))))
 
+(defn member-add-form [{:keys [tr path sections]}]
+  (let [required-label [:span  {:class "text-red-300 float-right"} " required"]]
+    [:div {:class "flex flex-1 flex-col justify-between"}
+     [:div {:class "divide-y divide-gray-200 px-4 sm:px-6"}
+      [:div {:class "space-y-6 pt-6 pb-5"}
+       [:div
+        [:label {:for (path "name")  :class "block text-sm font-medium text-gray-900"} (tr [:member/name]) required-label]
+        [:div {:class "mt-2 space-y-5"}
+         (ui/text :id (path "name") :name "name" :value "" :class "mb-2 sm:mb-0 sm:mr-2" :required? true)]]
+       [:div
+        [:label {:for (path "nick") :class "block text-sm font-medium text-gray-900"} (tr [:member/nick])]
+        [:div {:class "mt-2 space-y-5"}
+         (ui/text :id (path "nick") :name "nick" :value "" :required? false)]]
+       [:div
+        [:label {:for (path "email") :class "block text-sm font-medium text-gray-900"} (tr [:Email]) required-label]
+        [:div {:class "mt-2 space-y-5"}
+         (ui/input :id (path "email") :name "email" :label ""  :type :email  :required? true)]]
+       [:div
+        [:label {:for (path "username") :class "block text-sm font-medium text-gray-900"} (tr [:member/username]) required-label]
+        [:div {:class "mt-2 space-y-5"}
+         (ui/text :id (path "username") :name "username" :value "" :required? false)]]
+       [:div
+        [:label {:for (path "phone") :class "block text-sm font-medium text-gray-900"} (tr [:Phone]) required-label]
+        [:div {:class "mt-2 space-y-5"}
+         (ui/input :id (path "phone") :type :tel :name "phone" :label ""  :pattern "\\+[\\d-]+" :title "Phone number starting with +country code. Only spaces, dashes, and numbers"  :required? true)]]
+       [:div
+        [:label {:for "section-name" :class "block text-sm font-medium text-gray-900"} (tr [:section]) required-label]
+        [:div {:class "mt-2 space-y-5"}
+         (ui/section-select  :id "section-name" :class "mt-4" :sections sections  :required? true)]]
+       [:div
+        [:div {:class "relative flex items-start"}
+         [:div {:class "flex h-5 items-center"}
+          (ui/checkbox :id "create-sno-id" :checked? true)]
+         [:div {:class "ml-3 text-sm"}
+          [:label {:for "create-sno-id" :class "font-medium text-gray-700"}
+           (tr [:member/create-sno-id])]
+          [:p {:class "text-gray-500"} (tr [:member/create-sno-id-description])]]]]
+       [:div
+        [:div {:class "relative flex items-start"}
+         [:div {:class "flex h-5 items-center"}
+          (ui/checkbox :id "active?" :checked? true)]
+         [:div {:class "ml-3 text-sm"}
+          [:label {:for "active?" :class "font-medium text-gray-700"}
+           (tr [:Active])]]]]
+       [:div {:id "new-member-form-errors"}]]]]))
+
+(defn -member-create [req]
+  (try
+    (let [new-member (controller/create-member! req)]
+      (response/hx-redirect (url/link-member new-member)))
+    (catch Exception e
+      (if-let [error-msg (when (:validation/error (ex-data e))
+                           (:validation/error (ex-data e)))]
+        (ui/retarget-response
+         "#new-member-form-errors"
+         [:div {:id "new-member-form-errors" :class "text-red-500"}
+          [:p [:span "⚠ "] error-msg]])
+        (throw e)))))
+
+(ctmx/defcomponent ^:endpoint member-create-endpoint [req]
+  (when (util/post? req)
+    (-member-create req)))
+
 (ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req} ^:boolean edit?]
-  (let [add? (util/qp-bool req :add)
-        tr (i18n/tr-from-req req)
-        comp-name (util/comp-namer #'members-index-page)]
+  (let [tr (i18n/tr-from-req req)
+        comp-name (util/comp-namer #'members-index-page)
+        sections (controller/sections db)]
     [:div {:id id}
      (ui/page-header :title "Member Admin")
+     (ui/slideover-panel-form {:title (tr [:member/new-member]) :id (path "slideover")
+                               :form-attrs {:hx-post (util/comp-name #'member-create-endpoint) :hx-target (hash ".")}
+                               :buttons (list
+                                         (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
+                                         (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
+                              (member-add-form {:tr tr :path path :sections sections}))
      [:div {:class "mt-2"}
       [:div {:class "px-4 sm:px-6 lg:px-8"}
        [:div {:class "flex items-center justify-end"}
         [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
-         (ui/toggle :label (tr [:action/edit]) :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
-         #_(ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
-                      :attr {:hx-target (hash ".") :hx-get (comp-name "?add=true")})]]
+         (ui/toggle :label (tr [:action/quick-edit]) :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
+         (ui/button :label (tr [:action/add]) :priority :primary :class "" :icon icon/plus :centered? true
+                    :attr {:data-flyout-trigger (hash "slideover")})]]
 
        [:div {:class "mt-4"}
         [:table {:class "min-w-full divide-y divide-gray-300"}

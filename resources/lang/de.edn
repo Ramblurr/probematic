@@ -93,6 +93,7 @@
   "angemeldet sind.Instrumente und andere Gegenstände, die zu Versicherungszwecken bei der Band ",
   :name "Name",
   :nick "Spitzname",
+  :username "Benutzername"
   :gigs-attended "Gigs besucht",
   :probes-attended "Proben besucht"},
  :instruments "Instrumente",

@@ -15,8 +15,13 @@
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
           :nick "Nickname"
+          :username "Username"
           :gigs-attended "Gigs Attended"
-          :probes-attended "Probes Attended"}
+          :probes-attended "Probes Attended"
+          :new-member "New Member"
+          :create-sno-id "Create SNO ID"
+          :create-sno-id-description "A new account will be created so the person can access all online SNO systems."}
+ :sno-id "SNO ID"
  :gig.status {:confirmed "Confirmed!"
               :unconfirmed "Unconfirmed"
               :cancelled "Cancelled"}
@@ -124,6 +129,7 @@
  :section "Section"
  :section-none "No Section"
  :action {:edit "Edit"
+          :quick-edit "Quick Edit"
           :done "Done"
           :download "Download"
           :reorder "Reorder"
@@ -191,7 +197,10 @@
          :unauthorized-title "Authentication failed"
          :unauthorized-message "Your identity is unknown to the system.. something probably went wrong. Please contact Casey and tell him this error code:"
          :go-home "Go Home"
-         :notify "Click to notify Casey"}
+         :notify "Click to notify Casey"
+         :member-unique-username "A member already has that username"
+         :member-unique-email "A member already has that email address"
+         :member-unique-phone "A member already has that phone number"}
  :updating "Updating..."
  :email-subject {:gig-created "New Gig: %1"
                  :gig-updated "Gig Edit: %1"}

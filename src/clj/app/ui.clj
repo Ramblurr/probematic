@@ -164,6 +164,13 @@
                 trigger-name)}
     :body (ctmx.render/html body)}))
 
+(defn retarget-response
+  [new-target body]
+  {:status 200
+   :headers {"Content-Type" "text/html"
+             "HX-Retarget" new-target}
+   :body (ctmx.render/html body)})
+
 (def select-size {:normal "text-base  sm:text-sm py-2 pl-3 pr-10 mt-1"
                   :small "text-xs py-1 pl-2 pr-5 "
                   :xsmall "text-xs py-1 pl-0 pr-0 "})
@@ -189,6 +196,13 @@
 (defn required-label [required?]
   (when required?
     [:p {:class "text-red-400"} "required"]))
+
+(defn required-label-inline
+  ([]
+   (required-label-inline true))
+  ([required?]
+   (when required?
+     [:span  {:class "text-red-400"} " required"])))
 
 (defn select-left [& {:keys [id label options required?]
                       :or {required? true}}]
@@ -277,17 +291,19 @@
 (def input-size {:normal "sm:text-sm"
                  :small "text-xs"})
 
-(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required?]
+(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required? id]
                 :or {size :normal
                      required? true}}]
   [:div {:class (cs class (get input-label-size size)
                     (get input-container-size size)
                     "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600")}
-   [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white font-medium text-gray-900"}
-    label]
+   (when label
+     [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white font-medium text-gray-900"}
+      label])
    [:input (util/remove-nils (merge (or extra-attrs {})
                                     {:class (cs (get input-size size) "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0")
                                      :type type
+                                     :id id
                                      :pattern pattern
                                      :title title
                                      :name name
@@ -636,10 +652,11 @@
     [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
      [:span {:class "text-gray-500 sm:text-sm"} "EUR"]]]])
 
-(defn checkbox [& {:keys [label id]}]
+(defn checkbox [& {:keys [label id checked?]}]
   [:div {:class "mt-2 relative flex items-start"}
    [:div {:class "flex h-5 items-center"}
-    [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
+    [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+             :checked checked?}]]
    [:div {:class "ml-3 text-sm"}
     [:label {:for id :class "font-medium text-gray-700"} label]]])
 

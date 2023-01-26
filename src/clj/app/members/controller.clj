@@ -3,7 +3,9 @@
             [app.datomic :as d]
             [app.queries :as q]
             [app.controllers.common :as common]
-            [datomic.client.api :as datomic]))
+            [datomic.client.api :as datomic]
+            [com.yetanalytics.squuid :as sq]
+            [app.i18n :as i18n]))
 
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
@@ -17,14 +19,11 @@
 
 (defn transact-member!
   [conn gigo-key tx-data]
-  (let [result (d/transact conn {:tx-data tx-data})]
-    (if  (d/db-ok? result)
-      {:member
-       (d/find-by (:db-after result)
-                  :member/gigo-key
-                  gigo-key
-                  q/member-pattern)}
-      result)))
+  {:member
+   (d/find-by (:db-after (datomic/transact conn {:tx-data tx-data}))
+              :member/gigo-key
+              gigo-key
+              q/member-pattern)})
 
 (defn update-active-and-section! [{:keys [datomic-conn db] :as req}]
   (let [params (common/unwrap-params req)
@@ -34,6 +33,39 @@
         tx-data [[:db/add member-ref :member/section [:section/name (:section-name params)]]
                  [:db/add member-ref :member/active? (not (:member/active? member))]]]
     (transact-member! datomic-conn gigo-key tx-data)))
+
+(defn munge-unique-conflict-error [req e]
+  (let [tr (i18n/tr-from-req req)
+        field (cond
+                (re-find #".*:member/phone.*" (ex-message e)) :error/member-unique-phone
+                (re-find #".*:member/username.*" (ex-message e))  :error/member-unique-username
+                (re-find #".*:member/email.*" (ex-message e))   :error/member-unique-email
+                :else nil)]
+    (ex-info "Validation error" {:validation/error (if field (tr [field]) (ex-message e))})))
+
+(defn create-member! [{:keys [datomic-conn db] :as req}]
+  (let [{:keys [create-sno-id phone email name nick username section-name active?] :as params} (-> req :params)]
+    (cond
+      (q/member-by-email db email)
+      (throw (ex-info "Validation error" {:validation/field "email"
+                                          :validation/error "Member already exists with that e-mail address"}))
+      :else
+      (let [gigo-key (str (sq/generate-squuid))
+            txs [{:member/name name
+                  :member/nick nick
+                  :member/gigo-key gigo-key
+                  :member/phone phone
+                  :member/active? (common/check->bool active?)
+                  :member/section [:section/name section-name]
+                  :member/email email}]]
+        (try
+          (:member (transact-member! datomic-conn gigo-key txs))
+          (catch Exception e
+            (throw
+             (cond
+               (= :db.error/unique-conflict (:db/error (ex-data e)))
+               (munge-unique-conflict-error req e)
+               :else e))))))))
 
 (defn update-member! [{:keys [datomic-conn] :as req}]
   (let [gigo-key (-> req :path-params :gigo-key)
