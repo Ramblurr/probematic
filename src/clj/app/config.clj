@@ -23,9 +23,11 @@
   (some?  (#{"qa" "dev" "test"} (-> env :environment))))
 
 (defn app-secret-key [env]
+  (assert env)
   (:app-secret-key env))
 
 (defn app-base-url [env]
+  (assert env)
   (:app-base-url env))
 
 (defn session-config [env]

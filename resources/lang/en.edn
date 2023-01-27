@@ -26,7 +26,8 @@
           :phone-validation "Phone number starting with +country code. Only spaces, dashes, and numbers"
           :username-validation "Username can only have A-Z, 0-9 _, ., -, or @. No spaces."
           :create-sno-id "Create SNO ID"
-          :create-sno-id-description "A new account will be created so the person can access all online SNO systems."}
+          :create-sno-id-description "An invitation to make a SNO ID will be e-mailed to the person so they can make an account an access all SNO online systems."
+          :open-invitations "Open Invitations"}
  :sno-id "SNO ID"
  :gig.status {:confirmed "Confirmed!"
               :unconfirmed "Unconfirmed"
@@ -197,7 +198,7 @@
         :name "Filename"
         :size "Size"}
  :error {:unknown-title "Something went wrong"
-         :unknown-message "Sorry about this. It's not your fault. Please contact Casey and tell him this error code:"
+         :unknown-message "Sorry about this! It's not your fault. Please contact Casey and tell him this error code:"
          :not-found-title "Not Found"
          :not-found-message "The thing you were looking for wasn't found. If you think it should exist, please contact and tell him this error code:"
          :unauthorized-title "Authentication failed"
@@ -223,7 +224,23 @@
          :can-make-it "I can make it!"
          :cannot-make-it "I cannot make it"
          :gig-info-page "Take me to the Gig Info page"
-         :sign-off "Mit groovigen Grüßen — SNObot"}
+         :sign-off "Mit groovigen Grüßen — SNObot"
+         :invite-expired "Sorry, the invitation code has expired. Please ask for a new one!"
+         :invite-new-user-intro "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
+         :invite-new-user-intro2 "Click the link below to setup your account."}
+ :account {:create-sno-id-title "Create SNO ID"
+           :create-sno-id-subtitle "You're only a few steps away from your new SNO ID!"
+           :password-instructions "Must be at least 8 characters"
+           :password-confirm-instructions "Both passwords must match"
+           :password "Password"
+           :password-confirm "Confirm password"
+           :create-account "Create account"
+           :account-created-title "Your SNO ID was created!"
+           :account-created-subtitle "Welcome :) Please login using your new SNO ID."}
+ :password {:commonly-used "The password is a known hacked password. Please choose a more secure password."
+            :too-short "The password is too short. It must be at least 8 characters."
+            :does-not-match "The passwords do not match."}
+ :login "Login"
 
 ;;
  }

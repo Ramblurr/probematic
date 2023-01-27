@@ -9,6 +9,7 @@
             [app.gigs.domain :as domain]))
 
 (def faker (Faker.))
+(-> faker (.internet) (.password))
 
 (defn last-name []
   (-> faker (.name) (.lastName)))

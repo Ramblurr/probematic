@@ -5,9 +5,11 @@
    [app.util :as util]
    [clojure.string :as str]
    [datomic.client.api :as datomic]
+   [jsonista.core :as j]
    [keycloak.admin :as admin]
    [keycloak.deployment :as keycloak]
    [keycloak.user :as user]
+   [keycloak.utils :as keycloak.utils]
    [medley.core :as m])
   (:import
    (org.keycloak.representations.idm UserRepresentation)))
@@ -87,27 +89,77 @@
         realm (-> env :keycloak :realm)]
     (str server-url "/admin/master/console/#/" realm "/users/" keycloak-id "/setttings")))
 
-(defn get-user! [kc keycloak-id]
-  (-> (admin/get-user (client kc) (realm kc) keycloak-id)
+(defn get-user! [{:keys [client realm]} keycloak-id]
+  (-> (admin/get-user client realm keycloak-id)
       (user-representation->)))
 
+(defn- user-for-update [{:keys [username first-name last-name email enabled email-verified]}]
+  (keycloak.utils/hint-typed-doto "org.keycloak.representations.idm.UserRepresentation" (UserRepresentation.)
+                                  (.setUsername username)
+                                  (.setFirstName first-name)
+                                  (.setLastName last-name)
+                                  (.setEmailVerified email-verified)
+                                  (.setEmail email)
+                                  (.setEnabled enabled)))
+
+(defn- update-user [{:keys [client realm] :as kc} keycloak-id person]
+  (-> client
+      (.realm realm)
+      (.users)
+      (.get keycloak-id)
+      (.update (user-for-update (util/remove-nils person))))
+  (get-user! kc keycloak-id))
+
 (defn update-user-meta! [kc {:member/keys [username email active? name keycloak-id] :as member}]
-  (tap> {:updating-member member})
   (assert (not (str/blank? email)))
   (assert (not (str/blank? username)))
   (assert (not (str/blank? name)))
   (assert (not (str/blank? keycloak-id)))
-  (-> (client kc)
-      (.realm (realm kc))
-      (.users)
-      (.get (:member/keycloak-id member))
-      (.update (user/user-for-update
-                (util/remove-nils
-                 {:username username
-                  :email email
-                  :enabled active?
-                  :first-name name}))))
-  (get-user! kc keycloak-id))
+  (update-user kc keycloak-id
+               {:username username
+                :email email
+                :enabled active?
+                :first-name name}))
+
+(defn- maybe-parse-json [s]
+  (if (or (nil? s) (str/blank? s))
+    s
+    (j/read-value s j/keyword-keys-object-mapper)))
+
+(defn- parse-response [^javax.ws.rs.core.Response resp]
+  (when resp
+    (let [r {:status (.getStatus resp)
+             :headers (.getStringHeaders resp)
+             :body (-> resp (.readEntity java.lang.String) maybe-parse-json)}]
+      (.close resp)
+      r)))
+
+(defn- extract-id [resp]
+  (let [loc (first (get-in resp [:headers "Location"]))]
+    (subs (str loc) (+ (str/last-index-of (str loc) "/") 1))))
+
+(defn- create-user! [{:keys [client realm] :as kc} person]
+  (let [resp (-> client (.realm realm) (.users) (.create (user/user-for-creation person)) parse-response)]
+    (if-not (= 201 (:status resp))
+      (throw (ex-info "Create Keycloak User Failed" {:response (:body resp)}))
+      (let [group-id (admin/get-group-id client realm (:group person))
+            user-id (extract-id resp)]
+        (admin/add-user-to-group! client realm group-id user-id)
+        (update-user kc user-id {:enabled (:enabled person) :email-verified true})))))
+
+(defn create-new-member! [kc {:member/keys [active? email username name] :as member} password]
+  (assert (not (str/blank? email)))
+  (assert (not (str/blank? username)))
+  (assert (not (str/blank? name)))
+  (assert (not (str/blank? password)))
+  (let [new-user (create-user! kc
+                               {:username username
+                                :email email
+                                :password password
+                                :enabled active?
+                                :group "Mitglieder"
+                                :first-name name})]
+    new-user))
 
 (defn kc-from-req [req]
   (-> req :system :keycloak))
@@ -137,6 +189,7 @@
                       :member/name "Testuser Testing"})
 
   ;; rcf
+  (admin/delete-user-by-id! (client kc) (realm kc))
 
   ;;
   )

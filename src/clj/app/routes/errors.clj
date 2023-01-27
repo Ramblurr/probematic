@@ -29,6 +29,8 @@
     :id_token
     :refresh_token
     :keycloak
+    :password
+    :password-confirm
     :reitit.core/match
     :muuntaja/response
     :reitit.core/router})

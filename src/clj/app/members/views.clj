@@ -2,6 +2,8 @@
   (:require
    [app.i18n :as i18n]
    [app.icons :as icon]
+   [app.keycloak :as keycloak]
+   [app.layout :as layout]
    [app.members.controller :as controller]
    [app.ui :as ui]
    [app.urls :as url]
@@ -9,8 +11,7 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [medley.core :as m]
-   [app.keycloak :as keycloak]))
+   [medley.core :as m]))
 
 (defn member-table-headers [tr members]
   [{:label (tr [:member/name]) :priority :normal :key :name
@@ -252,9 +253,11 @@
     (-member-create req)))
 
 (ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req} ^:boolean edit?]
+  (when (util/delete? req) (controller/delete-invitation req))
   (let [tr (i18n/tr-from-req req)
         comp-name (util/comp-namer #'members-index-page)
-        sections (controller/sections db)]
+        sections (controller/sections db)
+        open-invitations (controller/members-with-open-invites req)]
     [:div {:id id}
      (ui/page-header :title "Member Admin")
      (ui/slideover-panel-form {:title (tr [:member/new-member]) :id (path "slideover")
@@ -263,8 +266,31 @@
                                          (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
                                          (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
                               (member-add-form {:tr tr :path path :sections sections}))
+
      [:div {:class "mt-2"}
-      [:div {:class "px-4 sm:px-6 lg:px-8"}
+      (when (seq open-invitations)
+        [:div {:class "px-4 sm:px-6 lg:px-8 py-10"}
+         (ui/divider-left (tr [:member/open-invitations]) nil)
+         [:div {:class "mt-4"}
+          [:table {:class "min-w-full divide-y divide-gray-300"}
+
+           (ui/table-row-head [{:label (tr [:member/name]) :priority :medium :key :owner}
+                               {:label (tr [:member/email]) :priority :medium :key :owner}
+                               {:label "" :variant :action :key :action}])
+
+           (ui/table-body
+            (rt/map-indexed (fn [req idx {:member/keys [name email invite-code]}]
+                              [:tr
+                               [:td {:class "px-3 py-4"} name]
+                               [:td {:class "px-3 py-4"} email]
+                               [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
+                                [:span {:class "flex flex-row space-x-2"}
+                                 [:button {:type "submit" :class "text-red-600 hover:text-sno-orange-900 cursor-pointer"
+                                           :hx-target (hash ".")
+                                           :hx-delete (comp-name) :hx-vals {:invite-code invite-code}} (tr [:action/delete])]]]]) req open-invitations))]]])
+
+      [:div {:class "px-4 sm:px-6 lg:px-8 mt-4"}
+       (when (seq open-invitations) (ui/divider-left (tr [:nav/members]) nil))
        [:div {:class "flex items-center justify-end"}
         [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
          (ui/toggle :label (tr [:action/quick-edit]) :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
@@ -276,3 +302,64 @@
          (if edit?
            (member-table-rw req)
            (member-table-ro req))]]]]]))
+
+(defn invite-accept-form [req {:keys [member invite-code]} error-msg]
+  (let [tr (i18n/tr-from-req req)]
+    (layout/centered-content req
+                             [:form {:class "space-y-6" :action "/invite-accept" :method "POST"}
+                              [:input {:type :hidden :name "invite-code" :value invite-code}]
+                              [:h2 {:class "font-medium text-2xl"} (tr [:account/create-sno-id-title])]
+                              [:p {:class "text-lg text-gray-700"} (tr [:account/create-sno-id-subtitle])]
+                              [:div
+                               [:label {:for "email" :class "block text-sm font-medium text-gray-700"} (tr [:member/email])]
+                               [:div {:class "mt-1"}
+                                [:input {:disabled true :value (:member/email member) :id "email" :name "email" :type "email" :autocomplete "email" :required true :class "block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-sno-orange-500 focus:outline-none focus:ring-sno-orange-500 sm:text-sm  disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"}]]]
+                              [:div
+                               [:label {:for "password" :class "block text-sm font-medium text-gray-700"} (tr [:account/password])]
+                               [:div {:class "mt-1"}
+                                [:input {:id "password" :name "password" :type "password" :autocomplete "new-password" :required true :class "block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-sno-orange-500 focus:outline-none focus:ring-sno-orange-500 sm:text-sm"}]]
+                               [:p {:class "text-xs text-gray-700"} (tr [:account/password-instructions])]]
+                              [:div
+                               [:label {:for "password-confirm" :class "block text-sm font-medium text-gray-700"} (tr [:account/password-confirm])]
+                               [:div {:class "mt-1"}
+                                [:input {:id "password-confirm" :name "password-confirm" :autocomplete "new-password" :type "password" :required true :class "block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-sno-orange-500 focus:outline-none focus:ring-sno-orange-500 sm:text-sm"}]]
+                               [:p {:class "text-xs text-gray-700"} (tr [:account/password-confirm-instructions])]]
+                              (when error-msg
+                                [:div
+                                 [:p {:class "text-medium text-red-500"} error-msg]])
+                              [:div
+                               (ui/button :centered? true :priority :primary :label (tr [:account/create-account]) :class "w-full")]])))
+
+(defn invite-invalid [req]
+  (let [tr (i18n/tr-from-req req)]
+    (layout/centered-content req
+                             [:div
+                              [:div (tr [:email/invite-expired])]])))
+
+(defn invite-accept [req]
+  (let [tr (i18n/tr-from-req req)
+        invite-data (controller/load-invite req)]
+    (if invite-data
+      (invite-accept-form req invite-data nil)
+      (invite-invalid req))))
+
+(defn invite-accept-post [req]
+  (try
+
+    (let [member (controller/setup-account req)
+          tr (i18n/tr-from-req req)]
+      (layout/centered-content req
+                               [:div {:class "space-y-6"}
+                                [:h2 {:class "font-medium text-2xl"} (tr [:account/account-created-title])]
+                                [:p {:class "text-lg text-gray-700"} (tr [:account/account-created-subtitle])]
+                                [:div
+                                 (ui/link-button :priority :primary :centered? true
+                                                 :class "w-full"
+                                                 :label (tr [:login]) :attr {:href (str "/login?login_hint=" (util/url-encode (:member/email member)))})]]))
+
+    (catch Throwable e
+      (let [reason (-> e ex-data :reason)]
+        (condp = reason
+          nil (throw e)
+          :code-expired (invite-invalid req)
+          (invite-accept-form req (->  e ex-data :invite-data) ((i18n/tr-from-req req) [reason])))))))

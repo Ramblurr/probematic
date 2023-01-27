@@ -1,8 +1,10 @@
 (ns app.secret-box
   (:require
+   [app.util :as util]
    [buddy.core.codecs :as codecs]
-   [taoensso.nippy :as nippy]
-   [com.yetanalytics.squuid :as sq]))
+   [buddy.core.hash :as digest]
+   [com.yetanalytics.squuid :as sq]
+   [taoensso.nippy :as nippy]))
 
 (defn bytes->b64u
   "Convert byte array into a URL safe base64 encoded string"
@@ -35,6 +37,12 @@
 
 (defn decrypt [ciphertext password]
   (decrypt-bytes (b64u->bytes ciphertext) password))
+
+(defn random-str [len]
+  (bytes->b64u (util/random-bytes len)))
+
+(defn sha1-str [in]
+  (codecs/bytes->hex (digest/sha1 in)))
 
 (comment
   ;; Usage

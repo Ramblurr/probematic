@@ -5,7 +5,21 @@
    [clojure.walk :as walk]
    [ctmx.form :as form]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t])
+  (:import
+   [java.net URLEncoder URLDecoder]
+   [java.security SecureRandom]))
+
+(defn url-encode [v]
+  (URLEncoder/encode v "UTF-8"))
+
+(defn url-decode [v]
+  (URLDecoder/decode v "UTF-8"))
+
+(defn random-bytes [size]
+  (let [seed (byte-array size)]
+    (.nextBytes (SecureRandom.) seed)
+    seed))
 
 (defn clean-number [n]
   (str/replace n #"[^+\d]" ""))

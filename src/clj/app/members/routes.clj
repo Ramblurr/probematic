@@ -35,3 +35,8 @@
        :app.route/name :app/members}
    (members-detail)
    (members-index)])
+
+(defn invite-accept-route []
+  ["/invite-accept" {:app.route/name :app/invite-accept
+                     :get  (fn [req] (view/invite-accept req))
+                     :post (fn [req] (view/invite-accept-post req))}])

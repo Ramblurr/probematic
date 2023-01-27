@@ -7,7 +7,7 @@
    [app.gigs.routes :refer [gig-answer-link-route gigs-routes]]
    [app.insurance.routes :refer [insurance-routes]]
    [app.interceptors :as interceptors]
-   [app.members.routes :refer [members-routes]]
+   [app.members.routes :refer [members-routes invite-accept-route]]
    [app.probeplan.routes :refer [probeplan-routes]]
    [app.sardine :as sardine]
    [app.songs.routes :refer [songs-routes]]
@@ -31,6 +31,7 @@
    ["/oauth2"
     ["/callback" {:handler (fn [req] (auth/oauth2-callback-handler (:env system) (:oauth2 system) req))}]]
    (gig-answer-link-route)
+   (invite-accept-route)
 
    ["" {:interceptors [auth/require-authenticated-user
                        (interceptors/webdav-interceptor system)]}

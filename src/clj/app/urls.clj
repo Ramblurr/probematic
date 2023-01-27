@@ -41,6 +41,9 @@
 (defn absolute-gig-answer-link-undo [env]
   (str (config/app-base-url env) "/gig/answer-link-undo"))
 
+(defn absolute-link-new-user-invite [env invite-code]
+  (str (config/app-base-url env) "/invite-accept?code=" invite-code))
+
 (defn link-logout [] "/logout")
 (defn link-login [] "/login")
 

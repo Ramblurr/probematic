@@ -50,6 +50,12 @@
    (tmpl/gig-updated-email-plain sys gig edited-attrs)
    (tmpl/gig-updated-recipient-variables sys gig members)))
 
+(defn build-new-user-invite [{:keys [tr] :as sys} {:member/keys [email] :as member} invite-code]
+  (build-email email
+               (tr [:email-subject/new-invite])
+               (tmpl/new-user-invite-html sys invite-code)
+               (tmpl/new-user-invite-plain sys invite-code)))
+
 (defn- sys-from-req [req]
   {:tr (:tempura/tr req)
    :env (-> req :system :env)
@@ -69,6 +75,10 @@
           members (q/active-members db)
           sys (sys-from-req req)]
       (queue-email! sys  (build-gig-updated-email sys gig members edited-attrs)))))
+
+(defn send-new-user-email! [req new-member invite-code]
+  (queue-email! (sys-from-req req)
+                (build-new-user-invite (sys-from-req req) new-member invite-code)))
 
 (comment
 
@@ -124,6 +134,8 @@
 
   (queue-email! {:redis redis-opts} (debug/xxx (build-gig-created-email sys gig2 [member2])))
   (queue-email! {:redis redis-opts} (debug/xxx (build-gig-updated-email sys gig2 [member2] [:gig/status :gig/location])))
+
+  (generate-invite-code env "0185ee9c-7e67-8733-82f6-7a74aa588a92")
 
   ;;
   )

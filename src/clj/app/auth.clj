@@ -4,6 +4,7 @@
    [app.render :as render]
    [app.secret-box :as secret-box]
    [app.session :refer [redis-store]]
+   [app.util :as util]
    [buddy.core.codecs :as codecs]
    [buddy.core.keys :as buddy-keys]
    [buddy.sign.jwt :as jwt]
@@ -12,10 +13,7 @@
    [io.pedestal.http.ring-middlewares :as ring-middlewares]
    [jsonista.core :as j]
    [medley.core :as m]
-   [org.httpkit.client :as http])
-  (:import
-   (java.net URLEncoder)
-   (java.security SecureRandom)))
+   [org.httpkit.client :as http]))
 
 (defn throw-unauthorized
   ([msg data]
@@ -26,14 +24,6 @@
     (ex-info msg
              (merge {:app/error-type :app.error.type/authentication-failure} data)
              cause))))
-
-(defn- url-encode [v]
-  (URLEncoder/encode v "UTF-8"))
-
-(defn- random-bytes [size]
-  (let [seed (byte-array size)]
-    (.nextBytes (SecureRandom.) seed)
-    seed))
 
 (defn- load-openid-config [well-known-uri]
   (some->
@@ -69,15 +59,17 @@
 
 (defn login-page-handler [env {:keys [openid-config client-id callback-uri]} request]
   (let [next          (get-in request [:params :next] false)
-        state         (codecs/bytes->str (codecs/bytes->b64u (random-bytes 16)))
+        login_hint    (get-in request [:params :login_hint] false)
+        state         (codecs/bytes->str (codecs/bytes->b64u (util/random-bytes 16)))
         scope         (str/join " " ["openid" "email" "profile"])
         authorize-uri (str (:authorization_endpoint openid-config)
                            "?response_type=code"
                            "&client_id=" client-id
                            "&redirect_uri=" callback-uri
                            "&state=" state
-                           "&scope=" scope)]
-
+                           "&scope=" scope
+                           (when login_hint
+                             (str "&login_hint=" (util/url-encode login_hint))))]
     {:status 302 :headers {"Location" authorize-uri} :body ""
      :cookies {"oauth2" (oauth2-cookie env
                                        {:oauth2/state state :oauth2/redirect-uri callback-uri :oauth2/post-login-uri next})}}))
@@ -89,7 +81,7 @@
   [env {:keys [openid-config client-id callback-uri]} request]
   (let [id-token (-> request :session :session/id-token)
         idp-logout-uri (str (:end_session_endpoint openid-config)
-                            "?post_logout_redirect_uri=" (url-encode (str (config/app-base-url env)))
+                            "?post_logout_redirect_uri=" (util/url-encode (str (config/app-base-url env)))
                             "&client_id=" client-id
                             "&id_token_hint=" id-token)]
     {:status 302 :headers {"Location" idp-logout-uri} :body "" :session nil}))
@@ -216,7 +208,7 @@
               (if (get-current-email req)
                 ctx
                 (assoc ctx :response {:status 302 :headers {"location"
-                                                            (str "/login?next=" (url-encode (str uri "?" query-string)))} :body ""}))))})
+                                                            (str "/login?next=" (util/url-encode (str uri "?" query-string)))} :body ""}))))})
 
 (defn has-roles?
   "Given a role set and a request, returns true if the current user has all the roles."
@@ -233,3 +225,25 @@
 (defn dev-auth-interceptor [dev-session]
   {:name ::dev-auth-interceptor
    :enter #(-> % (assoc-in [:request :session] dev-session))})
+
+(defn is-password-pwned? [password]
+  (let [sha1sum ^String (secret-box/sha1-str password)
+        r (:body @(http/get (str "https://api.pwnedpasswords.com/range/" (.substring sha1sum 0 5))
+                            {:keepalive -1
+                             :headers   {"user-agent" "probematic: https://github.com/Ramblurr/probematic"}}))
+        lines (when r (.split r "(?m)\n"))]
+    (some #(-> (.toLowerCase ^String %)
+               (.split ":")
+               (first)
+               (= (.substring sha1sum 5)))
+          lines)))
+
+(defn validate-password
+  "Returns :password/valid if the password is valid.
+  Other return options are :password/does-not-match :password/too-short, :password/commonly-used"
+  [password password-confirm]
+  (cond
+    (not= password password-confirm) :password/does-not-match
+    (< (count password) 8)           :password/too-short
+    (is-password-pwned? password)    :password/commonly-used
+    :else                            :password/valid))

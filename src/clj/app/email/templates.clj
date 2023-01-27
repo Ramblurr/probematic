@@ -235,3 +235,35 @@
 
 (defn gig-updated-recipient-variables [{:keys [env]} gig members]
   (template-values-gig-attendance env (:gig/gig-id gig) members))
+
+(defn new-user-invite-html [{:keys [tr env] :as sys} invite-code]
+  (str (html
+        [:div
+         [:p
+          (tr [:email/greeting])]
+         [:p (tr [:email/invite-new-user-intro])]
+         [:p (tr [:email/invite-new-user-intro2])]
+         (let [invite-link (url/absolute-link-new-user-invite env invite-code)]
+           [:p [:a {:href invite-link} invite-link]])
+         [:p]
+         [:p (tr [:email/sign-off])]])))
+
+(defn new-user-invite-plain [{:keys [tr env] :as sys} invite-code]
+  (selmer.util/without-escaping
+   (let [invite-link (url/absolute-link-new-user-invite env invite-code)]
+     (selmer/render
+      "{{greeting}}
+
+{{intro}}
+
+{{intro2}}
+
+{{invite-link}}
+
+{{sign-off}}
+"
+      {:greeting (tr [:email/greeting])
+       :intro (tr [:email/invite-new-user-intro])
+       :intro2 (tr [:email/invite-new-user-intro2])
+       :invite-link invite-link
+       :sign-off (tr [:email/sign-off])}))))
