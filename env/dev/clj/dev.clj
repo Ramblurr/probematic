@@ -1,23 +1,16 @@
 (ns dev
   (:require
-   [app.routes.pedestal-reitit]
    [app.ig]
-   [app.jobs.sync-gigs :as sync-gigs]
-   [app.jobs.sync-members :as sync-members]
    [app.schemas :as schemas]
-   [integrant.repl.state :as state]
-   [malli.dev :as md]
-   [datomic.client.api :as d]
-   [ol.app.dev.dev-extras :as dev-extra]
-   [clojure.tools.namespace.repl :as repl]
-   [ol.system :as system]
    [browser :as browser]
-   [jsonista.core :as j]
    [clojure.string :as str]
-   [tick.core :as t]
-   [medley.core :as m]
-   [app.util :as util]
-   [app.insurance.controller :as controller]))
+   [clojure.tools.namespace.repl :as repl]
+   [datomic.client.api :as d]
+   [integrant.repl.state :as state]
+   [jsonista.core :as j]
+   [malli.dev :as md]
+   [ol.app.dev.dev-extras :as dev-extra]
+   [ol.system :as system]))
 
 (repl/disable-reload! (find-ns 'browser))
 (repl/disable-reload! *ns*)
@@ -25,9 +18,6 @@
 (set! *print-namespace-maps* false)
 
 ;(mr/set-default-registry! schemas/registry)
-(def datomic (-> state/system :app.ig/datomic-db))
-(def conn (:conn datomic))
-(def app (-> state/system :app.ig.router/routes))
 
 (defn go-with-browser []
   (dev-extra/go)
@@ -72,6 +62,8 @@
 
   (do
     (require '[app.gigo.core :as gigo])
+    (require '[app.jobs.sync-gigs :as sync-gigs])
+    (require '[app.jobs.sync-members :as sync-members])
     (def gigoc (:app.ig/gigo-client state/system))
     (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
     (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic/gigo-members.json") j/keyword-keys-object-mapper)
@@ -117,6 +109,20 @@
                                :db/doc "Notes for the arrangement"
                                :db/valueType :db.type/string
                                :db/cardinality :db.cardinality/one}]})
+
+  (def datomic (-> state/system :app.ig/datomic-db))
+  (def conn (:conn datomic))
+  (def app (-> state/system :app.ig.router/routes))
+
+  (do
+    (require '[integrant.repl.state :as state])
+    (require '[keycloak.admin :as admin])
+    (def env (-> state/system :app.ig/env))
+    (def kc (-> state/system :app.ig/keycloak))
+    (def conn (-> state/system :app.ig/datomic-db :conn)))
+  ;; rcf
+
+  (def user0 (second))
 
 ;;
   )

@@ -11,13 +11,14 @@
                    :client-id      #ref [:secrets :oauth2 :client-id]
                    :client-secret  #ref [:secrets :oauth2 :client-secret]
                    :callback-path  "/oauth2/callback"}
- :authorization   {:known-roles   #{:admin :Mitglieder}}
+ :authorization   {:known-roles #{:admin :Mitglieder}}
  :environment     #profile {:prod #or [#env APP_ENVIRONMENT "prod"]
                             :dev  "dev"
                             :demo "demo"
                             :test "test"}
- :discourse       {:api-key  #ref [:secrets :discourse :api-key]
-                   :username #ref [:secrets :discourse :username]
+ :keycloak        #ref [:secrets :keycloak]
+ :discourse       {:api-key   #ref [:secrets :discourse :api-key]
+                   :username  #ref [:secrets :discourse :username]
                    :forum-url "https://forum.streetnoise.at"}
  :nextcloud       {:password         #ref [:secrets :nextcloud :password]
                    :username         #ref [:secrets :nextcloud :username]
@@ -75,6 +76,7 @@
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :webdav     #ig/ref :app.ig/webdav-sardine
                                              :env        #ig/ref :app.ig/env
+                                             :keycloak   #ig/ref :app.ig/keycloak
                                              :oauth2     #ig/ref :app.ig/oauth2
                                              :redis      #ig/ref :app.ig/redis}
                    :app.ig/oauth2           {:env #ig/ref :app.ig/env}
@@ -97,6 +99,7 @@
                                              :redis   #ig/ref :app.ig/redis
                                              :mailgun #ig/ref :app.ig/mailgun}
                    :app.ig/webdav-sardine   {:env #ig/ref :app.ig/env}
+                   :app.ig/keycloak         {:env #ig/ref :app.ig/env}
                    :app.ig.jobs/definitions {:env     #ig/ref :app.ig/env
                                              :gigo    #ig/ref :app.ig/gigo-client
                                              :datomic #ig/ref :app.ig/datomic-db}}

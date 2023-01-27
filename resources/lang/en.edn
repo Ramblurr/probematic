@@ -17,6 +17,7 @@
           :nick "Nickname"
           :username "Username"
           :phone "Phone"
+          :keycloak-id "SNO UUID"
           :email "E-Mail"
           :active? "Active?"
           :gigs-attended "Gigs Attended"

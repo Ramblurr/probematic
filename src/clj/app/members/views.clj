@@ -9,7 +9,8 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.keycloak :as keycloak]))
 
 (defn member-table-headers [tr members]
   [{:label (tr [:member/name]) :priority :normal :key :name
@@ -38,7 +39,7 @@
                      (:member (controller/update-member! req))
                      :else
                      (:member req))
-        {:member/keys [name nick email username phone active? section]} member
+        {:member/keys [name nick email username phone active? section keycloak-id]} member
         coverages (controller/member-current-insurance-info req member)
         private-instruments (filter :instrument.coverage/private? coverages)
         band-instruments (filter #(not (:instrument.coverage/private? %)) coverages)
@@ -83,6 +84,9 @@
       (ui/panel {:title
                  (tr [:Contact-Information])}
                 (ui/dl
+                 (ui/dl-item (tr [:member/active?]) (if edit?
+                                                      (ui/toggle-checkbox  :checked? active? :name (path "active?"))
+                                                      (ui/bool-bubble active?)))
                  (ui/dl-item (tr [:member/email]) (if edit?
                                                     (ui/input :name (path "email") :label "" :value email :type :email)
                                                     email))
@@ -91,9 +95,10 @@
                                                               (tr [:member/phone-validation]))
                                                     phone))
                  (ui/dl-item (tr [:member/username]) username)
-                 (ui/dl-item (tr [:member/active?]) (if edit?
-                                                      (ui/toggle-checkbox  :checked? active? :name (path "active?"))
-                                                      (ui/bool-bubble active?)))))
+                 (ui/dl-item (tr [:member/keycloak-id])
+                             [:a {:href (keycloak/link-user-edit (-> req :system :env)  keycloak-id)
+                                  :class "link-blue"}
+                              keycloak-id])))
 
       (ui/panel {:title
                  (tr [:member/insurance-title])

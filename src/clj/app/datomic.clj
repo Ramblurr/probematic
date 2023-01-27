@@ -21,6 +21,14 @@
         (assoc uuid-key (sq/generate-squuid)))
     tx))
 
+(defn last-transaction-time [db]
+  (first (ffirst
+          (d/q
+           '[:find (max 1 ?tx)
+             :where
+             [?tx :db/txInstant]]
+           db))))
+
 (defn transact [conn opts]
   (try
     (d/transact conn opts)
@@ -139,9 +147,7 @@
       (when (= 0 (count-all (d/db conn) :gig/gig-id))
         (demo/seed-gigs! conn))))
   :seeded)
-
-(when nil :cool)
-
+(def datum-elements (juxt :e :a :v :tx :added))
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -164,5 +170,36 @@
                                :db/doc "The textual representation of the plans from archived gigs imported from gigo"
                                :db/valueType :db.type/string
                                :db/cardinality :db.cardinality/one}]})
-  ;;
+  (defn rollback
+    "Reassert retracted datoms and retract asserted datoms in a transaction,
+  effectively \"undoing\" the transaction.
+
+  WARNING: *very* naive function!"
+    [conn tx]
+    (let [tx-log (d/tx-range conn {:start tx :end nil}) ; find the transaction
+          txid   (-> tx-log :t d/t->tx) ; get the transaction entity id
+          newdata (->> (:data tx-log)   ; get the datoms from the transaction
+                       (remove #(= (:e %) txid)) ; remove transaction-metadata datoms
+                     ; invert the datoms add/retract state.
+                       (map #(do [(if (:added %) :db/retract :db/add) (:e %) (:a %) (:v %)]))
+                       reverse)] ; reverse order of inverted datoms.
+      @(d/transact conn newdata)))
+
+  (let [tx-log (d/tx-range conn {:start tx :end nil}) ; find the transaction
+        txid   (-> tx-log :t d/t->tx)   ; get the transaction entity id
+        newdata (->> (:data tx-log)     ; get the datoms from the transaction
+                     (remove #(= (:e %) txid)) ; remove transaction-metadata datoms
+                                        ; invert the datoms add/retract state.
+                     (map #(do [(if (:added %) :db/retract :db/add) (:e %) (:a %) (:v %)]))
+                     reverse)]          ; reverse order of inverted datoms.
+    @(d/transact conn newdata))
+
+  (datum-elements
+   (last
+    (:data
+     (last
+      (d/tx-range conn {:start (last-transaction-time db)
+                        :end nil})))))
+
+;;
   )

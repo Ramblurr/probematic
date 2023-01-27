@@ -1,6 +1,7 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
+   [app.keycloak :as keycloak]
    [taoensso.carmine :as car]
    [app.email.email-worker :as email-worker]
    [app.config :as config]
@@ -135,3 +136,10 @@
 (defmethod ig/init-key ::oauth2
   [_ sys]
   (auth/build-oauth2-config (:env sys)))
+
+(defmethod ig/init-key ::keycloak [_ sys]
+  (keycloak/init! sys))
+
+(defmethod ig/halt-key! ::keycloak
+  [_ sys]
+  (keycloak/halt! sys))
