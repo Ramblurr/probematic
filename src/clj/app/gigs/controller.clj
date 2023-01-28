@@ -85,8 +85,9 @@
                                           q/results->gigs
                                           (map (partial attach-attendance db member)))]
 
-    (sort-by :gig/date
-             (concat gigs-with-no-attendance gigs-with-unknown-attendance))))
+    (->> (concat gigs-with-no-attendance gigs-with-unknown-attendance)
+         (sort-by :gig/call-time)
+         (sort-by :gig/date))))
 
 (clojure.core/comment
   (q/attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw"

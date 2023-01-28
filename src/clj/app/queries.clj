@@ -120,6 +120,7 @@
   (->> r
        (mapv first)
        (mapv gig.domain/db->gig)
+       (sort-by :gig/call-time)
        (sort-by :gig/date)))
 
 (defn find-all-gigs [db]
