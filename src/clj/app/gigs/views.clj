@@ -639,54 +639,50 @@
                 archived? {:keys [hash path tr comp-name]}
                 member-select-vals]
   [:div
-   (ui/page-header-full :title
-                        (ui/text :label "Title" :name (path "title") :value title)
-                        :subtitle
-                        (list
-                         (ui/select
-                          :label (tr [:gig/status])
-                          :id (path "status")
-                          :value (when status (name status))
-                          :size :small
-                          :required? true
-                          :options (map (fn [m] {:label (tr [m]) :value (name m)})
-                                        (if gig
-                                          domain/statuses
-                                          domain/create-statuses)))
-                         (ui/select
-                          :id (path "gig-type")
-                          :label (tr [:gig/gig-type])
-                          :value (when gig-type (name gig-type))
-                          :size :small
-                          :required? true
-                          :options
-                          (if (nil? gig)
-                            (concat [{:label "-" :value ""}]
-                                    (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
-                            (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types)))
-                         (ui/checkbox :label (tr [(if gig
-                                                    :gig/email-about-change?
-                                                    :gig/email-about-new?)]) :id (path "notify?")))
+   ;; page-header-full
+   [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 bg-white"}
+    [:div {:class "flex items-center space-x-5 w-full sm:w-1/2"}
+     [:div {:class "w-full"}
+      [:h1 {:class "text-2xl font-bold text-gray-900 w-full"}
+       (ui/text :label "Title" :name (path "title") :value title)]
+      [:p {:class "text-sm font-medium text-gray-500 w-full"}
+       (list
+        (ui/select
+         :label (tr [:gig/status])
+         :id (path "status")
+         :value (when status (name status))
+         :size :small
+         :required? true
+         :options (map (fn [m] {:label (tr [m]) :value (name m)})
+                       (if gig
+                         domain/statuses
+                         domain/create-statuses)))
+        (ui/select
+         :id (path "gig-type")
+         :label (tr [:gig/gig-type])
+         :value (when gig-type (name gig-type))
+         :size :small
+         :required? true
+         :options
+         (if (nil? gig)
+           (concat [{:label "-" :value ""}]
+                   (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
+           (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))))]]]
+    [:dil {:class "hidden sm:flex justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
+     (when-not archived?
+       (list
+        (ui/button :label (tr [:action/delete]) :priority :white-destructive :centered? true
+                   :hx-delete (comp-name) :hx-target (hash ".")
+                   :hx-confirm (tr [:action/confirm-delete-gig] [title]))
+        (ui/button :label (tr [:action/cancel])
+                   :priority :white
+                   :centered? true
+                   :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" false}})
+        (ui/button :label (tr [:action/save])
+                   :priority :primary
+                   :centered? true
+                   :attr {:hx-target (hash ".")})))]]
 
-                        :buttons
-                        (when-not archived?
-                          (util/remove-nils
-                           (list
-                            (when gig (ui/button :label (tr [:action/delete]) :priority :white-destructive :centered? true
-                                                 :hx-delete (comp-name) :hx-target (hash ".")
-                                                 :hx-confirm (tr [:action/confirm-delete-gig] [title])))
-                            (if gig
-                              (ui/button :label (tr [:action/cancel])
-                                         :priority :white
-                                         :centered? true
-                                         :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" false}})
-                              (ui/link-button :label (tr [:action/cancel])
-                                              :priority :white :centered? true
-                                              :attr {:href (url/link-gigs-home) :hx-boost true}))
-                            (ui/button :label (tr [:action/save])
-                                       :priority :primary
-                                       :centered? true
-                                       :attr {:hx-target (hash ".")})))))
    [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
     [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
      [:section
@@ -718,8 +714,23 @@
           (when false
             (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3"))
           (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
+          (ui/dl-item nil (ui/checkbox :label (tr [:gig/email-about-change?]) :id (path "notify?")))
           ;;
-          )]]]]]]])
+          )]]
+       [:div {:class "px-4 py-5 sm:px-6"}
+        [:div {:class  "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:hidden"}
+
+         (ui/button :label (tr [:action/delete]) :priority :white-destructive :centered? true
+                    :hx-delete (comp-name) :hx-target (hash ".")
+                    :hx-confirm (tr [:action/confirm-delete-gig] [title]))
+         (ui/button :label (tr [:action/cancel])
+                    :priority :white
+                    :centered? true
+                    :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {"edit?" false}})
+         (ui/button :label (tr [:action/save])
+                    :priority :primary
+                    :centered? true
+                    :attr {:hx-target (hash ".")})]]]]]]])
 
 (defn gig-create-form [{:gig/keys [title date end-date status gig-type
                                    contact pay-deal call-time set-time end-time
@@ -746,31 +757,21 @@
                         :id (path "status")
                         :value (when status (name status))
                         :required? true
-                        :options (map (fn [m] {:label (tr [m]) :value (name m)})
-                                      (if gig
-                                        domain/statuses
-                                        domain/create-statuses))))
+                        :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/create-statuses)))
           (ui/dl-item  (tr [:gig/gig-type])
                        (ui/select
                         :id (path "gig-type")
 
                         :value (when gig-type (name gig-type))
                         :required? true
-                        :options
-                        (if (nil? gig)
-                          (concat [{:label "-" :value ""}]
-                                  (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
-                          (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))))
+                        :options (concat [{:label "-" :value ""}]
+                                         (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))))
           (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members member-select-vals :with-empty-opt? true))
           (ui/dl-item (tr [:gig/location]) (ui/text :value location :name (path "location")))
           (ui/dl-item (tr [:gig/date])
-                      (if (nil? gig)
-                        (ui/date :value date :name (path "date") :required? true :min (str (t/date)))
-                        (ui/date :value date :name (path "date") :required? true)))
+                      (ui/date :value date :name (path "date") :required? true :min (str (t/date))))
           (ui/dl-item (tr [:gig/end-date])
-                      (if (nil? gig)
-                        (ui/date :value end-date :name (path "end-date") :required? false :min (str (t/tomorrow)))
-                        (ui/date :value end-date :name (path "end-date") :required? false)))
+                      (ui/date :value end-date :name (path "end-date") :required? false :min (str (t/tomorrow))))
           (ui/dl-item "" "" "hidden sm:block")
           (ui/dl-item (tr [:gig/call-time]) (ui/input-time :value call-time :name (path "call-time") :required? true))
           (ui/dl-item (tr [:gig/set-time]) (ui/input-time :value set-time :name (path "set-time") :required? false))
@@ -783,10 +784,7 @@
           (when false
             (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3"))
           (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
-          (ui/dl-item nil
-                      (ui/checkbox :label (tr [(if gig
-                                                 :gig/email-about-change?
-                                                 :gig/email-about-new?)]) :id (path "notify?")) "sm:col-span-3")
+          (ui/dl-item nil (ui/checkbox :label (tr [:gig/email-about-new?]) :id (path "notify?")) "sm:col-span-3")
           ;;
           )]]
        [:div {:class "px-4 py-5 sm:px-6"}
