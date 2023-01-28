@@ -720,6 +720,85 @@
           (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
           ;;
           )]]]]]]])
+
+(defn gig-create-form [{:gig/keys [title date end-date status gig-type
+                                   contact pay-deal call-time set-time end-time
+                                   outfit description location setlist leader post-gig-plans
+                                   more-details] :as gig}
+                       archived? {:keys [hash path tr comp-name]}
+                       member-select-vals]
+  [:div
+   [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
+    [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
+     [:section
+      [:div {:class "bg-white shadow sm:rounded-lg "}
+       [:div {:class "px-4 py-5 sm:px-6"}
+        [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
+         (tr [:gig/create-title])]]
+       [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
+        [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+         (list
+          (ui/dl-item (tr [:gig/title])
+                      (ui/text  :name (path "title") :value title) "sm:col-span-2")
+
+          (ui/dl-item  (tr [:gig/status])
+                       (ui/select
+                        :id (path "status")
+                        :value (when status (name status))
+                        :required? true
+                        :options (map (fn [m] {:label (tr [m]) :value (name m)})
+                                      (if gig
+                                        domain/statuses
+                                        domain/create-statuses))))
+          (ui/dl-item  (tr [:gig/gig-type])
+                       (ui/select
+                        :id (path "gig-type")
+
+                        :value (when gig-type (name gig-type))
+                        :required? true
+                        :options
+                        (if (nil? gig)
+                          (concat [{:label "-" :value ""}]
+                                  (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
+                          (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))))
+          (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members member-select-vals :with-empty-opt? true))
+          (ui/dl-item (tr [:gig/location]) (ui/text :value location :name (path "location")))
+          (ui/dl-item (tr [:gig/date])
+                      (if (nil? gig)
+                        (ui/date :value date :name (path "date") :required? true :min (str (t/date)))
+                        (ui/date :value date :name (path "date") :required? true)))
+          (ui/dl-item (tr [:gig/end-date])
+                      (if (nil? gig)
+                        (ui/date :value end-date :name (path "end-date") :required? false :min (str (t/tomorrow)))
+                        (ui/date :value end-date :name (path "end-date") :required? false)))
+          (ui/dl-item "" "" "hidden sm:block")
+          (ui/dl-item (tr [:gig/call-time]) (ui/input-time :value call-time :name (path "call-time") :required? true))
+          (ui/dl-item (tr [:gig/set-time]) (ui/input-time :value set-time :name (path "set-time") :required? false))
+          (ui/dl-item (tr [:gig/end-time]) (ui/input-time :value end-time :name (path "end-time") :required? false))
+          (ui/dl-item (tr [:gig/outfit]) (ui/text :value (or  outfit (tr [:orange-and-green])) :name (path "outfit") :required? false))
+          (ui/dl-item (tr [:gig/pay-deal]) (ui/text :value pay-deal :name (path "pay-deal") :required? false))
+          (ui/dl-item (tr [:gig/leader]) (ui/text :label "" :value leader :name (path "leader") :required? false))
+          (ui/dl-item (tr [:gig/post-gig-plans]) (ui/text :value post-gig-plans :name (path "post-gig-plans") :required? false) "sm:col-span-2")
+          (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name (path "more-details") :required? false :placeholder (tr [:gig/more-details-placeholder])) "sm:col-span-3")
+          (when false
+            (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3"))
+          (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
+          (ui/dl-item nil
+                      (ui/checkbox :label (tr [(if gig
+                                                 :gig/email-about-change?
+                                                 :gig/email-about-new?)]) :id (path "notify?")) "sm:col-span-3")
+          ;;
+          )]]
+       [:div {:class "px-4 py-5 sm:px-6"}
+        [:div {:class "flex justify-end space-x-4"}
+         (ui/link-button :label (tr [:action/cancel])
+                         :priority :white :centered? true
+                         :attr {:href (url/link-gigs-home) :hx-boost true})
+         (ui/button :label (tr [:action/save])
+                    :priority :primary
+                    :centered? true
+                    :attr {:hx-target (hash ".")})]]]]]]])
+
 (ctmx/defcomponent ^:endpoint  gigs-detail-page-info [{:keys [db] :as req} gig ^:boolean edit?]
   (let [comp-name (util/comp-namer #'gigs-detail-page-info)
         tr (i18n/tr-from-req req)
@@ -845,7 +924,7 @@
         (response/hx-redirect (url/link-gig new-gig)))
 
       [:form {:hx-post (comp-name) :class "space-y-8 divide-y divide-gray-200"}
-       (gig-form nil false {:path path :hash hash :tr tr :comp-name comp-name} (q/members-for-select-active db))])))
+       (gig-create-form nil false {:path path :hash hash :tr tr :comp-name comp-name} (q/members-for-select-active db))])))
 
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [db] :as req}]
   (let [future-gigs (q/gigs-future db)
