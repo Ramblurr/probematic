@@ -34,21 +34,25 @@
 (defn gig-attendance-endpoint [{:keys [db] :as req} id idx gig]
   (let [attendance (:attendance gig)
         gig-id (:gig/gig-id gig)
-        {:member/keys [gigo-key]} (:attendance/member attendance)]
+        {:member/keys [gigo-key]} (:attendance/member attendance)
+        {:gig/keys [date end-date status title]} gig]
     [:div {:id id :class (ui/cs "flex flex-col md:grid md:grid-cols-4 gap-x-0 md:gap-y-8 px-4 py-2 sm:px-6 last:rounded-b-md border-b border-gray-200"
                                 (when (= 0 idx) "sm:rounded-t-md")
                                 (if (= 0 (mod idx 2))
                                   "bg-white"
                                   "bg-white"))}
-     [:div {:class "order-2 md:order-none md:col-span-1 text-sm whitespace-nowrap"}
+     [:div {:class "md:order-none md:col-span-1 text-sm whitespace-nowrap font-medium"}
       [:div {:class "flex gap-x-2 md:grid md:grid-flow-col md:auto-cols-min"}
-       [:div {:class "hidden md:block"} (ui/gig-status-icon (:gig/status gig))]
-       [:div {:class "md:order-none md:min-w-[5rem]"} (ui/gig-date gig)]
+       [:div {:class "hidden md:block"} (ui/gig-status-icon status)]
+       [:div {:class "md:order-none md:min-w-[5rem]"}
+        (if end-date
+          (ui/daterange date end-date)
+          (ui/datetime date))]
        [:div {:class "md:order-none "} (ui/gig-time gig)]]]
-     [:div {:class "order-1 md:order-none font-bold md:font-normal"}
-      [:a {:href (url/link-gig gig) :class "link-blue"} (:gig/title gig)]]
-     [:div {:class "order-last md:order-none md:col-span-2 flex gap-x-2"}
-      [:div {:class "block md:hidden"} (ui/gig-status-icon (:gig/status gig))]
+     [:div {:class "md:order-none md:font-normal"}
+      [:a {:href (url/link-gig gig) :class "link-blue"} title]]
+     [:div {:class "order-last md:order-none md:col-span-2 flex gap-x-2 flex-wrap"}
+      [:div {:class "block md:hidden"} (ui/gig-status-icon status)]
       [:div (gig-attendance-person-plan req gig-id gigo-key (:attendance/plan attendance))]
       [:div (gig-attendance-person-motivation req gig-id gigo-key (:attendance/motivation attendance))]
       [:div (gig-attendance-person-comment req gig-id gigo-key (:attendance/comment attendance) false)]]]))

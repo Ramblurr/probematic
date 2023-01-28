@@ -785,7 +785,7 @@
 
 (defn format-dt
   ([dt]
-   (format-dt dt (t/formatter "dd-MMM-yyyy")))
+   (format-dt dt (t/formatter "dd MMM yyyy")))
   ([dt fmt]
    (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
      (t/format fmt  norm-dt))))

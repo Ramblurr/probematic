@@ -156,7 +156,7 @@
            (ui/link-button :label (tr [:action/cancel]) :attr {:href (url/link-gig gig)} :priority :white)
            (ui/button :label (tr [:action/save]) :priority :primary)]]]))))
 
-(defn gig-row [{:gig/keys [status title location date gig-id] :as gig}]
+(defn gig-row [{:gig/keys [status title location date end-date] :as gig}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
     [:a {:href (url/link-gig gig) :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
@@ -171,7 +171,9 @@
         location]
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 mt-0 ml-6 min-w-[8rem]"}
         (icon/calendar {:class style-icon})
-        (ui/datetime date)]]]]))
+        (if end-date
+          (ui/daterange date end-date)
+          (ui/datetime date))]]]]))
 
 (defn attendance-opts [tr size]
   (let [icon-class "mr-3 text-gray-400"
@@ -238,7 +240,12 @@
         comment (if post?
                   (-> (controller/update-attendance-comment! req gig-id) :attendance :attendance/comment)
                   comment)]
-    [:div {:id id :class ""}
+    [:div {:id id :class
+           ;; this css is relevant only for the gig-detail-page
+           ;; even thoough this function is reused by the dashboard page, the css doesn't do anything
+           ;; but could cause problems in the future
+           (ui/cs (when-not comment "col-start-0 col-span-1")
+                  (when comment "col-span-3 col-start-3 lg:col-start-0 lg:col-span-3"))}
      (if edit?
        (ui/text :name (path "comment") :value comment :required? false :size :small
                 :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
@@ -296,24 +303,17 @@
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)
         has-comment? (:attendance/comment attendance)]
     [:div {:id id}
-     ;; for mobile < sm
-     (clojure.core/comment
-       [:div {:class (ui/cs "sm:hidden grid grid-rows-auto  grid-cols-3")}
-        [:div {:class (ui/cs "grid gap-x-2 grid-cols-6 col-span-3")}
-         [:div {:class "col-span-2 align-middle"} [:a {:href (url/link-member gigo-key) :class "link-blue align-middle"} (ui/member-nick member)]]
-         [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
-         [:div {:class "col-span-2"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
-         (when-not has-comment? [:div {:class "col-span-1 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])]
-        (when has-comment?
-          [:div {:class "col-start-2 col-span-2 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)])])
-     ;; for > sm
      [:div {:class "grid grid-cols grid-cols-6 gap-x-2"}
-      [:div {:class "col-span-2 align-middle"}
+      [:div {:class "col-span-2 lg:col-span-1 align-middle"}
        [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
         (ui/member-nick member)]]
       [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
-      [:div {:class "col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
-      [:div {:class "col-span-2 break-words"} (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)]]]))
+      [:div {:class "col-span-2 lg:col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
+      ;; col-start-3 col-span-2 break-words
+      ;;;
+      (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)
+      ;; [:div {:class ""}]
+      ]]))
 
 (defn gig-attendance-person-archived [{:keys [db] :as req} idx attendance]
   (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
@@ -763,7 +763,7 @@
               [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
                (tr [:gig/gig-info])]]
              [:div {:class "border-t border-gray-200 px-4 py-5 sm:px-6"}
-              [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+              [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 grid-cols-2 sm:grid-cols-3"}
                (list
                 (ui/dl-item (tr [:gig/date])
                             (if end-date
@@ -817,14 +817,15 @@
          [:div {:class "px-4 py-5 sm:px-6 flex flex-row flex-items-center justify-between"}
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
            (tr [:gig/attendance])]
-          [:div
-           (ui/button :label (if show-committed?
-                               (tr [:gig/show-all])
-                               (tr [:gig/show-committed]))
-                      :size :xsmall
-                      :priority :primary
-                      :centered? true
-                      :attr  {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:show-committed? (not show-committed?)}})]]
+          (when-not archived?
+            [:div
+             (ui/button :label (if show-committed?
+                                 (tr [:gig/show-all])
+                                 (tr [:gig/show-committed]))
+                        :size :xsmall
+                        :priority :primary
+                        :centered? true
+                        :attr  {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:show-committed? (not show-committed?)}})])]
 
          [:div {:class "border-t border-gray-200"}
           (if archived?

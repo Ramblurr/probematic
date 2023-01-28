@@ -431,6 +431,9 @@
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db  (datomic/db conn))) ;; rcf
 
+  (def m0 (q/retrieve-member db "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICAu9bgmgoM"))
+  (gigs-needing-plan db m0)
+
   (q/plays-by-gig db "0185a673-9f36-8f74-b737-1b53a510398c")
 
   (q/gigs-after db (q/date-midnight-today!) q/gig-detail-pattern)
