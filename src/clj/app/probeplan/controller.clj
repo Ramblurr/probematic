@@ -1,6 +1,6 @@
 (ns app.probeplan.controller
   (:require
-   [app.gigs.controller :as gig.controller]
+   [app.gigs.service :as gig.service]
    [app.probeplan.domain :as domain]
    [app.queries :as q]
    [datomic.client.api :as datomic]
@@ -35,7 +35,7 @@
   (let [song-tuples (map probeplan-song-tx probeplan-probe-song-col-rw)
         current  (q/probeplan-song-tuples-for-gig db gig-id)
         tmpid (str "probeplan-" idx)
-        song-txs (gig.controller/reconcile-probeplan tmpid song-tuples current)
+        song-txs (gig.service/reconcile-probeplan tmpid song-tuples current)
 
         tx  {:probeplan/gig [:gig/gig-id gig-id]
              :db/id tmpid

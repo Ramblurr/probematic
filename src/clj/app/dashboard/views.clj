@@ -1,7 +1,7 @@
 (ns app.dashboard.views
   (:require [app.ui :as ui]
             [app.gigs.views :as gig.view]
-            [app.gigs.controller :as gig.controller]
+            [app.gigs.service :as gig.service]
             [app.i18n :as i18n]
             [app.icons :as icon]
             [ctmx.core :as ctmx]
@@ -71,8 +71,8 @@
 
 (ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db] :as req}]
   (let [member (auth/get-current-member req)
-        gigs-planned (gig.controller/gigs-planned-for db member)
-        need-answer-gigs (gig.controller/gigs-needing-plan db member)
+        gigs-planned (gig.service/gigs-planned-for db member)
+        need-answer-gigs (gig.service/gigs-needing-plan db member)
         offset 0
         limit 10
         ;; past-gigs (controller/gigs-past-two-weeks db)

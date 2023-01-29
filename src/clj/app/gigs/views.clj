@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [comment])
   (:require
    [app.auth :as auth]
-   [app.gigs.controller :as controller]
+   [app.gigs.service :as service]
    [app.gigs.domain :as domain]
    [app.i18n :as i18n]
    [app.icons :as icon]
@@ -135,12 +135,12 @@
         post? (util/post? req)]
     (if post?
       (do
-        (controller/log-play! req gig-id)
+        (service/log-play! req gig-id)
         (response/hx-redirect (url/link-gig gig-id)))
       (let [tr (i18n/tr-from-req req)
             gig (q/retrieve-gig db gig-id)
             plays (q/plays-by-gig db gig-id)
-            songs-not-played (controller/songs-not-played plays (q/find-all-songs db))
+            songs-not-played (service/songs-not-played plays (q/find-all-songs db))
             ;; our log-play component wants to have "plays" for every song
             ;; so we enrich the actual plays with stubs for the songs that were not played
             plays (sort-by #(-> % :played/song :song/title) (concat plays
@@ -223,7 +223,7 @@
         gig-id     (or gig-id (value "gig-id"))
         tr         (i18n/tr-from-req req)
         motivation (if post?
-                     (-> (controller/update-attendance-motivation! req gig-id) :attendance :attendance/motivation)
+                     (-> (service/update-attendance-motivation! req gig-id) :attendance :attendance/motivation)
                      motivation)]
     [:form {:id id :hx-target (hash ".")}
      [:input {:type :hidden :name (path "gig-id") :value gig-id}]
@@ -239,7 +239,7 @@
         gigo-key (or gigo-key (value "gigo-key"))
         gig-id (or gig-id (value "gig-id"))
         comment (if post?
-                  (-> (controller/update-attendance-comment! req gig-id) :attendance :attendance/comment)
+                  (-> (service/update-attendance-comment! req gig-id) :attendance :attendance/comment)
                   comment)]
     [:div {:id id :class
            ;; this css is relevant only for the gig-detail-page
@@ -273,7 +273,7 @@
         gig-id     (or gig-id (value "gig-id"))
         plan-kw (or
                  (if post?
-                   (-> (controller/update-attendance-plan! req gig-id) :attendance :attendance/plan)
+                   (-> (service/update-attendance-plan! req gig-id) :attendance :attendance/plan)
                    plan)
                  :plan/no-response)]
     [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
@@ -401,7 +401,7 @@
         archived?              (domain/gig-archived? gig)
         current-user           (auth/get-current-member req)
         tr                     (i18n/tr-from-req req)
-        {:gig/keys [comments]} (cond (util/post? req) (controller/post-comment! req)
+        {:gig/keys [comments]} (cond (util/post? req) (service/post-comment! req)
                                      :else            gig)]
     (comment-section current-user archived? id (comp-name) tr comments)))
 
@@ -482,7 +482,7 @@
         tr (i18n/tr-from-req req)
         song-ids (map util/ensure-uuid song-ids)
         songs (util/index-sort-by song-ids :song/song-id (if (util/post? req)
-                                                           (controller/update-setlist! req song-ids)
+                                                           (service/update-setlist! req song-ids)
                                                            (q/find-songs db song-ids)))
         selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
@@ -607,7 +607,7 @@
         tr (i18n/tr-from-req req)
         ;; archived? (domain/gig-archived? gig)
         songs (if (util/post? req)
-                (controller/update-probeplan! req (util/unwrap-params req))
+                (service/update-probeplan! req (util/unwrap-params req))
                 (q/probeplan-songs-for-gig db (-> req :path-params :gig/gig-id)))
         ;; selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)
         ]
@@ -637,7 +637,7 @@
 (ctmx/defcomponent ^:endpoint gig-delete [{:keys [db] :as req}]
   (when
    (util/delete? req)
-    (controller/delete-gig! req)
+    (service/delete-gig! req)
     (response/hx-redirect (url/link-gigs-home))))
 
 (declare gig-details-get)
@@ -770,7 +770,7 @@
            ]]]]]]]))
 (ctmx/defcomponent ^:endpoint  gig-details-edit-post [req]
   (when (util/post? req)
-    (let [{:keys [gig db-after]} (controller/update-gig! req)
+    (let [{:keys [gig db-after]} (service/update-gig! req)
           req (-> req (assoc :gig gig)
                   (assoc :db db-after))]
 
@@ -945,7 +945,7 @@
   (let [tr (i18n/tr-from-req req)
         comp-name (util/comp-namer #'gig-create-page)]
     (if (util/post? req)
-      (let [new-gig (:gig (controller/create-gig! req))]
+      (let [new-gig (:gig (service/create-gig! req))]
         (response/hx-redirect (url/link-gig new-gig)))
 
       [:form {:hx-post (comp-name) :class "space-y-8 divide-y divide-gray-200"}
@@ -955,7 +955,7 @@
   (let [future-gigs (q/gigs-future db)
         offset 0
         limit 20
-        past-gigs (controller/gigs-past-page db offset limit)
+        past-gigs (service/gigs-past-page db offset limit)
         tr (i18n/tr-from-req req)]
     [:div
      (ui/page-header :title (tr [:gigs/title])
@@ -988,7 +988,7 @@
 (defn gig-answer-link [req]
   (let [tr (i18n/tr-from-req req)
         logged-in? (-> req :session :session/member)
-        {:keys [gig]} (controller/update-attendance-from-link! req)]
+        {:keys [gig]} (service/update-attendance-from-link! req)]
     (if logged-in?
       (response/redirect (url/link-gig gig))
       (layout/centered-content req

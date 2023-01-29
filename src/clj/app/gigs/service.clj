@@ -1,4 +1,4 @@
-(ns app.gigs.controller
+(ns app.gigs.service
   (:refer-clojure :exclude [comment])
   (:require
    [app.auth :as auth]
