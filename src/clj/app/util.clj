@@ -7,8 +7,25 @@
    [medley.core :as m]
    [tick.core :as t])
   (:import
-   [java.net URLEncoder URLDecoder]
-   [java.security SecureRandom]))
+   (java.net URLDecoder URLEncoder)
+   (java.security SecureRandom)))
+
+(defmacro wrap-ctmx [req]
+  `(-> ~req
+       (assoc-in [:ctmx :hash] 'hash)
+       (assoc-in [:ctmx :path] 'path)
+       (assoc-in [:ctmx :id] 'id)
+       (assoc-in [:tr] (:tempura/tr ~req))))
+
+(defn hash [kw]
+  (str "#" (name kw)))
+
+(defn id [kw]
+  (name kw))
+
+(defmacro endpoint
+  [f]
+  `(-> ~f var meta :name str))
 
 (defn url-encode [v]
   (URLEncoder/encode v "UTF-8"))

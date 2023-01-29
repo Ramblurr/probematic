@@ -17,7 +17,7 @@
   (ctmx/make-routes
    "/{gig/gig-id}/"
    (fn [req]
-     (layout/app-shell req (view/gigs-detail-page req false)))))
+     (layout/app-shell req (view/gig-detail-page req false)))))
 
 (defn gig-create-route []
   (ctmx/make-routes
@@ -51,7 +51,7 @@
   (ctmx/make-routes
    "/{gig/gig-id}/"
    (fn [req]
-     (layout/app-shell req (view/gigs-detail-page req false)))))
+     (layout/app-shell req (view/gig-detail-page req false)))))
 
 (defn gigs-routes []
   ["" {:app.route/name :app/gigs}
