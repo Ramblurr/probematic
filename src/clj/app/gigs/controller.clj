@@ -246,7 +246,8 @@
 (defn transact-gig! [datomic-conn gig-txs gig-id]
   (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
     {:gig (q/retrieve-gig (:db-after result) gig-id)
-     :gig-before (q/retrieve-gig (:db-before result) gig-id)}))
+     :gig-before (q/retrieve-gig (:db-before result) gig-id)
+     :db-after (:db-after result)}))
 
 (defn post-comment! [{:keys [datomic-conn] :as req}]
   (let [{:keys [body]} (common/unwrap-params req)

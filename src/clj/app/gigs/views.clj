@@ -335,6 +335,7 @@
    [:div {:class "font-bold break-words"} (section-name-wrappable section)]
    [:div {:id id :class ""}
     (rt/map-indexed gig-attendance-person req (:members section))]])
+
 (ctmx/defcomponent ^:endpoint gig-attendance-archived [{:keys [db] :as req} idx section]
   [:div {:id id :class (ui/cs "grid grid-cols-3 gap-x-0 gap-y-8 mb-2 px-4 py-0 sm:px-6"
                               (when (= 0 (mod idx 2))
