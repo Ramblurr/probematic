@@ -52,7 +52,7 @@
   (s/schema
    [:map {:name :app.entity/probeplan-table-row}
     [:date ::s/date]
-    [:gig-id {:optional true} :string]
+    [:gig-id {:optional true} :uuid]
     [:fixed? :boolean]
     [:last-fixed? :boolean]
     [:num-gigs integer?]
@@ -86,7 +86,6 @@
 
         all-probes (concat fixed-probes future-probes)]
     (assert (every? (partial s/valid? ProbeplanTableRow) all-probes))
-
     all-probes))
 
 (def stat-weights {:song/days-since-performed 50
