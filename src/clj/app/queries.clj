@@ -1,14 +1,11 @@
 (ns app.queries
   (:require
-
    [app.datomic :as d]
    [app.gigs.domain :as gig.domain]
    [app.util :as util]
    [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]
-   [app.debug :as debug]
-   [app.queries :as q]))
+   [tick.core :as t]))
 
 (def section-pattern [:section/name :section/default? :section/position])
 
@@ -322,7 +319,7 @@
                                 true (util/isort-by #(-> % :attendance/member member-nick-or-name)))})))
                [])
        (map (fn [as]
-              (assoc as :section/position (-> (q/retrieve-section-by-name db (:section/name as))
+              (assoc as :section/position (-> (retrieve-section-by-name db (:section/name as))
                                               :section/position))))
        (sort-by :section/position)))
 

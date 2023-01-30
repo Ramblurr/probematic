@@ -6,6 +6,9 @@
    [medley.core :as m]
    [tick.core :as t]))
 
+(def MAX-INTENSIVE 2)
+(def MAX-SONGS 5)
+
 (def probeplan-versions #{:probeplan.version/classic})
 
 (def probeplan-classic-emphases #{:probeplan.emphasis/intensive :probeplan.emphasis/none})

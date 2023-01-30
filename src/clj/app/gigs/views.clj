@@ -512,7 +512,7 @@
       [:input {:type :hidden :name (str idx "_songs_position")  :value (or position "9999")}]
       [:input {:type :hidden :name (str idx "_songs_emphasis")  :value emphasis}]
       [:input {:type :checkbox :id this-song-id  :name (str idx "_songs_song-id") :value this-song-id
-               :data-maximum 5 :data-checkbox-limit true
+               :data-maximum probeplan.domain/MAX-SONGS :data-checkbox-limit true
                :_ "on click
                      if checkboxLimitReached()
                        halt the event
@@ -545,8 +545,16 @@
      title
      [:div  {:class "border-l-4  border-gray-200 ml-2 pl-2 mt-1 flex items-center space-x-3"}
       [:label  {:for id :class (ui/cs "icon-fist-punch cursor-pointer" (when checked? "intensiv--checked"))}
-       [:input {:type "checkbox" :class "sr-only" :name (path "emphasis") :id id
-                :_ "on change if I match <:checked/>
+       [:input {:type :checkbox :class "sr-only" :name (path "emphasis") :id id
+                :data-maximum probeplan.domain/MAX-INTENSIVE :data-checkbox-limit true
+                :_ "
+on click
+                     if checkboxLimitReached()
+                       halt the event
+                       then add .shake-horizontal to <p.probeplan-instruction/>
+                       then settle then remove .shake-horizontal from <p.probeplan-instruction/>
+end
+on change if I match <:checked/>
                                                 add .intensiv--checked to the closest parent <label/>
                                                 else
                                                 remove .intensiv--checked from the closest parent <label/>
@@ -565,7 +573,7 @@
     (ui/panel {:title (tr [:gig/probeplan]) :id "probeplan-container"
                :buttons (ui/button :class "pulse-delay" :label (tr [:action/done]) :priority :primary :form id)}
               [:form {:class "w-full" :hx-post (util/endpoint-path gigs-detail-page-probeplan) :hx-target "#probeplan-container" :id id}
-               [:p (tr [:gig/probeplan-sort])]
+               [:p {:class "probeplan-instruction mb-2 text-xl"} (tr [:gig/probeplan-sort])]
                [:div {:class "htmx-indicator pulsate"} (tr [:updating])]
                [:ul {:class "sortable p-0 m-0 grid grid-cols-1 gap-y-0 md:gap-x-2 max-w-sm"}
                 (rt/map-indexed gig-probeplan-sort-item req selected-songs)]])))

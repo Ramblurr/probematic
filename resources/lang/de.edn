@@ -165,8 +165,6 @@
   :end-time "Ende",
   :probe-info "Probeninfos",
   :call-time "Beginn",
-  :probeplan-sort
-  "als intensiv.Ziehen Sie die Songs in die Probeplan-Reihenfolge und markieren Sie ein Paar ",
   :play-log-subtitle
   "Hier kannst du aufnehmen, was bei diesem Gig/Probe gespielt wurde.",
   :title "Titel",

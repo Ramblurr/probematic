@@ -74,7 +74,7 @@
        :show-all "Show All"
        :show-committed "Show Committed"
        :play-log-subtitle "Here you can record what was played at this gig/probe."
-       :probeplan-sort "Drag the songs into probeplan order, and mark a couple as intensive."
+       :probeplan-sort "Drag the songs into probeplan order, and mark at most 2 as intensive."
        :probeplan "Probeplan"
        :probeplan-choose "Choose 5 songs."
        :create-probeplan "Make Probeplan"
