@@ -871,8 +871,8 @@
         gig? (#{:gig.type/gig} gig-type)
         scheduled-songs (when gig? (q/setlist-song-ids-for-gig db gig-id))
         attendances-by-section (if archived?
-                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendances-for-gig db gig-id) false)
-                                 (q/attendance-plans-by-section-for-gig db gig-id (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
+                                 (q/attendance-plans-by-section-for-gig db (q/attendances-for-gig db gig-id) false)
+                                 (q/attendance-plans-by-section-for-gig db (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
 
     [:div {:id (util/id :comp/gig-detail-page)}
      (gig-detail-info-section req (:gig req))

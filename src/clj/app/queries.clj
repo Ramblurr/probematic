@@ -1,11 +1,16 @@
 (ns app.queries
   (:require
+
    [app.datomic :as d]
    [app.gigs.domain :as gig.domain]
    [app.util :as util]
    [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.debug :as debug]
+   [app.queries :as q]))
+
+(def section-pattern [:section/name :section/default? :section/position])
 
 (def attendance-pattern [{:attendance/section [:section/name]}
                          {:attendance/member [:member/name :member/gigo-key :member/nick]}
@@ -115,6 +120,21 @@
 (def setlist-v1-pattern [{:setlist/gig [:gig/gig-id]}
                          :setlist/version
                          :setlist.v1/songs])
+
+(defn retrieve-sections [db]
+  (->>
+   (d/find-all db :section/name section-pattern)
+   (mapv first)
+   (sort-by :section/position)))
+
+(defn retrieve-active-sections [db]
+  (->>
+   (d/find-all-by db :section/active? true section-pattern)
+   (mapv first)
+   (sort-by :section/position)))
+
+(defn retrieve-section-by-name [db name]
+  (d/find-by db :section/name name section-pattern))
 
 (defn results->gigs [r]
   (->> r
@@ -290,7 +310,7 @@
 
 (defn attendance-plans-by-section-for-gig
   "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
-  [db gig-id attendance-for-gig committed-only?]
+  [db attendance-for-gig committed-only?]
   (->> attendance-for-gig
        (group-by :attendance/section)
        (reduce (fn [acc [k v]]
@@ -300,7 +320,11 @@
                               (cond->> v
                                 committed-only? (filter #(= :plan/definitely (:attendance/plan %)))
                                 true (util/isort-by #(-> % :attendance/member member-nick-or-name)))})))
-               [])))
+               [])
+       (map (fn [as]
+              (assoc as :section/position (-> (q/retrieve-section-by-name db (:section/name as))
+                                              :section/position))))
+       (sort-by :section/position)))
 
 (defn section-for-member [db gigo-key]
   (->
@@ -377,18 +401,6 @@
                 :position position
                 :emphasis emphasis}))
        (sort-by :position)))
-
-(defn all-sections [db]
-  (->>
-   (d/find-all db :section/name [:section/name :section/default? :section/position])
-   (mapv first)
-   (sort-by :section/position)))
-
-(defn active-sections [db]
-  (->>
-   (d/find-all-by db :section/active? true [:section/name :section/default? :section/position])
-   (mapv first)
-   (sort-by :section/position)))
 
 (defn sheet-music-by-song [db song-id]
   (->> (d/find-all-by db :sheet-music/song  [:song/song-id song-id] play-pattern)
