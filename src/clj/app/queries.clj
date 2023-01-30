@@ -39,7 +39,7 @@
 (def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location :gig/gigo-id
                          :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
                          :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans
-                         :gig/more-details :gig/gig-type
+                         :forum.topic/topic-id :gig/more-details :gig/gig-type
                          {:gig/comments [{:comment/author [:member/name :member/nick :member/member-id :member/avatar-template]}
                                          :comment/body :comment/comment-id :comment/created-at]}
                          {:gig/contact [:member/name :member/member-id :member/nick]}])

@@ -657,7 +657,7 @@ on change if I match <:checked/>
                                    more-details] :as gig}]
 
   [:form {:hx-post post-endpoint :class "space-y-8 divide-y divide-gray-200"}
-   [:div
+   [:div {:class "mb-8"}
     [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
      [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
       [:section
@@ -704,7 +704,7 @@ on change if I match <:checked/>
              (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3"))
            (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
            (ui/dl-item nil (ui/checkbox :label (tr [:gig/email-about-new?]) :id (path "notify?")) "sm:col-span-3")
-               ;;
+           ;;
            )]]
         [:div {:class "px-4 py-5 sm:px-6"}
          [:div {:class "flex justify-end space-x-4"}
@@ -714,7 +714,13 @@ on change if I match <:checked/>
           (ui/button :label (tr [:action/save])
                      :priority :primary
                      :centered? true
-                     :attr {:hx-target (hash ".")})]]]]]]]])
+                     :attr {:hx-target (hash ".")})]]]]]]
+
+    (ui/panel {:title "Advanced"}
+              [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+               (list
+                (ui/dl-item "Forum Topic ID"
+                            (ui/text  :name (path "topic-id") :required? false) "sm:col-span-2"))])]])
 
 (declare gig-details-edit-post)
 (declare gig-details-edit-form)
@@ -805,7 +811,7 @@ on change if I match <:checked/>
                               :hx-delete  gig-delete-endpoint :hx-target hx-target
                               :hx-confirm (tr [:action/confirm-delete-gig] [title])))]
 
-     [:div
+     [:div {:class "mb-8"}
       ;; page-header-full with buttons hidden on smallest screens
       [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 bg-white"}
        [:div {:class "flex items-center space-x-5 w-full sm:w-1/2"}
@@ -877,13 +883,20 @@ on change if I match <:checked/>
              )]]
           [:div {:class "px-4 py-5 sm:px-6"}
            [:div {:class "justify-stretch mt-6 flex flex-col space-y-4 space-y-4 sm:hidden"}
-            buttons]]]]]]])])
+            buttons]]]]]]
+      (ui/panel {:title "Advanced"}
+                [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+                 (list
+                  (ui/dl-item "Forum Topic ID"
+                              (ui/text  :name  "topic-id" :value (:forum.topic/topic-id gig) :required? false) "sm:col-span-2"))])])])
 
 (ctmx/defcomponent ^:endpoint  gig-detail-info-section-hxget [req]
   (gig-detail-info-section req (:gig req)))
 
 (defn discourse-comment-embed [{:keys [tr system] :as req} gig]
-  (when-let [topic-id (:id  (discourse/topic-for-gig system gig))]
+  (when-let [topic-id (:forum.topic/topic-id gig)
+             ;; (:id  (discourse/topic-for-gig system gig))
+             ]
     [:div {:class "divide-y divide-gray-200"}
      (comment-header tr)
      (list
@@ -956,7 +969,8 @@ on change if I match <:checked/>
   (if (util/post? req)
     (let [new-gig (:gig (service/create-gig! req))]
       (response/hx-redirect (url/link-gig new-gig)))
-    (gig-create-form {:path path :hash hash :tr tr :post-endpoiint (util/endpoint-path gig-create-page)
+    (gig-create-form {:path path :hash hash :tr tr
+                      :post-endpoint (util/endpoint-path gig-create-page)
                       :member-select-vals (q/members-for-select-active db)} nil)))
 
 ;;;; List Gigs

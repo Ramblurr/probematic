@@ -168,10 +168,11 @@
                               {:section/name "cabaret" :section/default? false}
                               {:section/name "violin" :section/default? false}
                               {:section/name "horn" :section/default? false}]})
-  (d/transact conn {:tx-data [{:db/ident :gig/gigo-plan-archive
-                               :db/doc "The textual representation of the plans from archived gigs imported from gigo"
+  (d/transact conn {:tx-data [{:db/ident :forum.topic/topic-id
+                               :db/doc "The topic id of the associated forum topic"
                                :db/valueType :db.type/string
                                :db/cardinality :db.cardinality/one}]})
+
   (defn rollback
     "Reassert retracted datoms and retract asserted datoms in a transaction,
   effectively \"undoing\" the transaction.

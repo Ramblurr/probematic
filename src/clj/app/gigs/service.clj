@@ -22,7 +22,8 @@
    [tick.core :as t]
    [app.jobs.gig-events :as gig.events]
    [app.debug :as debug]
-   [app.discourse :as discourse]))
+   [app.discourse :as discourse]
+   [clojure.set :as set]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -291,7 +292,8 @@
     [:outfit {:optional true} :string]
     [:more-details {:optional true} :string]
     [:setlist {:optional true} :string]
-    [:post-gig-plans {:optional true} :string]]))
+    [:post-gig-plans {:optional true} :string]
+    [:topic-id {:optional true} :string]]))
 
 (defn update-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (common/path-param-uuid! req :gig/gig-id)
@@ -303,6 +305,7 @@
     (if (s/valid? UpdateGig decoded)
       (let [tx (-> decoded
                    (common/ns-qualify-key :gig)
+                   (set/rename-keys {:gig/topic-id :forum.topic/topic-id})
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
                    (m/update-existing :gig/contact (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)]))
@@ -317,13 +320,15 @@
         params (-> req util/unwrap-params util/remove-empty-strings util/remove-nils (assoc :gig-id gig-id))
         notify? (:notify? params)
         decoded (util/remove-nils (s/decode UpdateGig params))
-        tx (-> decoded (common/ns-qualify-key :gig)
+        tx (-> decoded
+               (common/ns-qualify-key :gig)
+               (set/rename-keys {:topic-id :forum.topic/topic-id})
                (update :gig/status str->status)
                (update :gig/gig-type str->gig-type)
                (m/update-existing :gig/contact (fn [member-id] [:member/member-id member-id]))
                (domain/gig->db))]
     (let [result (transact-gig! datomic-conn [tx] gig-id)]
-      (gig.events/trigger-gig-created req notify? result)
+      (gig.events/trigger-gig-created req notify? gig-id)
       result)))
 
 (defn delete-gig! [{:keys [datomic-conn db] :as req}]

@@ -241,11 +241,11 @@ GO TO PROBEMATIC!!
                             {:title topic-title
                              :category_id category-id})}))))
 
-(defn new-thread-for-gig
+(defn new-thread-for-gig!
   "Creates a new topic for the gig, returns the topic id."
   [env gig]
   (let [gig-id (:gig/gig-id gig)]
-    (:id
+    (:topic_id
      (request! env
                {:method :post
                 :url "/posts.json"
@@ -256,6 +256,8 @@ GO TO PROBEMATIC!!
                               :external_id gig-id}}))))
 
 (defn summarize-attendance [gig {:keys [db]}]
+  (assert db)
+  (assert gig)
   (assoc gig :gig/attendance-summary
          (->> (q/attendances-for-gig db (:gig/gig-id gig))
               (remove #(nil? (:attendance/plan %)))
@@ -274,6 +276,9 @@ GO TO PROBEMATIC!!
 (defn upsert-thread-for-gig!
   "If a thread was created, returns the topic id, otherwise nil."
   [{:keys [env db] :as sys} gig-id]
+  (assert db)
+  (assert env)
+  (assert gig-id)
   (let [gig (-> (q/retrieve-gig db gig-id)
                 (summarize-attendance sys)
                 (planned-songs sys))
@@ -282,7 +287,9 @@ GO TO PROBEMATIC!!
       (do
         (update-topic-for-gig env gig topic)
         (update-post-for-gig env gig post-id))
-      (new-thread-for-gig env gig))))
+      (let [topic-id (str (new-thread-for-gig! env gig))]
+        (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
+                                                              :forum.topic/topic-id topic-id]]})))))
 
 (comment
 

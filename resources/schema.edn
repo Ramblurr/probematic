@@ -686,6 +686,11 @@
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :forum.topic/topic-id
+    :db/doc "The topic id of the associated forum topic"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
    ;;
    ]
 

@@ -62,7 +62,8 @@
     [:gig/setlist {:optional true :max 4096} :string]
     [:gig/description {:optional true :max 4096} :string]
     [:gig/post-gig-plans {:optional true :max 4096} :string]
-    [:gig/gigo-plan-archive  {:optional true :max 4096} :string]]))
+    [:gig/gigo-plan-archive  {:optional true :max 4096} :string]
+    [:forum.topic/topic-id {:optional true :max 30} :string]]))
 
 (def GigEntityFromGigo
   (s/schema
@@ -85,7 +86,8 @@
     [:gig/setlist {:optional true :max 4096} :string]
     [:gig/description {:optional true :max 4096} :string]
     [:gig/post-gig-plans {:optional true :max 4096} :string]
-    [:gig/gigo-plan-archive  {:optional true :max 4096} :string]]))
+    [:gig/gigo-plan-archive  {:optional true :max 4096} :string]
+    [:forum.topic/topic-id {:optional true :max 30} :string]]))
 
 (defn gig->db
   ([gig]
