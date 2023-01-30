@@ -1,4 +1,5 @@
 (ns app.util
+  (:refer-clojure :exclude [hash])
   (:require
    [clojure.pprint :as pprint]
    [clojure.string :as str]
@@ -9,23 +10,6 @@
   (:import
    (java.net URLDecoder URLEncoder)
    (java.security SecureRandom)))
-
-(defmacro wrap-ctmx [req]
-  `(-> ~req
-       (assoc-in [:ctmx :hash] 'hash)
-       (assoc-in [:ctmx :path] 'path)
-       (assoc-in [:ctmx :id] 'id)
-       (assoc-in [:tr] (:tempura/tr ~req))))
-
-(defn hash [kw]
-  (str "#" (name kw)))
-
-(defn id [kw]
-  (name kw))
-
-(defmacro endpoint
-  [f]
-  `(-> ~f var meta :name str))
 
 (defn url-encode [v]
   (URLEncoder/encode v "UTF-8"))
@@ -129,6 +113,16 @@
 (defn delete? [{:keys [request-method]}]
   (= :delete request-method))
 
+(defn make-get-request
+  "Returns a new GET request based on passed in request.
+    See: https://github.com/spookylukey/django-htmx-patterns/blob/master/view_restart.rst"
+  ([old-req]
+   (-> old-req
+       (assoc :request-method :get)))
+  ([old-req extra]
+   (-> (merge old-req extra)
+       (assoc :request-method :get))))
+
 (defn comp-namer [var]
   (fn
     ([]
@@ -138,6 +132,16 @@
 
 (defn comp-name [var]
   ((comp-namer var)))
+
+(defn hash [kw]
+  (str "#" (name kw)))
+
+(defn id [kw]
+  (name kw))
+
+(defmacro endpoint-path
+  [f]
+  `(-> ~f var meta :name str))
 
 (defn kw->str [kw]
   (when kw

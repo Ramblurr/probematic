@@ -54,7 +54,7 @@
      (partial tr (tr-opts param-langs) langs))))
 
 (defn tr-from-req [req]
-  (:tempura/tr req))
+  (:tr req))
 
 (defn parse-http-accept-header
   "Parses HTTP Accept header and returns sequence of [choice weight] pairs

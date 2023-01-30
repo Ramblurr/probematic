@@ -183,7 +183,7 @@
                     req (if tr
                           (assoc request
                                  :will-change-lang change-lang
-                                 :tempura/tr tr
+                                 :tr tr
                                  :tempura/accept-langs accepted
                                  :current-locale (keyword current-locale))
                           (assoc request
