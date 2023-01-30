@@ -41,7 +41,6 @@
   (exec-later handle-gig-details-edited req notify? (-> transact-result :gig :gig/gig-id) transact-result))
 
 (defn trigger-gig-edited [req gig-id edit-type]
-  (tap> {:edit-type edit-type :gig-id gig-id})
   (exec-later handle-gig-edited req gig-id edit-type))
 
 (defn trigger-gig-created [req notify? gig-id]

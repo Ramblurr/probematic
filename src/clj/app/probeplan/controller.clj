@@ -32,7 +32,8 @@
    (domain/str->play-emphasis emphasis)])
 
 (defn update-probeplan-tx [db idx {:keys  [date gig-id probeplan-probe-song-col-rw]}]
-  (let [song-tuples (map probeplan-song-tx probeplan-probe-song-col-rw)
+  (let [gig-id (util/ensure-uuid! gig-id)
+        song-tuples (map probeplan-song-tx probeplan-probe-song-col-rw)
         current  (q/probeplan-song-tuples-for-gig db gig-id)
         tmpid (str "probeplan-" idx)
         song-txs (gig.service/reconcile-probeplan tmpid song-tuples current)
