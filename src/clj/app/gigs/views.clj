@@ -140,7 +140,7 @@
       (let [tr (i18n/tr-from-req req)
             gig (q/retrieve-gig db gig-id)
             plays (q/plays-by-gig db gig-id)
-            songs-not-played (service/songs-not-played plays (q/find-all-songs db))
+            songs-not-played (q/songs-not-played plays (q/find-all-songs db))
             ;; our log-play component wants to have "plays" for every song
             ;; so we enrich the actual plays with stubs for the songs that were not played
             plays (sort-by #(-> % :played/song :song/title) (concat plays
@@ -634,12 +634,6 @@
                  :buttons (ui/button :tag :a :label "Edit" :priority :white :attr {:href (url/link-probeplan-home) :hx-boost true})}
                 [:div {:class "max-w-lg"}])))
 
-(ctmx/defcomponent ^:endpoint gig-delete [{:keys [db] :as req}]
-  (when
-   (util/delete? req)
-    (service/delete-gig! req)
-    (response/hx-redirect (url/link-gigs-home))))
-
 (declare gig-details-get)
 (declare gig-detail-page)
 
@@ -789,7 +783,7 @@
          member-select-vals (q/members-for-select-active (:db req))
          hx-target  (util/hash :comp/gig-details-edit-form)
          gig-detail-page-endpoint (util/endpoint gig-detail-page)
-         gig-delete-endpoint (util/endpoint gig-delete)]
+         gig-delete-endpoint  nil #_(util/endpoint endpoints/gig-delete)]
 
      [:div
       ;; page-header-full with buttons hidden on smallest screens
@@ -890,11 +884,8 @@
                        :centered? true
                        :attr {:hx-target hx-target})]]]]]]])])
 
-(ctmx/defcomponent ^:endpoint  gig-details-get [req]
-  (gigs-detail-page-info-ro req (:gig req)))
-
-(ctmx/defcomponent ^:endpoint gig-detail-page [{:tempura/keys [tr] :keys [db] :as req} ^:boolean show-committed?]
-  gig-details-edit-form gig-delete gig-details-edit-post gig-details-get
+(defn gig-detail-page [{:tempura/keys [tr] :keys [db] :as req} ^:boolean show-committed?]
+  ;; gig-details-edit-form #_endpoints/gig-delete gig-details-edit-post gig-details-get
   (let [{:gig/keys [gig-id gig-type] :as gig} (:gig req)
         comp-name (util/comp-namer #'gig-detail-page)
         archived? (domain/gig-archived? gig)

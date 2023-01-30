@@ -1,12 +1,20 @@
 (ns app.urls
   (:import [java.net URLEncoder])
   (:require [app.config :as config]
-            [clojure.string :as str]
-            [app.auth :as auth]))
+            [reitit.core :as r]
+            [app.debug :as debug]))
 
 (defn link-helper
   ([prefix id-key maybe-id]
    (link-helper prefix id-key maybe-id "/"))
+  ([prefix id-key maybe-id suffix]
+   (let [maybe-id-id (if (map? maybe-id) (id-key maybe-id)
+                         maybe-id)]
+     (str prefix maybe-id-id suffix))))
+
+(defn link-helper-new
+  ([prefix id-key maybe-id]
+   (link-helper prefix id-key maybe-id ""))
   ([prefix id-key maybe-id suffix]
    (let [maybe-id-id (if (map? maybe-id) (id-key maybe-id)
                          maybe-id)]
@@ -19,6 +27,7 @@
 (def link-member (partial link-helper "/member/" :member/gigo-key))
 
 (def link-gig (partial link-helper "/gig/" :gig/gig-id))
+(def link-gig-new (partial link-helper-new "/gig/" :gig/gig-id))
 (def link-song (partial link-helper "/song/" :song/song-id))
 
 (def link-policy (partial link-helper "/insurance/" :insurance.policy/policy-id))
@@ -46,6 +55,29 @@
 
 (defn link-logout [] "/logout")
 (defn link-login [] "/login")
+
+(defn throw-on-missing-match [match name]
+  (if match
+    match
+    (throw (ex-info (format "No such route named %s" name) {:name name}))))
+
+(defn endpoint-route
+  ([router name]
+   (r/match-by-name! router name))
+  ([router name data]
+   (r/match-by-name! router name data)))
+
+(defn endpoint-path
+  ([req name]
+   (-> (-> req :system :routes :router)
+       (r/match-by-name! name)
+       (throw-on-missing-match name)
+       (r/match->path)))
+  ([req name data]
+   (-> (-> req :system :routes :router)
+       (r/match-by-name! name data)
+       (throw-on-missing-match name)
+       (r/match->path))))
 
 (comment
   ;;

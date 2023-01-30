@@ -69,6 +69,9 @@
       (body-end)]
      (when js [:script {:src (str "/js" js)}])))))
 
+(defn snippet-response [body]
+  (ctmx.render/snippet-response body))
+
 (defn post-login-client-side-redirect
   "When using a SameSite=strict session cookie, after the OAUTH2 login the session cookie will not be sent. We need to interrupt the server-side redirect
   with this client side redirect to trigger the SameSite=strict allow policy so the session cookie will be sent."

@@ -222,6 +222,14 @@
     (filter #((set song-ids) (:song/song-id %))
             (find-all-songs db))))
 
+(defn songs-not-played
+  [plays all-songs]
+  (->> all-songs
+       (remove (fn [song]
+                 (->> plays
+                      (map #(-> % :played/song :song/song-id))
+                      (some (fn [p] (= p (:song/song-id song)))))))))
+
 (defn active-members-by-section [db]
   (->>
    (datomic/q '[:find (pull ?section pattern)

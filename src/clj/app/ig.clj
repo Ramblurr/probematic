@@ -23,7 +23,8 @@
    [reitit.pedestal :as pedestal]
    [sentry-clj.core :as sentry]
    [app.sardine :as sardine]
-   [app.auth :as auth]))
+   [app.auth :as auth]
+   [app.debug :as debug]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
 (alter-var-root #'ctmx.render/html (constantly
@@ -40,7 +41,9 @@
 
 (defmethod ig/init-key :app.ig.router/routes
   [_ system]
-  (routes/routes system))
+  (let [routes (routes/routes system)]
+    {:routes  routes
+     :router  (http/router routes)}))
 
 (defmethod ig/init-key :app.ig.jobs/definitions
   [_ {:keys [env] :as system}]
@@ -61,14 +64,15 @@
                                                                                                    (-> env :max-header-size))})
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
-      true (interceptors/with-default-interceptors system)
-                 ;; swap in the reitit router
-      true (pedestal/replace-last-interceptor
-            (pedestal/routing-interceptor
-             (http/router routes)
-             handler))
-      ;; (config/dev-mode? env) interceptors/prone-exception-interceptor
+      true (interceptors/with-default-pedestal-interceptors system)
+      true (interceptors/with-interceptor
+             (pedestal/routing-interceptor
+              (:router routes)
+             ;; (http/router routes)
+              handler))
       (config/dev-mode? env) (server/dev-interceptors)
+      true (debug/xxx)
+      ;; (config/dev-mode? env) interceptors/prone-exception-interceptor
       true (server/create-server)
       true (server/start))))
 

@@ -17,12 +17,16 @@
    [io.pedestal.interceptor.error :as error-int]
    [luminus-transit.time :as time]
    [muuntaja.core :as m]
+   [io.pedestal.http :as http]
+
+   [io.pedestal.interceptor :as pedestal.interceptor]
    [reitit.coercion.malli :as rcm]
    [reitit.http.coercion :as coercion]
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
-   [ring.middleware.keyword-params :as keyword-params])
+   [ring.middleware.keyword-params :as keyword-params]
+   [app.debug :as debug])
   (:import
    (org.eclipse.jetty.server HttpConfiguration)))
 
@@ -233,8 +237,12 @@
 (defn log-diffs [previous current]
   (let [[deleted added] (diff/diff (dissoc previous ::chain/queue ::chain/stack ::previous-ctx)
                                    (dissoc current ::chain/queue ::chain/stack ::previous-ctx))]
-    (when deleted (log/debug :deleted deleted))
-    (when added (log/debug :added added))))
+    (when deleted
+      (tap> {:deleted deleted})
+      (log/debug :deleted deleted))
+    (when added
+      (tap> {:added added})
+      (log/debug :added added))))
 
 (defn handle-debug [ctx]
   (log-diffs (::previous-ctx ctx) ctx)
@@ -261,12 +269,12 @@
                       seq
                       (interleave (repeat debug-interceptor)))))))})
 
-(defn default-interceptors [system]
+(defn default-reitit-interceptors [system]
   (into [] (remove nil?
-                   [human-id-interceptor
+                   [;; inject-debug-interceptor
+                    human-id-interceptor
                     (i18n-interceptor system)
                     log-request-interceptor
-                    service-error-handler
                     #_(cond (config/demo-mode? (:env system))
                             auth/demo-auth-interceptor
                             ;; (config/dev-mode? (:env system))
@@ -274,8 +282,7 @@
                             :else (auth/auth-interceptor (-> system :env :authorization :cert-filename)
                                                          (-> system :env :authorization :known-roles)))
 
-                    dev-mode-interceptor
-                    middlewares/cookies
+                    ;; dev-mode-interceptor
                     ;; query-params & form-params
                     (parameters/parameters-interceptor)
                     ;; content-negotiation
@@ -296,5 +303,11 @@
                     ;; multipart
                     (multipart/multipart-interceptor)])))
 
-(defn with-default-interceptors [service system]
-  (update-in service [:io.pedestal.http/interceptors] conj (default-interceptors system)))
+(defn with-default-pedestal-interceptors [service system]
+  (update-in service [::http/interceptors] conj
+             service-error-handler
+             middlewares/cookies
+             (pedestal.interceptor/interceptor (system-interceptor system))))
+
+(defn with-interceptor [service interceptor]
+  (update-in service [::http/interceptors] conj interceptor))

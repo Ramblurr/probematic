@@ -122,13 +122,6 @@
         then (t/<< now (t/new-duration 14 :days))]
     (q/gigs-between db then now)))
 
-(defn songs-not-played [plays all-songs]
-  (->> all-songs
-       (remove (fn [song]
-                 (->> plays
-                      (map #(-> % :played/song :song/song-id))
-                      (some (fn [p] (= p (:song/song-id song)))))))))
-
 (defn get-attendance
   ([db gig-id gigo-key]
    (get-attendance db (q/gig+member gig-id gigo-key)))
@@ -418,6 +411,7 @@
                                   (assoc play :intensive "play-emphasis/durch")
                                   play))))
         tx-data (map #(upsert-log-play-tx gig-id %) play-params)
+        _ (tap> {:tx-data tx-data :pp play-params})
         result (d/transact datomic-conn {:tx-data tx-data})]
     (if (d/db-ok? result)
       (do
