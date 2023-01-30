@@ -12,10 +12,11 @@
    [ol.app.dev.dev-extras :as dev-extra]
    [ol.system :as system]
    [app.queries :as q]
-   [jsonista.core :as json]))
+   [jsonista.core :as json]
+   [com.yetanalytics.squuid :as sq]))
 
-(repl/disable-reload! (find-ns 'browser))
-(repl/disable-reload! *ns*)
+;; (repl/disable-reload! (find-ns 'browser))
+;; (repl/disable-reload! *ns*)
 
 (set! *print-namespace-maps* false)
 
@@ -73,6 +74,7 @@
     (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic/gigo-members.json") j/keyword-keys-object-mapper)
           tx-data (map (fn [{:keys [gigo_key email nick name section occ]}]
                          {:member/gigo-key (str/trim gigo_key)
+                          :member/member-id (sq/generate-squuid)
                           :member/email (str/trim email)
                           :member/nick (str/trim nick)
                           :member/name (str/trim name)

@@ -87,17 +87,6 @@
     [:gig/post-gig-plans {:optional true :max 4096} :string]
     [:gig/gigo-plan-archive  {:optional true :max 4096} :string]]))
 
-(clojure.core/comment
-  (def _gig {:gig/gig-id "A" :gig/title "Title" :gig/status :gig.status/cancelled :gig/date (t/date) :gig/gig-type :gig.type/probe
-             :gig/location "PR" :gig/call-time (t/time "03:00") :gig/set-time (t/time "14:23")
-             :gig/contact [:member/gigo-key "Foobar"]})
-
-  (s/valid? GigEntity _gig)
-  (s/explain-human GigEntity _gig)
-  (s/decode-datomic GigEntity
-                    (s/encode-datomic GigEntity _gig))
-  ;;
-  )
 (defn gig->db
   ([gig]
    (gig->db GigEntity gig))

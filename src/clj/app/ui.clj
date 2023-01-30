@@ -446,7 +446,7 @@
          (if with-empty-opt?
            [{:value "" :label " - "}] [])
          (->> members
-              (map (fn [m] {:value (:member/gigo-key m) :label (member-nick m)}))
+              (map (fn [m] {:value (:member/member-id m) :label (member-nick m)}))
               (sort-by :label)))]
     (condp = variant
       :inline (select :id id

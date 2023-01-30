@@ -202,7 +202,7 @@
   [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
    (icon {:class  icon-class}) label])
 
-(defn attendance-dropdown [& {:keys [gigo-key gig-id value tr]
+(defn attendance-dropdown [& {:keys [member-id gig-id value tr]
                               :or {value "no-response"}}]
   (let [{:keys [opts default]} (attendance-opts tr :large)
         current-opt (or (m/find-first #(= value (:value %)) (:opts (attendance-opts tr :small))) default)
@@ -211,7 +211,7 @@
     [:div {:class "dropdown relative inline-block text-left"}
      [:div
       [:button {:type "button" :class (ui/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100 min-h-[25px]")  :aria-expanded "true", :aria-haspopup "true"}
-       [:input {:type "hidden" :name "gigo-key" :value gigo-key}]
+       [:input {:type "hidden" :name "member-id" :value member-id}]
        [:input {:type "hidden" :name "gig-id" :value gig-id}]
        [:input {:type "hidden" :name "plan" :value (:value current-opt) :class "item-input"}]
        [:span {:class "item-icon"}
@@ -226,25 +226,25 @@
        [:div {:class "py-1" :role "none"}
         (map attendance-dropdown-opt  opts)]]]]))
 
-(defn motivation-endpoint [{:keys [tr] :as req} {:keys [path id hash value]} comp-name gig-id gigo-key motivation]
+(defn motivation-endpoint [{:keys [tr] :as req} {:keys [id hash value]} comp-name gig-id member-id motivation]
   (let [post?      (util/post? req)
-        gigo-key   (or gigo-key (value "gigo-key"))
+        member-id   (or member-id (value "member-id"))
         gig-id     (or gig-id (value "gig-id"))
         motivation (if post?
                      (-> (service/update-attendance-motivation! req gig-id) :attendance :attendance/motivation)
                      motivation)]
     [:form {:id id :hx-target (hash ".")}
-     [:input {:type :hidden :name (path "gig-id") :value gig-id}]
+     [:input {:type :hidden :name  "gig-id" :value gig-id}]
      (ui/select
-      :id (path "motivation")
+      :id  "motivation"
       :value (when motivation (name motivation))
       :size :small
-      :extra-attrs {:hx-trigger "change" :hx-post (comp-name) :hx-vals (ui/hx-vals {(path "gigo-key") gigo-key})}
+      :extra-attrs {:hx-trigger "change" :hx-post (comp-name) :hx-vals (ui/hx-vals {"member-id" member-id})}
       :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/motivations))]))
 
-(defn comment-endpoint [req {:keys [path id hash value]} comp-name gig-id gigo-key comment edit?]
+(defn comment-endpoint [req {:keys [id hash value]} comp-name gig-id member-id comment edit?]
   (let [post? (util/post? req)
-        gigo-key (or gigo-key (value "gigo-key"))
+        member-id (or member-id (value "member-id"))
         gig-id (or gig-id (value "gig-id"))
         comment (if post?
                   (-> (service/update-attendance-comment! req gig-id) :attendance :attendance/comment)
@@ -256,9 +256,9 @@
            (ui/cs (when-not comment "col-start-0 col-span-1")
                   (when comment "col-span-3 col-start-3 lg:col-start-0 lg:col-span-3"))}
      (if edit?
-       (ui/text :name (path "comment") :value comment :required? false :size :small
+       (ui/text :name "comment" :value comment :required? false :size :small
                 :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
-                              :hx-vals {(path "gigo-key") gigo-key (path "gig-id") (str gig-id)}
+                              :hx-vals {"member-id" (str member-id) "gig-id" (str gig-id)}
                               :_ "on focus or htmx:afterRequest or load
                                           set :initial_value to my value
                                         end
@@ -267,16 +267,16 @@
                                           blur() me
                                         end"})
 
-       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gig-id (str gig-id) :gigo-key gigo-key :comment comment :edit? true}}]
+       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gig-id (str gig-id) :member-id (str member-id) :comment comment :edit? true}}]
          (if comment
            [:span (merge hx-attrs {:class "text-xs sm:text-sm ml-2 link-blue"})
             comment]
            [:button  hx-attrs
             (icon/comment-outline {:class "ml-2 mb-2 w-5 h-5 cursor-pointer hover:text-blue-500 active:text-blue-300"})])))]))
 
-(defn plan-endpoint [{:keys  [tr] :as  req} {:keys [id  value]} comp-name gig-id gigo-key plan]
+(defn plan-endpoint [{:keys  [tr] :as  req} {:keys [id  value]} comp-name gig-id member-id plan]
   (let [post? (util/post? req)
-        gigo-key   (or gigo-key (value "gigo-key"))
+        member-id   (or member-id (value "member-id"))
         gig-id     (or gig-id (value "gig-id"))
         plan-kw (or
                  (if post?
@@ -284,50 +284,53 @@
                    plan)
                  :plan/no-response)]
     [:form {:hx-post (comp-name) :id id :hx-trigger "planChanged"} ;; this form is triggered by javascript
-     (attendance-dropdown :tr tr :gig-id gig-id :gigo-key gigo-key :value (name plan-kw))]))
+     (attendance-dropdown :tr tr :gig-id gig-id :member-id member-id :value (name plan-kw))]))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} gigo-key plan]
+(ctmx/defcomponent ^:endpoint gig-attendance-person-plan [{:keys [db] :as req} member-id plan]
   (plan-endpoint req
                  {:path path :id id :hash hash :value value}
                  (util/comp-namer #'gig-attendance-person-plan)
                  (gig-id-from-path req)
-                 gigo-key plan))
+                 (util/ensure-uuid! member-id)
+                 plan))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment  ^:boolean edit?]
+(ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} member-id comment  ^:boolean edit?]
   (comment-endpoint req
                     {:path path :id id :hash hash :value value}
                     (util/comp-namer #'gig-attendance-person-comment)
                     (gig-id-from-path req)
-                    gigo-key comment edit?))
+                    (util/ensure-uuid! member-id)
+                    comment edit?))
 
-(ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [{:keys [db] :as req} gigo-key motivation]
+(ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [{:keys [db] :as req} member-id motivation]
   (motivation-endpoint req
                        {:path path :id id :hash hash :value value}
                        (util/comp-namer #'gig-attendance-person-motivation)
                        (gig-id-from-path req)
-                       gigo-key motivation))
+                       (util/ensure-uuid! member-id)
+                       motivation))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
-  (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)
+  (let [{:member/keys [member-id] :as member} (:attendance/member attendance)
         has-comment? (:attendance/comment attendance)]
     [:div {:id id}
      [:div {:class "grid grid-cols grid-cols-6 gap-x-2"}
       [:div {:class "col-span-2 lg:col-span-1 align-middle"}
-       [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
+       [:a {:href (url/link-member member-id) :class "text-blue-500 hover:text-blue-600 align-middle"}
         (ui/member-nick member)]]
-      [:div {:class "col-span-1"} (gig-attendance-person-plan req gigo-key (:attendance/plan attendance))]
-      [:div {:class "col-span-2 lg:col-span-1"} (gig-attendance-person-motivation req gigo-key (:attendance/motivation attendance))]
+      [:div {:class "col-span-1"} (gig-attendance-person-plan req member-id (:attendance/plan attendance))]
+      [:div {:class "col-span-2 lg:col-span-1"} (gig-attendance-person-motivation req member-id (:attendance/motivation attendance))]
       ;; col-start-3 col-span-2 break-words
       ;;;
-      (gig-attendance-person-comment req gigo-key (:attendance/comment attendance) false)
+      (gig-attendance-person-comment req member-id (:attendance/comment attendance) false)
       ;; [:div {:class ""}]
       ]]))
 
 (defn gig-attendance-person-archived [{:keys [db] :as req} idx attendance]
-  (let [{:member/keys [gigo-key] :as member} (:attendance/member attendance)]
+  (let [{:member/keys [member-id] :as member} (:attendance/member attendance)]
     [:div {:class "grid grid-cols grid-cols-5"}
      [:div {:class "col-span-2 align-middle"}
-      [:a {:href (url/link-member gigo-key) :class "text-blue-500 hover:text-blue-600 align-middle"}
+      [:a {:href (url/link-member member-id) :class "text-blue-500 hover:text-blue-600 align-middle"}
        (ui/member-nick member)]]
      [:div {:class "col-span-1"} (:attendance/plan attendance)]
      [:div {:class "col-span-1"} (:attendance/motivation attendance)]
@@ -459,7 +462,7 @@
                         title]) songs)]])))
 
 (defn gigs-detail-page-setlist-list-ro [selected-songs]
-  [:ul {:class "list-disc" :hx-boost true}
+  [:ul {:class "list-disc" :hx-boost "true"}
    (map (fn [{:song/keys [title solo-count] :as song}]
           [:li {:class "ml-4"}
            [:a {:href (url/link-song song) :class "link-blue"}
@@ -584,7 +587,7 @@ on change if I match <:checked/>
                 (rt/map-indexed gig-probeplan-sort-item req selected-songs)]])))
 
 (defn gigs-detail-page-probeplan-list-ro [selected-songs]
-  [:div {:class "mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2" :hx-boost true}
+  [:div {:class "mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2" :hx-boost "true"}
    (map (fn [{:song/keys [title] :keys [emphasis] :as song}]
           (let [intensive? (= emphasis :probeplan.emphasis/intensive)]
             [:div {:class
@@ -595,7 +598,7 @@ on change if I match <:checked/>
                [:div {:class "flex-shrink-0"}
                 (icon/fist-punch {:class "h-10 w-10 text-purple-600"})])
              [:div {:class "min-w-0 flex-1"}
-              [:a {:href (url/link-song song) :class "focus:outline-none"  :hx-boost true}
+              [:a {:href (url/link-song song) :class "focus:outline-none"  :hx-boost "true"}
                [:span {:class "absolute inset-0" :aria-hidden "true"}]
                [:p {:class "text-sm font-medium text-gray-900"} title]
                [:p {:class "truncate text-sm text-gray-500"} "Last Played: never"]]]]))
@@ -635,11 +638,7 @@ on change if I match <:checked/>
                    (ui/button :label (tr [:gig/create-probeplan]) :priority :primary :icon icon/plus
                               :attr {:hx-get (util/endpoint-path gig-probeplan-choose-songs)
                                      :hx-target target})]]
-                 (gigs-detail-page-probeplan-list-ro songs))])
-     ;;;
-    #_(ui/panel {:title (tr [:gig/probeplan])
-                 :buttons (ui/button :tag :a :label "Edit" :priority :white :attr {:href (url/link-probeplan-home) :hx-boost true})}
-                [:div {:class "max-w-lg"}])))
+                 (gigs-detail-page-probeplan-list-ro songs))])))
 
 (ctmx/defcomponent ^:endpoint gig-delete [{:keys [db] :as req}]
   (when
@@ -685,7 +684,7 @@ on change if I match <:checked/>
                          :required? true
                          :options (concat [{:label "-" :value ""}]
                                           (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))))
-           (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id (path "contact") :members member-select-vals :with-empty-opt? true))
+           (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/member-id contact) :label "" :id (path "contact") :members member-select-vals :with-empty-opt? true))
            (ui/dl-item (tr [:gig/location]) (ui/text :value location :name (path "location")))
            (ui/dl-item (tr [:gig/date])
                        (ui/date :value date :name (path "date") :required? true :min (str (t/date))))
@@ -710,7 +709,7 @@ on change if I match <:checked/>
          [:div {:class "flex justify-end space-x-4"}
           (ui/link-button :label (tr [:action/cancel])
                           :priority :white :centered? true
-                          :attr {:href (url/link-gigs-home) :hx-boost true})
+                          :attr {:href (url/link-gigs-home) :hx-boost "true"})
           (ui/button :label (tr [:action/save])
                      :priority :primary
                      :centered? true
@@ -859,7 +858,7 @@ on change if I match <:checked/>
                          (if (nil? gig)
                            (ui/date :value end-date :name "end-date" :required? false :min (str (t/tomorrow)))
                            (ui/date :value end-date :name "end-date" :required? false)))
-             (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/gigo-key contact) :label "" :id  "contact" :members member-select-vals :with-empty-opt? true))
+             (ui/dl-item (tr [:gig/contact]) (ui/member-select :value (:member/member-id contact) :label "" :id  "contact" :members member-select-vals :with-empty-opt? true))
              (ui/dl-item (tr [:gig/call-time]) (ui/input-time :value call-time :name  "call-time" :required? true))
              (ui/dl-item (tr [:gig/set-time]) (ui/input-time :value set-time :name  "set-time" :required? false))
              (ui/dl-item (tr [:gig/end-time]) (ui/input-time :value end-time :name  "end-time" :required? false))
@@ -910,7 +909,6 @@ on change if I match <:checked/>
         probe? (#{:gig.type/probe :gig.type/extra-probe} gig-type)
         gig? (#{:gig.type/gig} gig-type)
         scheduled-songs (when gig? (q/setlist-song-ids-for-gig db gig-id))
-        _ (tap> {:gig-id (:gig req)})
         attendances-by-section (if archived?
                                  (q/attendance-plans-by-section-for-gig db (q/attendances-for-gig db gig-id) false)
                                  (q/attendance-plans-by-section-for-gig db (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
@@ -971,7 +969,7 @@ on change if I match <:checked/>
                                 (ui/button :tag :a :label (tr [:action/create])
                                            :priority :primary
                                            :centered? true
-                                           :attr {:hx-boost true :href (url/link-gig-create)} :icon icon/plus)))
+                                           :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
 
      [:div {:class "mt-6 px-4 sm:px-6 md:px-8 md:flex md:flex-row md:space-x-4"}
       [:div {:class "max-w-lg"}

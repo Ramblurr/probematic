@@ -51,7 +51,7 @@
 
 (defn match-members [members kc]
   (let [users (list-users kc)
-        all (for [{:member/keys [email username gigo-key] :as m} members]
+        all (for [{:member/keys [email username member-id] :as m} members]
               (if-let [matched-user (m/find-first #(= email  (:user/email %)) users)]
                 (-> m
                     (assoc :member/keycloak-id  (:user/user-id matched-user))
@@ -65,13 +65,13 @@
 
 (defn match-txs [matches]
   (mapcat (fn [m]
-            [[:db/add [:member/gigo-key (:member/gigo-key m)] :member/keycloak-id (:member/keycloak-id m)]
-             [:db/add [:member/gigo-key (:member/gigo-key m)] :member/username (:member/username m)]])
+            [[:db/add [:member/member-id (:member/member-id m)] :member/keycloak-id (:member/keycloak-id m)]
+             [:db/add [:member/member-id (:member/member-id m)] :member/username (:member/username m)]])
           matches))
 
 (defn find-members-matches [{:keys [db kc]}]
   (->
-   (->> (d/find-all db :member/gigo-key q/member-pattern)
+   (->> (d/find-all db :member/member-id q/member-pattern)
         (mapv #(first %)))
    (match-members  kc)
    :matched

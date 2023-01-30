@@ -16,7 +16,7 @@
   [string]
   (some-> string str (URLEncoder/encode "UTF-8") (.replace "+" "%20")))
 
-(def link-member (partial link-helper "/member/" :member/gigo-key))
+(def link-member (partial link-helper "/member/" :member/member-id))
 
 (def link-gig (partial link-helper "/gig/" :gig/gig-id))
 (def link-song (partial link-helper "/song/" :song/song-id))

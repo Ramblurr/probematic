@@ -16,5 +16,5 @@
 (defn routes []
   ["" {:app.route/name :app/dashboard
        :app.auth/roles #{:Mitglieder}
-       :interceptors [auth/roles-authorization-interceptor gig.routes/gigs-interceptors]}
+       :interceptors [auth/roles-authorization-interceptor]}
    (dashboard-route)])

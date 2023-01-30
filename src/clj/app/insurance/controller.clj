@@ -256,12 +256,12 @@
       {:policy (retrieve-policy (:db-after result) policy-id)}
       result)))
 
-(defn upsert-instrument! [conn {:keys [owner-gigo-key category-id
+(defn upsert-instrument! [conn {:keys [owner-member-id category-id
                                        name make model build-year
                                        instrument-id
                                        serial-number]}]
   (let [tx-data [(util/remove-nils {:instrument/instrument-id (or  instrument-id (sq/generate-squuid))
-                                    :instrument/owner [:member/gigo-key owner-gigo-key]
+                                    :instrument/owner [:member/member-id owner-member-id]
                                     :instrument/category [:instrument.category/category-id category-id]
                                     :instrument/name name
                                     :instrument/make make
@@ -440,12 +440,12 @@
                       [:instrument.category/category-id :instrument.category/name])
            :instrument.category/category-id))
 
-  (d/find-all db :member/name [:member/gigo-key])
+  (d/find-all db :member/name [:member/member-id])
 
   (def casey-ref
     (d/ref
-     (d/find-by db :member/name "Casey Link" [:member/gigo-key])
-     :member/gigo-key))
+     (d/find-by db :member/name "Casey Link" [:member/member-id])
+     :member/member-id))
 
   (d/transact conn {:tx-data [{:instrument/owner casey-ref
                                :instrument/category category-blech-ref

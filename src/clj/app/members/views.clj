@@ -11,7 +11,8 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.queries :as q]))
 
 (defn member-table-headers [tr members]
   [{:label (tr [:member/name]) :priority :normal :key :name
@@ -28,10 +29,6 @@
    {:label (tr [:Active]) :priority :medium :key :value}
    ;;
    ])
-
-(defn member-by-id [req gigo-key]
-  (m/find-first #(= gigo-key (:member/gigo-key %)) (:members req)))
-
 (ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}  ^:boolean edit?]
   (let [comp-name (util/comp-namer #'members-detail-page)
         post? (util/post? req)
@@ -128,12 +125,12 @@
                  (ui/dl-item (tr [:member/gigs-attended]) "coming soon")
                  (ui/dl-item (tr [:member/probes-attended]) "coming soon")))]]))
 
-(ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx gigo-key]
+(ctmx/defcomponent ^:endpoint member-row-rw [{:keys [db] :as req} ^:long idx member-id]
   (let [td-class "px-3 py-4"
         comp-name  (util/comp-namer #'member-row-rw)
         member (cond
                  (util/post? req) (:member (controller/update-active-and-section! req))
-                 :else (member-by-id req gigo-key))
+                 :else (q/retrieve-member db member-id))
         {:member/keys [name email active? phone section]} member
         sections (controller/sections db)
         section-name (:section/name section)]
@@ -147,7 +144,7 @@
        (ui/section-select :label "" :id "section-name" :value section-name :class "mt-4" :sections sections :extra-attrs {:hx-post (comp-name) :hx-target (hash ".")})]
       [:td {:class td-class :_hx-include (str "#member" idx " input") :id (str "member" idx)}
        [:input {:type "hidden" :name "idx" :value idx}]
-       [:input {:type "hidden" :name "gigo-key" :value gigo-key}]
+       [:input {:type "hidden" :name "member-id" :value member-id}]
        (let [icon (if active? icon/xmark icon/plus)
              class (if active? "text-red-500" "text-green-500")]
          (ui/button :icon icon :size :small
@@ -156,11 +153,11 @@
       ;;
       )]))
 
-(ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db] :as req} idx gigo-key]
-  (let [{:member/keys [name email active? phone section] :as member} (member-by-id req gigo-key)
+(ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db] :as req} idx member-id]
+  (let [{:member/keys [name email active? phone section] :as member} (q/retrieve-member db member-id)
         section-name (:section/name section)
         td-class "px-3 py-4"]
-    [:tr {:id id :hx-boost true}
+    [:tr {:id id :hx-boost "true"}
      (list
       [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
        [:a {:href (url/link-member member) :class "font-medium text-blue-600 hover:text-blue-500"}
@@ -173,21 +170,21 @@
       )]))
 
 (ctmx/defcomponent ^:endpoint member-table-rw [{:keys [db] :as req}]
-  (let [members (-> req :members)
+  (let [members (controller/members db)
         tr (i18n/tr-from-req req)
         table-headers (member-table-headers tr members)]
     (list
      (ui/table-row-head table-headers)
      (ui/table-body
-      (rt/map-indexed member-row-rw req (map :member/gigo-key members))))))
+      (rt/map-indexed member-row-rw req (map :member/member-id members))))))
 
 (ctmx/defcomponent ^:endpoint member-table-ro [{:keys [db] :as req}]
-  (let [members (-> req :members)
+  (let [members (controller/members db)
         table-headers (member-table-headers (i18n/tr-from-req req) members)]
     (list
      (ui/table-row-head table-headers)
      (ui/table-body
-      (rt/map-indexed member-row-ro req (map :member/gigo-key members))))))
+      (rt/map-indexed member-row-ro req (map :member/member-id members))))))
 
 (defn member-add-form [{:keys [tr path sections]}]
   (let [required-label [:span  {:class "text-red-300 float-right"} " required"]]

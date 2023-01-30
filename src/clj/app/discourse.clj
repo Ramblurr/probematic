@@ -42,12 +42,12 @@
                                                                                         [martian-http/perform-request])})
         user-list (list-users m)
         members (->>
-                 (d/find-all db :member/gigo-key [:member/name :member/email :member/gigo-key])
+                 (d/find-all db :member/member-id [:member/name :member/email :member/member-id])
                  (map first)
                  (map #(update % :member/email str/lower-case)))
         joined (set/join user-list members {:email :member/email})
         txs (->> joined
-                 (map #(select-keys % [:member/gigo-key :avatar_template :id :username]))
+                 (map #(select-keys % [:member/member-id :avatar_template :id :username]))
                  (map #(update % :id str))
                  (map #(set/rename-keys % {:avatar_template :member/avatar-template :id :member/discourse-id :username :member/nick})))]
     (d/transact conn {:tx-data txs})))
@@ -214,7 +214,7 @@
 
   (sort-by first (martian/explore m))
   (martian/explore m :admin-list-users)
-  (d/find-all db :member/gigo-key [:member/name :member/email :member/gigo-key :member/avatar-template :member/discourse-id :member/nick])
+  (d/find-all db :member/member-id [:member/name :member/email :member/member-id :member/avatar-template :member/discourse-id :member/nick])
 
   (def g (q/retrieve-gig db "0185cfb2-4ac4-8cab-b1d9-5dd1fd1a3e20"))
   (def g2 (q/retrieve-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMCil42RCQw"))

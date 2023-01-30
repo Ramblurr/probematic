@@ -10,7 +10,7 @@
 (def section-pattern [:section/name :section/default? :section/position])
 
 (def attendance-pattern [{:attendance/section [:section/name]}
-                         {:attendance/member [:member/name :member/gigo-key :member/nick]}
+                         {:attendance/member [:member/name :member/member-id :member/nick]}
                          :attendance/plan
                          :attendance/gig+member
                          {:attendance/gig [:gig/gig-id]}
@@ -18,10 +18,10 @@
                          :attendance/motivation
                          :attendance/updated])
 
-(def member-pattern [:member/gigo-key :member/username :member/name :member/nick :member/active? :member/phone :member/email :member/avatar-template
+(def member-pattern [:member/member-id :member/username :member/name :member/nick :member/active? :member/phone :member/email :member/avatar-template
                      {:member/section [:section/name]}])
 
-(def member-detail-pattern [:member/gigo-key :member/name :member/nick :member/active? :member/phone :member/email
+(def member-detail-pattern [:member/member-id :member/name :member/nick :member/active? :member/phone :member/email
                             :member/username :member/keycloak-id
                             :member/discourse-id :member/avatar-template
                             {:member/section [:section/name]}
@@ -40,9 +40,9 @@
                          :gig/end-date  :gig/pay-deal :gig/call-time :gig/set-time
                          :gig/end-time :gig/description :gig/setlist :gig/leader :gig/post-gig-plans
                          :gig/more-details :gig/gig-type
-                         {:gig/comments [{:comment/author [:member/name :member/nick :member/gigo-key :member/avatar-template]}
+                         {:gig/comments [{:comment/author [:member/name :member/nick :member/member-id :member/avatar-template]}
                                          :comment/body :comment/comment-id :comment/created-at]}
-                         {:gig/contact [:member/name :member/gigo-key :member/nick]}])
+                         {:gig/contact [:member/name :member/member-id :member/nick]}])
 
 (def play-pattern [{:played/gig gig-pattern}
                    {:played/song [:song/song-id :song/title]}
@@ -98,7 +98,7 @@
 
 (def instrument-pattern [:instrument/name
                          :instrument/instrument-id
-                         {:instrument/owner [:member/name :member/gigo-key]}
+                         {:instrument/owner [:member/name :member/member-id]}
                          {:instrument/category [:instrument.category/category-id
                                                 :instrument.category/code
                                                 :instrument.category/name]}])
@@ -109,7 +109,7 @@
                                 :instrument/model
                                 :instrument/build-year
                                 :instrument/serial-number
-                                {:instrument/owner [:member/name :member/gigo-key]}
+                                {:instrument/owner [:member/name :member/member-id]}
                                 {:instrument/category [:instrument.category/category-id
                                                        :instrument.category/code
                                                        :instrument.category/name]}])
@@ -155,6 +155,14 @@
                [(missing? $ ?e :gig/gig-id)]]
              db gig-pattern)))
 
+(defn members-missing-id [db]
+  (mapv first
+        (d/q '[:find (pull ?e pattern)
+               :in $ pattern
+               :where [?e :member/member-id _]
+               [(missing? $ ?e :member/member-id)]]
+             db member-pattern)))
+
 (defn gigs-before [db instant]
   (results->gigs  (d/q '[:find (pull ?e pattern)
                          :in $ ?time pattern
@@ -196,16 +204,16 @@
 (defn gigs-past [db]
   (gigs-before db (date-midnight-today!)))
 
-(defn gig+member [gig-id gigo-key]
-  (pr-str [gig-id gigo-key]))
+(defn gig+member [gig-id member-id]
+  (pr-str [gig-id member-id]))
 
-(defn retrieve-member [db gigo-key]
-  (d/find-by db :member/gigo-key gigo-key member-detail-pattern))
+(defn retrieve-member [db member-id]
+  (d/find-by db :member/member-id member-id member-detail-pattern))
 
 (defn members-for-select
   [db]
   (mapv first
-        (d/find-all db :member/gigo-key  [:member/name :member/nick :member/gigo-key :member/active?])))
+        (d/find-all db :member/member-id  [:member/name :member/nick :member/member-id :member/active?])))
 
 (defn members-for-select-active
   [db]
@@ -233,7 +241,7 @@
                 [?coverage :instrument.coverage/instrument ?instr]
                 [?instr :instrument/owner ?member]]
               db pattern
-              (d/ref member :member/gigo-key)
+              (d/ref member :member/member-id)
               (d/ref policy :insurance.policy/policy-id))
    (map first)))
 
@@ -254,7 +262,7 @@
                 :where
                 [?section :section/name ?v]]
               db [:section/name
-                  {:member/_section [:member/name :member/gigo-key :member/nick]}])
+                  {:member/_section [:member/name :member/member-id :member/nick]}])
    (map first)))
 
 (defn active-members [db]
@@ -263,20 +271,20 @@
                 :in $ pattern
                 :where
                 [?member :member/active? true]]
-              db [:member/name :member/gigo-key :member/nick {:member/section [:section/name]} :member/email])
+              db [:member/name :member/member-id :member/nick {:member/section [:section/name]} :member/email])
    (map first)
    (map #(update % :member/section :section/name))))
 
 (defn attendance-for-gig
   "Return the member's attendance for the gig"
-  [db gig-id gigo-key]
+  [db gig-id member-id]
   (->
    (datomic/q '[:find (pull ?gig pattern)
                 :in $ ?gig-id ?gig+member pattern
                 :where
                 [?gig :gig/gig-id ?gig-id]
                 [?a :attendance/gig+member ?gig+member]]
-              db gig-id (gig+member gig-id gigo-key)
+              db gig-id (gig+member gig-id member-id)
               [:gig/title {:attendance/_gig attendance-pattern}])
    ffirst
    :attendance/_gig
@@ -300,7 +308,7 @@
         members  (active-members db)
         no-plan (remove (fn [member]
                           (m/find-first (fn [p]
-                                          (= (:member/gigo-key member) (get-in p [:attendance/member :member/gigo-key]))) plans))
+                                          (= (:member/member-id member) (get-in p [:attendance/member :member/member-id]))) plans))
                         members)]
     (concat plans
             (map (fn [member]
@@ -331,15 +339,15 @@
                                               :section/position))))
        (sort-by :section/position)))
 
-(defn section-for-member [db gigo-key]
+(defn section-for-member [db member-id]
   (->
    (datomic/q '[:find ?section-name
-                :in $ ?gigo-key
+                :in $ ?member-id
                 :where
-                [?member :member/gigo-key ?gigo-key]
+                [?member :member/member-id ?member-id]
                 [?member :member/section ?section]
                 [?section :section/name ?section-name]]
-              db gigo-key)
+              db member-id)
    ffirst))
 
 (defn member-by-email [db email]
@@ -513,12 +521,12 @@
   (active-members-by-section db)
 
   (instruments-for-member-covered-by db
-                                     {:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"}
+                                     {:member/member-id "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"}
                                      (insurance-policy-effective-as-of db (t/now) policy-pattern)
                                      instrument-coverage-detail-pattern)
 
   (d/transact conn {:tx-data [{:attendance/gig [:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"]
-                               :attendance/member [:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"]
+                               :attendance/member [:member/member-id "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"]
                                :attendance/gig+member (pr-str ["ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww" "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA086WiwoM"])
                                :attendance/section [:section/name "flute"]
                                :attendance/updated (t/inst)
@@ -545,7 +553,7 @@
   (let [plans (->>
                (d/find-by db :gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww"
                           [:gig/gig-type :gig/title {:attendance/_gig [{:attendance/section [:section/name]}
-                                                                       {:attendance/member [:member/name :member/gigo-key :member/nick]}
+                                                                       {:attendance/member [:member/name :member/member-id :member/nick]}
                                                                        :attendance/plan
                                                                        :attendance/comment
                                                                        :attendance/motivation

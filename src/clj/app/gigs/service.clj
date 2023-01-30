@@ -28,7 +28,7 @@
 (def str->gig-type (zipmap (map name domain/gig-types) domain/gig-types))
 
 (defn attach-attendance [db member {:gig/keys [gig-id] :as gig}]
-  (assoc gig :attendance (q/attendance-for-gig db gig-id (:member/gigo-key member))))
+  (assoc gig :attendance (q/attendance-for-gig db gig-id (:member/member-id member))))
 
 (defn gigs-planned-for
   "Return the gigs that the member as supplied an attendance plan for"
@@ -94,7 +94,7 @@
   (q/attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw"
                         "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")
 
-  (gigs-needing-plan db {:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"}))
+  (gigs-needing-plan db {:member/member-id "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"}))
 
 (defn page
   ([offset limit coll]
@@ -131,8 +131,8 @@
                       (some (fn [p] (= p (:song/song-id song)))))))))
 
 (defn get-attendance
-  ([db gig-id gigo-key]
-   (get-attendance db (q/gig+member gig-id gigo-key)))
+  ([db gig-id member-id]
+   (get-attendance db (q/gig+member gig-id member-id)))
   ([db gig+member]
    (assert (string? gig+member))
    (d/find-by db :attendance/gig+member gig+member q/attendance-pattern)))
@@ -151,52 +151,53 @@
 (defn touch-attendance-tx [attendance]
   [:db/add (d/ref attendance) :attendance/updated (t/inst)])
 
-(defn create-attendance-tx [db gig-id gigo-key]
-  {:attendance/gig+member (q/gig+member gig-id gigo-key)
+(defn create-attendance-tx [db gig-id member-id]
+  {:attendance/gig+member (q/gig+member gig-id member-id)
    :attendance/gig        [:gig/gig-id gig-id]
-   :attendance/member     [:member/gigo-key gigo-key]
+   :attendance/member     [:member/member-id member-id]
    :attendance/updated    (t/inst)
-   :attendance/section    [:section/name (q/section-for-member db gigo-key)]})
+   :attendance/section    [:section/name (q/section-for-member db member-id)]})
 
-(defn create-attendance-plan-tx [db gig-id gigo-key plan]
-  (assoc (create-attendance-tx db gig-id gigo-key) :attendance/plan plan))
+(defn create-attendance-plan-tx [db gig-id member-id plan]
+  (assoc (create-attendance-tx db gig-id member-id) :attendance/plan plan))
 
 (defn update-attendance-plan! [{:keys [datomic-conn db] :as req} gig-id]
-  (let [{:keys [gigo-key plan] :as params} (common/unwrap-params req)
+  (let [{:keys [member-id plan] :as params} (common/unwrap-params req)
+        member-id (util/ensure-uuid! member-id)
         _ (assert gig-id)
-        _ (assert gigo-key)
-        attendance (get-attendance db gig-id gigo-key)
+        _ (assert member-id)
+        attendance (get-attendance db gig-id member-id)
         plan-kw (str->plan plan)
         attendance-txs (if attendance
                          [(update-attendance-plan-tx attendance plan-kw)
                           (touch-attendance-tx attendance)]
-                         [(create-attendance-plan-tx db gig-id gigo-key plan-kw)])]
+                         [(create-attendance-plan-tx db gig-id member-id plan-kw)])]
 
     (assert plan-kw (format  "unknown plan value: '%s'" plan))
-    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key))))
+    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id member-id))))
 
 (defn update-attendance-from-link! [{:keys [datomic-conn db system params] :as req}]
   (let [answer-enc (:answer params)
         answer (secret-box/decrypt answer-enc (config/app-secret-key (:env system)))
-        gigo-key (:member/gigo-key answer)
+        member-id (util/ensure-uuid! (:member/member-id answer))
         gig-id (:gig/gig-id answer)
         gig (q/retrieve-gig db gig-id)
-        member (q/retrieve-member db gigo-key)
+        member (q/retrieve-member db member-id)
         plan-kw ((set domain/plans)  (:attendance/plan answer))]
     (assert gig)
     (assert member)
     (assert plan-kw)
     (when (domain/in-future? gig)
-      (let [attendance (get-attendance db gig-id gigo-key)
+      (let [attendance (get-attendance db gig-id member-id)
             attendance-txs (if attendance
                              [(update-attendance-plan-tx attendance plan-kw)
                               (touch-attendance-tx attendance)]
-                             [(create-attendance-plan-tx db  gig-id gigo-key plan-kw)])]
-        (transact-attendance! datomic-conn  attendance-txs (q/gig+member gig-id gigo-key))
+                             [(create-attendance-plan-tx db  gig-id member-id plan-kw)])]
+        (transact-attendance! datomic-conn  attendance-txs (q/gig+member gig-id member-id))
         {:gig gig :member member}))))
 
-(defn create-attendance-comment-tx [db gig-id gigo-key comment]
-  (assoc (create-attendance-tx db gig-id gigo-key) :attendance/comment comment))
+(defn create-attendance-comment-tx [db gig-id member-id comment]
+  (assoc (create-attendance-tx db gig-id member-id) :attendance/comment comment))
 
 (defn update-attendance-comment-tx [attendance comment]
   [:db/add (d/ref attendance) :attendance/comment comment])
@@ -205,10 +206,11 @@
   [:db/retract (d/ref attendance) :attendance/comment])
 
 (defn update-attendance-comment! [{:keys [datomic-conn db] :as req} gig-id]
-  (let [{:keys [gigo-key comment] :as params} (common/unwrap-params req)
+  (let [{:keys [member-id comment] :as params} (common/unwrap-params req)
+        member-id (util/ensure-uuid! member-id)
         _ (assert gig-id)
-        _ (assert gigo-key)
-        attendance (get-attendance db gig-id gigo-key)
+        _ (assert member-id)
+        attendance (get-attendance db gig-id member-id)
         attendance-txs (if attendance
                          (if (str/blank? comment)
                            (if (:attendance/comment attendance)
@@ -219,30 +221,31 @@
                             (touch-attendance-tx attendance)])
                          (if (str/blank? comment)
                            :nop
-                           [(create-attendance-comment-tx db gig-id gigo-key comment)]))]
+                           [(create-attendance-comment-tx db gig-id member-id comment)]))]
 
     (if (= :nop attendance-txs)
       {:attendance attendance}
-      (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key)))))
+      (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id member-id)))))
 
-(defn create-attendance-motivation-tx [db gig-id gigo-key motivation]
-  (assoc (create-attendance-tx db gig-id gigo-key) :attendance/motivation motivation))
+(defn create-attendance-motivation-tx [db gig-id member-id motivation]
+  (assoc (create-attendance-tx db gig-id member-id) :attendance/motivation motivation))
 
 (defn update-attendance-motivation-tx [attendance motivation]
   [:db/add (d/ref attendance) :attendance/motivation motivation])
 
 (defn update-attendance-motivation! [{:keys [datomic-conn db] :as req} gig-id]
-  (let [{:keys [gigo-key motivation] :as params} (common/unwrap-params req)
+  (let [{:keys [member-id motivation] :as params} (common/unwrap-params req)
+        member-id (util/ensure-uuid! member-id)
         _ (assert gig-id)
-        _ (assert gigo-key)
-        attendance (get-attendance db gig-id gigo-key)
+        _ (assert member-id)
+        attendance (get-attendance db gig-id member-id)
         motivation-kw (str->motivation motivation)
         attendance-txs  (if attendance
                           [(update-attendance-motivation-tx attendance motivation-kw)
                            (touch-attendance-tx attendance)]
-                          [(create-attendance-motivation-tx db gig-id gigo-key motivation-kw)])]
+                          [(create-attendance-motivation-tx db gig-id member-id motivation-kw)])]
     (assert motivation-kw (format  "unknown motivation value: %s" motivation))
-    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id gigo-key))))
+    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id member-id))))
 
 (defn transact-gig! [datomic-conn gig-txs gig-id]
   (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
@@ -299,10 +302,8 @@
                    (common/ns-qualify-key :gig)
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
-                   (m/update-existing :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
-                   (debug/xxx :pre->)
-                   (domain/gig->db)
-                   (debug/xxx :post->))
+                   (m/update-existing :gig/contact (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)]))
+                   (domain/gig->db))
             result (transact-gig! datomic-conn [tx] gig-id)]
         (when notify?
           (email/send-gig-updated! req gig-id
@@ -318,7 +319,7 @@
         tx (-> decoded (common/ns-qualify-key :gig)
                (update :gig/status str->status)
                (update :gig/gig-type str->gig-type)
-               (m/update-existing :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
+               (m/update-existing :gig/contact (fn [member-id] [:member/member-id member-id]))
                (domain/gig->db))]
     (let [result (transact-gig! datomic-conn [tx] gig-id)]
       (when notify?

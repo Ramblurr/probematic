@@ -6,7 +6,8 @@
             [datomic.client.api :as d]
             [clojure.tools.logging :as log]
             [tick.core :as t]
-            [app.gigs.domain :as domain]))
+            [app.gigs.domain :as domain]
+            [com.yetanalytics.squuid :as sq]))
 
 (def faker (Faker.))
 (-> faker (.internet) (.password))
@@ -26,9 +27,6 @@
 (defn email []
   (-> faker (.internet) (.emailAddress)))
 
-(defn gigo-key []
-  (-> faker (.letterify "???????????????????????????????????????????????")))
-
 (defn section []
   (rand-nth ["flute"
              "bass"
@@ -40,9 +38,10 @@
              "trombone/bombardino"
              "sax soprano/clarinet"]))
 
+(defn member-id [] (sq/generate-squuid))
 (defn member []
   (let [full-name (person-name)]
-    {:member/gigo-key (gigo-key)
+    {:member/member-id (member-id)
      :member/name full-name
      :member/nick (-> full-name (str/split #" ") first (str/lower-case))
      :member/email (email)
@@ -60,7 +59,7 @@
 (defn seed-random-members! [conn]
   (log/info "Seeding random members")
 
-  (d/transact conn {:tx-data [{:member/gigo-key "admin"
+  (d/transact conn {:tx-data [{:member/member-id "admin"
                                :member/name "Admin Nimda"
                                :member/nick "admin"
                                :member/email "admin@example.com"
@@ -73,31 +72,31 @@
   (log/info "Seeding gigs")
   (d/transact conn {:tx-data
                     (map domain/gig->db
-                         [{:gig/gig-id (gigo-key)
+                         [{:gig/gig-id (member-id)
                            :gig/title "Rehersal"
                            :gig/location "Proberaum"
                            :gig/gig-type :gig.type/probe
                            :gig/status :gig.status/confirmed
                            :gig/date  (t/>> (t/date) (t/new-period 7 :days))
-                           :gig/contact        [:member/gigo-key "admin"]
+                           :gig/contact        [:member/member-id "admin"]
                            :gig/call-time (t/time "19:00")
                            :gig/set-time (t/time "19:30")}
-                          {:gig/gig-id (gigo-key)
+                          {:gig/gig-id (member-id)
                            :gig/title "Rehersal"
                            :gig/location "Proberaum"
                            :gig/gig-type :gig.type/probe
                            :gig/status :gig.status/confirmed
                            :gig/date  (t/>> (t/date) (t/new-period 14 :days))
-                           :gig/contact        [:member/gigo-key "admin"]
+                           :gig/contact        [:member/member-id "admin"]
                            :gig/call-time (t/time "19:00")
                            :gig/set-time (t/time "19:30")}
-                          {:gig/gig-id (gigo-key)
+                          {:gig/gig-id (member-id)
                            :gig/title "Treibhaus Gig"
                            :gig/location "Treibhaus"
                            :gig/gig-type :gig.type/gig
                            :gig/status :gig.status/unconfirmed
                            :gig/date  (t/>> (t/date) (t/new-period 6 :days))
-                           :gig/contact        [:member/gigo-key "admin"]
+                           :gig/contact        [:member/member-id "admin"]
                            :gig/call-time (t/time "13:00")
                            :gig/leader     "Norbert"
                            :gig/post-gig-plans "Pizza and beer"

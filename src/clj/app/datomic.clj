@@ -103,6 +103,8 @@
         db attr val-pattern pattern)))
 
 (def entity-ids [:gig/gig-id
+                 :gig/gigo-id
+                 :member/member-id
                  :member/gigo-key
                  :song/song-id
                  :insurance.policy/policy-id
@@ -142,7 +144,7 @@
     ;; (when-not (ident-has-attr? db :account/validate :db.entity/attrs)
     ;;   (tx validation/entity-attrs))
     (when (config/demo-mode? env)
-      (when (= 0 (count-all (d/db conn) :member/gigo-key))
+      (when (= 0 (count-all (d/db conn) :member/member-id))
         (demo/seed-random-members! conn))
       (when (= 0 (count-all (d/db conn) :gig/gig-id))
         (demo/seed-gigs! conn))))

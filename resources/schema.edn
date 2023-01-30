@@ -13,6 +13,12 @@
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :member/member-id
+    :db/doc "Our UUID for the member"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :member/gigo-key
     :db/doc "The gigo member key, a unique identifier"
     :db/unique :db.unique/identity

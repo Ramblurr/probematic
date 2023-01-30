@@ -25,29 +25,29 @@
 (defn template-link-gig-attendance [env attendance-plan]
   (str (url/absolute-gig-answer-link-base env) "/?answer=%recipient." (template-key-gig-attendance attendance-plan) "%"))
 
-(defn payload-for-attendance [env gig-id gigo-key attendance-plan]
+(defn payload-for-attendance [env gig-id member-id attendance-plan]
   (secret-box/encrypt
-   {:member/gigo-key gigo-key
+   {:member/member-id member-id
     :gig/gig-id gig-id
     :attendance/plan attendance-plan}
    (config/app-secret-key env)))
 
-(defn payload-for-reminder [env gig-id gigo-key]
+(defn payload-for-reminder [env gig-id member-id]
   (secret-box/encrypt
-   {:member/gigo-key gigo-key
+   {:member/member-id member-id
     :gig/gig-id gig-id
     :reminder true}
    (config/app-secret-key env)))
 
 (defn template-values-gig-attendance [env gig-id members]
-  (reduce (fn [recipient-vars {:member/keys [gigo-key email]}]
+  (reduce (fn [recipient-vars {:member/keys [member-id email]}]
             (-> recipient-vars
                 (assoc-in  [email (template-key-gig-attendance :plan/definitely)]
-                           (payload-for-attendance env gig-id gigo-key :plan/definitely))
+                           (payload-for-attendance env gig-id member-id :plan/definitely))
                 (assoc-in  [email (template-key-gig-attendance :plan/definitely-not)]
-                           (payload-for-attendance env gig-id gigo-key :plan/definitely-not))
+                           (payload-for-attendance env gig-id member-id :plan/definitely-not))
                 (assoc-in [email (template-key-gig-attendance :reminder)]
-                          (payload-for-reminder env gig-id gigo-key))))
+                          (payload-for-reminder env gig-id member-id))))
 
           {} members))
 

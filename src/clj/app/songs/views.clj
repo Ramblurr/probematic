@@ -324,6 +324,7 @@
         tr (i18n/tr-from-req req)
         filtered-songs (search-songs song all-songs)]
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
+           :hx-boost "true"
            :id id}
      (song-list tr filtered-songs)]))
 

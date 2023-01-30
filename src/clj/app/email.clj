@@ -93,7 +93,7 @@
                :gig/title "Probe"
                :gig/gig-id "0185a673-9f2d-8b0e-8f1a-e70db25c9add"
                :gig/contact {:member/name "SNOrchestra"
-                             :member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA6K70hwoM"
+                             :member/member-id "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA6K70hwoM"
                              :member/nick "SNO"}
                :gig/gig-type :gig.type/probe
                :gig/set-time (t/time "19:00")
@@ -102,10 +102,10 @@
     (require '[app.config :as config])
 
     (def member {:member/email "me@example.com"
-                 :member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
+                 :member/member-id "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
 
     (def member2 {:member/email "me+test@example.com"
-                  :member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
+                  :member/member-id "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM"})
 
     (def redis-opts (-> state/system :app.ig/redis))
     (def env (-> state/system :app.ig/env))

@@ -638,7 +638,7 @@
                      [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
                      [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
                     [:div {:class "space-y-6 sm:space-y-5"}
-                     (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-gigo-key") :members (q/members-for-select db) :variant :left)
+                     (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-member-id") :members (q/members-for-select db) :variant :left)
                      (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
                      (ui/text-left :label (tr [:instrument/name]) :id (path "name"))
                      (ui/text-left :label (tr [:instrument/make]) :id (path "make"))
@@ -690,7 +690,7 @@
            [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/owner])]
            [:dd {:class "mt-1 text-sm text-gray-900"}
             (if edit?
-              (ui/member-select :variant :inline-no-label :id (path "owner-gigo-key") :members (q/members-for-select db))
+              (ui/member-select :variant :inline-no-label :id (path "owner-member-id") :members (q/members-for-select db))
               (-> instrument :instrument/owner :member/name))]]
           [:div {:class "sm:col-span-1"}
            [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/category])]

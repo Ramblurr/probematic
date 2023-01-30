@@ -226,7 +226,9 @@
     v))
 
 (defn ensure-uuid! [v]
-  (parse-uuid v))
+  (if (uuid? v)
+    v
+    (parse-uuid v)))
 
 (defn log-pprint
   "A pretty-print function suitable for use with

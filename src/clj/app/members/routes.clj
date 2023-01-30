@@ -1,15 +1,15 @@
 (ns app.members.routes
   (:require
-   [app.queries :as q]
    [app.layout :as layout]
    [app.members.views :as view]
-   [app.members.controller :as controller]
-   [datomic.client.api :as d]
-   [ctmx.core :as ctmx]))
+   [app.queries :as q]
+   [app.util.http :as http.util]
+   [ctmx.core :as ctmx]
+   [datomic.client.api :as d]))
 
 (defn members-detail []
   (ctmx/make-routes
-   "/member/{gigo-key}"
+   "/member/{member-id}"
    (fn [req]
      (layout/app-shell req
                        (view/members-detail-page req false)))))
@@ -25,15 +25,17 @@
                             :enter (fn [ctx]
                                      (let [conn (-> ctx :request :datomic-conn)
                                            db (d/db conn)
-                                           member-gigo-key (-> ctx :request :path-params :gigo-key)]
-                                       (cond-> ctx
-                                         member-gigo-key (assoc-in [:request :member] (q/retrieve-member db member-gigo-key))
-                                         true (assoc-in [:request :members] (controller/members db)))))}])
+                                           member-id (http.util/path-param-uuid! (:request ctx) :member-id)
+                                           member (q/retrieve-member db member-id)]
+                                       (if member
+                                         (assoc-in ctx [:request :member] member)
+                                         (throw (ex-info "Member not found" {:app/error-type :app.error.type/not-found
+                                                                             :member/member-id member-id})))))}])
 
 (defn routes []
-  ["" {:interceptors  members-interceptors
-       :app.route/name :app/members}
-   (members-detail)
+  ["" {:app.route/name :app/members}
+   ["" {:interceptors  members-interceptors}
+    (members-detail)]
    (members-index)])
 
 (defn unauthenticated-routes []
