@@ -19,7 +19,7 @@
       (if (:play result)
         (response/hx-redirect "/songs/")
         (let [conn (-> req :system :conn)
-              songs (q/find-all-songs db)
+              songs (q/retrieve-all-songs db)
               gigs (q/find-all-gigs db)]
 
           [:form {:id id :hx-post (path ".")
@@ -320,7 +320,7 @@
               :hx-target (hash "../songs-list")}]]))
 
 (ctmx/defcomponent ^:endpoint songs-list [{:keys [db] :as req} song]
-  (let [all-songs (q/find-all-songs db)
+  (let [all-songs (q/retrieve-all-songs db)
         tr (i18n/tr-from-req req)
         filtered-songs (search-songs song all-songs)]
     [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"

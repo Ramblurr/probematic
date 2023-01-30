@@ -67,7 +67,7 @@
 (defn log-play-legend [tr]
   (let [shared-classes "h-8 w-8 border-solid border-b-2 pb-1"]
     [:div {:class "ml-2"}
-     [:h3 {:class "font-bold"}
+     [:h3 {:class "font-bold text-gray-900"}
       (tr [:play-log/diagram-legend])]
 
      [:div {:class "grid grid-cols-3 space-y-2 max-w-sm sm:max-w-none sm:grid-cols-7 sm:space-x-3"}
@@ -137,7 +137,8 @@
         (response/hx-redirect (url/link-gig gig-id)))
       (let [gig (q/retrieve-gig db gig-id)
             plays (q/plays-by-gig db gig-id)
-            songs-not-played (service/songs-not-played plays (q/find-all-songs db))
+            planned-songs (q/planned-songs-for-gig db gig-id)
+            songs-not-played (service/songs-not-played plays (q/retrieve-all-songs db))
             ;; our log-play component wants to have "plays" for every song
             ;; so we enrich the actual plays with stubs for the songs that were not played
             plays (sort-by #(-> % :played/song :song/title) (concat plays
@@ -145,7 +146,13 @@
 
         [:form {:id id :hx-post (path ".") :class "space-y-4"}
          (ui/page-header :title (list  (:gig/title gig) " (" (ui/datetime (:gig/date gig)) ")")
-                         :subtitle (tr [:gig/play-log-subtitle]))
+                         :subtitle
+                         [:div
+                          [:p {:class "pb-2"} (tr [:gig/play-log-subtitle])]
+                          [:p  (tr [:gig/was-planned-to-play])]
+                          [:p {:class " text-gray-600 ml-2"}
+                           (str/join ", " (mapv :song/title planned-songs))]])
+
          (log-play-legend tr)
          [:ul {:class "toggler-container"}
           (rt/map-indexed gig-log-play req plays)]
@@ -415,7 +422,7 @@
 (declare gigs-detail-page-setlist)
 
 (ctmx/defcomponent ^:endpoint gig-setlist-choose-songs [{:keys [tr db] :as req}]
-  (let [all-songs (q/find-all-songs db)
+  (let [all-songs (q/retrieve-all-songs db)
         comp-name (util/comp-namer #'gig-setlist-choose-songs)]
     (if (util/put? req)
       (gig-setlist-sort req (util/unwrap-params req))
@@ -433,7 +440,7 @@
                        (sort-by :song-order)
                        (map :song-id)
                        (map util/ensure-uuid))
-        songs (util/index-sort-by song-ids :song/song-id (q/find-songs db song-ids))]
+        songs (util/index-sort-by song-ids :song/song-id (q/retrieve-songs db song-ids))]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                :buttons (ui/button :class "pulse-delay" :label (tr [:action/save]) :priority :primary :form id)}
               [:form {:class "w-full" :hx-post (util/endpoint-path gigs-detail-page-setlist) :hx-target "#setlist-container" :id id}
@@ -474,7 +481,7 @@
         song-ids (map util/ensure-uuid song-ids)
         songs (util/index-sort-by song-ids :song/song-id (if (util/post? req)
                                                            (service/update-setlist! req song-ids)
-                                                           (q/find-songs db song-ids)))
+                                                           (q/retrieve-songs db song-ids)))
         selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                :buttons (when (seq songs)
@@ -517,7 +524,7 @@
 (declare gigs-detail-page-probeplan)
 
 (ctmx/defcomponent ^:endpoint gig-probeplan-choose-songs [{:keys [tr db] :as req}]
-  (let [all-songs (q/find-all-songs db)
+  (let [all-songs (q/retrieve-all-songs db)
         comp-name (util/comp-namer #'gig-probeplan-choose-songs)]
     (if (util/put? req)
       (gig-probeplan-sort req (util/unwrap-params req))
@@ -552,7 +559,7 @@
                              (filter :song-id)
                              (map #(update % :position (fn [v] (Integer/parseInt v))))
                              (map #(update % :song-id util/ensure-uuid)))
-        selected-songs (->> (clojure.set/join selected-songs (q/find-songs db (map :song-id selected-songs))  {:song-id :song/song-id})
+        selected-songs (->> (clojure.set/join selected-songs (q/retrieve-songs db (map :song-id selected-songs))  {:song-id :song/song-id})
                             (into [])
                             (sort-by :position))]
     (ui/panel {:title (tr [:gig/probeplan]) :id "probeplan-container"

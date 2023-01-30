@@ -46,7 +46,7 @@
       nil)))
 
 (defn probeplan-plans [db]
-  (domain/future-probeplans (q/find-all-songs db)
+  (domain/future-probeplans (q/retrieve-all-songs db)
                             (future-probeplans db)))
 
 (defn update-probeplans! [{:keys [datomic-conn db] :as req}]

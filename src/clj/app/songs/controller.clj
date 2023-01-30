@@ -116,7 +116,7 @@
                              :song/song-id (sq/generate-squuid)
                              :song/total-plays 0}) _titles)})
 
-  (q/find-all-songs (d/db conn))
+  (q/retrieve-all-songs (d/db conn))
 
   (let [res
         (create-song! (assoc-in req [:params :song-new_song] "Asterix"))]

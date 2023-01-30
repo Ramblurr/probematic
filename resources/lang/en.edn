@@ -80,7 +80,8 @@
        :create-probeplan "Make Probeplan"
        :create-setlist "Make Setlist"
        :create-title "Create Gig"
-       :answer-link-submitted "Your answer has been submitted - thanks!"}
+       :answer-link-submitted "Your answer has been submitted - thanks!"
+       :was-planned-to-play "It was planned to play these songs:"}
  :orange-and-green "orange and green"
 
  :gigs {:title "Gigs & Probes"

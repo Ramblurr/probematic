@@ -81,7 +81,7 @@
   ([db]
    (make-song-cycle db false))
   ([db shuffle?]
-   (let [songs (q/find-all-songs db)]
+   (let [songs (q/retrieve-all-songs db)]
      (cycle
       (if shuffle?
         (shuffle songs)

@@ -355,7 +355,7 @@
                      :setlist/version :setlist.version/v1}
         txs         (concat [tx] txs)
         result      (datomic/transact datomic-conn {:tx-data txs})]
-    (q/find-songs (:db-after result) song-ids)))
+    (q/retrieve-songs (:db-after result) song-ids)))
 
 (defn reconcile-probeplan [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))

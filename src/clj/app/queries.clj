@@ -232,15 +232,15 @@
               (d/ref policy :insurance.policy/policy-id))
    (map first)))
 
-(defn find-all-songs [db]
+(defn retrieve-all-songs [db]
   (util/isort-by :song/title
                  (mapv first
                        (d/find-all db :song/song-id song-pattern))))
-(defn find-songs [db song-ids]
+(defn retrieve-songs [db song-ids]
   (if (empty? song-ids)
     []
     (filter #((set song-ids) (:song/song-id %))
-            (find-all-songs db))))
+            (retrieve-all-songs db))))
 
 (defn active-members-by-section [db]
   (->>
@@ -401,6 +401,18 @@
                 :position position
                 :emphasis emphasis}))
        (sort-by :position)))
+
+(defn setlist-songs-for-gig [db gig-id]
+  (let [song-ids (setlist-song-ids-for-gig db gig-id)]
+    (retrieve-songs db song-ids)))
+
+(defn planned-songs-for-gig
+  "If the gig is a probe, then returns probeplan-songs-for gig, otherwise returns"
+  [db gig-id]
+  (let [{:gig/keys [gig-type]} (retrieve-gig db gig-id)]
+    (if (= :gig.type/gig gig-type)
+      (setlist-songs-for-gig db gig-id)
+      (probeplan-songs-for-gig db gig-id))))
 
 (defn sheet-music-by-song [db song-id]
   (->> (d/find-all-by db :sheet-music/song  [:song/song-id song-id] play-pattern)
