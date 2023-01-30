@@ -31,6 +31,7 @@
 (def song-pattern [:song/title :song/song-id :song/active? :song/solo-count])
 (def song-pattern-detail [:song/title :song/song-id
                           :song/total-plays :song/total-performances :song/total-rehearsals
+                          :forum.topic/topic-id
                           {:song/last-rehearsal [:gig/gig-id :gig/title :gig/date]}
                           {:song/last-performance [:gig/gig-id :gig/title]}
                           :song/active? :song/composition-credits :song/arrangement-credits :song/arrangement-notes :song/origin :song/solo-count])

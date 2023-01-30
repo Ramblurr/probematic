@@ -11,6 +11,7 @@
    [clojure.string :as clojure.string]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
+   [hiccup.util]
    [medley.core :as m]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
@@ -151,7 +152,27 @@
                                                    (:sheet-music/_section section-sheet)))
                                   "sm:col-span-1")) sections-sheets)])))
 
-(ctmx/defcomponent ^:endpoint song-detail-page [{:keys [db] :as req} ^:boolean edit?]
+(defn song-comments [req song]
+  [:div {:class "mb-8"}
+   (when-let [topic-id (:forum.topic/topic-id song)]
+     (ui/panel {:title "Comments"}
+               (list
+                [:div {:id "discourse-comments" :class "mb-6"}]
+                [:script {:type "text/javascript"}
+                 (hiccup.util/raw-string
+                  (format
+                   "
+  DiscourseEmbed = { discourseUrl: 'https://forum.streetnoise.at/',
+                     topicId: '%s' };
+
+  (function() {
+    var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+    d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+  })();
+" topic-id))])))])
+
+(ctmx/defcomponent ^:endpoint song-detail-page [{:keys [tr db] :as req} ^:boolean edit?]
   (let [song-id                          (parse-uuid (-> req :path-params :song-id))
         song                             (if (util/post? req) (controller/update-song! req (parse-uuid (-> req :path-params :song-id)))
                                              (controller/retrieve-song db song-id))
@@ -159,8 +180,8 @@
                      arrangement-credits arrangement-notes
                      last-rehearsal last-performance
                      total-plays total-performances total-rehearsals
-                     origin solo-count]} song
-        tr                               (i18n/tr-from-req req)
+                     origin solo-count]
+         :forum.topic/keys [topic-id]} song
         comp-name                        (util/comp-namer #'song-detail-page)]
     (if (util/delete? req)
       (do
@@ -196,19 +217,23 @@
                                                 :attr {:href (str "/song/log-play/" song-id "/")}))))
 
        (if edit?
-         (ui/panel {:title (tr [:song/background-title])}
-                   (ui/dl
-                    (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
-                    (ui/dl-item (tr [:song/composition-credits])
-                                (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false))
-                    (ui/dl-item (tr [:song/arrangement-credits])
-                                (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false))
-                    (ui/dl-item (tr [:song/origin])
-                                (ui/textarea :label "" :name (path "origin") :value origin :required? false)
-                                "sm:col-span-3")
-                    (ui/dl-item (tr [:song/arrangement-notes])
-                                (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false)
-                                "sm:col-span-3")))
+         (list
+          (ui/panel {:title (tr [:song/background-title])}
+                    (ui/dl
+                     (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
+                     (ui/dl-item (tr [:song/composition-credits])
+                                 (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false))
+                     (ui/dl-item (tr [:song/arrangement-credits])
+                                 (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false))
+                     (ui/dl-item (tr [:song/origin])
+                                 (ui/textarea :label "" :name (path "origin") :value origin :required? false)
+                                 "sm:col-span-3")
+                     (ui/dl-item (tr [:song/arrangement-notes])
+                                 (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false)
+                                 "sm:col-span-3")))
+          (ui/panel {:title "Advanced"}
+                    (ui/dl
+                     (ui/dl-item "Forum Topic ID" (ui/text :label "" :name (path "topic-id") :value topic-id :required? false)))))
          (ui/panel {:title (tr [:song/background-title])}
                    (ui/dl
                     (ui/dl-item (tr [:song/solo-count]) solo-count)
@@ -227,7 +252,8 @@
                   (ui/dl-item (tr [:song/last-played-probe]) [:a {:class "link-blue" :href (url/link-gig last-rehearsal)}
                                                               (ui/gig-date last-rehearsal) " "
                                                               (:gig/title last-rehearsal)])))
-       (song-sheet-music req)])))
+       (song-sheet-music req)
+       (song-comments req song)])))
 
 (ctmx/defcomponent ^:endpoint song-new [req]
   (let [tr (i18n/tr-from-req req)]
