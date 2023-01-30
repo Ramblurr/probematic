@@ -58,13 +58,14 @@
                                                           :io.pedestal.http/host           #or [#env HTTP_BIND_HOST "localhost"]
                                         ;:io.pedestal.http/resource-path "/static"
                                                           :io.pedestal.http/join?          false
-                                                          :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src     "https://*.streetnoise.at 'self' data:;"
-                                                                                                                               :object-src  "'none';"
-                                                                                                                               :default-src "'self';"
-                                                                                                                               :font-src    "'self' https://rsms.me;"
-                                                                                                                               :script-src  "'self' 'unsafe-inline' 'unsafe-eval';"
-                                                                                                                               :style-src   "'self' 'unsafe-inline' https://rsms.me;"
-                                                                                                                               :connect-src "'self'"}}}
+                                                          :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src     "https://*.streetnoise.at 'self' data:"
+                                                                                                                               :object-src  "'none'"
+                                                                                                                               :default-src "'self'"
+                                                                                                                               :font-src    "'self'"
+                                                                                                                               :script-src  "https://forum.streetnoise.at 'self' 'unsafe-inline' 'unsafe-eval'"
+                                                                                                                               :style-src   "'self' 'unsafe-inline'"
+                                                                                                                               :connect-src "'self'"
+                                                                                                                               :frame-src "https://id.streetnoise.at https://forum.streetnoise.at 'self'"}}}
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :env        #ig/ref :app.ig/env
                                              :handler    #ig/ref :app.ig/handler
