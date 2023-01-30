@@ -19,7 +19,8 @@
    [ctmx.rt :as rt]
    [medley.core :as m]
    [tick.core :as t]
-   [hiccup.util :as hiccup.util]))
+   [hiccup.util :as hiccup.util]
+   [app.discourse :as discourse]))
 
 (defn- gig-id-from-path [req]
   (http.util/path-param-uuid! req :gig/gig-id))
@@ -881,16 +882,17 @@ on change if I match <:checked/>
 (ctmx/defcomponent ^:endpoint  gig-detail-info-section-hxget [req]
   (gig-detail-info-section req (:gig req)))
 
-(defn discourse-comment-embed [{:keys [tr] :as req} gig]
-  [:div {:class "divide-y divide-gray-200"}
-   (comment-header tr)
-   (list
-    [:div {:id "discourse-comments"
-           :class "mb-6"}]
-    [:script {:type "text/javascript"}
-     (hiccup.util/raw-string
-      (format
-       "
+(defn discourse-comment-embed [{:keys [tr system] :as req} gig]
+  (when-let [topic-id (:id  (discourse/topic-for-gig system gig))]
+    [:div {:class "divide-y divide-gray-200"}
+     (comment-header tr)
+     (list
+      [:div {:id "discourse-comments"
+             :class "mb-6"}]
+      [:script {:type "text/javascript"}
+       (hiccup.util/raw-string
+        (format
+         "
   DiscourseEmbed = { discourseUrl: 'https://forum.streetnoise.at/',
                      topicId: '%s' };
 
@@ -899,7 +901,7 @@ on change if I match <:checked/>
     d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
   })();
-" "2686"))])])
+" topic-id))])]))
 
 (ctmx/defcomponent ^:endpoint gig-detail-page [{:keys [tr db] :as req} ^:boolean show-committed?]
   gig-details-edit-form gig-delete gig-details-edit-post gig-detail-info-section-hxget

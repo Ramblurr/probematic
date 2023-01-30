@@ -10,9 +10,6 @@
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]))
 
-(defn retrieve-song [db song-id]
-  (d/find-by db :song/song-id song-id q/song-pattern-detail))
-
 (defn create-song! [req]
   (let [{:keys [title active?]} (-> req util/unwrap-params)
         song-id (sq/generate-squuid)
@@ -20,7 +17,7 @@
                            {:tx-data [{:song/title title :song/song-id song-id
                                        :song/total-plays 0
                                        :song/active? (ctmx.rt/parse-boolean active?)}]})]
-    (retrieve-song (:db-after result) song-id)))
+    (q/retrieve-song (:db-after result) song-id)))
 
 (defn delete-song! [{:keys [db datomic-conn] :as req} song-id]
   (let [song-ref [:song/song-id song-id]
@@ -47,7 +44,7 @@
                               :song/solo-count (when-not (string/blank? solo-count) (Long/parseLong solo-count))})
         result (datomic/transact datomic-conn {:tx-data [tx]})]
 
-    (retrieve-song (:db-after result) song-id)))
+    (q/retrieve-song (:db-after result) song-id)))
 
 (defn log-play! [req]
   (let [{:keys [gig-id song-id play-type feeling]} (util/unwrap-params req)

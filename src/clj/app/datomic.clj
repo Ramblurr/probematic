@@ -47,7 +47,7 @@
   (let [ok? (not (db-error? result))]
     (if ok? true
         (do
-          (tap> result)
+          ;; (tap> result)
           false))))
 
 (defn pull-many

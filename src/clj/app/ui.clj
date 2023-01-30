@@ -810,9 +810,12 @@
   (when date
     (t/format (t/formatter "dd.MM.yy E") (t/date date))))
 
-(defn gig-time [{:gig/keys [date call-time set-time]}]
+(defn gig-time [{:gig/keys [date call-time set-time end-time]}]
   (when-let [time (or call-time set-time)]
-    (t/format (t/formatter "HH:mm") (t/at date time))))
+    (let [fmt-start (t/format (t/formatter "HH:mm") (t/at date time))]
+      (if end-time
+        (str fmt-start " - " (t/format (t/formatter "HH:mm") (t/at date end-time)))
+        fmt-start))))
 
 (defn datetime [dt]
   (if dt

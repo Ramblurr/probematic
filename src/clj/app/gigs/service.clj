@@ -20,7 +20,9 @@
    [datomic.client.api :as datomic]
    [medley.core :as m]
    [tick.core :as t]
-   [app.debug :as debug]))
+   [app.jobs.gig-events :as gig.events]
+   [app.debug :as debug]
+   [app.discourse :as discourse]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -137,12 +139,15 @@
    (assert (string? gig+member))
    (d/find-by db :attendance/gig+member gig+member q/attendance-pattern)))
 
-(defn transact-attendance! [datomic-conn attendance-txs gig+member]
-  (let [result (d/transact datomic-conn {:tx-data attendance-txs})]
+(defn transact-attendance! [{:keys [datomic-conn] :as req} attendance-txs gig-id member-id]
+  (let [result (d/transact datomic-conn {:tx-data attendance-txs})
+        gig+member (q/gig+member gig-id member-id)]
     (if (d/db-ok? result)
-      {:attendance (get-attendance (:db-after result) gig+member)}
       (do
-        (tap> result)
+        (gig.events/trigger-gig-edited req gig-id :attendance)
+        {:attendance (get-attendance (:db-after result) gig+member)})
+      (do
+        ;; (tap> result)
         result))))
 
 (defn update-attendance-plan-tx [attendance plan]
@@ -174,7 +179,7 @@
                          [(create-attendance-plan-tx db gig-id member-id plan-kw)])]
 
     (assert plan-kw (format  "unknown plan value: '%s'" plan))
-    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id member-id))))
+    (transact-attendance! req attendance-txs gig-id member-id)))
 
 (defn update-attendance-from-link! [{:keys [datomic-conn db system params] :as req}]
   (let [answer-enc (:answer params)
@@ -193,7 +198,7 @@
                              [(update-attendance-plan-tx attendance plan-kw)
                               (touch-attendance-tx attendance)]
                              [(create-attendance-plan-tx db  gig-id member-id plan-kw)])]
-        (transact-attendance! datomic-conn  attendance-txs (q/gig+member gig-id member-id))
+        (transact-attendance! req  attendance-txs gig-id member-id)
         {:gig gig :member member}))))
 
 (defn create-attendance-comment-tx [db gig-id member-id comment]
@@ -225,7 +230,7 @@
 
     (if (= :nop attendance-txs)
       {:attendance attendance}
-      (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id member-id)))))
+      (transact-attendance! req attendance-txs gig-id member-id))))
 
 (defn create-attendance-motivation-tx [db gig-id member-id motivation]
   (assoc (create-attendance-tx db gig-id member-id) :attendance/motivation motivation))
@@ -245,7 +250,7 @@
                            (touch-attendance-tx attendance)]
                           [(create-attendance-motivation-tx db gig-id member-id motivation-kw)])]
     (assert motivation-kw (format  "unknown motivation value: %s" motivation))
-    (transact-attendance! datomic-conn attendance-txs (q/gig+member gig-id member-id))))
+    (transact-attendance! req attendance-txs  gig-id member-id)))
 
 (defn transact-gig! [datomic-conn gig-txs gig-id]
   (let [result (datomic/transact datomic-conn {:tx-data gig-txs})]
@@ -289,14 +294,12 @@
     [:post-gig-plans {:optional true} :string]]))
 
 (defn update-gig! [{:keys [datomic-conn] :as req}]
-
   (let [gig-id (common/path-param-uuid! req :gig/gig-id)
         params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id)
                      (update :contact util/blank->nil)
                      (update :end-date util/blank->nil))
         notify? (rt/parse-boolean (:notify? params))
         decoded  (util/remove-nils (s/decode UpdateGig params))]
-    (tap> {:decoded decoded})
     (if (s/valid? UpdateGig decoded)
       (let [tx (-> decoded
                    (common/ns-qualify-key :gig)
@@ -305,9 +308,7 @@
                    (m/update-existing :gig/contact (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)]))
                    (domain/gig->db))
             result (transact-gig! datomic-conn [tx] gig-id)]
-        (when notify?
-          (email/send-gig-updated! req gig-id
-                                   (keys (second (clojure.data/diff (:gig-before result) (:gig result))))))
+        (gig.events/trigger-gig-details-edited req notify? result)
         result)
       (s/throw-error "Cannot update the gig. The gig data is invalid." nil  UpdateGig decoded))))
 
@@ -322,8 +323,7 @@
                (m/update-existing :gig/contact (fn [member-id] [:member/member-id member-id]))
                (domain/gig->db))]
     (let [result (transact-gig! datomic-conn [tx] gig-id)]
-      (when notify?
-        (email/send-gig-created! req gig-id))
+      (gig.events/trigger-gig-created req notify? result)
       result)))
 
 (defn delete-gig! [{:keys [datomic-conn db] :as req}]
@@ -360,6 +360,7 @@
                      :setlist/version :setlist.version/v1}
         txs         (concat [tx] txs)
         result      (datomic/transact datomic-conn {:tx-data txs})]
+    (gig.events/trigger-gig-edited req gig-id :setlist)
     (q/retrieve-songs (:db-after result) song-ids)))
 
 (defn reconcile-probeplan [eid new-song-tuples current-song-tuples]
@@ -378,16 +379,17 @@
 (defn update-probeplan!
   "Updates the probeplan for the current gig. song-ids are ordered. Returns the songs in the setlist."
   [{:keys [datomic-conn db] :as req} song-id-emphases]
-  (let [gig-id      (common/path-param-uuid! req :gig/gig-id)
+  (let [gig-id (common/path-param-uuid! req :gig/gig-id)
         song-tuples (map probeplan-song-tx song-id-emphases)
-        current     (q/probeplan-song-tuples-for-gig db  gig-id)
-        txs         (reconcile-probeplan "probeplan" song-tuples current)
-        tx          {:probeplan/gig     [:gig/gig-id gig-id]
-                     :db/id             "probeplan"
-                     :probeplan/version :probeplan.version/classic}
-        txs         (concat [tx] txs)
+        current (q/probeplan-song-tuples-for-gig db gig-id)
+        txs (reconcile-probeplan "probeplan" song-tuples current)
+        tx {:probeplan/gig [:gig/gig-id gig-id]
+            :db/id "probeplan"
+            :probeplan/version :probeplan.version/classic}
+        txs (concat [tx] txs)
         ;; _ (tap> txs)
-        result      (datomic/transact datomic-conn {:tx-data txs})]
+        result (datomic/transact datomic-conn {:tx-data txs})]
+    (gig.events/trigger-gig-edited req gig-id :probeplan)
     (q/probeplan-songs-for-gig (:db-after result) gig-id)))
 
 (clojure.core/comment

@@ -118,6 +118,9 @@
                          :setlist/version
                          :setlist.v1/songs])
 
+(defn retrieve-song [db song-id]
+  (d/find-by db :song/song-id song-id song-pattern-detail))
+
 (defn retrieve-sections [db]
   (->>
    (d/find-all db :section/name section-pattern)
@@ -145,7 +148,7 @@
 
 (defn retrieve-gig [db gig-id]
   (gig.domain/db->gig
-   (d/find-by db :gig/gig-id gig-id gig-detail-pattern)))
+   (d/find-by db :gig/gig-id (util/ensure-uuid gig-id) gig-detail-pattern)))
 
 (defn gigs-missing-id [db]
   (mapv first
@@ -415,9 +418,19 @@
                 :emphasis emphasis}))
        (sort-by :position)))
 
-(defn setlist-songs-for-gig [db gig-id]
-  (let [song-ids (setlist-song-ids-for-gig db gig-id)]
-    (retrieve-songs db song-ids)))
+(defn setlist-songs-for-gig
+  "Returns a list of maps with the following keys:
+  :song/title
+  :song/song-id
+  :position
+  "
+  [db gig-id]
+  (->> (setlist-song-tuples-for-gig db gig-id)
+       (mapv (fn [[[_ song-id] position]]
+               {:song/title (:song/title (retrieve-song db song-id))
+                :song/song-id song-id
+                :position position}))
+       (sort-by :position)))
 
 (defn planned-songs-for-gig
   "If the gig is a probe, then returns probeplan-songs-for gig, otherwise returns"
@@ -425,6 +438,7 @@
   (let [{:gig/keys [gig-type]} (retrieve-gig db gig-id)]
     (if (= :gig.type/gig gig-type)
       (setlist-songs-for-gig db gig-id)
+      ;; (setlist-for-gig db gig-id)
       (probeplan-songs-for-gig db gig-id))))
 
 (defn sheet-music-by-song [db song-id]
