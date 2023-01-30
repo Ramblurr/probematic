@@ -3,7 +3,7 @@
   (:require
    [app.auth :as auth]
    [app.config :as config]
-   [app.controllers.common :as common]
+   [app.util.http :as common]
    [app.datomic :as d]
    [app.email :as email]
    [app.gigs.domain :as domain]
@@ -19,7 +19,8 @@
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.debug :as debug]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -252,7 +253,7 @@
 (defn post-comment! [{:keys [datomic-conn] :as req}]
   (let [{:keys [body]} (common/unwrap-params req)
         author (d/ref (auth/get-current-member req))
-        gig-id (-> req :path-params :gig/gig-id)
+        gig-id (common/path-param-uuid! req :gig/gig-id)
         gig-txs [{:db/id "new_comment"
                   :comment/comment-id (sq/generate-squuid)
                   :comment/body body
@@ -266,7 +267,7 @@
   "This schema describes the http post we receive when updating a gig's info"
   (s/schema
    [:map {:name ::UpdateGig}
-    [:gig-id ::s/non-blank-string]
+    [:gig-id :uuid]
     [:title ::s/non-blank-string]
     [:date ::s/date]
     [:end-date {:optional true} ::s/date]
@@ -286,19 +287,22 @@
 
 (defn update-gig! [{:keys [datomic-conn] :as req}]
 
-  (let [gig-id (common/path-param req :gig/gig-id)
+  (let [gig-id (common/path-param-uuid! req :gig/gig-id)
         params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id)
                      (update :contact util/blank->nil)
                      (update :end-date util/blank->nil))
         notify? (rt/parse-boolean (:notify? params))
         decoded  (util/remove-nils (s/decode UpdateGig params))]
+    (tap> {:decoded decoded})
     (if (s/valid? UpdateGig decoded)
       (let [tx (-> decoded
                    (common/ns-qualify-key :gig)
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
                    (m/update-existing :gig/contact (fn [gigo-key] [:member/gigo-key gigo-key]))
-                   (domain/gig->db))
+                   (debug/xxx :pre->)
+                   (domain/gig->db)
+                   (debug/xxx :post->))
             result (transact-gig! datomic-conn [tx] gig-id)]
         (when notify?
           (email/send-gig-updated! req gig-id
@@ -322,7 +326,7 @@
       result)))
 
 (defn delete-gig! [{:keys [datomic-conn db] :as req}]
-  (let [gig-id      (common/path-param req :gig/gig-id)
+  (let [gig-id      (common/path-param-uuid! req :gig/gig-id)
         gig-ref     [:gig/gig-id gig-id]
         attendances (mapv (fn [{:attendance/keys [gig+member]}]
                             [:db/retractEntity [:attendance/gig+member gig+member]])  (q/attendances-for-gig db gig-id))
@@ -346,7 +350,7 @@
 (defn update-setlist!
   "Updates the setlist for the current gig. song-ids are ordered. Returns the songs in the setlist."
   [{:keys [datomic-conn db] :as req} song-ids]
-  (let [gig-id      (common/path-param req :gig/gig-id)
+  (let [gig-id      (common/path-param-uuid! req :gig/gig-id)
         song-tuples (map-indexed (fn [idx sid] [[:song/song-id sid] idx]) song-ids)
         current     (q/setlist-song-tuples-for-gig db  gig-id)
         txs         (reconcile-setlist "setlist" song-tuples current)
@@ -373,7 +377,7 @@
 (defn update-probeplan!
   "Updates the probeplan for the current gig. song-ids are ordered. Returns the songs in the setlist."
   [{:keys [datomic-conn db] :as req} song-id-emphases]
-  (let [gig-id      (common/path-param req :gig/gig-id)
+  (let [gig-id      (common/path-param-uuid! req :gig/gig-id)
         song-tuples (map probeplan-song-tx song-id-emphases)
         current     (q/probeplan-song-tuples-for-gig db  gig-id)
         txs         (reconcile-probeplan "probeplan" song-tuples current)

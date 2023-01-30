@@ -88,6 +88,12 @@
 
 ;;;; Gigs
    {:db/ident :gig/gig-id
+    :db/doc "Our UUID id"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/gigo-id
     :db/doc "The gig id from gig-o-matic."
     :db/valueType :db.type/string
     :db/unique :db.unique/identity

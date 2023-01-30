@@ -33,7 +33,10 @@
   (str "/nextcloud-fetch?path=" (url-encode path)))
 
 (defn absolute-link-gig [env gig-id]
-  (str (config/app-base-url env) "/gig/" gig-id))
+  (str (config/app-base-url env) "/gig/" gig-id "/"))
+
+(defn absolute-link-song [env song-id]
+  (str (config/app-base-url env) "/song/" song-id "/"))
 
 (defn absolute-gig-answer-link-base [env]
   (str (config/app-base-url env) "/gig/answer-link"))

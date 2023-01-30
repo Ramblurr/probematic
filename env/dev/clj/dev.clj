@@ -10,7 +10,9 @@
    [jsonista.core :as j]
    [malli.dev :as md]
    [ol.app.dev.dev-extras :as dev-extra]
-   [ol.system :as system]))
+   [ol.system :as system]
+   [app.queries :as q]
+   [jsonista.core :as json]))
 
 (repl/disable-reload! (find-ns 'browser))
 (repl/disable-reload! *ns*)
@@ -29,6 +31,8 @@
   (browser/refresh))
 
 (comment
+
+  (repl/clear)
 
   ;; Run go to start the system
   (dev-extra/go)
@@ -117,12 +121,15 @@
   (do
     (require '[integrant.repl.state :as state])
     (require '[keycloak.admin :as admin])
+    (require '[datomic.client.api :as datomic])
     (def env (-> state/system :app.ig/env))
     (def kc (-> state/system :app.ig/keycloak))
-    (def conn (-> state/system :app.ig/datomic-db :conn)))
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db (datomic/db conn)))
   ;; rcf
+  (q/find-all-gigs db)
 
   (def user0 (second))
 
-;;
+  ;;
   )

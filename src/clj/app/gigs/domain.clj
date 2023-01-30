@@ -28,6 +28,9 @@
                   :motivation/very-low])
 (def gig-types [:gig.type/probe :gig.type/extra-probe :gig.type/meeting :gig.type/gig])
 
+(defn setlist-gig? [{:gig/keys [gig-type]}]
+  (contains? #{:gig.type/gig} gig-type))
+
 (def setlist-versions [:setlist.version/v1])
 
 (def SetlistV1Entity
@@ -40,7 +43,31 @@
 (def GigEntity
   (s/schema
    [:map {:name :app.entity/gig}
-    [:gig/gig-id ::s/non-blank-string]
+    [:gig/gig-id :uuid]
+    [:gig/title {:max 4096} ::s/non-blank-string]
+    [:gig/status (s/enum-from statuses)]
+    [:gig/date ::s/instdate]
+    [:gig/end-date {:optional true} ::s/instdate]
+    [:gig/gig-type (s/enum-from gig-types)]
+    [:gig/gigo-id {:optional true} ::s/non-blank-string]
+    [:gig/location {:optional true :max 4096} ::s/non-blank-string]
+    [:gig/contact {:optional true} ::s/datomic-ref]
+    [:gig/call-time {:optional true} ::s/minute-time]
+    [:gig/set-time {:optional true} ::s/minute-time]
+    [:gig/end-time {:optional true} ::s/time]
+    [:gig/leader {:optional true :max 4096} :string]
+    [:gig/pay-deal {:optional true :max 4096} :string]
+    [:gig/outfit {:optional true :max 4096} :string]
+    [:gig/more-details {:optional true :max 4096} :string]
+    [:gig/setlist {:optional true :max 4096} :string]
+    [:gig/description {:optional true :max 4096} :string]
+    [:gig/post-gig-plans {:optional true :max 4096} :string]
+    [:gig/gigo-plan-archive  {:optional true :max 4096} :string]]))
+
+(def GigEntityFromGigo
+  (s/schema
+   [:map {:name :app.entity/gig}
+    [:gig/gigo-id ::s/non-blank-string]
     [:gig/title {:max 4096} ::s/non-blank-string]
     [:gig/status (s/enum-from statuses)]
     [:gig/date ::s/instdate]
@@ -71,14 +98,17 @@
                     (s/encode-datomic GigEntity _gig))
   ;;
   )
-(defn gig->db [gig]
-  (when-not (s/valid? GigEntity gig)
-    (throw
-     (ex-info "Gig not valid" {:gig gig
-                               :schema GigEntity
-                               :error (s/explain GigEntity gig)
-                               :human (s/explain-human GigEntity gig)})))
-  (s/encode-datomic GigEntity gig))
+(defn gig->db
+  ([gig]
+   (gig->db GigEntity gig))
+  ([schema gig]
+   (when-not (s/valid? schema gig)
+     (throw
+      (ex-info "Gig not valid" {:gig gig
+                                :schema schema
+                                :error (s/explain schema gig)
+                                :human (s/explain-human schema gig)})))
+   (s/encode-datomic schema gig)))
 
 (defn ->comment [comment]
   (-> comment

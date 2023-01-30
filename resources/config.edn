@@ -85,7 +85,7 @@
                    :app.ig/gigo-client      {:env #ig/ref :app.ig/env}
                    :app.ig/sentry           {:env #ig/ref :app.ig/env}
                    :app.ig/datomic-db       {:server-type :dev-local
-                                             :system      "dev"
+                                             :system      "app"
                                              :db-name     "probematic"
                                              :env         #ig/ref :app.ig/env
                                              :storage-dir #or [#env DATOMIC_DB_STORAGE_DIR

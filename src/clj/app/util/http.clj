@@ -1,16 +1,30 @@
-(ns app.controllers.common
+(ns app.util.http
   (:require
    [ctmx.form :as form]
    [medley.core :as m]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [app.util :as util]))
 
 (defn unwrap-params
   ([req] (-> req :form-params form/json-params-pruned))
   ([req name]
    (-> req :form-params form/json-params-pruned name)))
 
-(defn path-param [req k]
+(defn path-param
+  "Fetches the path param k"
+  [req k]
   (-> req :path-params k))
+
+(defn path-param-uuid
+  "Fetches the path param k coerced as a uuid"
+  [req k]
+  (util/ensure-uuid
+   (path-param req k)))
+
+(defn path-param-uuid!
+  "Like path-param uuid but throws if the param doesn't exist."
+  [req k]
+  (util/ensure-uuid! (path-param req k)))
 
 (defn no-blanks [m]
   (m/map-vals #(if (and (string? %) (str/blank? %)) nil %) m))

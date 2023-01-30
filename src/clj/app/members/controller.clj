@@ -1,7 +1,7 @@
 (ns app.members.controller
   (:require
    [app.auth :as auth]
-   [app.controllers.common :as common]
+   [app.util.http :as common]
    [app.datomic :as d]
    [app.email :as email]
    [app.i18n :as i18n]

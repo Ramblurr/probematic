@@ -1,5 +1,7 @@
 (ns app.interceptors
   (:require
+
+   [io.pedestal.http.secure-headers :as sec-headers]
    [app.auth :as auth]
    [app.config :as config]
    [app.i18n :as i18n]
@@ -69,6 +71,9 @@
                             (assoc ctx :response {:status 400 :body "A bad one"})
 
                             [{:exception-type :clojure.lang.ExceptionInfo :cognitect.anomalies/category :cognitect.anomalies/incorrect}]
+                            (assoc ctx :response (errors/not-found-error (:request ctx) ex))
+
+                            [{:exception-type :clojure.lang.ExceptionInfo :app/error-type :app.error.type/not-found}]
                             (assoc ctx :response (errors/not-found-error (:request ctx) ex))
 
                             [{:exception-type :clojure.lang.ExceptionInfo :app/error-type :app.error.type/validation}]
@@ -299,6 +304,7 @@
 
 (defn with-default-pedestal-interceptors [service system]
   (update-in service [::http/interceptors] conj
+             ;; (sec-headers/secure-headers (::http/secure-headers service))
              service-error-handler
              middlewares/cookies
              (pedestal.interceptor/interceptor (system-interceptor system))

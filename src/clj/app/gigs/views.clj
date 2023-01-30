@@ -1,6 +1,7 @@
 (ns app.gigs.views
   (:refer-clojure :exclude [comment hash])
   (:require
+   [app.util.http :as http.util]
    [app.auth :as auth]
    [app.gigs.domain :as domain]
    [app.gigs.service :as service]
@@ -17,7 +18,11 @@
    [ctmx.response :as response]
    [ctmx.rt :as rt]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [hiccup.util :as hiccup.util]))
+
+(defn- gig-id-from-path [req]
+  (http.util/path-param-uuid! req :gig/gig-id))
 
 (defn radio-button  [idx {:keys [id name label value opt-id icon size class icon-class model disabled? required? data]
                           :or {size :normal
@@ -129,7 +134,7 @@
         (icon/fist-punch {:class "h-8 w-8"})]]]]))
 
 (ctmx/defcomponent ^:endpoint gig-log-plays [{:keys [tr db] :as req}]
-  (let [gig-id (-> req :path-params :gig/gig-id)
+  (let [gig-id (gig-id-from-path req)
         post? (util/post? req)]
     (if post?
       (do
@@ -253,7 +258,7 @@
      (if edit?
        (ui/text :name (path "comment") :value comment :required? false :size :small
                 :extra-attrs {:hx-target (hash ".") :hx-post (comp-name) :hx-trigger "focusout, keydown[key=='Enter'] changed"  :autofocus true
-                              :hx-vals {(path "gigo-key") gigo-key (path "gig-id") gig-id}
+                              :hx-vals {(path "gigo-key") gigo-key (path "gig-id") (str gig-id)}
                               :_ "on focus or htmx:afterRequest or load
                                           set :initial_value to my value
                                         end
@@ -262,7 +267,7 @@
                                           blur() me
                                         end"})
 
-       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gig-id gig-id :gigo-key gigo-key :comment comment :edit? true}}]
+       (let [hx-attrs {:hx-target (hash ".") :hx-get (comp-name) :hx-vals {:gig-id (str gig-id) :gigo-key gigo-key :comment comment :edit? true}}]
          (if comment
            [:span (merge hx-attrs {:class "text-xs sm:text-sm ml-2 link-blue"})
             comment]
@@ -285,21 +290,21 @@
   (plan-endpoint req
                  {:path path :id id :hash hash :value value}
                  (util/comp-namer #'gig-attendance-person-plan)
-                 (-> req :path-params :gig/gig-id)
+                 (gig-id-from-path req)
                  gigo-key plan))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-comment [{:keys [db] :as req} gigo-key comment  ^:boolean edit?]
   (comment-endpoint req
                     {:path path :id id :hash hash :value value}
                     (util/comp-namer #'gig-attendance-person-comment)
-                    (-> req :path-params :gig/gig-id)
+                    (gig-id-from-path req)
                     gigo-key comment edit?))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [{:keys [db] :as req} gigo-key motivation]
   (motivation-endpoint req
                        {:path path :id id :hash hash :value value}
                        (util/comp-namer #'gig-attendance-person-motivation)
-                       (-> req :path-params :gig/gig-id)
+                       (gig-id-from-path req)
                        gigo-key motivation))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
@@ -610,7 +615,7 @@ on change if I match <:checked/>
   (let [;; archived? (domain/gig-archived? gig)
         songs (if (util/post? req)
                 (service/update-probeplan! req (util/unwrap-params req))
-                (q/probeplan-songs-for-gig db (-> req :path-params :gig/gig-id)))
+                (q/probeplan-songs-for-gig db (gig-id-from-path req)))
         ;; selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)
         target (util/hash :comp/gig-probeplan-container)]
     (ui/panel {:title (tr [:gig/probeplan]) :id (util/id :comp/gig-probeplan-container)
@@ -877,6 +882,26 @@ on change if I match <:checked/>
 (ctmx/defcomponent ^:endpoint  gig-detail-info-section-hxget [req]
   (gig-detail-info-section req (:gig req)))
 
+(defn discourse-comment-embed [{:keys [tr] :as req} gig]
+  [:div {:class "divide-y divide-gray-200"}
+   (comment-header tr)
+   (list
+    [:div {:id "discourse-comments"
+           :class "mb-6"}]
+    [:script {:type "text/javascript"}
+     (hiccup.util/raw-string
+      (format
+       "
+  DiscourseEmbed = { discourseUrl: 'https://forum.streetnoise.at/',
+                     topicId: '%s' };
+
+  (function() {
+    var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+    d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+  })();
+" "2686"))])])
+
 (ctmx/defcomponent ^:endpoint gig-detail-page [{:keys [tr db] :as req} ^:boolean show-committed?]
   gig-details-edit-form gig-delete gig-details-edit-post gig-detail-info-section-hxget
   (let [{:gig/keys [gig-id gig-type] :as gig} (:gig req)
@@ -885,6 +910,7 @@ on change if I match <:checked/>
         probe? (#{:gig.type/probe :gig.type/extra-probe} gig-type)
         gig? (#{:gig.type/gig} gig-type)
         scheduled-songs (when gig? (q/setlist-song-ids-for-gig db gig-id))
+        _ (tap> {:gig-id (:gig req)})
         attendances-by-section (if archived?
                                  (q/attendance-plans-by-section-for-gig db (q/attendances-for-gig db gig-id) false)
                                  (q/attendance-plans-by-section-for-gig db (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
@@ -919,9 +945,11 @@ on change if I match <:checked/>
             (rt/map-indexed gig-attendance-archived req attendances-by-section)
             (rt/map-indexed gig-attendance req attendances-by-section))]]]
 ;;;; Comments Section
-       #_[:section {:aria-labelledby "notes-title"}
-          [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg"}
-           (gigs-detail-page-comment req gig)]]]]]))
+       [:section {:aria-labelledby "notes-title"}
+        [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg mb-6"}
+         [:div {:class "px-4 py-5 sm:px-6 "}
+          (discourse-comment-embed req gig)]
+         #_(gigs-detail-page-comment req gig)]]]]]))
 
 ;;;; Create Gig
 (ctmx/defcomponent ^:endpoint gig-create-page [{:keys [tr db] :as req}]

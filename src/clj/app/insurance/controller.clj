@@ -1,6 +1,6 @@
 (ns app.insurance.controller
   (:require
-   [app.controllers.common :as common]
+   [app.util.http :as common]
    [app.datomic :as d]
    [app.queries :as q]
    [app.util :as util]

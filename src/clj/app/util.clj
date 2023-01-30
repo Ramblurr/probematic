@@ -225,6 +225,9 @@
     (parse-uuid v)
     v))
 
+(defn ensure-uuid! [v]
+  (parse-uuid v))
+
 (defn log-pprint
   "A pretty-print function suitable for use with
   `clojure.tools.logging` functions."

@@ -64,8 +64,8 @@
 (defn datomic-transformer []
   (mt/transformer
    {:name :datomic
-    :decoders (mt/-string-decoders)
-    :encoders (mt/-string-encoders)}))
+    :decoders (assoc (mt/-string-decoders) :uuid identity)
+    :encoders (assoc  (mt/-string-encoders) :uuid identity)}))
 
 (defn decode-datomic [schema doc]
   (m/decode schema doc malli-opts (mt/transformer datomic-transformer)))

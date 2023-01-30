@@ -12,7 +12,9 @@
             [tick.core :as t]
             [app.discourse :as discourse]
             [clojure.tools.logging :as log]
-            [app.routes.errors :as errors])
+            [app.routes.errors :as errors]
+            [com.yetanalytics.squuid :as sq]
+            [app.queries :as q])
 
   (:import (java.time DayOfWeek)))
 
@@ -31,8 +33,9 @@
 ;; in order to manage the dialogflow Gig entity
 (defn- gig-tx [gig]
   (domain/gig->db
+   domain/GigEntityFromGigo
    (->
-    {:gig/gig-id         (:id gig)
+    {:gig/gigo-id        (:id gig)
      :gig/title          (:title gig)
      :gig/location       (:address gig)
      :gig/gig-type       (cond
@@ -57,9 +60,19 @@
     util/remove-nils
     util/remove-empty-strings)))
 
+(defn backfill-gig-ids [conn db]
+  (let [txs (->> (q/gigs-missing-id db)
+                 (map :gig/gigo-id)
+                 (map (fn [gigo-id]
+                        [:db/add [:gig/gigo-id gigo-id] :gig/gig-id (sq/generate-squuid)])))]
+    (when (seq txs)
+      (d/transact conn {:tx-data txs}))))
+
 (defn update-gigs-db! [conn gigs]
   (assert conn)
-  (d/transact conn {:tx-data (map gig-tx gigs)}))
+  (backfill-gig-ids conn
+                    (:db-after
+                     (d/transact conn {:tx-data (map gig-tx gigs)}))))
 
 (defn probe? [g]
   (and

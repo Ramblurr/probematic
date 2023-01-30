@@ -4,7 +4,8 @@
    [app.layout :as layout]
    [app.queries :as q]
    [ctmx.core :as ctmx]
-   [datomic.client.api :as d]))
+   [datomic.client.api :as d]
+   [app.util :as util]))
 
 (defn gigs-list-route []
   (ctmx/make-routes
@@ -36,9 +37,12 @@
                         :enter (fn [ctx]
                                  (let [conn (-> ctx :request :datomic-conn)
                                        db (d/db conn)
-                                       gig-id (-> ctx :request :path-params :gig/gig-id)]
-                                   (cond-> ctx
-                                     gig-id (assoc-in [:request :gig] (q/retrieve-gig db gig-id)))))})
+                                       gig-id (-> ctx :request :path-params :gig/gig-id util/ensure-uuid)
+                                       gig (q/retrieve-gig db gig-id)]
+                                   (if gig
+                                     (assoc-in ctx [:request :gig] gig)
+                                     (throw (ex-info "Gig not found" {:app/error-type :app.error.type/not-found
+                                                                      :gig/gig-id gig-id})))))})
 
 (defn gigs-list-route []
   (ctmx/make-routes

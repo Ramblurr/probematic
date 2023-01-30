@@ -810,9 +810,9 @@
   (when date
     (t/format (t/formatter "dd.MM.yy E") (t/date date))))
 
-(defn gig-time [{:gig/keys [date call-time]}]
-  (when call-time
-    (t/format (t/formatter "HH:mm") (t/at date call-time))))
+(defn gig-time [{:gig/keys [date call-time set-time]}]
+  (when-let [time (or call-time set-time)]
+    (t/format (t/formatter "HH:mm") (t/at date time))))
 
 (defn datetime [dt]
   (if dt
@@ -846,6 +846,38 @@
        (format-dt start (t/formatter "dd MMM yyyy"))
        " – "
        (format-dt end (t/formatter "dd MMM yyyy"))])))
+
+(defn daterange-plain
+  "As per: https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Dates_and_numbers#Ranges"
+  [start end]
+  (let [same?  (= start end)
+        same-month? (= (t/month start) (t/month end))
+        same-year? (= (t/year start) (t/year end))]
+    (cond
+      same?
+      (format-dt start)
+      (and same-month? same-year?)
+      (str
+       (format-dt start (t/formatter "dd"))
+       "–"
+       (format-dt end (t/formatter "dd"))
+       " "
+       (format-dt start (t/formatter "MMM yyyy")))
+      same-year?
+      (str
+       (format-dt start (t/formatter "dd MMM"))
+       " – "
+       (format-dt end (t/formatter "dd MMM yyyy")))
+      :else
+      (str
+       (format-dt start (t/formatter "dd MMM yyyy"))
+       " – "
+       (format-dt end (t/formatter "dd MMM yyyy"))))))
+
+(defn gig-date-plain [{:gig/keys [end-date date]}]
+  (if end-date
+    (daterange-plain date end-date)
+    (format-dt date)))
 
 (defn time [t]
   (when t

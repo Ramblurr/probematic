@@ -49,10 +49,8 @@
 
 (defn body-end []
   (list
-   [:script {:src "/js/hyperscript.org@0.9.7.js"
-             :integrity "sha384-6GYN8BDHOJkkru6zcpGOUa//1mn+5iZ/MyT6mq34WFIpuOeLF52kSi721q0SsYF9"}]
-   [:script {:src "/js/htmx.js"
-             :integrity "sha384-mrsv860ohrJ5KkqRxwXXj6OIT6sONUxOd+1kvbqW351hQd7JlfFnM0tLetA76GU0"}]
+   [:script {:src "/js/hyperscript.org@0.9.7.js"}]
+   [:script {:src "/js/htmx.js"}]
    [:script {:src "/js/nprogress.js"}]
    [:script {:src "/js/popperjs@2-dev.js"}]
    [:script {:src "/js/tippy@6-dev.js"}]
