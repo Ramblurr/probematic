@@ -162,6 +162,13 @@
                                  (config/oauth2-known-roles env))
            {"oauth2" (expire-oauth2-cookie env)} post-login-uri))))))
 
+(defn routes [system]
+  [""
+   ["/login" {:handler (fn [req] (login-page-handler (:env system) (:oauth2 system) req))}]
+   ["/logout" {:handler (fn [req] (logout-page-handler (:env system) (:oauth2 system) req))}]
+   ["/oauth2"
+    ["/callback" {:handler (fn [req] (oauth2-callback-handler (:env system) (:oauth2 system) req))}]]])
+
 (defn session-interceptor
   [{:keys [env redis]}]
   (let [{:keys [session-ttl-s cookie-attrs]} (config/session-config env)]

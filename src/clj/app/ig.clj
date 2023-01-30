@@ -40,7 +40,9 @@
 
 (defmethod ig/init-key :app.ig.router/routes
   [_ system]
-  (routes/routes system))
+  (let [routes (routes/routes system)]
+    {:routes  routes
+     :router  (http/router routes)}))
 
 (defmethod ig/init-key :app.ig.jobs/definitions
   [_ {:keys [env] :as system}]
@@ -61,12 +63,11 @@
                                                                                                    (-> env :max-header-size))})
       true (assoc :io.pedestal.http/allowed-origins
                   {:creds true :allowed-origins (constantly true)})
-      true (interceptors/with-default-interceptors system)
-                 ;; swap in the reitit router
-      true (pedestal/replace-last-interceptor
-            (pedestal/routing-interceptor
-             (http/router routes)
-             handler))
+      true (interceptors/with-default-pedestal-interceptors system)
+      true (interceptors/with-interceptor
+             (pedestal/routing-interceptor
+              (:router routes)
+              handler))
       ;; (config/dev-mode? env) interceptors/prone-exception-interceptor
       (config/dev-mode? env) (server/dev-interceptors)
       true (server/create-server)

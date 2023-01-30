@@ -52,8 +52,7 @@
                                                       :demo :demo
                                                       :test :test}
                    :app.ig/env              {:profile #ig/ref :app.ig/profile}
-                   :app.ig/pedestal         {:i18n-langs #ig/ref :app.ig/i18n-langs
-                                             :service    {:io.pedestal.http/type           :jetty
+                   :app.ig/pedestal         {:service    {:io.pedestal.http/type           :jetty
                                                           :io.pedestal.http/routes         []
                                                           :io.pedestal.http/port           #long #or [#env HTTP_PORT #profile {:dev 6161 :test 6162} 6160]
                                                           :io.pedestal.http/host           #or [#env HTTP_BIND_HOST "localhost"]
@@ -66,19 +65,20 @@
                                                                                                                                :script-src  "'self' 'unsafe-inline' 'unsafe-eval';"
                                                                                                                                :style-src   "'self' 'unsafe-inline' https://rsms.me;"
                                                                                                                                :connect-src "'self'"}}}
-                                             :env        #ig/ref :app.ig/env
-                                             :profile    #ig/ref :app.ig/profile
-                                             :routes     #ig/ref :app.ig.router/routes
-                                             :handler    #ig/ref :app.ig/handler}
-                   :app.ig/handler          {:env #ig/ref :app.ig/env}
-                   :app.ig.router/routes    {:routes     #ig/refset :app.ig/routes
-                                             :i18n-langs #ig/ref :app.ig/i18n-langs
                                              :datomic    #ig/ref :app.ig/datomic-db
-                                             :webdav     #ig/ref :app.ig/webdav-sardine
                                              :env        #ig/ref :app.ig/env
+                                             :handler    #ig/ref :app.ig/handler
+                                             :i18n-langs #ig/ref :app.ig/i18n-langs
                                              :keycloak   #ig/ref :app.ig/keycloak
-                                             :oauth2     #ig/ref :app.ig/oauth2
-                                             :redis      #ig/ref :app.ig/redis}
+                                             :profile    #ig/ref :app.ig/profile
+                                             :redis      #ig/ref :app.ig/redis
+                                             :routes     #ig/ref :app.ig.router/routes
+                                             :webdav     #ig/ref :app.ig/webdav-sardine}
+                   :app.ig/handler          {:env #ig/ref :app.ig/env}
+                   :app.ig.router/routes    {:routes #ig/refset :app.ig/routes
+                                             :i18n-langs #ig/ref :app.ig/i18n-langs
+                                             :env    #ig/ref :app.ig/env
+                                             :oauth2 #ig/ref :app.ig/oauth2}
                    :app.ig/oauth2           {:env #ig/ref :app.ig/env}
                    :ol.ig/jobs              {:job-defs #ig/ref :app.ig.jobs/definitions
                                              :env      #ig/ref :app.ig/env}

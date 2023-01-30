@@ -1,17 +1,17 @@
 (ns app.routes
   (:require
-   [app.routes.pedestal-reitit :as pedestal-reitit]
    [app.auth :as auth]
-   [app.dashboard.routes :refer [dashboard-routes]]
-   [app.file-browser.routes :refer [file-browser-routes]]
-   [app.gigs.routes :refer [gig-answer-link-route gigs-routes]]
-   [app.insurance.routes :refer [insurance-routes]]
+   [app.dashboard.routes :as dashboard]
+   [app.file-browser.routes :as file-browser]
+   [app.gigs.routes :as gigs]
+   [app.insurance.routes :as insurance]
    [app.interceptors :as interceptors]
-   [app.members.routes :refer [members-routes invite-accept-route]]
-   [app.probeplan.routes :refer [probeplan-routes]]
-   [app.sardine :as sardine]
-   [app.songs.routes :refer [songs-routes]]
-   [reitit.coercion.malli :as rcm]
+   [app.members.routes :as members]
+   [app.nextcloud :as nextcloud]
+   [app.probeplan.routes :as probeplan]
+   [app.routes.pedestal-reitit :as pedestal-reitit]
+   [app.songs.routes :as songs]
+   [integrant.repl.state :as state]
    [reitit.ring :as ring]))
 
 (pedestal-reitit/nop)
@@ -19,38 +19,39 @@
 (defn routes [system]
   ["" {:coercion     interceptors/default-coercion
        :muuntaja     interceptors/formats-instance
-       :interceptors (conj  (interceptors/default-interceptors system)
-                            (auth/session-interceptor system)
-                            (interceptors/system-interceptor system)
-                            (interceptors/datomic-interceptor system)
-                            (interceptors/current-user-interceptor system)
-                            ;;
-                            )}
-   ["/login" {:handler (fn [req] (auth/login-page-handler (:env system) (:oauth2 system) req))}]
-   ["/logout" {:handler (fn [req] (auth/logout-page-handler (:env system) (:oauth2 system) req))}]
-   ["/oauth2"
-    ["/callback" {:handler (fn [req] (auth/oauth2-callback-handler (:env system) (:oauth2 system) req))}]]
-   (gig-answer-link-route)
-   (invite-accept-route)
+       :interceptors (interceptors/default-reitit-interceptors system)}
+
+   (auth/routes system)
+   (gigs/unauthenticated-routes)
+   (members/unauthenticated-routes)
 
    ["" {:interceptors [auth/require-authenticated-user
                        (interceptors/webdav-interceptor system)]}
 
-    (members-routes)
-    (dashboard-routes)
-    (songs-routes)
-    (gigs-routes)
-    (probeplan-routes)
-    (insurance-routes)
-    (file-browser-routes)
-    ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
-                         :coercion rcm/coercion
-                         :app.route/name :app/nextcloud-fetch
-                         :handler (fn [req] (sardine/fetch-file-handler req false))}]
-                                        ;["/index.html" (index-route frontend-index-adapter index-csp)]
-    ]])
+    (dashboard/routes)
+    (file-browser/routes)
+    (gigs/routes)
+    (insurance/routes)
+    (members/routes)
+    (nextcloud/routes)
+    (probeplan/routes)
+    (songs/routes)]])
 
 (defn default-handler [{:keys [] :as system}]
   (ring/routes
    (ring/create-resource-handler {:path "/"})
    (ring/create-default-handler)))
+
+(comment
+  (do
+    (require '[integrant.repl.state :as state])
+    (require '[reitit.core :as r])
+    (require '[reitit.http :as http])
+    (require '[app.urls :as url])
+    (def _routes (-> state/system :app.ig.router/routes :routes))
+    (def _router (-> state/system :app.ig.router/routes :router))
+    (def env (-> state/system :app.ig/env))
+    (tap> _routes))
+  ;; rcf
+  ;;
+  )

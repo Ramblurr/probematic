@@ -53,7 +53,7 @@
    (fn [req]
      (layout/app-shell req (view/gig-detail-page req false)))))
 
-(defn gigs-routes []
+(defn routes []
   ["" {:app.route/name :app/gigs}
    ["/gigs"
     (gig-create-route)
@@ -62,7 +62,8 @@
     (gig-detail-route)
     (gig-log-play-route)]])
 
-(defn gig-answer-link-route []
-  ["/answer-link" {:app.route/name :app/gig-answer-link
-                   :handler  (fn [req]
-                               (view/gig-answer-link req))}])
+(defn unauthenticated-routes []
+  [""
+   ["/answer-link" {:app.route/name :app/gig-answer-link
+                    :handler  (fn [req]
+                                (view/gig-answer-link req))}]])

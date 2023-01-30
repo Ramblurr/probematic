@@ -35,7 +35,7 @@
                         (ui/page-header :title "Log Play")
                         (view/songs-log-play req)]))))
 
-(defn songs-routes []
+(defn routes []
   ["" {:app.route/name :app/songs}
    (song-detail-routes)
    (songs-log-play-routes)

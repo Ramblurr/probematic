@@ -17,7 +17,7 @@
    :enter (fn [ctx]
             (assoc-in ctx [:request :all-songs] (q/find-all-songs (-> ctx :request :db))))})
 
-(defn probeplan-routes []
+(defn routes []
   ["" {:app.route/name :app/probeplan
        :interceptors [probeplan-interceptor]}
    (probeplan-index-route)])

@@ -13,7 +13,7 @@
      (layout/app-shell req
                        (view/dashboard-page req)))))
 
-(defn dashboard-routes []
+(defn routes []
   ["" {:app.route/name :app/dashboard
        :app.auth/roles #{:Mitglieder}
        :interceptors [auth/roles-authorization-interceptor gig.routes/gigs-interceptors]}

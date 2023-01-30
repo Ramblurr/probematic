@@ -1,5 +1,7 @@
 (ns app.nextcloud
   (:require
+   [app.sardine :as sardine]
+   [reitit.coercion.malli :as rcm]
    [jsonista.core :as j]
    [org.httpkit.client :as client]))
 
@@ -42,6 +44,12 @@
                         :url     (str "/users")
                         :headers {"accept" "application/json"}} config)]
     (->  resp parse-body :body :ocs :data)))
+
+(defn routes []
+  ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
+                       :coercion rcm/coercion
+                       :app.route/name :app/nextcloud-fetch
+                       :handler (fn [req] (sardine/fetch-file-handler req false))}])
 
 (comment
   (do

@@ -11,6 +11,6 @@
      (layout/app-shell req
                        (view/choose-file-page req)))))
 
-(defn file-browser-routes []
+(defn routes []
   ["" {:app.route/name :app/songs}
    (choose-file-page)])

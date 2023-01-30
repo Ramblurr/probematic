@@ -30,13 +30,14 @@
                                          member-gigo-key (assoc-in [:request :member] (q/retrieve-member db member-gigo-key))
                                          true (assoc-in [:request :members] (controller/members db)))))}])
 
-(defn members-routes []
+(defn routes []
   ["" {:interceptors  members-interceptors
        :app.route/name :app/members}
    (members-detail)
    (members-index)])
 
-(defn invite-accept-route []
-  ["/invite-accept" {:app.route/name :app/invite-accept
-                     :get  (fn [req] (view/invite-accept req))
-                     :post (fn [req] (view/invite-accept-post req))}])
+(defn unauthenticated-routes []
+  [""
+   ["/invite-accept" {:app.route/name :app/invite-accept
+                      :get  (fn [req] (view/invite-accept req))
+                      :post (fn [req] (view/invite-accept-post req))}]])

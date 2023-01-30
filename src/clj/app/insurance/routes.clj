@@ -50,7 +50,7 @@
                                            policy-id (assoc-in  [:request :policy] (controller/retrieve-policy db (parse-uuid policy-id)))
                                            instrument-id (assoc-in  [:request :instrument] (controller/retrieve-instrument db (parse-uuid instrument-id))))))}])
 
-(defn insurance-routes []
+(defn routes []
   ["" {:app.route/name :app/insurance
        :interceptors insurance-interceptors}
    (ctmx/make-routes
