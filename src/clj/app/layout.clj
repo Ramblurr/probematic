@@ -116,7 +116,8 @@
 (defn desktop-menu [req member]
   [:div {:id "desktop-sidebar-menu" :class "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"}
    [:div {:class "flex flex-shrink-0 items-center px-6"}
-    (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]
+    [:a {:href "/"}
+     (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]]
 
    [:div {:class "mt-5 flex h-0 flex-1 flex-col overflow-y-auto pt-1"}
     (user-account-actions req member)
@@ -133,7 +134,8 @@
        [:span {:class "sr-only"} "Close sidebar"]
        (icon/xmark {:class "h-6 w-6 text-white"})]]
      [:div {:class "flex flex-shrink-0 items-center px-4"}
-      (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]
+      [:a {:href "/"}
+       (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]]
      [:div {:class "mt-5 h-0 flex-1 overflow-y-auto"}
       [:nav {:class "px-2"}
        [:div {:class "space-y-1"}
