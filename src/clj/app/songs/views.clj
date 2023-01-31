@@ -126,7 +126,7 @@
 (ctmx/defcomponent ^:endpoint song-sheet-music [{:keys [db] :as req}]
   song-sheet-music-edit
   (let [song-id                               (parse-uuid (-> req :path-params :song-id))
-        {:song/keys [title active?] :as song} (controller/retrieve-song db song-id)
+        {:song/keys [title active?] :as song} (q/retrieve-song db song-id)
         tr                                    (i18n/tr-from-req req)
         sections-sheets                       (q/sheet-music-for-song db song-id)
         default-section                       (m/find-first :section/default? sections-sheets)
@@ -175,7 +175,7 @@
 (ctmx/defcomponent ^:endpoint song-detail-page [{:keys [tr db] :as req} ^:boolean edit?]
   (let [song-id                          (parse-uuid (-> req :path-params :song-id))
         song                             (if (util/post? req) (controller/update-song! req (parse-uuid (-> req :path-params :song-id)))
-                                             (controller/retrieve-song db song-id))
+                                             (q/retrieve-song db song-id))
         {:song/keys [title active? composition-credits
                      arrangement-credits arrangement-notes
                      last-rehearsal last-performance

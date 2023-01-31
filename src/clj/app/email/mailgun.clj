@@ -1,14 +1,18 @@
 (ns app.email.mailgun
   (:require
    [jsonista.core :as j]
-   [org.httpkit.client :as client]))
+   [org.httpkit.client :as client]
+   [clojure.tools.logging :as log]))
 
 (def retryable-errors #{429 500})
+
+(defn can-send-mail-to-in-test-mode? [{:keys [mailgun]} to]
+  (contains? (:test-mode-disabled-for mailgun) to))
 
 (defn send-email-req
   "Creates the email payload
   documentation: https://documentation.mailgun.com/en/latest/api-sending.html#sending"
-  [{:keys [mailgun]} to subject plain html]
+  [{:keys [mailgun] :as sys} to subject plain html]
   (let [{:keys [api-key mailgun-domain send-domain from test-mode?]} mailgun]
     {:method :post
      :url (str "https://" mailgun-domain "/v3/" send-domain "/messages")
@@ -18,14 +22,36 @@
                    :subject subject
                    :text plain
                    :html html
-                   "o:testmode" test-mode?
+                   "o:testmode" (if test-mode?  (not (can-send-mail-to-in-test-mode? sys to)) false)
                    "o:tracking" false}}))
+
+(defn partition-tos [{:keys [mailgun] :as sys} tos]
+  (if (:test-mode? mailgun)
+    (let [r (group-by (partial can-send-mail-to-in-test-mode? sys) tos)]
+      {:send-in-normalmode (get r true)
+       :send-in-testmode (get r false)})
+
+    {:send-in-normalmode tos
+     :send-in-testmode nil}))
+(comment
+
+  (partition-tos {:mailgun {:test-mode? false}} ["alice@example.com" "foo@foobar.com"])
+;; => {:send-in-normalmode ["alice@example.com" "foo@foobar.com"],
+;;     :send-in-testmode nil}
+
+  (partition-tos {:mailgun {:test-mode? true
+                            :test-mode-disabled-for #{}}}
+                 ["alice@example.com" "foo@foobar.com" "bob@foobar.com"])
+;; => {:send-in-normalmode ["alice@example.com" "foo@foobar.com" "bob@foobar.com"],
+;;     :send-in-testmode nil}
+  )
+
 (defn send-batch-req
   "Creates the email payload for sending batched emails
   documentation: https://documentation.mailgun.com/en/latest/user_manual.html#batch-sending-1"
-  [{:keys [mailgun]} tos subject plain html recipient-variables]
+  [{:keys [mailgun]}  test-mode? tos subject plain html recipient-variables]
   (assert (<=  (count tos) 1000) (format  "The maximum number of recipients allowed for Batch Sending is 1,000.. was %d" (count tos)))
-  (let [{:keys [api-key mailgun-domain send-domain from test-mode?]} mailgun]
+  (let [{:keys [api-key mailgun-domain send-domain from]} mailgun]
     {:method :post
      :url (str "https://" mailgun-domain "/v3/" send-domain "/messages")
      :basic-auth ["api" api-key]
@@ -67,8 +93,13 @@
 (defn send-batch!
   "Sends batch emails"
   [sys tos subject plain html recipient-variables]
-  (let [req (send-batch-req sys tos subject plain html recipient-variables)]
-    (make-request! sys req)))
+  (let [{:keys [send-in-normalmode send-in-testmode]} (partition-tos sys tos)]
+    (when send-in-normalmode
+      (tap> {:send-normal! send-in-normalmode})
+      (make-request! sys (send-batch-req sys false send-in-normalmode subject plain html recipient-variables)))
+    (when send-in-testmode
+      (tap> {:send-test! send-in-testmode
+             :mailgun-req (send-batch-req sys true send-in-testmode subject plain html recipient-variables)}))))
 
 (comment
 

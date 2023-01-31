@@ -57,7 +57,7 @@
                (tmpl/new-user-invite-plain sys invite-code)))
 
 (defn- sys-from-req [req]
-  {:tr (:tempura/tr req)
+  {:tr (:tr req)
    :env (-> req :system :env)
    :redis (-> req :system :redis)})
 
