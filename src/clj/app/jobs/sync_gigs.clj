@@ -2,11 +2,13 @@
   (:require [app.debug :as debug]
             [app.features :as f]
             [app.gigo :as gigo]
+            [app.gigo.core :as gigo.core]
             [app.gigs.domain :as domain]
             [app.util :as util]
             [clojure.set :as set]
             [clojure.string :as s]
-            [datomic.client.api :as d]
+            [datomic.client.api :as datomic]
+            [app.datomic :as d]
             [integrant.repl.state :as state]
             [ol.jobs-util :as jobs]
             [tick.core :as t]
@@ -14,7 +16,8 @@
             [clojure.tools.logging :as log]
             [app.routes.errors :as errors]
             [com.yetanalytics.squuid :as sq]
-            [app.queries :as q])
+            [app.queries :as q]
+            [app.gigs.service :as service])
 
   (:import (java.time DayOfWeek)))
 
@@ -66,13 +69,40 @@
                  (map (fn [gigo-id]
                         [:db/add [:gig/gigo-id gigo-id] :gig/gig-id (sq/generate-squuid)])))]
     (when (seq txs)
-      (d/transact conn {:tx-data txs}))))
+      (datomic/transact conn {:tx-data txs}))))
 
 (defn update-gigs-db! [conn gigs]
   (assert conn)
   (backfill-gig-ids conn
                     (:db-after
-                     (d/transact conn {:tx-data (map gig-tx gigs)}))))
+                     (datomic/transact conn {:tx-data (map gig-tx gigs)}))))
+
+(defn attendance-person-tx [db gig {:keys [the_member_key the_plan] :as at}]
+  (let [member (d/find-by db :member/gigo-key the_member_key q/member-detail-pattern)]
+    (assert gig)
+    (assert member)
+    (merge
+     (service/create-attendance-tx db (:gig/gig-id gig) (:member/member-id member))
+     (util/remove-nils
+      {:attendance/plan  (gigo.core/plan->attendance-kw (:value the_plan))
+       :attendance/comment (util/blank->nil (:comment the_plan))
+       :attendance/motivation (get
+                               {"" :motivation/none
+                                1 :motivation/very-high
+                                2 :motivation/high
+                                3 :motivation/medium
+                                4 :motivation/low
+                                5 :motivation/very-low} (:feedback_value the_plan) :motivation/none)}))))
+
+(defn gig-attendance-tx [db {:keys [id attendance]}]
+  (assert db)
+  (let [gig (d/find-by db :gig/gigo-id id q/gig-detail-pattern)]
+    (map (partial attendance-person-tx db gig) attendance)))
+    ;;
+
+(defn update-gigs-attendance-db! [conn gigs]
+  (datomic/transact conn {:tx-data
+                          (mapcat (partial gig-attendance-tx (datomic/db conn)) gigs)}))
 
 (defn probe? [g]
   (and
@@ -168,7 +198,7 @@
                                         ;(tap> matches)
       (when-not (empty? ents-to-delete)
         @(df-api/batch-delete-entities etc etn ents-to-delete "en")
-        (d/transact conn gigs-to-update))
+        (datomic/transact conn gigs-to-update))
       @(df-api/batch-update-entities etc etn ents-to-update "en")
       {:titles-changed (count ents-to-delete)
        :total-updated  (count ents-to-update)})))
@@ -189,8 +219,8 @@
                                         ;(tap> to-delete)
       (when-not (empty? to-delete)
         @(df-api/batch-delete-entities etc etn to-delete "en")
-        (d/transact conn
-                    (mapv (fn [g] [:db/retract (:db/id g) :dialogflow/entity-value]) gigs))
+        (datomic/transact conn
+                          (mapv (fn [g] [:db/retract (:db/id g) :dialogflow/entity-value]) gigs))
         {:deleted (count to-delete)}))))
 
 (comment
@@ -206,10 +236,10 @@
                                         ;(tap> to-create)
       (when-not (empty? to-create)
         @(df-api/batch-create-entities etc etn to-create "en")
-        (d/transact conn
-                    (->> gigs
-                         (mapv #(select-keys % [:gig/gig-id :dialogflow/entity-value :gig/title]))
-                         (mapv #(assoc % :dialogflow/entity-value (:gig/title %)))))
+        (datomic/transact conn
+                          (->> gigs
+                               (mapv #(select-keys % [:gig/gig-id :dialogflow/entity-value :gig/title]))
+                               (mapv #(assoc % :dialogflow/entity-value (:gig/title %)))))
         {:created (count to-create)}))))
 
 (defn- sync-gigs [env conn gigo etc _]
@@ -265,9 +295,9 @@
                                         ;(update-dialogflow-gig-entities! (-> _opts :env) (-> _opts :conn) (-> _opts :df-clients :entity-types-client))
   (prune-gig-entities-before! (:env _opts) (:conn _opts) (-> _opts :df-clients :entity-types-client) (t/at (t/new-date 2022 8 1) (t/midnight)))
   (create-dialogflow-gig-entities! (:env _opts) (:conn _opts) (-> _opts :df-clients :entity-types-client))
-  (d/transact (:conn _opts) {:tx-data [{:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA6K70hwoM"
-                                        :member/name     "SNOrchestra"
-                                        :member/email    "strabanda@gmail.com"
-                                        :member/active?  true}]})
+  (datomic/transact (:conn _opts) {:tx-data [{:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA6K70hwoM"
+                                              :member/name     "SNOrchestra"
+                                              :member/email    "strabanda@gmail.com"
+                                              :member/active?  true}]})
                                         ;
   )

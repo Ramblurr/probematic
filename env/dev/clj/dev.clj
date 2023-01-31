@@ -13,7 +13,9 @@
    [ol.system :as system]
    [app.queries :as q]
    [jsonista.core :as json]
-   [com.yetanalytics.squuid :as sq]))
+   [com.yetanalytics.squuid :as sq]
+   [app.keycloak :as keycloak]
+   [datomic.client.api :as datomic]))
 
 ;; (repl/disable-reload! (find-ns 'browser))
 ;; (repl/disable-reload! *ns*)
@@ -52,6 +54,7 @@
 ;;; Run this before running either of the seeds below
   (do
     (require '[integrant.repl.state :as state])
+    (def kc (-> state/system :app.ig/keycloak))
     (def env (:app.ig/env state/system))
     (def conn (-> state/system :app.ig/datomic-db :conn))) ;; rcf
 
@@ -69,6 +72,7 @@
     (require '[app.gigo.core :as gigo])
     (require '[app.jobs.sync-gigs :as sync-gigs])
     (require '[app.jobs.sync-members :as sync-members])
+    (require '[app.keycloak :as keycloak])
     (def gigoc (:app.ig/gigo-client state/system))
     (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
     (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic/gigo-members.json") j/keyword-keys-object-mapper)
@@ -84,11 +88,18 @@
     (sync-members/update-member-data! conn (sync-members/fetch-people-data! (:airtable env)))
     (gigo/update-cache! gigoc)
     (sync-gigs/update-gigs-db! conn @gigo/gigs-cache)
+    (sync-gigs/update-gigs-attendance-db! conn @gigo/gigs-cache)
+    (filter  #(= ""  (get-in % [:the_plan :feedback_value]))
+             (:attendance
+              (first @gigo/gigs-cache)))
     (d/transact conn {:tx-data
                       (map (fn [{:keys [id display_name]}]
                              [:db/add [:member/gigo-key id] :member/nick display_name])
                            (gigo/get-band-members! gigoc sno))})
+
+    (keycloak/match-members-to-keycloak! {:db (datomic/db conn) :kc kc :datomic-conn conn})
     :seed-done) ;; END SEEDS
+  1
 
 ;;;; Scratch pad
   ;;  everything below is notes/scratch
