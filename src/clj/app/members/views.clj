@@ -15,7 +15,7 @@
    [app.queries :as q]))
 
 (defn member-table-headers [tr members]
-  [{:label (tr [:member/name]) :priority :normal :key :name
+  [{:label (tr [:member/name]) :priority :important :key :name
     :render-fn (fn [_ instrument]
                  (list
                   (:name instrument)
@@ -23,10 +23,10 @@
                    [:dt {:class "sr-only"} (:name instrument)]
                    [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
 
-   {:label (tr [:Email]) :priority :medium :key :owner}
-   {:label (tr [:Phone]) :priority :medium :key :value}
+   {:label (tr [:Email]) :priority :low :key :owner}
+   {:label (tr [:Phone]) :priority :important :key :value}
    {:label (tr [:section]) :priority :medium :key :value}
-   {:label (tr [:Active]) :priority :medium :key :value}
+   {:label (tr [:Active]) :priority :low :key :value}
    ;;
    ])
 (ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}  ^:boolean edit?]
@@ -153,19 +153,27 @@
       ;;
       )]))
 
-(ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db] :as req} idx member-id]
+(ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db tr] :as req} idx member-id]
   (let [{:member/keys [name email active? phone section] :as member} (q/retrieve-member db member-id)
         section-name (:section/name section)
         td-class "px-3 py-4"]
     [:tr {:id id :hx-boost "true"}
      (list
-      [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
-       [:a {:href (url/link-member member) :class "font-medium text-blue-600 hover:text-blue-500"}
-        name]]
-      [:td {:class td-class} email]
-      [:td {:class td-class} phone]
-      [:td {:class td-class} section-name]
-      [:td {:class td-class} (ui/bool-bubble active?)]
+      [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6"
+                          (ui/table-row-priorities :important))}
+       [:a {:href (url/link-member member) :class "font-medium text-blue-600 hover:text-blue-500"} name]
+       [:dl {:class "font-normal xl:hidden"}
+        [:dt {:class "sr-only sm:hidden"} (tr [:member/email])]
+        [:dd {:class "mt-1 truncate text-gray-500"} email]
+        [:dt {:class "sr-only sm:hidden"} (tr [:section])]
+        [:dd {:class "mt-1 truncate text-gray-500 sm:hidden"} section-name]
+        [:dt {:class "sr-only sm:hidden"} (tr [:member/active?])]
+        [:dd {:class "mt-1 truncate text-gray-500"} (ui/bool-bubble active?)]]]
+
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} email]
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :important))} phone]
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :medium))} section-name]
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} (ui/bool-bubble active?)]
       ;;
       )]))
 
