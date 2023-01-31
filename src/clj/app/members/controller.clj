@@ -23,10 +23,25 @@
        (mapv first)
        (sort-by :section/name)))
 
-(defn members [db]
-  (->> (d/find-all db :member/member-id q/member-pattern)
-       (mapv #(first %))
-       (sort-by (juxt :member/name :member/active))))
+(defn sort-by-spec [sorting coll]
+  #_(tap> {:sorting sorting
+           :fields (mapv :field sorting)
+           :dir (if (= :asc (-> sorting first :order)) :asc :desc)})
+  (let [asc? (= :asc (-> sorting first :order))
+
+        r (sort-by (fn [v]
+                     (mapv (fn [s]
+                             (if (string? s)
+                               (str/lower-case s)
+                               s))
+                           ((apply juxt (map :field sorting)) v))) coll)]
+    (if asc? r (reverse r))))
+
+(defn members [db sorting]
+  (let [sorting (or sorting [{:field :member/name :order :asc}])]
+    (->> (d/find-all db :member/member-id q/member-pattern)
+         (mapv #(first %))
+         (sort-by-spec sorting))))
 
 (defn keycloak-attrs-changed? [before-m after-m]
   (let [ks [:member/email :member/username :member/active? :member/name]]
