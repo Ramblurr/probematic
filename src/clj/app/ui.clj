@@ -565,7 +565,7 @@
   {:important ""
    :normal "sm:pl-6"
    :medium "hidden sm:table-cell"
-   :low "hidden lg:table-cell"})
+   :low "hidden xl:table-cell"})
 
 (def table-row-variant
   {:action "relative py-3.5 pl-3 pr-4 sm:pr-6"
@@ -595,6 +595,7 @@
                                  (get table-row-variant variant ""))}
                     [:span {:class (cs (when (= variant :action) "sr-only"))} label]])
                  headers)]])
+
 (defn table-body [& more]
   (into [] (concat
             [:tbody {:class "divide-y divide-gray-200 bg-white"}]

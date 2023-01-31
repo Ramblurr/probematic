@@ -57,6 +57,10 @@
    {:instrument.coverage/instrument
     [:instrument/name
      :instrument/instrument-id
+     :instrument/make
+     :instrument/model
+     :instrument/serial-number
+     :instrument/build-year
      {:instrument/owner [:member/name]}
      {:instrument/category [:instrument.category/category-id
                             :instrument.category/code

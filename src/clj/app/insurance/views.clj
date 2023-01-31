@@ -305,7 +305,7 @@
 
 (defn coverage-table-headers [{:insurance.policy/keys [coverage-types]}]
   (concat
-   [{:label "Name" :priority :normal :key :name
+   [{:label "Name" :priority :important :key :name
      :render-fn (fn [_ instrument]
                   (list
                    (:name instrument)
@@ -313,11 +313,11 @@
                     [:dt {:class "sr-only"} (:name instrument)]
                     [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
 
-    {:label "Owner" :priority :medium :key :owner}
-    {:label "Make" :priority :medium :key :value}
-    {:label "Model" :priority :medium :key :value}
-    {:label "Build Year" :priority :medium :key :value}
-    {:label "Serial Number" :priority :medium :key :value}
+    {:label "Owner" :priority :important :key :owner}
+    {:label "Make" :priority :low :key :value}
+    {:label "Model" :priority :low :key :value}
+    {:label "Build Year" :priority :low :key :value}
+    {:label "Serial Number" :priority :low :key :value}
     {:label "Band/Private" :priority :medium :key :value}
     {:label "Value" :priority :medium :key :value :variant :number}
     ;;
@@ -327,27 +327,43 @@
            :variant :number
            :key (:insurance.coverage.type/name ct)
            :priority :normal}) coverage-types)
-   [{:label "Total Cost" :priority :medium :key :value :variant :number}]
-   [{:label "Edit" :variant :action :key :action}]))
+   [{:label "Total Cost" :priority :low :key :value :variant :number}]
+   [{:label "Edit" :priority :important :variant :action :key :action}]))
 
-(defn shared-static-columns [coverage]
-  (let [{:instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
+(defn band-or-private [private?]
+  (if private? "private" "band"))
+
+(defn shared-static-columns [tr coverage]
+  (let [{:instrument.coverage/keys [private?]
+         :instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
     (list
-     [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
-      name]
-     [:td {:class "px-3 py-4"}
+     [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6"
+                         (ui/table-row-priorities :important))}
+      name
+      [:dl {:class "font-normal xl:hidden"}
+       [:dt {:class "sr-only"} (tr [:band-private])]
+       [:dd {:class "mt-1 truncate text-gray-700 sm:hidden"} (band-or-private private?)]
+       [:dt {:class "sr-only"} (tr [:insurance/make])]
+       [:dd {:class "mt-1 truncate text-gray-700"} make]
+       [:dt {:class "sr-only sm:hidden"} (tr [:insurance/model])]
+       [:dd {:class "mt-1 truncate text-gray-500"} model]
+       [:dt {:class "sr-only sm:hidden"} (tr [:insurance/build-year])]
+       [:dd {:class "mt-1 truncate text-gray-500"} build-year]
+       [:dt {:class "sr-only sm:hidden"} (tr [:insurance/serial-number])]
+       [:dd {:class "mt-1 truncate text-gray-500"} serial-number]]]
+     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :important))}
       (-> owner :member/name)]
-     [:td {:class "px-3 py-4"} make]
-     [:td {:class "px-3 py-4"} model]
-     [:td {:class "px-3 py-4"} build-year]
-     [:td {:class "px-3 py-4"} serial-number]
-      ;;
+     [:td {:class (ui/cs  "px-3 py-4" (ui/table-row-priorities :low))} make]
+     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} model]
+     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} build-year]
+     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} serial-number]
+     ;;
      )))
 
 (defn shared-static-columns-end [coverage]
   (let [{:instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
     (list
-     [:td {:class "px-3 py-4 text-right"}
+     [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :low))}
       (ui/money (:instrument.coverage/cost coverage) :EUR)]
       ;;
      )))
@@ -401,18 +417,20 @@
       [:div {:class "space-y-6 pt-6 pb-5"}
        [:div
         [:label {:class "block text-sm font-medium text-gray-900"} (tr [:instrument/name])]
-        [:div {:class "mt-2 space-y-5"}
-         (str/join ", "
-                   (util/remove-nils
-                    [name
-                     make
-                     model
-                     build-year
-                     serial-number]))]]
+        [:div {:class "font-normal mt-2"}
+         [:p  name]
+         [:p
+          (str/join ", "
+                    (util/remove-nils
+                     (util/remove-empty-strings
+                      [make
+                       model
+                       build-year
+                       serial-number])))]]]
 
        [:div
         [:label {:class "block text-sm font-medium text-gray-900"} (tr [:instrument/owner])]
-        [:div {:class "mt-2 space-y-5"}
+        [:div {:class "mt-2 space-y-5 font-normal"}
          (-> instrument :instrument/owner :member/name)]]
 
        [:div
@@ -454,9 +472,8 @@
             [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
             [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]]))
 
-(ctmx/defcomponent ^:endpoint coverage-table-row [{:keys [db] :as req} idx coverage-id]
+(ctmx/defcomponent ^:endpoint coverage-table-row [{:keys [tr db] :as req} idx coverage-id]
   (let [policy (:policy req)
-        tr (i18n/tr-from-req req)
         post? (util/post? req)
         delete? (util/delete? req)
         comp-name (util/comp-namer #'coverage-table-row)
@@ -472,20 +489,12 @@
       (into [] (concat
 
                 [:tr {:id id}
-                 (shared-static-columns coverage)
+                 (shared-static-columns tr coverage)
 
-                 [:td {:class "px-3 py-4"}
-                  (ui/slideover-panel-form {:title "Edit Instrument Coverage" :id (path "slideover")
-                                            :form-attrs {:hx-post (comp-name) :hx-target (hash ".")}
-                                            :buttons (list
-                                                      (ui/button {:label (tr [:action/delete]) :priority :white-destructive :hx-delete (comp-name) :hx-target (hash ".") :hx-confirm (tr [:action/confirm-generic])})
-                                                      (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
-                                                      (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
-                                           (coverage-edit-form {:tr tr :path path} coverage-types coverage))
-                  (if (:instrument.coverage/private? coverage)
-                    "private"
-                    "band")]
-                 [:td {:class "px-3 py-4 text-right"}
+                 [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :medium))}
+
+                  (band-or-private (:instrument.coverage/private? coverage))]
+                 [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :medium))}
                   (ui/money (:instrument.coverage/value coverage) :EUR)]]
                 (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
                         [:td {:class "px-3 py-4 text-right"}
@@ -498,6 +507,14 @@
                 (shared-static-columns-end coverage)
                 (list
                  [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
+                  [:div {:class "text-left"}
+                   (ui/slideover-panel-form {:title "Edit Instrument Coverage" :id (path "slideover")
+                                             :form-attrs {:hx-post (comp-name) :hx-target (hash ".")}
+                                             :buttons (list
+                                                       (ui/button {:label (tr [:action/delete]) :priority :white-destructive :hx-delete (comp-name) :hx-target (hash ".") :hx-confirm (tr [:action/confirm-generic])})
+                                                       (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
+                                                       (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
+                                            (coverage-edit-form {:tr tr :path path} coverage-types coverage))]
                   [:span {:class "flex flex-row space-x-2"}
                    [:button {:type "submit" :class "text-blue-600 hover:text-sno-orange-900 cursor-pointer"
                              :data-flyout-trigger (hash "slideover")} "Edit"]]]))))))
@@ -560,7 +577,9 @@
             [:div
              "You should add a coverage to an instrument"]
             [:div
-             (ui/button :label (tr [:insurance/instrument-coverage]) :priority :primary :icon icon/plus :attr {:hx-get (comp-name) :hx-vals {:add? true} :hx-target (hash ".")})]])]]])))
+             (ui/button :label (tr [:insurance/instrument-coverage])
+                        :priority :primary :icon icon/plus
+                        :attr {:data-flyout-trigger (hash "slideover")})]])]]])))
 
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
   [:div

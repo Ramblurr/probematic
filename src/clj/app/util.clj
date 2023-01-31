@@ -70,7 +70,7 @@
   [req] (-> req :params form/json-params))
 
 (defn remove-nils
-  "Returns the map less any keys that have nil values"
+  "Returns the list/vec/map less any keys that have nil values"
   [m]
   (cond (map? m)
         (into {} (filter #(not (nil? (val %))) m))
@@ -91,13 +91,18 @@
     arg))
 
 (defn remove-empty-strings
-  "Returns the map less any keys that have empty-strings as values values"
+  "Returns the list/vec/map less any keys that have empty-strings as values values"
   [m]
-  (into {} (filter (fn [e]
-                     (if (string? (val e))
-                       (not (str/blank? (val e)))
-                       true))
-                   m)))
+  (let [seq-pred (fn [v] (not (if (string? v) (str/blank? v) false)))]
+    (cond (map? m)
+          (into {} (filter (fn [e]
+                             (if (string? (val e))
+                               (not (str/blank? (val e)))
+                               true))
+                           m))
+          (list? m) (filter seq-pred m)
+          (vector? m) (filterv seq-pred m)
+          (sequential? m) (filter seq-pred m))))
 
 (defn qp-bool
   "Parse the query parameter specified by k as a boolean"
