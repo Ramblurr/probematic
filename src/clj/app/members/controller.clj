@@ -1,7 +1,6 @@
 (ns app.members.controller
   (:require
    [app.auth :as auth]
-   [app.util.http :as common]
    [app.datomic :as d]
    [app.email :as email]
    [app.i18n :as i18n]
@@ -10,12 +9,14 @@
    [app.routes.errors :as errors]
    [app.secret-box :as secret-box]
    [app.twilio :as twilio]
+   [app.util :as util]
+   [app.util.http :as http.util]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
+   [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
    [taoensso.carmine :as redis]
-   [tick.core :as t]
-   [app.util.http :as http.util]))
+   [tick.core :as t]))
 
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
@@ -45,12 +46,13 @@
     {:member after-member}))
 
 (defn update-active-and-section! [{:keys [db] :as req}]
-  (let [params (common/unwrap-params req)
-        member-id (:member-id params)
+  (let [params (http.util/unwrap-params req)
+        member-id (util/ensure-uuid! (:member-id params))
         member (q/retrieve-member db member-id)
         member-ref (d/ref member :member/member-id)
-        tx-data [[:db/add member-ref :member/section [:section/name (:section-name params)]]
-                 [:db/add member-ref :member/active? (not (:member/active? member))]]]
+        tx-data (if (contains? params :active?)
+                  [[:db/add member-ref :member/active? (rt/parse-boolean (:active? params))]]
+                  [[:db/add member-ref :member/section [:section/name (:section-name params)]]])]
     (transact-member! req member-id tx-data)))
 
 (defn munge-unique-conflict-error [tr e]
@@ -87,11 +89,11 @@
                   :member/member-id member-id
                   :member/phone (twilio/clean-number (:env system) phone)
                   :member/username (validate-username tr username)
-                  :member/active? (common/check->bool active?)
+                  :member/active? (http.util/check->bool active?)
                   :member/section [:section/name section-name]
                   :member/email (clean-email email)}]
             new-member (:member (transact-member! req member-id txs))]
-        (when (common/check->bool create-sno-id)
+        (when (http.util/check->bool create-sno-id)
           (email/send-new-user-email! req new-member (generate-invite-code! req new-member)))
         new-member)
 
@@ -103,14 +105,14 @@
            :else e))))))
 (defn update-member! [req]
   (let [member-id (http.util/path-param-uuid! req :member-id)
-        params (common/unwrap-params req)
+        params (http.util/unwrap-params req)
         member-ref [:member/member-id member-id]
         tx-data [{:db/id member-ref
                   :member/name (:name params)
                   :member/phone (:phone params)
                   :member/nick (:nick params)
                   :member/email (clean-email (:email params))
-                  :member/active? (common/check->bool (:active? params))
+                  :member/active? (http.util/check->bool (:active? params))
                   :member/section [:section/name (:section-name params)]}]]
     (transact-member! req member-id tx-data)))
 

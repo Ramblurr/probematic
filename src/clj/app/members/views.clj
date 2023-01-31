@@ -14,7 +14,7 @@
    [medley.core :as m]
    [app.queries :as q]))
 
-(defn member-table-headers [tr members]
+(defn member-table-headers-ro [tr]
   [{:label (tr [:member/name]) :priority :important :key :name
     :render-fn (fn [_ instrument]
                  (list
@@ -27,6 +27,21 @@
    {:label (tr [:Phone]) :priority :important :key :value}
    {:label (tr [:section]) :priority :medium :key :value}
    {:label (tr [:Active]) :priority :low :key :value}
+   ;;
+   ])
+(defn member-table-headers-rw [tr]
+  [{:label (tr [:member/name]) :priority :important :key :name
+    :render-fn (fn [_ instrument]
+                 (list
+                  (:name instrument)
+                  [:dl {:class "font-normal sm:hidden"}
+                   [:dt {:class "sr-only"} (:name instrument)]
+                   [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
+
+   {:label (tr [:Email]) :priority :low :key :owner}
+   {:label (tr [:Phone]) :priority :low :key :value}
+   {:label (tr [:section]) :priority :important :key :value}
+   {:label (tr [:Active]) :priority :important :key :value}
    ;;
    ])
 (ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}  ^:boolean edit?]
@@ -134,23 +149,23 @@
         {:member/keys [name email active? phone section]} member
         sections (controller/sections db)
         section-name (:section/name section)]
-    [:tr {:id id :hx-include (str "#" id " input, #"  id " select")}
+    [:tr {:id id}
      (list
       [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6")}
        name]
-      [:td {:class td-class} email]
-      [:td {:class td-class} phone]
-      [:td {:class td-class}
-       (ui/section-select :label "" :id "section-name" :value section-name :class "mt-4" :sections sections :extra-attrs {:hx-post (comp-name) :hx-target (hash ".")})]
-      [:td {:class td-class :_hx-include (str "#member" idx " input") :id (str "member" idx)}
-       [:input {:type "hidden" :name "idx" :value idx}]
-       [:input {:type "hidden" :name "member-id" :value member-id}]
-       (let [icon (if active? icon/xmark icon/plus)
-             class (if active? "text-red-500" "text-green-500")]
-         (ui/button :icon icon :size :small
-                    :class class
-                    :attr {:hx-post (comp-name) :hx-target (hash ".")}))]
-      ;;
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} email]
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} phone]
+      [:td {:class td-class :hx-include (str "#" id " input, #"  id " select")}
+       (ui/section-select :label "" :id "section-name" :value section-name :class "mt-4" :sections sections
+                          :extra-attrs {:hx-post (comp-name) :hx-target (hash ".")
+                                        :hx-vals {:member-id (str member-id)}})]
+      [:td {:class td-class :id (str "member" idx)}
+       (ui/toggle :active? active? :hx-post (util/endpoint-path member-row-rw)
+                  :hx-vals {:active? (not active?)
+                            :member-id (str member-id)}
+                  :hx-target (hash "."))]
+
+;;
       )]))
 
 (ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db tr] :as req} idx member-id]
@@ -180,7 +195,7 @@
 (ctmx/defcomponent ^:endpoint member-table-rw [{:keys [db] :as req}]
   (let [members (controller/members db)
         tr (i18n/tr-from-req req)
-        table-headers (member-table-headers tr members)]
+        table-headers (member-table-headers-rw tr)]
     (list
      (ui/table-row-head table-headers)
      (ui/table-body
@@ -188,7 +203,7 @@
 
 (ctmx/defcomponent ^:endpoint member-table-ro [{:keys [db] :as req}]
   (let [members (controller/members db)
-        table-headers (member-table-headers (i18n/tr-from-req req) members)]
+        table-headers (member-table-headers-ro (i18n/tr-from-req req))]
     (list
      (ui/table-row-head table-headers)
      (ui/table-body
@@ -299,8 +314,9 @@
        [:div {:class "flex items-center justify-end"}
         [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
          (ui/toggle :label (tr [:action/quick-edit]) :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
-         (ui/button :label (tr [:action/add]) :priority :primary :class "" :icon icon/plus :centered? true
-                    :attr {:data-flyout-trigger (hash "slideover")})]]
+         (when-not edit?
+           (ui/button :label (tr [:action/add]) :priority :primary :class "" :icon icon/plus :centered? true
+                      :attr {:data-flyout-trigger (hash "slideover")}))]]
 
        [:div {:class "mt-4"}
         [:table {:class "min-w-full divide-y divide-gray-300"}

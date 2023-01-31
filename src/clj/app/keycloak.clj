@@ -3,7 +3,6 @@
    [app.datomic :as d]
    [app.queries :as q]
    [app.util :as util]
-   [org.httpkit.client :as client]
    [clojure.string :as str]
    [datomic.client.api :as datomic]
    [jsonista.core :as j]
