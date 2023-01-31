@@ -136,14 +136,12 @@
             :insurance.policy/covered-instruments covered-instruments-ids}]))))
 
 (defn transact-policy! [conn tx-data]
-  (let [result (d/transact conn {:tx-data tx-data})]
-    (if  (d/db-ok? result)
-      {:policy
-       (d/find-by (datomic/db conn)
-                  :insurance.policy/policy-id
-                  (:insurance.policy/policy-id (last tx-data))
-                  q/policy-pattern)}
-      result)))
+  (let [result (datomic/transact conn {:tx-data tx-data})]
+    {:policy
+     (d/find-by (:db-after result)
+                :insurance.policy/policy-id
+                (:insurance.policy/policy-id (last tx-data))
+                q/policy-pattern)}))
 
 (defn datestr->inst
   "Convert a string like 2022-01-01 to an instant at midnight"
@@ -208,10 +206,8 @@
                   :insurance.category.factor/factor (bigdec (:premium-factor params))
                   :insurance.category.factor/category [:instrument.category/category-id (common/ensure-uuid (:category-id params))]}
                  [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/category-factors "cat_fact"]]
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if (d/db-ok? result)
-      {:policy (retrieve-policy (:db-after result) policy-id)}
-      result)))
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+    {:policy (retrieve-policy (:db-after result) policy-id)}))
 
 (defn update-category-factors! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (common/unwrap-params req)
@@ -222,10 +218,8 @@
                           {:insurance.category.factor/category-factor-id (parse-uuid category-id)
                            :insurance.category.factor/factor (bigdec premium-factor)}))
                       (if (sequential? params) params [params]))
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if (d/db-ok? result)
-      {:policy (retrieve-policy (:db-after result) policy-id)}
-      result)))
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+    {:policy (retrieve-policy (:db-after result) policy-id)}))
 
 (defn update-coverage-types! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (common/unwrap-params req)
@@ -238,10 +232,8 @@
                            :insurance.coverage.type/type-id  (parse-uuid type-id)
                            :insurance.coverage.type/premium-factor (bigdec premium-factor)}))
                       (if (sequential? params) params [params]))
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if (d/db-ok? result)
-      {:policy (retrieve-policy (:db-after result) policy-id)}
-      result)))
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+    {:policy (retrieve-policy (:db-after result) policy-id)}))
 
 (defn create-coverage-type! [{:keys [datomic-conn] :as req} policy-id]
   (let [params (common/unwrap-params req)
@@ -251,31 +243,27 @@
                   :insurance.coverage.type/premium-factor (bigdec (:premium-factor params))
                   :db/id "new-coverage"}
                  [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/coverage-types "new-coverage"]]
-        result (d/transact datomic-conn {:tx-data tx-data})]
-    (if  (d/db-ok? result)
-      {:policy (retrieve-policy (:db-after result) policy-id)}
-      result)))
+        result (datomic/transact datomic-conn {:tx-data tx-data})]
+    {:policy (retrieve-policy (:db-after result) policy-id)}))
 
 (defn upsert-instrument! [conn {:keys [owner-member-id category-id
                                        name make model build-year
                                        instrument-id
                                        serial-number]}]
   (let [tx-data [(util/remove-nils {:instrument/instrument-id (or  instrument-id (sq/generate-squuid))
-                                    :instrument/owner [:member/member-id owner-member-id]
+                                    :instrument/owner [:member/member-id (util/ensure-uuid! owner-member-id)]
                                     :instrument/category [:instrument.category/category-id category-id]
                                     :instrument/name name
                                     :instrument/make make
                                     :instrument/model model
                                     :instrument/build-year build-year
                                     :instrument/serial-number serial-number})]
-        result  (d/transact conn {:tx-data tx-data})]
-    (if  (d/db-ok? result)
-      {:instrument
-       (d/find-by (:db-after result)
-                  :instrument/instrument-id
-                  (:instrument/instrument-id (last tx-data))
-                  q/instrument-pattern)}
-      result)))
+        result  (datomic/transact conn {:tx-data tx-data})]
+    {:instrument
+     (d/find-by (:db-after result)
+                :instrument/instrument-id
+                (:instrument/instrument-id (last tx-data))
+                q/instrument-pattern)}))
 
 (defn create-instrument! [{:keys [datomic-conn] :as req}]
   (let [params (-> (common/unwrap-params req)
@@ -290,19 +278,17 @@
     (upsert-instrument! datomic-conn params)))
 
 (defn add-instrument-coverage! [conn {:keys [instrument-id policy-id private? value coverage-type-ids]}]
-  (d/transact conn {:tx-data [{:db/id "covered_instrument"
-                               :instrument.coverage/coverage-id (sq/generate-squuid)
-                               :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
-                               :instrument.coverage/types (mapv (fn [type-id] [:insurance.coverage.type/type-id type-id]) coverage-type-ids)
-                               :instrument.coverage/private? private?
-                               :instrument.coverage/value (bigdec value)}
-                              [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]]}))
+  (datomic/transact conn {:tx-data [{:db/id "covered_instrument"
+                                     :instrument.coverage/coverage-id (sq/generate-squuid)
+                                     :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
+                                     :instrument.coverage/types (mapv (fn [type-id] [:insurance.coverage.type/type-id type-id]) coverage-type-ids)
+                                     :instrument.coverage/private? private?
+                                     :instrument.coverage/value (bigdec value)}
+                                    [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]]}))
 
 (defn remove-instrument-coverage! [{:keys [datomic-conn] :as req} coverage-id]
-  (let [result (d/transact datomic-conn {:tx-data [[:db/retractEntity [:instrument.coverage/coverage-id (common/ensure-uuid coverage-id)]]]})]
-    (if (d/db-ok? result)
-      {:policy (retrieve-policy (:db-after result) (-> req :policy :insurance.policy/policy-id))}
-      result)))
+  (let [result (datomic/transact datomic-conn {:tx-data [[:db/retractEntity [:instrument.coverage/coverage-id (common/ensure-uuid coverage-id)]]]})]
+    {:policy (retrieve-policy (:db-after result) (-> req :policy :insurance.policy/policy-id))}))
 (defn retrieve-coverage [db coverage-id]
   (d/find-by db :instrument.coverage/coverage-id (common/ensure-uuid coverage-id) q/instrument-coverage-detail-pattern))
 
@@ -424,13 +410,13 @@
                     str
                     parse-uuid))
 
-  (d/transact conn {:tx-data category-default-tx})
+  (datomic/transact conn {:tx-data category-default-tx})
 
   (defn rename-category [conn code new-name]
     (let [ref (d/ref (d/find-by (datomic/db conn) :instrument.category/code code
                                 [:instrument.category/category-id :instrument.category/name])
                      :instrument.category/category-id)]
-      (d/transact conn {:tx-data [[:db/add ref :instrument.category/name new-name]]})))
+      (datomic/transact conn {:tx-data [[:db/add ref :instrument.category/name new-name]]})))
 
   (rename-category conn "4" "Etui/Zubehör/Mundstück")
   (rename-category conn "5" "Zupf und Bögen")
@@ -447,23 +433,23 @@
      (d/find-by db :member/name "Casey Link" [:member/member-id])
      :member/member-id))
 
-  (d/transact conn {:tx-data [{:instrument/owner casey-ref
-                               :instrument/category category-blech-ref
-                               :instrument/name "Marching Trombone"
-                               :instrument/instrument-id (sq/generate-squuid)
-                               :instrument/make "King"
-                               :instrument/model "Flugelbone"
-                               :instrument/build-year "1971"
-                               :instrument/serial-number "12345"}]})
+  (datomic/transact conn {:tx-data [{:instrument/owner casey-ref
+                                     :instrument/category category-blech-ref
+                                     :instrument/name "Marching Trombone"
+                                     :instrument/instrument-id (sq/generate-squuid)
+                                     :instrument/make "King"
+                                     :instrument/model "Flugelbone"
+                                     :instrument/build-year "1971"
+                                     :instrument/serial-number "12345"}]})
 
   (def caseys-instrument-ref (d/ref
                               (d/find-by (datomic/db conn) :instrument/owner casey-ref [:instrument/instrument-id])
                               :instrument/instrument-id))
 
-  (d/transact conn {:tx-data [{:db/ident :insurance.policy/effective-until
-                               :db/doc "The instant at which this policy ends"
-                               :db/valueType :db.type/instant
-                               :db/cardinality :db.cardinality/one}]})
+  (datomic/transact conn {:tx-data [{:db/ident :insurance.policy/effective-until
+                                     :db/doc "The instant at which this policy ends"
+                                     :db/valueType :db.type/instant
+                                     :db/cardinality :db.cardinality/one}]})
 
   (def txns [{:db/id "cat_factor_blech"
               :insurance.category.factor/category-factor-id (sq/generate-squuid)
@@ -506,7 +492,7 @@
               :insurance.policy/premium-factor (* (bigdec 1.07) (bigdec 0.00447))
               :insurance.policy/category-factors  ["cat_factor_blech"]}])
 
-  (d/transact conn {:tx-data txns})
+  (datomic/transact conn {:tx-data txns})
 
   (def policy-ref (d/ref (d/find-by (datomic/db conn) :insurance.policy/name "2022-2023" [:insurance.policy/policy-id])
                          :insurance.policy/policy-id))
@@ -518,11 +504,11 @@
                                            [:instrument.coverage/coverage-id]))
                               :instrument.coverage/coverage-id))
 
-  (d/transact conn {:tx-data [{:db/id policy-ref
-                               :insurance.policy/covered-instruments [caseys-covered-ref]}]})
+  (datomic/transact conn {:tx-data [{:db/id policy-ref
+                                     :insurance.policy/covered-instruments [caseys-covered-ref]}]})
 
-  (d/transact conn {:tx-data [{:db/id caseys-covered-ref
-                               :instrument.coverage/value (bigdec 3000)}]})
+  (datomic/transact conn {:tx-data [{:db/id caseys-covered-ref
+                                     :instrument.coverage/value (bigdec 3000)}]})
 
   (def policy
     (d/find-by (datomic/db conn) :insurance.policy/name "2022-2023"

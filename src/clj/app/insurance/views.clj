@@ -622,36 +622,37 @@
                     [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
                      (tr [:action/create])]]]])])))
 
-(ctmx/defcomponent ^:endpoint instrument-create-page [{:keys [db] :as req}]
-  (let [result (and (util/post? req) (controller/create-instrument! req))
-        tr (i18n/tr-from-req req)]
-    (if-let [instrument  (:instrument result)]
-      (response/hx-redirect (url/link-instrument instrument))
-      [:div
-       (ui/page-header :title (tr [:instrument/create-title])
-                       :subtitle (tr [:instrument/create-subtitle]))
-       (ui/panel {}
-                 [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
-                  [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
-                   [:div {:class "space-y-6 sm:space-y-5"}
-                    [:div
-                     [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
-                     [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
-                    [:div {:class "space-y-6 sm:space-y-5"}
-                     (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-member-id") :members (q/members-for-select db) :variant :left)
-                     (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
-                     (ui/text-left :label (tr [:instrument/name]) :id (path "name"))
-                     (ui/text-left :label (tr [:instrument/make]) :id (path "make"))
-                     (ui/text-left :label (tr [:instrument/model]) :id (path "model"))
-                     (ui/text-left :label (tr [:instrument/serial-number]) :id (path "serial-number") :required? false)
-                     (ui/text-left :label (tr [:instrument/build-year]) :id (path "build-year") :required? false)]]]
+(ctmx/defcomponent ^:endpoint instrument-create-page [{:keys [tr db] :as req}]
+  (if (util/post? req)
+    (do
+      (response/hx-redirect (url/link-instrument
+                             (:instrument (controller/create-instrument! req)))))
 
-                  [:div {:class "pt-5"}
-                   [:div {:class "flex justify-end"}
-                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-                     (tr [:action/cancel])]
-                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-                     (tr [:action/create])]]]])])))
+    [:div
+     (ui/page-header :title (tr [:instrument/create-title])
+                     :subtitle (tr [:instrument/create-subtitle]))
+     (ui/panel {}
+               [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
+                [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
+                 [:div {:class "space-y-6 sm:space-y-5"}
+                  [:div
+                   [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
+                   [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
+                  [:div {:class "space-y-6 sm:space-y-5"}
+                   (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-member-id") :members (q/members-for-select db) :variant :left)
+                   (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
+                   (ui/text-left :label (tr [:instrument/name]) :id (path "name"))
+                   (ui/text-left :label (tr [:instrument/make]) :id (path "make"))
+                   (ui/text-left :label (tr [:instrument/model]) :id (path "model"))
+                   (ui/text-left :label (tr [:instrument/serial-number]) :id (path "serial-number") :required? false)
+                   (ui/text-left :label (tr [:instrument/build-year]) :id (path "build-year") :required? false)]]]
+
+                [:div {:class "pt-5"}
+                 [:div {:class "flex justify-end"}
+                  [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
+                   (tr [:action/cancel])]
+                  [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
+                   (tr [:action/create])]]]])]))
 
 (ctmx/defcomponent ^:endpoint instrument-detail-page [{:keys [db] :as req} ^:boolean edit?]
   (let [post? (util/post? req)
