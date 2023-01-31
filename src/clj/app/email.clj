@@ -56,6 +56,12 @@
                (tmpl/new-user-invite-html sys invite-code)
                (tmpl/new-user-invite-plain sys invite-code)))
 
+(defn build-generic-email [{:keys [tr] :as sys} to-email subject body-text cta-text cta-url]
+  (build-email to-email
+               subject
+               (tmpl/generic-email-html sys body-text cta-text cta-url)
+               (tmpl/generic-email-plain sys body-text cta-text cta-url)))
+
 (defn- sys-from-req [req]
   {:tr (:tr req)
    :env (-> req :system :env)
@@ -79,6 +85,18 @@
 (defn send-new-user-email! [req new-member invite-code]
   (queue-email! (sys-from-req req)
                 (build-new-user-invite (sys-from-req req) new-member invite-code)))
+
+(defn send-admin-email! [req from-member req-human-id]
+  (let [member-name (:member/name from-member)
+        admin-email (-> req :system :env :admin-email)]
+    (assert admin-email)
+    (queue-email! (sys-from-req req)
+                  (build-generic-email (sys-from-req req)
+                                       admin-email
+                                       (str "Probematic Error from " member-name)
+                                       (format "There was a probematic error that needs attention from %s with human-id %s" member-name req-human-id)
+                                       nil
+                                       nil))))
 
 (comment
 

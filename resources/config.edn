@@ -1,5 +1,6 @@
 {:name            "probematic"
  :secrets         #include #or [#env APP_SECRETS_FILE "../secrets.edn"]
+ :admin-email     #ref [:secrets :admin-email]
  :app-base-url    #ref [:secrets :app-base-url]
  :app-secret-key  #ref [:secrets :app-secret-key]
  :session-config  {:cookie-attrs  {:same-site :strict

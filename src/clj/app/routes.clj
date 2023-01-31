@@ -1,5 +1,6 @@
 (ns app.routes
   (:require
+   [app.routes.errors :as errors]
    [app.auth :as auth]
    [app.dashboard.routes :as dashboard]
    [app.file-browser.routes :as file-browser]
@@ -35,7 +36,8 @@
     (members/routes)
     (nextcloud/routes)
     (probeplan/routes)
-    (songs/routes)]])
+    (songs/routes)
+    (errors/routes)]])
 
 (defn default-handler [{:keys [] :as system}]
   (ring/routes

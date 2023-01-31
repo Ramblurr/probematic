@@ -267,3 +267,33 @@
        :intro2 (tr [:email/invite-new-user-intro2])
        :invite-link invite-link
        :sign-off (tr [:email/sign-off])}))))
+(defn generic-email-plain [{:keys [tr env] :as sys} body-text cta-text cta-url]
+  (selmer.util/without-escaping
+   (selmer/render
+    "{{greeting}}
+
+{{intro}}
+
+{{cta-text}}
+
+{{cta-url}}
+
+{{sign-off}}
+"
+    {:greeting (tr [:email/greeting])
+     :intro body-text
+     :cta-text cta-text
+     :cta-url cta-url
+     :sign-off (tr [:email/sign-off])})))
+
+(defn generic-email-html [{:keys [tr env]} body-text cta-text cta-url]
+  (str (html
+        [:div
+         [:p
+          (tr [:email/greeting])]
+         [:p body-text]
+         (when cta-text
+           [:p [:a {:href cta-url} cta-text]])
+
+         [:p]
+         [:p (tr [:email/sign-off])]])))

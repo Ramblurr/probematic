@@ -39,92 +39,51 @@
   ;; it breaks tailwind classes with colons in them: i.e., sm:flex
   )
 
-(defn unauthorized-error-body [req]
-  (let [tr (i18n/tr-from-req req)
-        human-id (:human-id req)]
-    [:body {:class "h-full"}
-     [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
-      [:div {:class "mx-auto max-w-max"}
-       [:main {:class "sm:flex"}
-        [:p {:class "text-4xl font-bold tracking-tight text-sno-orange-600 sm:text-5xl"} "401"]
-        [:div {:class "sm:ml-6"}
-         [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
-          [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
-           (tr [:error/unauthorized-title])]
-          [:p {:class "mt-1 text-base text-gray-500"}
-           (tr [:error/unauthorized-message])]
-          [:p {:class "mt-1 text-base text-gray-500"}
-           "Error Code: "
-           [:span {:class "mt-1 text-base text-red-500 font-mono bg-red-100"}
-            human-id]]]]]]
-      [:div {:class "flex items-center justify-center mt-10"}
-       [:img {:src "/img/tuba-robot-boat-1000.jpg" :class "rounded-md w-full sm:w-1/2"}]]
-      [:div {:class "mx-auto max-w-max"}
-       [:main {:class "sm:flex"}
-        [:div {:class "sm:ml-6"}
-         [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
-          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-           (tr [:error/go-home])]]]]]]
-     (render/body-end)]))
-(defn not-found-error-body [req]
-  (let [tr (i18n/tr-from-req req)
-        human-id (:human-id req)]
-    [:body {:class "h-full"}
-     [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
-      [:div {:class "mx-auto max-w-max"}
-       [:main {:class "sm:flex"}
-        [:p {:class "text-4xl font-bold tracking-tight text-sno-orange-600 sm:text-5xl"} "404"]
-        [:div {:class "sm:ml-6"}
-         [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
-          [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
-           (tr [:error/not-found-title])]
-          [:p {:class "mt-1 text-base text-gray-500"}
-           (tr [:error/not-found-message])]
-          [:p {:class "mt-1 text-base text-gray-500"}
-           "Error Code: "
-           [:span {:class "mt-1 text-base text-red-500 font-mono bg-red-100"}
-            human-id]]]]]]
-      [:div {:class "flex items-center justify-center mt-10"}
-       [:img {:src "/img/tuba-robot-boat-1000.jpg" :class "rounded-md w-full sm:w-1/2"}]]
-      [:div {:class "mx-auto max-w-max"}
-       [:main {:class "sm:flex"}
-        [:div {:class "sm:ml-6"}
-         [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
-          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-           (tr [:error/go-home])]
-          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-100 px-4 py-2 text-sm font-medium text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-           (tr [:error/notify])]]]]]]
-     (render/body-end)]))
-(defn unknown-error-body [req]
-  (let [tr (i18n/tr-from-req req)
-        human-id (:human-id req)]
-    [:body {:class "h-full"}
-     [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
-      [:div {:class "mx-auto max-w-max"}
-       [:main {:class "sm:flex"}
+(defn error-common [tr code title message human-id]
+  [:body {:class "h-full"}
+   [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
+    [:div {:class "mx-auto max-w-max"}
+     [:main {:class "sm:flex"}
+      (when code
+        [:p {:class "text-4xl font-bold tracking-tight text-sno-orange-600 sm:text-5xl"}
+         code])
+      [:div {:class "sm:ml-6"}
+       [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
+        [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
+         title]
+        [:p {:class "mt-1 text-base text-gray-500"}
+         message]
+        [:p {:class "mt-1 text-base text-gray-500"}
+         "Error Code: "
+         [:span {:class "mt-1 text-base text-red-500 font-mono bg-red-100"}
+          human-id]]]]]]
+    [:div {:class "flex items-center justify-center mt-10"}
+     [:img {:src "/img/tuba-robot-boat-1000.jpg" :class "rounded-md w-full sm:w-1/2"}]]
+    [:div {:class "mx-auto max-w-max"}
+     [:main {:class "sm:flex"}
+      [:div {:class ""}
+       [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
+        [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
+         (tr [:error/go-home])]
+        [:a {:href "#"
+             :hx-post "/notify-admin"
+             :hx-vals {:human-id human-id}
+             :hx-target "#notification-confirmation"
+             :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-100 px-4 py-2 text-sm font-medium text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
+         (tr [:error/notify])]]
+       [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6 text-sno-orange-600"
+              :id "notification-confirmation"}]]]]]
 
-        [:div {:class "sm:ml-6"}
-         [:div {:class "sm:border-l sm:border-gray-200 sm:pl-6"}
-          [:h1 {:class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"}
-           (tr [:error/unknown-title])]
-          [:p {:class "mt-1 text-base text-gray-500"}
-           (tr [:error/unknown-message])]
+   (render/body-end)])
 
-          [:p {:class "mt-1 text-base text-gray-500"}
-           "Error Code: "
-           [:span {:class "mt-1 text-base text-red-500 font-mono bg-red-100"}
-            human-id]]]]]]
-      [:div {:class "flex items-center justify-center mt-10"}
-       [:img {:src "/img/tuba-robot-boat-1000.jpg" :class "rounded-md w-full sm:w-1/2"}]]
-      [:div {:class "mx-auto max-w-max"}
-       [:main {:class "sm:flex"}
-        [:div {:class "sm:ml-6"}
-         [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6"}
-          [:a {:href "/", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-           (tr [:error/go-home])]
-          [:a {:href "#", :class "inline-flex items-center rounded-md border border-transparent bg-sno-orange-100 px-4 py-2 text-sm font-medium text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-           (tr [:error/notify])]]]]]]
-     (render/body-end)]))
+(defn unauthorized-error-body [{:keys [tr human-id]}]
+  (error-common tr "401" (tr [:error/unauthorized-title]) (tr [:error/unauthorized-message]) human-id))
+
+(defn not-found-error-body [{:keys [tr human-id]}]
+  (error-common tr "404" (tr [:error/not-found-title]) (tr [:error/not-found-message]) human-id))
+
+(defn unknown-error-body [{:keys [tr human-id]}]
+  (error-common tr nil (tr [:error/unknown-title]) (tr [:error/unknown-message]) human-id))
 
 (defn error-page-response-fragment [cause req status]
   (render/html-status-response (or status 404)

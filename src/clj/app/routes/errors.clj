@@ -1,11 +1,13 @@
 (ns app.routes.errors
   (:require
+   [app.config :as config]
+   [app.email :as email]
+   [app.render :as render]
    [app.ui :as ui]
    [app.util :as util]
    [clojure.set :as set]
-   [sentry-clj.core :as sentry]
    [clojure.tools.logging :as log]
-   [app.config :as config]))
+   [sentry-clj.core :as sentry]))
 
 (def dangerous-keys
   #{:datomic-conn
@@ -119,3 +121,15 @@
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 500)
     (ui/error-page-response ex req 500)))
+
+(defn notify-admin [req]
+  (let [human-id (-> req :params :human-id)
+        member (-> req :session :session/member)]
+    (email/send-admin-email! req member human-id)
+    (render/snippet-response
+     [:span {:class "text-sno-orange-600"} "Notification sent!"])))
+
+(defn routes []
+  [""
+   ["/notify-admin" {:post (fn [req]
+                             (notify-admin req))}]])
