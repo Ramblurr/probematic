@@ -68,7 +68,7 @@
       [:li (tr [:gig/end-time]) ": " (ui/format-time end-time)])
     (when location
       [:li (tr [:gig/location]) ": " location])
-    (when pay-deal
+    (when-not (str/blank? pay-deal)
       [:li (tr [:gig/pay-deal]) ": " pay-deal])]
 
    (when more-details
@@ -99,7 +99,7 @@
                                       {:name (tr [:gig/end-time]) :value (ui/format-time end-time)})
                                     (when location
                                       {:name (tr [:gig/location]) :value location})
-                                    (when pay-deal
+                                    (when-not (str/blank? pay-deal)
                                       {:name (tr [:gig/pay-deal]) :value pay-deal})
                                     ;;
                                     ])}))
