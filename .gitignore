@@ -29,3 +29,4 @@ resources/public/css/compiled/*
 gigo-members.json
 redis-dev
 secrets/
+env/dev/clj/gigo_match.clj
