@@ -290,17 +290,19 @@
 (defn attendance-for-gig
   "Return the member's attendance for the gig"
   [db gig-id member-id]
-  (->
-   (datomic/q '[:find (pull ?gig pattern)
-                :in $ ?gig-id ?gig+member pattern
-                :where
-                [?gig :gig/gig-id ?gig-id]
-                [?a :attendance/gig+member ?gig+member]]
-              db gig-id (gig+member gig-id member-id)
-              [:gig/title {:attendance/_gig attendance-pattern}])
-   ffirst
-   :attendance/_gig
-   first))
+  (m/find-first #(= member-id (-> % :attendance/member :member/member-id))
+
+                (->
+                 (datomic/q '[:find (pull ?gig pattern)
+                              :in $ ?gig-id ?gig+member pattern
+                              :where
+                              [?gig :gig/gig-id ?gig-id]
+                              [?a :attendance/gig+member ?gig+member]]
+                            db gig-id (gig+member gig-id member-id)
+                            [:gig/title {:attendance/_gig attendance-pattern}])
+                 ffirst
+                 :attendance/_gig)))
+
 (defn attendances-for-gig
   "Return a list of attendances for the gig for all members"
   [db gig-id]

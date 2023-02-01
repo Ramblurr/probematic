@@ -1,15 +1,14 @@
 (ns app.dashboard.views
-  (:require [app.ui :as ui]
-            [app.gigs.views :as gig.view]
-            [app.gigs.service :as gig.service]
-            [app.i18n :as i18n]
-            [app.icons :as icon]
-            [ctmx.core :as ctmx]
-            [ctmx.rt :as rt]
-            [app.auth :as auth]
-            [app.util :as util]
-            [app.urls :as url]
-            [tick.core :as t]))
+  (:require
+   [app.auth :as auth]
+   [app.gigs.service :as gig.service]
+   [app.gigs.views :as gig.view]
+   [app.icons :as icon]
+   [app.ui :as ui]
+   [app.urls :as url]
+   [app.util :as util]
+   [ctmx.core :as ctmx]
+   [ctmx.rt :as rt]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [req gig-id member-id motivation]
   (gig.view/motivation-endpoint req
@@ -33,11 +32,12 @@
                              (util/ensure-uuid! member-id)
                              comment edit?))
 
-(defn gig-attendance-endpoint [{:keys [db] :as req} id idx gig]
+(defn gig-attendance-endpoint [req id idx gig]
   (let [attendance (:attendance gig)
         gig-id (:gig/gig-id gig)
         {:member/keys [member-id]} (:attendance/member attendance)
         {:gig/keys [date end-date status title]} gig]
+
     [:div {:id id :class (ui/cs "flex flex-col md:grid md:grid-cols-4 gap-x-0 md:gap-y-8 px-4 py-2 sm:px-6 last:rounded-b-md border-b border-gray-200"
                                 (when (= 0 idx) "sm:rounded-t-md")
                                 (if (= 0 (mod idx 2))
@@ -71,14 +71,10 @@
   gig-attendance-person-plan
   (gig-attendance-endpoint req id idx gig))
 
-(ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db tr] :as req}]
   (let [member (auth/get-current-member req)
         gigs-planned (gig.service/gigs-planned-for db member)
-        need-answer-gigs (gig.service/gigs-needing-plan db member)
-        offset 0
-        limit 10
-        ;; past-gigs (controller/gigs-past-two-weeks db)
-        tr (i18n/tr-from-req req)]
+        need-answer-gigs (gig.service/gigs-needing-plan db member)]
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list

@@ -28,7 +28,8 @@
 (def str->gig-type (zipmap (map name domain/gig-types) domain/gig-types))
 
 (defn attach-attendance [db member {:gig/keys [gig-id] :as gig}]
-  (assoc gig :attendance (q/attendance-for-gig db gig-id (:member/member-id member))))
+  (assoc gig :attendance
+         (q/attendance-for-gig db gig-id (:member/member-id member))))
 
 (defn gigs-planned-for
   "Return the gigs that the member as supplied an attendance plan for"
@@ -334,7 +335,6 @@
   (try
     (let [gig-ref     [:gig/gig-id gig-id]
           gig (q/retrieve-gig db gig-id)
-          _ (tap> {:got-gig gig})
           attendances (mapv (fn [{:attendance/keys [gig+member]}]
                               [:db/retractEntity [:attendance/gig+member gig+member]])  (q/attendances-for-gig db gig-id))
           played      (mapv (fn [{:played/keys [play-id]}]
@@ -402,7 +402,6 @@
             :db/id "probeplan"
             :probeplan/version :probeplan.version/classic}
         txs (concat [tx] txs)
-        ;; _ (tap> txs)
         result (datomic/transact datomic-conn {:tx-data txs})]
     (gig.events/trigger-gig-edited req gig-id :probeplan)
     (q/probeplan-songs-for-gig (:db-after result) gig-id)))
