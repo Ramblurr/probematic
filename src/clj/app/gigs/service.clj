@@ -3,28 +3,24 @@
   (:require
    [app.auth :as auth]
    [app.config :as config]
-   [app.util.http :as common]
    [app.datomic :as d]
-   [app.email :as email]
    [app.gigs.domain :as domain]
+   [app.jobs.gig-events :as gig.events]
    [app.probeplan.domain :as probeplan.domain]
    [app.probeplan.stats :as stats]
    [app.queries :as q]
    [app.schemas :as s]
    [app.secret-box :as secret-box]
    [app.util :as util]
+   [app.util.http :as common]
    [clojure.data :as clojure.data]
+   [clojure.set :as set]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]
-   [app.jobs.gig-events :as gig.events]
-   [app.debug :as debug]
-   [app.discourse :as discourse]
-   [clojure.set :as set]
-   [app.gigs.routes :as gigs]))
+   [tick.core :as t]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -102,7 +98,9 @@
 
 (defn page
   ([offset limit coll]
-   (take limit (drop offset coll)))
+   (if (= limit ##Inf)
+     (drop offset coll)
+     (take limit (drop offset coll))))
   ([limit coll]
    (page coll 0 limit)))
 

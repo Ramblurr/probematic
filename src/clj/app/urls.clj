@@ -28,6 +28,7 @@
 (defn link-songs-home [] "/songs/")
 (defn link-probeplan-home [] "/probeplan")
 (defn link-gig-create [] "/gigs/new/")
+(defn link-gig-archive [] "/gigs/archive/")
 
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))

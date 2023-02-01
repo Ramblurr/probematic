@@ -88,7 +88,9 @@
         :upcoming "Upcoming"
         :past "Past"
         :no-past "No gigs/probes in the past 2 weeks"
-        :no-future "No upcoming gigs/probes"}
+        :no-future "No upcoming gigs/probes"
+        :view-archive "View Gig Archive"
+        :archive "Gig Archive"}
  :insurance {:title "Insurance & Instruments"
              :name "Policy Name"
              :policies "Policies"

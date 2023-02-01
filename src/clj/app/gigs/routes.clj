@@ -7,19 +7,6 @@
    [ctmx.core :as ctmx]
    [datomic.client.api :as d]))
 
-(defn gigs-list-route []
-  (ctmx/make-routes
-   ""
-   (fn [req]
-     (layout/app-shell req
-                       (view/gigs-list-page req)))))
-
-(defn gig-detail-route []
-  (ctmx/make-routes
-   "/{gig/gig-id}/"
-   (fn [req]
-     (layout/app-shell req (view/gig-detail-page req false)))))
-
 (defn gig-create-route []
   (ctmx/make-routes
    "/new"
@@ -50,6 +37,12 @@
    (fn [req]
      (layout/app-shell req
                        (view/gigs-list-page req)))))
+(defn gigs-archive-route []
+  (ctmx/make-routes
+   "/archive"
+   (fn [req]
+     (layout/app-shell req
+                       (view/gigs-archive-page req)))))
 
 (defn gig-detail-route []
   (ctmx/make-routes
@@ -61,7 +54,8 @@
   ["" {:app.route/name :app/gigs}
    ["/gigs"
     (gig-create-route)
-    (gigs-list-route)]
+    (gigs-list-route)
+    (gigs-archive-route)]
    ["/gig" {:interceptors [gigs-interceptors]}
     (gig-detail-route)
     (gig-log-play-route)]])

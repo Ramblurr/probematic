@@ -1,7 +1,6 @@
 (ns app.gigs.views
   (:refer-clojure :exclude [comment hash])
   (:require
-   [app.util.http :as http.util]
    [app.auth :as auth]
    [app.gigs.domain :as domain]
    [app.gigs.service :as service]
@@ -12,15 +11,15 @@
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
+   [app.util.http :as http.util]
    [clojure.set :as set]
    [clojure.string :as str]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [medley.core :as m]
-   [tick.core :as t]
    [hiccup.util :as hiccup.util]
-   [app.discourse :as discourse]))
+   [medley.core :as m]
+   [tick.core :as t]))
 
 (defn- gig-id-from-path [req]
   (http.util/path-param-uuid! req :gig/gig-id))
@@ -977,7 +976,7 @@ on change if I match <:checked/>
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [tr db] :as req}]
   (let [future-gigs (q/gigs-future db)
         offset 0
-        limit 200
+        limit 20
         past-gigs (service/gigs-past-page db offset limit)]
     [:div
      (ui/page-header :title (tr [:gigs/title])
@@ -997,15 +996,58 @@ on change if I match <:checked/>
            (map (fn [gig]
                   [:li
                    (gig-row gig)]) future-gigs)])]]
-      [:div {:class "max-w-lg"}
+      [:div {:class "max-w-lg mb-8"}
        (ui/divider-left (tr [:gigs/past]))
        [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"}
         (if (empty? past-gigs)
           (tr [:gigs/no-past])
-          [:ul {:role "list", :class "divide-y divide-gray-200"}
-           (map (fn [gig]
-                  [:li
-                   (gig-row gig)]) past-gigs)])]]]]))
+          [:div
+           [:div {:class "mt-6 flow-root"}
+            [:ul {:role "list", :class "divide-y divide-gray-200"}
+             (map (fn [gig]
+                    [:li
+                     (gig-row gig)]) past-gigs)]
+
+            [:div {:class "px-6 mb-8 mt-8 justify-stretch flex flex-col space-y-4 space-y-4"}
+             (ui/link-button :centered? true :priority :white :label (tr [:gigs/view-archive])
+                             :hx-boost true
+                             :attr {:href (url/link-gig-archive)})]]])]]]]))
+
+;;;; List Gig Archive
+(ctmx/defcomponent ^:endpoint gigs-archive-page [{:keys [tr db] :as req}]
+  (let [year-groups (->> (service/gigs-past-page db 0 ##Inf)
+                         (group-by #(-> % :gig/date (t/year)))
+                         (map (fn [[year gigs]]
+                                {:year year
+                                 :gigs gigs}))
+                         (sort-by :year t/>))]
+
+    [:div
+     (ui/page-header :title (tr [:gigs/title])
+                     :buttons  (list
+                                (ui/button :tag :a :label (tr [:action/create])
+                                           :priority :primary
+                                           :centered? true
+                                           :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
+
+     [:div {:class "mt-6 px-4 sm:px-6 md:px-8 md:space-x-4 max-w-md"}
+      [:ul {:class "grid grid-cols-4 sm:grid-cols-5 gap-4"}
+       (map (fn [{:keys [year]}]
+              [:li
+               (ui/link-button :attr {:href (str "#" year)} :label year :priority :white)]) year-groups)]]
+     [:div {:class "mt-6 px-4 sm:px-6 md:px-8 xl:flex xl:flex-row md:space-x-4"}
+      (map-indexed
+       (fn [idx {:keys  [year gigs]}]
+         [:div {:class "max-w-lg mb-8" :id (str year)}
+          (ui/divider-left year)
+          [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"}
+           [:div
+            [:div {:class "mt-6 flow-root"}
+             [:ul {:role "list", :class "divide-y divide-gray-200"}
+              (map (fn [gig]
+                     [:li
+                      (gig-row gig)]) gigs)]]]]])
+       year-groups)]]))
 
 ;;;; Handle Answer Links from Emails
 (defn gig-answer-link [{:keys [tr] :as req}]
