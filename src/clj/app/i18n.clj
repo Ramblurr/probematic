@@ -117,10 +117,11 @@
   (let [acc (volatile! nil)]
     (fn
       ([] (rf))
-      ([res] (if-let [a @acc]
-               (do (vreset! acc nil)
-                   (rf res (apply str a)))
-               (rf res)))
+      ([res]
+       (if-let [a @acc]
+         (do (vreset! acc nil)
+             (rf res (apply str (reverse a))))
+         (rf res)))
       ([res i]
        (if (string? i)
          (do (vswap! acc conj i)
@@ -152,11 +153,6 @@
   "Parse the PO file given as stream of lines `l`."
   [l]
   (transduce parser conj [] l))
-
-(defn parse-from-reader
-  "Parse the PO file given in reader `rdr`.  `rdr` must implement `java.io.BufferedReader`."
-  [rdr]
-  (parse (line-seq rdr)))
 
 (defn parse-from-string
   "Parse the PO file given as string."
@@ -223,7 +219,11 @@ Content-Type: text/plain; charset=UTF-8
   ;; create pot
   (gen-pot "lang/en.edn" "lang/app.pot")
   ;; convert translated po to edn
-  (convert-po "de") ;; rcf
+  (convert-po "de")
+  (let [po-contents (slurp "resources/lang/test.po")
+        parsed (parse-from-string po-contents)]
+    parsed)
+  ;; rcf
 
-  ;;
+;;
   )

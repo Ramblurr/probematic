@@ -144,6 +144,14 @@ msgctxt ":insurance/covered-instruments"
 msgid "Covered Instruments"
 msgstr "Instrumente mit Versicherung"
 
+#: :email/invite-expired
+#, ycp-format
+msgctxt ":email/invite-expired"
+msgid "Sorry, the invitation code has expired. Please ask for a new one!"
+msgstr ""
+"Entschuldigung, der Einladungscode ist abgelaufen, bitte frag nach einem "
+"neuen!"
+
 #: :email/gig-edit-type
 #, ycp-format
 msgctxt ":email/gig-edit-type"
@@ -197,6 +205,20 @@ msgstr "Ich muss meine Verfügbarkeit ändern"
 msgctxt ":email/can-you-make-it?"
 msgid "Can you make it?"
 msgstr "Kannst du es schaffen?"
+
+#: :email/invite-new-user-intro2
+#, ycp-format
+msgctxt ":email/invite-new-user-intro2"
+msgid "Click the link below to setup your account."
+msgstr "Klickst du auf den Link unten, um dein Konto einzurichten."
+
+#: :email/invite-new-user-intro
+#, ycp-format
+msgctxt ":email/invite-new-user-intro"
+msgid "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
+msgstr ""
+"Du hast eine Einladung erhalten, eine StreetNoise Orchestra (SNO)-ID zu "
+"erstellen!"
 
 #: :email/can-make-it
 #, ycp-format
@@ -394,6 +416,28 @@ msgctxt ":Contact-Information"
 msgid "Contact Information"
 msgstr "Kontakt Informationen"
 
+#: :password/commonly-used
+#, ycp-format
+msgctxt ":password/commonly-used"
+msgid ""
+"The password is a known hacked password. Please choose a more secure "
+"password."
+msgstr ""
+"Das Passwort ist ein bekanntes gehacktes Passwort. Bitte wähle ein sicheres "
+"Passwort."
+
+#: :password/too-short
+#, ycp-format
+msgctxt ":password/too-short"
+msgid "The password is too short. It must be at least 8 characters."
+msgstr "Das Passwort ist zu kurz. Es muss mindestens 8 Zeichen lang sein."
+
+#: :password/does-not-match
+#, ycp-format
+msgctxt ":password/does-not-match"
+msgid "The passwords do not match."
+msgstr "Die Passwörter stimmen nicht überein."
+
 #: :outstanding-payments
 #, ycp-format
 msgctxt ":outstanding-payments"
@@ -484,17 +528,147 @@ msgctxt ":Active"
 msgid "Active?"
 msgstr "Aktiv?"
 
+#: :login
+#, ycp-format
+msgctxt ":login"
+msgid "Login"
+msgstr "Anmelden"
+
+#: :account/account-created-title
+#, ycp-format
+msgctxt ":account/account-created-title"
+msgid "Your SNO ID was created!"
+msgstr "Deine SNO-ID wurde erstellt!"
+
+#: :account/create-account
+#, ycp-format
+msgctxt ":account/create-account"
+msgid "Create account"
+msgstr "Konto erstellen"
+
+#: :account/password
+#, ycp-format
+msgctxt ":account/password"
+msgid "Password"
+msgstr "Passwort"
+
+#: :account/create-sno-id-subtitle
+#, ycp-format
+msgctxt ":account/create-sno-id-subtitle"
+msgid "You're only a few steps away from your new SNO ID!"
+msgstr "Du bist nur noch wenige Schritte von deiner neuen SNO-ID entfernt!"
+
+#: :account/password-instructions
+#, ycp-format
+msgctxt ":account/password-instructions"
+msgid "Must be at least 8 characters"
+msgstr "Muss mindestens 8 Zeichen lang sein"
+
+#: :account/create-sno-id-title
+#, ycp-format
+msgctxt ":account/create-sno-id-title"
+msgid "Create SNO ID"
+msgstr "SNO ID erstellen"
+
+#: :account/password-confirm-instructions
+#, ycp-format
+msgctxt ":account/password-confirm-instructions"
+msgid "Both passwords must match"
+msgstr "Beide Passwörter müssen übereinstimmen"
+
+#: :account/password-confirm
+#, ycp-format
+msgctxt ":account/password-confirm"
+msgid "Confirm password"
+msgstr "Kennwort bestätigen"
+
+#: :account/account-created-subtitle
+#, ycp-format
+msgctxt ":account/account-created-subtitle"
+msgid "Welcome :) Please login using your new SNO ID."
+msgstr ""
+"Herzlich willkommen! :) Bitte meldest du dich mit deiner neuen SNO-ID an"
+
 #: :band-instruments
 #, ycp-format
 msgctxt ":band-instruments"
 msgid "Band Instruments"
 msgstr "Band-Instrumente"
 
+#: :member/active?
+#, ycp-format
+msgctxt ":member/active?"
+msgid "Active?"
+msgstr "Aktiv?"
+
+#: :member/email
+#, ycp-format
+msgctxt ":member/email"
+msgid "E-Mail"
+msgstr "E-Mail"
+
+#: :member/nick
+#, ycp-format
+msgctxt ":member/nick"
+msgid "Nickname"
+msgstr "Spitzname"
+
+#: :member/open-invitations
+#, ycp-format
+msgctxt ":member/open-invitations"
+msgid "Open Invitations"
+msgstr "Einladungen öffnen"
+
+#: :member/gigs-attended
+#, ycp-format
+msgctxt ":member/gigs-attended"
+msgid "Gigs Attended"
+msgstr "Gigs besucht"
+
+#: :member/phone
+#, ycp-format
+msgctxt ":member/phone"
+msgid "Phone"
+msgstr "Telefon"
+
+#: :member/name
+#, ycp-format
+msgctxt ":member/name"
+msgid "Name"
+msgstr "Name"
+
+#: :member/username
+#, ycp-format
+msgctxt ":member/username"
+msgid "Username"
+msgstr "Nutzername"
+
+#: :member/keycloak-id
+#, ycp-format
+msgctxt ":member/keycloak-id"
+msgid "SNO UUID"
+msgstr "SNO UUID"
+
 #: :member/insurance-title
 #, ycp-format
 msgctxt ":member/insurance-title"
 msgid "Insurance & Instruments"
 msgstr "Versicherung & Instrumente"
+
+#: :member/create-sno-id
+#, ycp-format
+msgctxt ":member/create-sno-id"
+msgid "Create SNO ID"
+msgstr "SNO ID erstellen"
+
+#: :member/phone-validation
+#, ycp-format
+msgctxt ":member/phone-validation"
+msgid ""
+"Phone number starting with +country code. Only spaces, dashes, and numbers"
+msgstr ""
+"Telefonnummer, die mit +Landesvorwahl beginnt. Nur Leerzeichen, Bindestriche "
+"und Zahlen"
 
 #: :member/insurance-subtitle
 #, ycp-format
@@ -505,29 +679,36 @@ msgstr ""
 "Instrumente und andere Gegenstände, die zu Versicherungszwecken bei der Band "
 "angemeldet sind."
 
-#: :member/name
+#: :member/username-validation
 #, ycp-format
-msgctxt ":member/name"
-msgid "Name"
-msgstr "Name"
+msgctxt ":member/username-validation"
+msgid "Username can only have A-Z, 0-9 _, ., -, or @. No spaces."
+msgstr ""
+"Der Benutzername darf nur A–Z, 0–9 _, ., - oder @ enthalten. Kein "
+"Leerzeichen."
 
-#: :member/nick
+#: :member/create-sno-id-description
 #, ycp-format
-msgctxt ":member/nick"
-msgid "Nickname"
-msgstr "Spitzname"
-
-#: :member/gigs-attended
-#, ycp-format
-msgctxt ":member/gigs-attended"
-msgid "Gigs Attended"
-msgstr "Gigs besucht"
+msgctxt ":member/create-sno-id-description"
+msgid ""
+"An invitation to make a SNO ID will be e-mailed to the person so they can "
+"make an account an access all SNO online systems."
+msgstr ""
+"Eine Einladung zum Erstellen einer SNO-ID wird an die Person per E-Mail "
+"gesendet, damit sie ein Konto erstellen und auf alle SNO-Online-Systeme "
+"zugreifen kann."
 
 #: :member/probes-attended
 #, ycp-format
 msgctxt ":member/probes-attended"
 msgid "Probes Attended"
 msgstr "Proben besucht"
+
+#: :member/new-member
+#, ycp-format
+msgctxt ":member/new-member"
+msgid "New Member"
+msgstr "Neues Mitglied"
 
 #: :instruments
 #, ycp-format
@@ -550,6 +731,12 @@ msgid ""
 msgstr ""
 "Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-"
 "Auftritt gespielt wurde."
+
+#: :sno-id
+#, ycp-format
+msgctxt ":sno-id"
+msgid "SNO ID"
+msgstr "SNO ID"
 
 #: :updating
 #, ycp-format
@@ -611,6 +798,12 @@ msgctxt ":action/reorder"
 msgid "Reorder"
 msgstr "Neu anordnen"
 
+#: :action/quick-edit
+#, ycp-format
+msgctxt ":action/quick-edit"
+msgid "Quick Edit"
+msgstr "Schnellbearbeitung"
+
 #: :action/comment
 #, ycp-format
 msgctxt ":action/comment"
@@ -659,20 +852,49 @@ msgctxt ":action/view"
 msgid "View"
 msgstr "Sehen"
 
+#: :error/go-home
+#, ycp-format
+msgctxt ":error/go-home"
+msgid "Go Home"
+msgstr "Go Home"
+
+#: :error/unauthorized-message
+#, ycp-format
+msgctxt ":error/unauthorized-message"
+msgid ""
+"Your identity is unknown to the system.. something probably went wrong. "
+"Please contact Casey and tell him this error code:"
+msgstr ""
+"Ihre Identität ist dem System unbekannt. Wahrscheinlich ist etwas schief "
+"gelaufen. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode "
+"mit:"
+
 #: :error/unknown-title
 #, ycp-format
 msgctxt ":error/unknown-title"
 msgid "Something went wrong"
 msgstr "Ein Fehler ist aufgetreten"
 
+#: :error/member-unique-email
+#, ycp-format
+msgctxt ":error/member-unique-email"
+msgid "A member already has that email address"
+msgstr "Ein Mitglied hat diese E-Mail-Adresse bereits"
+
+#: :error/unauthorized-title
+#, ycp-format
+msgctxt ":error/unauthorized-title"
+msgid "Authentication failed"
+msgstr "Authentifizierung fehlgeschlagen"
+
 #: :error/unknown-message
 #, ycp-format
 msgctxt ":error/unknown-message"
 msgid ""
-"Sorry about this. It's not your fault. Please contact Casey and tell him "
+"Sorry about this! It's not your fault. Please contact Casey and tell him "
 "this error code:"
 msgstr ""
-"Tut mir leid. Es ist nicht deine Schuld. Bitte kontaktieren Sie Casey und "
+"Tut mir leid! Es ist nicht deine Schuld. Bitte kontaktieren Sie Casey und "
 "teilen Sie ihm diesen Fehlercode mit:"
 
 #: :error/not-found-title
@@ -692,34 +914,23 @@ msgstr ""
 "existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen "
 "Fehlercode mit:"
 
-#: :error/unauthorized-title
+#: :error/member-unique-phone
 #, ycp-format
-msgctxt ":error/unauthorized-title"
-msgid "Authentication failed"
-msgstr "Authentifizierung fehlgeschlagen"
-
-#: :error/unauthorized-message
-#, ycp-format
-msgctxt ":error/unauthorized-message"
-msgid ""
-"Your identity is unknown to the system.. something probably went wrong. "
-"Please contact Casey and tell him this error code:"
-msgstr ""
-"Ihre Identität ist dem System unbekannt. Wahrscheinlich ist etwas schief "
-"gelaufen. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode "
-"mit:"
-
-#: :error/go-home
-#, ycp-format
-msgctxt ":error/go-home"
-msgid "Go Home"
-msgstr "Go Home"
+msgctxt ":error/member-unique-phone"
+msgid "A member already has that phone number"
+msgstr "Ein Mitglied hat diese Telefonnummer bereits"
 
 #: :error/notify
 #, ycp-format
 msgctxt ":error/notify"
 msgid "Click to notify Casey"
 msgstr "Click to notify Casey"
+
+#: :error/member-unique-username
+#, ycp-format
+msgctxt ":error/member-unique-username"
+msgid "A member already has that username"
+msgstr "Ein Mitglied hat bereits diesen Benutzernamen"
 
 #: :missing
 #, ycp-format
@@ -756,6 +967,18 @@ msgstr "Keine Gigs/Proben in den letzten 2 Wochen"
 msgctxt ":gigs/no-future"
 msgid "No upcoming gigs/probes"
 msgstr "Keine bevorstehenden Gigs/Proben"
+
+#: :gigs/view-archive
+#, ycp-format
+msgctxt ":gigs/view-archive"
+msgid "View Gig Archive"
+msgstr "Gig-Archiv anzeigen"
+
+#: :gigs/archive
+#, ycp-format
+msgctxt ":gigs/archive"
+msgid "Gig Archive"
+msgstr "Gig-Archiv"
 
 #: :orange-and-green
 #, ycp-format
@@ -871,6 +1094,12 @@ msgctxt ":gig/description-help"
 msgid "This text will be used on the website under upcoming gigs."
 msgstr "Dieser Text wird auf der Website unter kommende Gigs verwendet."
 
+#: :gig/answer-link-submitted
+#, ycp-format
+msgctxt ":gig/answer-link-submitted"
+msgid "Your answer has been submitted - thanks!"
+msgstr "Deine Antwort wurde gesendet - danke!"
+
 #: :gig/pay-deal
 #, ycp-format
 msgctxt ":gig/pay-deal"
@@ -904,10 +1133,10 @@ msgstr "Beginn"
 #: :gig/probeplan-sort
 #, ycp-format
 msgctxt ":gig/probeplan-sort"
-msgid "Drag the songs into probeplan order, and mark a couple as intensive."
+msgid "Drag the songs into probeplan order, and mark at most 2 as intensive."
 msgstr ""
-"Ziehen Sie die Songs in die Probeplan-Reihenfolge und markieren Sie ein Paar "
-"als intensiv."
+"Ziehen Sie die Songs in die Probeplan-Reihenfolge und markieren Sie "
+"höchstens 2 als intensiv."
 
 #: :gig/play-log-subtitle
 #, ycp-format
@@ -938,6 +1167,12 @@ msgstr "Art"
 msgctxt ":gig/more-details"
 msgid "More Details"
 msgstr "Mehr Details"
+
+#: :gig/was-planned-to-play
+#, ycp-format
+msgctxt ":gig/was-planned-to-play"
+msgid "It was planned to play these songs:"
+msgstr "Es war geplant, diese Lieder zu spielen:"
 
 #: :gig/create-title
 #, ycp-format

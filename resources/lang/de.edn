@@ -23,7 +23,9 @@
   :effective-until "Gültig bis",
   :covered-instruments "Instrumente mit Versicherung"},
  :email
- {:gig-edit-type "BEARBEITET",
+ {:invite-expired
+  "Entschuldigung, der Einladungscode ist abgelaufen, bitte frag nach einem neuen!",
+  :gig-edit-type "BEARBEITET",
   :gig-info-page "Bring mich zur Gig-Info-Seite",
   :want-reminder "Erinnere mich in ein paar Tagen daran",
   :sign-off "Mit groovigen Grüßen — SNObot",
@@ -32,6 +34,10 @@
   :new-probe-added "Eine neue Probe steht an!",
   :need-to-change-availability? "Ich muss meine Verfügbarkeit ändern",
   :can-you-make-it? "Kannst du es schaffen?",
+  :invite-new-user-intro2
+  "Klickst du auf den Link unten, um dein Konto einzurichten.",
+  :invite-new-user-intro
+  "Du hast eine Einladung erhalten, eine StreetNoise Orchestra (SNO)-ID zu erstellen!",
   :can-make-it "Ich kann es schaffen!",
   :new-extra-probe-added "Eine neue Extraprobe steht an!",
   :greeting "Hallo!",
@@ -66,9 +72,15 @@
   :cancelled "Abgesagt"},
  :now "jetzt",
  :private-instrument-description
- "Kosten versichern wird.Ein privates Instrument ist ein Instrument, das der Besitzer auf eigene ",
+ "Ein privates Instrument ist ein Instrument, das der Besitzer auf eigene Kosten versichern wird.",
  :band-private "Band/Privat",
  :Contact-Information "Kontakt Informationen",
+ :password
+ {:commonly-used
+  "Das Passwort ist ein bekanntes gehacktes Passwort. Bitte wähle ein sicheres Passwort.",
+  :too-short
+  "Das Passwort ist zu kurz. Es muss mindestens 8 Zeichen lang sein.",
+  :does-not-match "Die Passwörter stimmen nicht überein."},
  :outstanding-payments "Ausstehende Zahlungen",
  :section-none "Kein Register",
  :Email "E-Mail",
@@ -86,20 +98,48 @@
   :unanswered "Zukünftige Termine: Sag Bescheid!",
   :upcoming "Alle kommenden Termine"},
  :Active "Aktiv?",
+ :login "Anmelden",
+ :account
+ {:account-created-title "Deine SNO-ID wurde erstellt!",
+  :create-account "Konto erstellen",
+  :password "Passwort",
+  :create-sno-id-subtitle
+  "Du bist nur noch wenige Schritte von deiner neuen SNO-ID entfernt!",
+  :password-instructions "Muss mindestens 8 Zeichen lang sein",
+  :create-sno-id-title "SNO ID erstellen",
+  :password-confirm-instructions
+  "Beide Passwörter müssen übereinstimmen",
+  :password-confirm "Kennwort bestätigen",
+  :account-created-subtitle
+  "Herzlich willkommen! :) Bitte meldest du dich mit deiner neuen SNO-ID an"},
  :band-instruments "Band-Instrumente",
  :member
- {:insurance-title "Versicherung & Instrumente",
-  :insurance-subtitle
-  "angemeldet sind.Instrumente und andere Gegenstände, die zu Versicherungszwecken bei der Band ",
-  :name "Name",
+ {:active? "Aktiv?",
+  :email "E-Mail",
   :nick "Spitzname",
-  :username "Benutzername"
+  :open-invitations "Einladungen öffnen",
   :gigs-attended "Gigs besucht",
-  :probes-attended "Proben besucht"},
+  :phone "Telefon",
+  :name "Name",
+  :username "Nutzername",
+  :keycloak-id "SNO UUID",
+  :insurance-title "Versicherung & Instrumente",
+  :create-sno-id "SNO ID erstellen",
+  :phone-validation
+  "Telefonnummer, die mit +Landesvorwahl beginnt. Nur Leerzeichen, Bindestriche und Zahlen",
+  :insurance-subtitle
+  "Instrumente und andere Gegenstände, die zu Versicherungszwecken bei der Band angemeldet sind.",
+  :username-validation
+  "Der Benutzername darf nur A–Z, 0–9 _, ., - oder @ enthalten. Kein Leerzeichen.",
+  :create-sno-id-description
+  "Eine Einladung zum Erstellen einer SNO-ID wird an die Person per E-Mail gesendet, damit sie ein Konto erstellen und auf alle SNO-Online-Systeme zugreifen kann.",
+  :probes-attended "Proben besucht",
+  :new-member "Neues Mitglied"},
  :instruments "Instrumente",
  :Phone "Telefon",
  :band-instrument-description
- "Auftritt gespielt wurde.Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-",
+ "Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-Auftritt gespielt wurde.",
+ :sno-id "SNO ID",
  :updating "Aktualisierung...",
  :action
  {:duplicate "Duplikat",
@@ -111,6 +151,7 @@
   :delete "Löschen",
   :save "Speichern",
   :reorder "Neu anordnen",
+  :quick-edit "Schnellbearbeitung",
   :comment "Kommentar",
   :confirm-generic "Bist du sicher?",
   :confirm-delete-gig "Möchten Sie den Gig %1 wirklich löschen?",
@@ -120,24 +161,30 @@
   :confirm-delete-song "Möchten Sie das Lied %1 wirklich löschen?",
   :view "Sehen"},
  :error
- {:unknown-title "Ein Fehler ist aufgetreten",
+ {:go-home "Go Home",
+  :unauthorized-message
+  "Ihre Identität ist dem System unbekannt. Wahrscheinlich ist etwas schief gelaufen. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode mit:",
+  :unknown-title "Ein Fehler ist aufgetreten",
+  :member-unique-email "Ein Mitglied hat diese E-Mail-Adresse bereits",
+  :unauthorized-title "Authentifizierung fehlgeschlagen",
   :unknown-message
-  "teilen Sie ihm diesen Fehlercode mit:Tut mir leid. Es ist nicht deine Schuld. Bitte kontaktieren Sie Casey und ",
+  "Tut mir leid! Es ist nicht deine Schuld. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode mit:",
   :not-found-title "Nicht gefunden",
   :not-found-message
-  "Fehlercode mit:existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es ",
-  :unauthorized-title "Authentifizierung fehlgeschlagen",
-  :unauthorized-message
-  "mit:gelaufen. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode Ihre Identität ist dem System unbekannt. Wahrscheinlich ist etwas schief ",
-  :go-home "Go Home",
-  :notify "Click to notify Casey"},
+  "Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen Fehlercode mit:",
+  :member-unique-phone "Ein Mitglied hat diese Telefonnummer bereits",
+  :notify "Click to notify Casey",
+  :member-unique-username
+  "Ein Mitglied hat bereits diesen Benutzernamen"},
  :missing ":de missing text",
  :gigs
  {:title "Gigs & Proben",
   :upcoming "Kommend",
   :past "Vergangen",
   :no-past "Keine Gigs/Proben in den letzten 2 Wochen",
-  :no-future "Keine bevorstehenden Gigs/Proben"},
+  :no-future "Keine bevorstehenden Gigs/Proben",
+  :view-archive "Gig-Archiv anzeigen",
+  :archive "Gig-Archiv"},
  :orange-and-green "orange und grün",
  :email-subject
  {:gig-created "Neuer Gig: %1", :gig-updated "Gig-Bearbeitung: %1"},
@@ -160,17 +207,21 @@
   :show-committed "Zeige fixe Zusagen",
   :description-help
   "Dieser Text wird auf der Website unter kommende Gigs verwendet.",
+  :answer-link-submitted "Deine Antwort wurde gesendet - danke!",
   :pay-deal "Bezahlung",
   :comment-placeholder "Melde dich zu Wort!",
   :end-time "Ende",
   :probe-info "Probeninfos",
   :call-time "Beginn",
+  :probeplan-sort
+  "Ziehen Sie die Songs in die Probeplan-Reihenfolge und markieren Sie höchstens 2 als intensiv.",
   :play-log-subtitle
   "Hier kannst du aufnehmen, was bei diesem Gig/Probe gespielt wurde.",
   :title "Titel",
   :probeplan-choose "Wählen Sie 5 Lieder aus.",
   :gig-type "Art",
   :more-details "Mehr Details",
+  :was-planned-to-play "Es war geplant, diese Lieder zu spielen:",
   :create-title "Gig erstellen",
   :probeplan "Probeplan",
   :leader "Dirigent",

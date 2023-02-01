@@ -133,6 +133,12 @@ msgctxt ":insurance/covered-instruments"
 msgid "Covered Instruments"
 msgstr ""
 
+#: :email/invite-expired
+#, ycp-format
+msgctxt ":email/invite-expired"
+msgid "Sorry, the invitation code has expired. Please ask for a new one!"
+msgstr ""
+
 #: :email/gig-edit-type
 #, ycp-format
 msgctxt ":email/gig-edit-type"
@@ -185,6 +191,18 @@ msgstr ""
 #, ycp-format
 msgctxt ":email/can-you-make-it?"
 msgid "Can you make it?"
+msgstr ""
+
+#: :email/invite-new-user-intro2
+#, ycp-format
+msgctxt ":email/invite-new-user-intro2"
+msgid "Click the link below to setup your account."
+msgstr ""
+
+#: :email/invite-new-user-intro
+#, ycp-format
+msgctxt ":email/invite-new-user-intro"
+msgid "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
 msgstr ""
 
 #: :email/can-make-it
@@ -379,6 +397,24 @@ msgctxt ":Contact-Information"
 msgid "Contact Information"
 msgstr ""
 
+#: :password/commonly-used
+#, ycp-format
+msgctxt ":password/commonly-used"
+msgid "The password is a known hacked password. Please choose a more secure password."
+msgstr ""
+
+#: :password/too-short
+#, ycp-format
+msgctxt ":password/too-short"
+msgid "The password is too short. It must be at least 8 characters."
+msgstr ""
+
+#: :password/does-not-match
+#, ycp-format
+msgctxt ":password/does-not-match"
+msgid "The passwords do not match."
+msgstr ""
+
 #: :outstanding-payments
 #, ycp-format
 msgctxt ":outstanding-payments"
@@ -469,28 +505,82 @@ msgctxt ":Active"
 msgid "Active?"
 msgstr ""
 
+#: :login
+#, ycp-format
+msgctxt ":login"
+msgid "Login"
+msgstr ""
+
+#: :account/account-created-title
+#, ycp-format
+msgctxt ":account/account-created-title"
+msgid "Your SNO ID was created!"
+msgstr ""
+
+#: :account/create-account
+#, ycp-format
+msgctxt ":account/create-account"
+msgid "Create account"
+msgstr ""
+
+#: :account/password
+#, ycp-format
+msgctxt ":account/password"
+msgid "Password"
+msgstr ""
+
+#: :account/create-sno-id-subtitle
+#, ycp-format
+msgctxt ":account/create-sno-id-subtitle"
+msgid "You're only a few steps away from your new SNO ID!"
+msgstr ""
+
+#: :account/password-instructions
+#, ycp-format
+msgctxt ":account/password-instructions"
+msgid "Must be at least 8 characters"
+msgstr ""
+
+#: :account/create-sno-id-title
+#, ycp-format
+msgctxt ":account/create-sno-id-title"
+msgid "Create SNO ID"
+msgstr ""
+
+#: :account/password-confirm-instructions
+#, ycp-format
+msgctxt ":account/password-confirm-instructions"
+msgid "Both passwords must match"
+msgstr ""
+
+#: :account/password-confirm
+#, ycp-format
+msgctxt ":account/password-confirm"
+msgid "Confirm password"
+msgstr ""
+
+#: :account/account-created-subtitle
+#, ycp-format
+msgctxt ":account/account-created-subtitle"
+msgid "Welcome :) Please login using your new SNO ID."
+msgstr ""
+
 #: :band-instruments
 #, ycp-format
 msgctxt ":band-instruments"
 msgid "Band Instruments"
 msgstr ""
 
-#: :member/insurance-title
+#: :member/active?
 #, ycp-format
-msgctxt ":member/insurance-title"
-msgid "Insurance & Instruments"
+msgctxt ":member/active?"
+msgid "Active?"
 msgstr ""
 
-#: :member/insurance-subtitle
+#: :member/email
 #, ycp-format
-msgctxt ":member/insurance-subtitle"
-msgid "Instruments and other items registered with the band for insurance purposes."
-msgstr ""
-
-#: :member/name
-#, ycp-format
-msgctxt ":member/name"
-msgid "Name"
+msgctxt ":member/email"
+msgid "E-Mail"
 msgstr ""
 
 #: :member/nick
@@ -499,16 +589,88 @@ msgctxt ":member/nick"
 msgid "Nickname"
 msgstr ""
 
+#: :member/open-invitations
+#, ycp-format
+msgctxt ":member/open-invitations"
+msgid "Open Invitations"
+msgstr ""
+
 #: :member/gigs-attended
 #, ycp-format
 msgctxt ":member/gigs-attended"
 msgid "Gigs Attended"
 msgstr ""
 
+#: :member/phone
+#, ycp-format
+msgctxt ":member/phone"
+msgid "Phone"
+msgstr ""
+
+#: :member/name
+#, ycp-format
+msgctxt ":member/name"
+msgid "Name"
+msgstr ""
+
+#: :member/username
+#, ycp-format
+msgctxt ":member/username"
+msgid "Username"
+msgstr ""
+
+#: :member/keycloak-id
+#, ycp-format
+msgctxt ":member/keycloak-id"
+msgid "SNO UUID"
+msgstr ""
+
+#: :member/insurance-title
+#, ycp-format
+msgctxt ":member/insurance-title"
+msgid "Insurance & Instruments"
+msgstr ""
+
+#: :member/create-sno-id
+#, ycp-format
+msgctxt ":member/create-sno-id"
+msgid "Create SNO ID"
+msgstr ""
+
+#: :member/phone-validation
+#, ycp-format
+msgctxt ":member/phone-validation"
+msgid "Phone number starting with +country code. Only spaces, dashes, and numbers"
+msgstr ""
+
+#: :member/insurance-subtitle
+#, ycp-format
+msgctxt ":member/insurance-subtitle"
+msgid "Instruments and other items registered with the band for insurance purposes."
+msgstr ""
+
+#: :member/username-validation
+#, ycp-format
+msgctxt ":member/username-validation"
+msgid "Username can only have A-Z, 0-9 _, ., -, or @. No spaces."
+msgstr ""
+
+#: :member/create-sno-id-description
+#, ycp-format
+msgctxt ":member/create-sno-id-description"
+msgid "An invitation to make a SNO ID will be e-mailed to the person so they can make an account an access all SNO online systems."
+msgstr ""
+
 #: :member/probes-attended
 #, ycp-format
 msgctxt ":member/probes-attended"
 msgid "Probes Attended"
+msgstr ""
+
+#: :member/new-member
+#, ycp-format
+msgctxt ":member/new-member"
+msgid "New Member"
 msgstr ""
 
 #: :instruments
@@ -527,6 +689,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":band-instrument-description"
 msgid "A band instrument is an instrument that was played at a SNO gig in the past year."
+msgstr ""
+
+#: :sno-id
+#, ycp-format
+msgctxt ":sno-id"
+msgid "SNO ID"
 msgstr ""
 
 #: :updating
@@ -589,6 +757,12 @@ msgctxt ":action/reorder"
 msgid "Reorder"
 msgstr ""
 
+#: :action/quick-edit
+#, ycp-format
+msgctxt ":action/quick-edit"
+msgid "Quick Edit"
+msgstr ""
+
 #: :action/comment
 #, ycp-format
 msgctxt ":action/comment"
@@ -637,16 +811,40 @@ msgctxt ":action/view"
 msgid "View"
 msgstr ""
 
+#: :error/go-home
+#, ycp-format
+msgctxt ":error/go-home"
+msgid "Go Home"
+msgstr ""
+
+#: :error/unauthorized-message
+#, ycp-format
+msgctxt ":error/unauthorized-message"
+msgid "Your identity is unknown to the system.. something probably went wrong. Please contact Casey and tell him this error code:"
+msgstr ""
+
 #: :error/unknown-title
 #, ycp-format
 msgctxt ":error/unknown-title"
 msgid "Something went wrong"
 msgstr ""
 
+#: :error/member-unique-email
+#, ycp-format
+msgctxt ":error/member-unique-email"
+msgid "A member already has that email address"
+msgstr ""
+
+#: :error/unauthorized-title
+#, ycp-format
+msgctxt ":error/unauthorized-title"
+msgid "Authentication failed"
+msgstr ""
+
 #: :error/unknown-message
 #, ycp-format
 msgctxt ":error/unknown-message"
-msgid "Sorry about this. It's not your fault. Please contact Casey and tell him this error code:"
+msgid "Sorry about this! It's not your fault. Please contact Casey and tell him this error code:"
 msgstr ""
 
 #: :error/not-found-title
@@ -661,28 +859,22 @@ msgctxt ":error/not-found-message"
 msgid "The thing you were looking for wasn't found. If you think it should exist, please contact and tell him this error code:"
 msgstr ""
 
-#: :error/unauthorized-title
+#: :error/member-unique-phone
 #, ycp-format
-msgctxt ":error/unauthorized-title"
-msgid "Authentication failed"
-msgstr ""
-
-#: :error/unauthorized-message
-#, ycp-format
-msgctxt ":error/unauthorized-message"
-msgid "Your identity is unknown to the system.. something probably went wrong. Please contact Casey and tell him this error code:"
-msgstr ""
-
-#: :error/go-home
-#, ycp-format
-msgctxt ":error/go-home"
-msgid "Go Home"
+msgctxt ":error/member-unique-phone"
+msgid "A member already has that phone number"
 msgstr ""
 
 #: :error/notify
 #, ycp-format
 msgctxt ":error/notify"
 msgid "Click to notify Casey"
+msgstr ""
+
+#: :error/member-unique-username
+#, ycp-format
+msgctxt ":error/member-unique-username"
+msgid "A member already has that username"
 msgstr ""
 
 #: :missing
@@ -719,6 +911,18 @@ msgstr ""
 #, ycp-format
 msgctxt ":gigs/no-future"
 msgid "No upcoming gigs/probes"
+msgstr ""
+
+#: :gigs/view-archive
+#, ycp-format
+msgctxt ":gigs/view-archive"
+msgid "View Gig Archive"
+msgstr ""
+
+#: :gigs/archive
+#, ycp-format
+msgctxt ":gigs/archive"
+msgid "Gig Archive"
 msgstr ""
 
 #: :orange-and-green
@@ -835,6 +1039,12 @@ msgctxt ":gig/description-help"
 msgid "This text will be used on the website under upcoming gigs."
 msgstr ""
 
+#: :gig/answer-link-submitted
+#, ycp-format
+msgctxt ":gig/answer-link-submitted"
+msgid "Your answer has been submitted - thanks!"
+msgstr ""
+
 #: :gig/pay-deal
 #, ycp-format
 msgctxt ":gig/pay-deal"
@@ -868,7 +1078,7 @@ msgstr ""
 #: :gig/probeplan-sort
 #, ycp-format
 msgctxt ":gig/probeplan-sort"
-msgid "Drag the songs into probeplan order, and mark a couple as intensive."
+msgid "Drag the songs into probeplan order, and mark at most 2 as intensive."
 msgstr ""
 
 #: :gig/play-log-subtitle
@@ -899,6 +1109,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":gig/more-details"
 msgid "More Details"
+msgstr ""
+
+#: :gig/was-planned-to-play
+#, ycp-format
+msgctxt ":gig/was-planned-to-play"
+msgid "It was planned to play these songs:"
 msgstr ""
 
 #: :gig/create-title
