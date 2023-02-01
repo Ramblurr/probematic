@@ -14,7 +14,8 @@
    [app.queries :as q]
    [clojure.string :as str]
    [clojure.set :as set]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.auth :as auth]))
 
 (def query-param-field-mapping
   {"name" :member/name
@@ -104,8 +105,9 @@
         private-instruments (filter :instrument.coverage/private? coverages)
         band-instruments (filter #(not (:instrument.coverage/private? %)) coverages)
         sections (controller/sections db)
-        section-name (:section/name section)]
-
+        section-name (:section/name section)
+        current-user-admin? (auth/current-user-admin? req)
+        account-enabled? (keycloak/user-account-enabled? (keycloak/kc-from-req req) keycloak-id)]
     [(if edit? :form :div)
      (if edit?
        {:id id :hx-post (comp-name)}
@@ -154,11 +156,22 @@
                                                     (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title
                                                               (tr [:member/phone-validation]))
                                                     phone))
-                 (ui/dl-item (tr [:member/username]) username)
+                 (ui/dl-item (tr [:member/username])
+                             (if (and edit? current-user-admin?)
+                               (ui/text :label "" :name (path "username") :value username :required? false)
+                               username))
                  (ui/dl-item (tr [:member/keycloak-id])
-                             [:a {:href (keycloak/link-user-edit (-> req :system :env)  keycloak-id)
-                                  :class "link-blue"}
-                              keycloak-id])))
+                             (if (and edit? current-user-admin?)
+                               (ui/text :label "" :name (path "keycloak-id") :value keycloak-id :required? false)
+                               [:a {:href (keycloak/link-user-edit (-> req :system :env)  keycloak-id)
+                                    :class "link-blue"}
+                                keycloak-id]))
+                 (ui/dl-item (tr [:member/sno-id-enabled-disabled])
+                             (if (and edit? current-user-admin?)
+                               (ui/toggle-checkbox  :checked? account-enabled? :name (path "sno-id-enabled?"))
+                               (ui/bool-bubble account-enabled?
+                                               {true (tr [:member/sno-id-enabled])
+                                                false (tr [:member/sno-id-disabled])})))))
 
       (ui/panel {:title
                  (tr [:member/insurance-title])

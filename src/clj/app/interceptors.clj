@@ -39,7 +39,7 @@
    :enter (fn [ctx]
             (if-let [member-email (-> ctx :request :session :session/email)]
               (if-let [member (q/member-by-email (d/db (-> system :datomic :conn)) member-email)]
-                (assoc-in ctx [:request :session :session/member] member)
+                (assoc-in ctx  [:request :session :session/member] member)
                 ctx)
               ctx))})
 

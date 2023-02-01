@@ -624,5 +624,15 @@
        [:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw"])
   (probeplan-songs-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw")
   (probeplan-song-tuples-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCgw")
-  ;;
+
+  (mapv first
+        (d/q '[:find (pull ?e pattern)
+               :in $ pattern
+               :where
+               [?e :member/member-id _]
+               [?e :member/active? true]
+               [(missing? $ ?e :member/keycloak-id)]]
+             db member-pattern))
+
+;;
   )

@@ -51,7 +51,7 @@
 (defn match-members [members kc]
   (let [users (list-users kc)
         all (for [{:member/keys [email username member-id] :as m} members]
-              (if-let [matched-user (m/find-first #(= email  (:user/email %)) users)]
+              (if-let [matched-user (m/find-first #(= (str/lower-case email)  (str/lower-case (:user/email %))) users)]
                 (-> m
                     (assoc :member/keycloak-id  (:user/user-id matched-user))
                     (assoc :member/username  (:user/username matched-user)))
@@ -110,7 +110,7 @@
       (.update (user-for-update (util/remove-nils person))))
   (get-user! kc keycloak-id))
 
-(defn update-user-meta! [kc {:member/keys [username email active? name keycloak-id] :as member}]
+(defn update-user-meta! [kc {:member/keys [username email name keycloak-id] :as member}]
   (assert (not (str/blank? email)))
   (assert (not (str/blank? username)))
   (assert (not (str/blank? name)))
@@ -118,8 +118,15 @@
   (update-user kc keycloak-id
                {:username username
                 :email email
-                :enabled active?
                 :first-name name}))
+
+(defn lock-account! [kc {:member/keys [keycloak-id]}]
+  (assert (not (str/blank? keycloak-id)))
+  (update-user kc keycloak-id {:enabled false}))
+
+(defn unlock-account! [kc {:member/keys [keycloak-id]}]
+  (assert (not (str/blank? keycloak-id)))
+  (update-user kc keycloak-id {:enabled true}))
 
 (defn- maybe-parse-json [s]
   (if (or (nil? s) (str/blank? s))
@@ -147,7 +154,7 @@
         (admin/add-user-to-group! client realm group-id user-id)
         (update-user kc user-id {:enabled (:enabled person) :email-verified true})))))
 
-(defn create-new-member! [kc {:member/keys [active? email username name] :as member} password]
+(defn create-new-member! [kc {:member/keys [email username name] :as member} password can-login?]
   (assert (not (str/blank? email)))
   (assert (not (str/blank? username)))
   (assert (not (str/blank? name)))
@@ -156,13 +163,16 @@
                                {:username username
                                 :email email
                                 :password password
-                                :enabled active?
+                                :enabled can-login?
                                 :group "Mitglieder"
                                 :first-name name})]
     new-user))
 
 (defn kc-from-req [req]
   (-> req :system :keycloak))
+
+(defn user-account-enabled? [kc keycloak-id]
+  (:user/enabled? (get-user! kc keycloak-id)))
 
 (comment
 
@@ -188,8 +198,9 @@
                       :member/active? true
                       :member/name "Testuser Testing"})
 
-  ;; rcf
   (admin/delete-user-by-id! (client kc) (realm kc))
+
+  (user-account-enabled? kc "e0acd2e3-1362-4854-b4fe-46813adced84")
 
   ;;
   )

@@ -191,6 +191,11 @@
                             (throw-unauthorized "Current users lacks required roles" {:permitted-roles roles})
                             ctx)
                           ctx)}))})
+(defn has-roles?
+  "Given a role set and a request, returns true if the current user has all the roles."
+  [roles req]
+  (set/subset? roles
+               (get-in req [:session :session/roles])))
 
 (defn get-session
   "Fetch the user's session info from the request map"
@@ -207,6 +212,10 @@
   [req]
   (-> req :session :session/email))
 
+(defn current-user-admin?
+  [req]
+  (has-roles? #{:admin} req))
+
 (def require-authenticated-user
   "Throws an unauthorized exception if the request map does not contain session information for the current user"
   {:name ::require-authenticated-user
@@ -216,12 +225,6 @@
                 ctx
                 (assoc ctx :response {:status 302 :headers {"location"
                                                             (str "/login?next=" (util/url-encode (str uri "?" query-string)))} :body ""}))))})
-
-(defn has-roles?
-  "Given a role set and a request, returns true if the current user has all the roles."
-  [roles req]
-  (set/subset? roles
-               (get-in req [:session :session/roles])))
 
 (def demo-auth-interceptor
   {:name ::demo-auth-interceptor

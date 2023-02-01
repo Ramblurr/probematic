@@ -50,15 +50,15 @@
      (select-keys after-m ks))))
 
 (defn transact-member!
-  [{:keys [datomic-conn system]} member-id tx-data]
-  (let [tx-result (datomic/transact datomic-conn {:tx-data tx-data})
-        before-member (q/retrieve-member (:db-before tx-result) member-id)
-        after-member (q/retrieve-member (:db-after tx-result) member-id)]
-    (when
-     (and (keycloak-attrs-changed? before-member after-member) (:member/keycloak-id after-member))
-      ;; TODO: rollback datomic tx if keycloak update fails
-      (keycloak/update-user-meta! (:keycloak system) after-member))
-    {:member after-member}))
+  ([{:keys [datomic-conn system]} member-id tx-data]
+   (let [tx-result (datomic/transact datomic-conn {:tx-data tx-data})
+         before-member (q/retrieve-member (:db-before tx-result) member-id)
+         after-member (q/retrieve-member (:db-after tx-result) member-id)]
+     (when
+      (and (keycloak-attrs-changed? before-member after-member) (:member/keycloak-id after-member))
+       ;; TODO: rollback datomic tx if keycloak update fails
+       (keycloak/update-user-meta! (:keycloak system) after-member))
+     {:member after-member})))
 
 (defn update-active-and-section! [{:keys [db] :as req}]
   (let [params (http.util/unwrap-params req)
@@ -119,18 +119,32 @@
            (= :db.error/unique-conflict (:db/error (ex-data e)))
            (munge-unique-conflict-error tr e)
            :else e))))))
+
 (defn update-member! [req]
   (let [member-id (http.util/path-param-uuid! req :member-id)
-        params (http.util/unwrap-params req)
+        current-user-admin? (auth/current-user-admin? req)
+        {:keys [sno-id-enabled? name phone nick email active? section-name keycloak-id username]} (http.util/unwrap-params req)
         member-ref [:member/member-id member-id]
-        tx-data [{:db/id member-ref
-                  :member/name (:name params)
-                  :member/phone (:phone params)
-                  :member/nick (:nick params)
-                  :member/email (clean-email (:email params))
-                  :member/active? (http.util/check->bool (:active? params))
-                  :member/section [:section/name (:section-name params)]}]]
-    (transact-member! req member-id tx-data)))
+        tx-data [(merge
+                  {:db/id member-ref
+                   :member/name name
+                   :member/phone phone
+                   :member/nick nick
+                   :member/email (clean-email email)
+                   :member/active? (http.util/check->bool active?)
+                   :member/section [:section/name section-name]}
+                  (if current-user-admin?
+                    (util/remove-nils
+                     (util/remove-empty-strings
+                      {:member/username username
+                       :member/keycloak-id keycloak-id}))
+                    {}))]
+        result (transact-member! req member-id tx-data)]
+    (when (and current-user-admin? (-> result :member :member/keycloak-id))
+      (if (ctmx.rt/parse-boolean sno-id-enabled?)
+        (keycloak/unlock-account! (keycloak/kc-from-req req) (:member result))
+        (keycloak/lock-account! (keycloak/kc-from-req req) (:member result))))
+    result))
 
 (defn member-current-insurance-info [{:keys [db] :as req} member]
   (let [policy (q/insurance-policy-effective-as-of db (t/inst) q/policy-pattern)
