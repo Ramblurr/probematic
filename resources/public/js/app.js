@@ -8,12 +8,12 @@ htmx.onLoad(function(content) {
   htmx.config.defaultSwapStyle = 'outerHTML';
 })
 
-function initWidgets(event) {
-  if (event) {
-    if(event.target.querySelector(".dropdown")) {
+function initWidgets(evt) {
+  if (evt) {
+    if(evt.target.querySelector(".dropdown")) {
       DropdownAll(evt.target)
     }
-    if(event.target.querySelector(".sortable")) {
+    if(evt.target.querySelector(".sortable")) {
       initSortable(evt.target);
     }
   } else {
@@ -52,11 +52,10 @@ document.body.addEventListener("htmx:beforeSwap", function(evt) {
 document.body.addEventListener("htmx:afterSettle", function(evt) {
   NProgress.done();
   setTimeout(() => NProgress.remove(), 1000)
-  initWidgets();
+  initWidgets(evt);
 })
 
 const initSortable = (target) => {
-  console.log("init sortable")
     var sortables = target.querySelectorAll(".sortable");
     for (var i = 0; i < sortables.length; i++) {
       var sortable = sortables[i];
