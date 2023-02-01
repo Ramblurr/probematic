@@ -50,6 +50,8 @@
 
 (defn link-logout [] "/logout")
 (defn link-login [] "/login")
+(defn absolute-link-login [env]
+  (str (config/app-base-url env) "/login"))
 
 (comment
   ;;

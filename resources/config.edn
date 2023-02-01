@@ -38,14 +38,14 @@
                    :twilio-token   #ref [:secrets :twilio :twilio-token]}
  :mailgun         {;;  test mode hits the mailgun API but mailgun does not send the message.
                    ;;  this still costs money
-                   :test-mode?     #ref [:secrets :mailgun :test-mode?]
+                   :test-mode?             #ref [:secrets :mailgun :test-mode?]
                    ;; demo mode does not hit the mailgun API.. it just taps the emails instead of sending
-                   :demo-mode?     #ref [:secrets :mailgun :demo-mode?]
-                   :test-mode-disabled-for  #ref [:secrets :mailgun :test-mode-disabled-for]
-                   :api-key        #ref [:secrets :mailgun :api-key]
-                   :from           #ref [:secrets :mailgun :from]
-                   :send-domain    #ref [:secrets :mailgun :send-domain]
-                   :mailgun-domain #ref [:secrets :mailgun :mailgun-domain]}
+                   :demo-mode?             #ref [:secrets :mailgun :demo-mode?]
+                   :test-mode-disabled-for #ref [:secrets :mailgun :test-mode-disabled-for]
+                   :api-key                #ref [:secrets :mailgun :api-key]
+                   :from                   #ref [:secrets :mailgun :from]
+                   :send-domain            #ref [:secrets :mailgun :send-domain]
+                   :mailgun-domain         #ref [:secrets :mailgun :mailgun-domain]}
  :sentry          {:dsn #ref [:secrets :sentry :dsn]}
  :redis           {:conn-spec #ref [:secrets :redis :conn-spec]}
  :max-header-size 12000
@@ -54,34 +54,30 @@
                                                       :demo :demo
                                                       :test :test}
                    :app.ig/env              {:profile #ig/ref :app.ig/profile}
-                   :app.ig/pedestal         {:service    {:io.pedestal.http/type           :jetty
-                                                          :io.pedestal.http/routes         []
-                                                          :io.pedestal.http/port           #long #or [#env HTTP_PORT #profile {:dev 6161 :test 6162} 6160]
-                                                          :io.pedestal.http/host           #or [#env HTTP_BIND_HOST "localhost"]
+                   :app.ig/pedestal         {:service-map {:io.pedestal.http/type   :jetty
+                                                           :io.pedestal.http/routes []
+                                                           :io.pedestal.http/port   #long #or [#env HTTP_PORT #profile {:dev 6161 :test 6162} 6160]
+                                                           :io.pedestal.http/host   #or [#env HTTP_BIND_HOST "localhost"]
                                         ;:io.pedestal.http/resource-path "/static"
-                                                          :io.pedestal.http/join?          false
-                                                          :io.pedestal.http/secure-headers {:content-security-policy-settings {:img-src     "https://*.streetnoise.at 'self' data:"
-                                                                                                                               :object-src  "'none'"
-                                                                                                                               :default-src "'self'"
-                                                                                                                               :font-src    "'self'"
-                                                                                                                               :script-src  "https://forum.streetnoise.at 'self' 'unsafe-inline' 'unsafe-eval'"
-                                                                                                                               :style-src   "'self' 'unsafe-inline'"
-                                                                                                                               :connect-src "'self'"
-                                                                                                                               :frame-src "https://id.streetnoise.at https://forum.streetnoise.at 'self'"}}}
-                                             :datomic    #ig/ref :app.ig/datomic-db
-                                             :env        #ig/ref :app.ig/env
-                                             :handler    #ig/ref :app.ig/handler
-                                             :i18n-langs #ig/ref :app.ig/i18n-langs
-                                             :keycloak   #ig/ref :app.ig/keycloak
-                                             :profile    #ig/ref :app.ig/profile
-                                             :redis      #ig/ref :app.ig/redis
-                                             :routes     #ig/ref :app.ig.router/routes
-                                             :webdav     #ig/ref :app.ig/webdav-sardine}
+                                                           :io.pedestal.http/join?  false}
+                                             :datomic     #ig/ref :app.ig/datomic-db
+                                             :env         #ig/ref :app.ig/env
+                                             :handler     #ig/ref :app.ig/handler
+                                             :i18n-langs  #ig/ref :app.ig/i18n-langs
+                                             :keycloak    #ig/ref :app.ig/keycloak
+                                             :profile     #ig/ref :app.ig/profile
+                                             :redis       #ig/ref :app.ig/redis
+                                             :routes      #ig/ref :app.ig.router/routes
+                                             :webdav      #ig/ref :app.ig/webdav-sardine}
                    :app.ig/handler          {:env #ig/ref :app.ig/env}
-                   :app.ig.router/routes    {:routes #ig/refset :app.ig/routes
+                   :app.ig.router/routes    {:routes     #ig/refset :app.ig/routes
                                              :i18n-langs #ig/ref :app.ig/i18n-langs
-                                             :env    #ig/ref :app.ig/env
-                                             :oauth2 #ig/ref :app.ig/oauth2}
+                                             :env        #ig/ref :app.ig/env
+                                             :oauth2     #ig/ref :app.ig/oauth2
+                                             :datomic    #ig/ref :app.ig/datomic-db
+                                             :webdav     #ig/ref :app.ig/webdav-sardine
+                                             :keycloak   #ig/ref :app.ig/keycloak
+                                             :redis      #ig/ref :app.ig/redis}
                    :app.ig/oauth2           {:env #ig/ref :app.ig/env}
                    :ol.ig/jobs              {:job-defs #ig/ref :app.ig.jobs/definitions
                                              :env      #ig/ref :app.ig/env}

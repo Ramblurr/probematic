@@ -469,11 +469,10 @@
       (invite-accept-form req invite-data nil)
       (invite-invalid req))))
 
-(defn invite-accept-post [req]
+(defn invite-accept-post [{:keys [tr system] :as req}]
   (try
 
-    (let [member (controller/setup-account req)
-          tr (i18n/tr-from-req req)]
+    (let [member (controller/setup-account req)]
       (layout/centered-content req
                                [:div {:class "space-y-6"}
                                 [:h2 {:class "font-medium text-2xl"} (tr [:account/account-created-title])]
@@ -481,7 +480,7 @@
                                 [:div
                                  (ui/link-button :priority :primary :centered? true
                                                  :class "w-full"
-                                                 :label (tr [:login]) :attr {:href (str "/login?login_hint=" (util/url-encode (:member/email member)))})]]))
+                                                 :label (tr [:login]) :attr {:href (str (url/absolute-link-login (:env system)) "?login_hint=" (util/url-encode (:member/email member)))})]]))
 
     (catch Throwable e
       (let [reason (-> e ex-data :reason)]

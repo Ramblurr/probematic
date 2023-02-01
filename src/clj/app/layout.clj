@@ -5,7 +5,8 @@
    [app.icons :as icon]
    [app.render :as render]
    [app.ui :as ui]
-   [app.urls :as url]))
+   [app.urls :as url]
+   [app.config :as config]))
 
 (defn navigation [tr]
   [{:label (tr [:nav/home]) :icon icon/home :href "/" :route-name :app/dashboard}
@@ -235,14 +236,16 @@
                             (app-container req member body)])))
 
 (defn centered-content [req body]
-  (render/html5-response {:title "Probematic"}
-                         [:div {:class "h-full bg-gray-50"}
-                          [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
-                           [:div {:class "sm:mx-auto sm:w-full sm:max-w-md"}
-                            (icon/logotype {:class "h-8 mx-auto h-12 w-auto text-green-500 logotype-dark"})]
-                           [:div {:class "mt-8 sm:mx-auto sm:w-full sm:max-w-md"}
-                            [:div {:class "bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"}
-                             body]]]]))
+  (let [uri-prefix (config/app-base-url (-> req :system :env))]
+    (render/html5-response-absolute {:title "Probematic"
+                                     :uri-prefix uri-prefix}
+                                    [:div {:class "h-full bg-gray-50"}
+                                     [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
+                                      [:div {:class "sm:mx-auto sm:w-full sm:max-w-md"}
+                                       (icon/logotype {:class "h-8 mx-auto h-12 w-auto text-green-500 logotype-dark"})]
+                                      [:div {:class "mt-8 sm:mx-auto sm:w-full sm:max-w-md"}
+                                       [:div {:class "bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"}
+                                        body]]]])))
 
 (defn sidebar-search []
       ;; "<!-- Sidebar Search -->"

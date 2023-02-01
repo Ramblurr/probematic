@@ -41,3 +41,9 @@
 
 (defn oauth2-known-roles [env]
   (-> env :authorization :known-roles))
+
+(defn keycloak-auth-server-url [env]
+  (-> env :keycloak :auth-server-url))
+
+(defn discourse-forum-url [env]
+  (-> env :discourse :forum-url))

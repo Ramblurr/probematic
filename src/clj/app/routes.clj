@@ -20,7 +20,11 @@
 (defn routes [system]
   ["" {:coercion     interceptors/default-coercion
        :muuntaja     interceptors/formats-instance
-       :interceptors (interceptors/default-reitit-interceptors system)}
+       :interceptors (into [] (concat (interceptors/default-reitit-interceptors system)
+                                      [(auth/session-interceptor system)
+                                       (interceptors/system-interceptor system)
+                                       (interceptors/datomic-interceptor system)
+                                       (interceptors/current-user-interceptor system)]))}
 
    (auth/routes system)
    (gigs/unauthenticated-routes)

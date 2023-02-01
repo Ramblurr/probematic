@@ -37,35 +37,45 @@
                                         ;:body (pretty-print-html body)
     :body  body}))
 
-(defn head [title]
+(defn head [title relative-prefix]
   [:head
    [:meta {:charset "utf-8"}]
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
    [:title (or title "Probematic")]
    ;; [:link {:rel "stylesheet" :href "https://rsms.me/inter/inter.css"}]
-   [:link {:rel "stylesheet" :href "/font/inter/inter.css"}]
-   [:link {:rel "stylesheet" :href "/css/compiled/main.css"}]])
+   [:link {:rel "stylesheet" :href (str relative-prefix "/font/inter/inter.css")}]
+   [:link {:rel "stylesheet" :href (str relative-prefix  "/css/compiled/main.css")}]])
 
-(defn body-end []
+(defn body-end [relative-prefix]
   (list
-   [:script {:src "/js/hyperscript.org@0.9.7.js"}]
-   [:script {:src "/js/htmx.js"}]
-   [:script {:src "/js/nprogress.js"}]
-   [:script {:src "/js/popperjs@2-dev.js"}]
-   [:script {:src "/js/tippy@6-dev.js"}]
-   [:script {:src "/js/sortable@1.14.0.js"}]
-   [:script {:src "/js/app.js" :type :module}]))
+   [:script {:src (str relative-prefix "/js/hyperscript.org@0.9.7.js")}]
+   [:script {:src (str relative-prefix "/js/htmx.js")}]
+   [:script {:src (str relative-prefix "/js/nprogress.js")}]
+   [:script {:src (str relative-prefix "/js/popperjs@2-dev.js")}]
+   [:script {:src (str relative-prefix "/js/tippy@6-dev.js")}]
+   [:script {:src (str relative-prefix "/js/sortable@1.14.0.js")}]
+   [:script {:src (str relative-prefix "/js/app.js") :type :module}]))
 
 (defn html5-response
   ([body] (html5-response nil body))
   ([{:keys [js title]} body]
    (html-response
     (html5-safe
-     (head title)
+     (head title nil)
      [:body (ctmx.render/walk-attrs body)
-      (body-end)]
+      (body-end nil)]
      (when js [:script {:src (str "/js" js)}])))))
+
+(defn html5-response-absolute
+  ([{:keys [js title
+            uri-prefix]} body]
+   (html-response
+    (html5-safe
+     (head title uri-prefix)
+     [:body (ctmx.render/walk-attrs body)
+      (body-end uri-prefix)]
+     (when js [:script {:src (str uri-prefix "/js" js)}])))))
 
 (defn snippet-response [body]
   (ctmx.render/snippet-response body))

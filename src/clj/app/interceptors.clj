@@ -1,7 +1,5 @@
 (ns app.interceptors
   (:require
-
-   [io.pedestal.http.secure-headers :as sec-headers]
    [app.auth :as auth]
    [app.config :as config]
    [app.i18n :as i18n]
@@ -16,7 +14,6 @@
    [datomic.client.api :as d]
    [io.pedestal.http :as http]
    [io.pedestal.http.ring-middlewares :as middlewares]
-   [io.pedestal.interceptor :as pedestal.interceptor]
    [io.pedestal.interceptor.chain :as chain]
    [io.pedestal.interceptor.error :as error-int]
    [luminus-transit.time :as time]
@@ -26,6 +23,7 @@
    [reitit.http.interceptors.multipart :as multipart]
    [reitit.http.interceptors.muuntaja :as muuntaja]
    [reitit.http.interceptors.parameters :as parameters]
+   [reitit.pedestal :as pedestal]
    [ring.middleware.keyword-params :as keyword-params])
   (:import
    (org.eclipse.jetty.server HttpConfiguration)))
@@ -35,6 +33,7 @@
    looks up the member and attaches the member info to the request under :session :session/member.
   If there is no authed member, then does nothing."
   [system]
+  (assert system)
   {:name ::current-user-interceptor
    :enter (fn [ctx]
             (if-let [member-email (-> ctx :request :session :session/email)]
@@ -54,6 +53,8 @@
 (defn datomic-interceptor
   "Attaches the datomic db and connection to the request map"
   [system]
+  (assert system)
+  (assert (-> system :datomic :conn))
   {:name ::datomic--interceptor
    :enter (fn [ctx]
             (let [conn (-> system :datomic :conn)]
@@ -129,12 +130,14 @@
 
 (def tap-interceptor
   {:name :tap-interceptor
-   :enter (fn [req]
-            (tap> (-> req :request))
-            (tap> (-> req :request :params))
-            (tap> (-> req :request :body-params))
-            (tap> (-> req :request :form-params))
-            req)})
+   :enter (fn [ctx]
+            ;; (tap> (-> req :request))
+            (tap> {:tap-inter (-> ctx :request :headers)})
+            ctx)
+   :leave (fn [ctx]
+            (tap> {:leaving true})
+            ctx)})
+
 (def log-request-interceptor
   "Logs all http requests with response time."
   {:name ::log-request
@@ -302,15 +305,15 @@
                     ;; multipart
                     (multipart/multipart-interceptor)])))
 
-(defn with-default-pedestal-interceptors [service system]
-  (update-in service [::http/interceptors] conj
-             ;; (sec-headers/secure-headers (::http/secure-headers service))
-             service-error-handler
-             middlewares/cookies
-             (pedestal.interceptor/interceptor (system-interceptor system))
-             (pedestal.interceptor/interceptor (datomic-interceptor system))
-             (pedestal.interceptor/interceptor (current-user-interceptor system))
-             (pedestal.interceptor/interceptor (auth/session-interceptor system))))
-
-(defn with-interceptor [service interceptor]
-  (update-in service [::http/interceptors] conj interceptor))
+(defn with-our-pedestal-interceptors [service system router handler]
+  (-> service
+      (update ::http/interceptors conj
+              service-error-handler
+              middlewares/cookies
+              ;; this should be last!
+              (pedestal/routing-interceptor router handler))
+      ;; remove the pedestal default handler, because now we use the reitit one
+      (update ::http/interceptors
+              (fn [interceptors]
+                (into []
+                      (remove #(= :io.pedestal.http.route/router (:name %)) interceptors))))))

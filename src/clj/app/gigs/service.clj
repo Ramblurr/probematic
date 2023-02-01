@@ -34,6 +34,7 @@
 (defn gigs-planned-for
   "Return the gigs that the member as supplied an attendance plan for"
   [db member]
+  (assert member)
   (->>
    (q/results->gigs (d/q '[:find (pull ?gig pattern)
                            :in $ ?member ?reference-time pattern

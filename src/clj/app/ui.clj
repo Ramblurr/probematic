@@ -74,7 +74,7 @@
        [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6 text-sno-orange-600"
               :id "notification-confirmation"}]]]]]
 
-   (render/body-end)])
+   (render/body-end nil)])
 
 (defn unauthorized-error-body [{:keys [tr human-id]}]
   (error-common tr "401" (tr [:error/unauthorized-title]) (tr [:error/unauthorized-message]) human-id))

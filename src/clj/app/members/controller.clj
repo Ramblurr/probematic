@@ -219,7 +219,7 @@
         (if-not (= :password/valid pw-validation-result)
           (throw (ex-info "Password invalid" {:reason pw-validation-result
                                               :invite-data {:member member :invite-code invite-code}}))
-          (let [new-user (keycloak/create-new-member! (keycloak/kc-from-req req) member password)]
+          (let [new-user (keycloak/create-new-member! (keycloak/kc-from-req req) member password true)]
             (:member (transact-member! req member-id [[:db/add [:member/member-id member-id]
                                                        :member/keycloak-id (:user/user-id new-user)]]))))))))
 
