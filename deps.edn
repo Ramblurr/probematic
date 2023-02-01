@@ -31,7 +31,7 @@
          com.github.lookfirst/sardine      {:mvn/version "5.10"}
 ;;;; Error reporting & Logging
          io.sentry/sentry-clj              {:mvn/version "6.7.186"}
-         ch.qos.logback/logback-classic    {:mvn/version "1.2.10"}
+         ch.qos.logback/logback-classic    {:mvn/version "1.4.5"}
 ;;;; i18n
          com.taoensso/tempura              {:mvn/version "1.5.3"}
 ;;;; Database
