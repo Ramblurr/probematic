@@ -8,7 +8,8 @@
    [app.util :as util]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [clojure.tools.logging :as log]))
 
 (defn queue-email! [sys email]
   (email-worker/queue-mail! (:redis sys) email))
@@ -83,6 +84,7 @@
       (queue-email! sys  (build-gig-updated-email sys gig members edited-attrs)))))
 
 (defn send-new-user-email! [req new-member invite-code]
+  (log/info (format "new user email to %s code=%s" (:member/email new-member) invite-code))
   (queue-email! (sys-from-req req)
                 (build-new-user-invite (sys-from-req req) new-member invite-code)))
 
