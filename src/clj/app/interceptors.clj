@@ -305,6 +305,10 @@
                     ;; multipart
                     (multipart/multipart-interceptor)])))
 
+(def to-remove #{:io.pedestal.http.route/query-params
+                 :io.pedestal.http.route/path-params-decoder
+                 :io.pedestal.http/log-request
+                 :io.pedestal.http.route/router})
 (defn with-our-pedestal-interceptors [service system router handler]
   (-> service
       (update ::http/interceptors conj
@@ -316,4 +320,4 @@
       (update ::http/interceptors
               (fn [interceptors]
                 (into []
-                      (remove #(= :io.pedestal.http.route/router (:name %)) interceptors))))))
+                      (remove #(contains? to-remove (:name %)) interceptors))))))
