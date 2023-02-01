@@ -200,6 +200,7 @@
   [{:keys [system db params] :as req}]
   (try
     (let [invite-code (:code params)
+          _ (assert invite-code)
           member-id (fetch-invite-code system invite-code)]
       (if-not member-id
         (throw (ex-info "Invite code expired" {:invite-code invite-code}))
