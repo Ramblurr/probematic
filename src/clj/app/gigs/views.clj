@@ -185,6 +185,19 @@
           (ui/daterange date end-date)
           (ui/datetime date))]]]]))
 
+(defn plan-icons []
+  (let [icon-class "mr-3 text-gray-400"
+        size-class "w-5 h-5"
+        red-class "text-red-500 group-hover:text-red-500"
+        green-class "text-green-500 group-hover:text-green-500"]
+    {:plan/definitely {:value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class)}
+     :plan/probably {:value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class)}
+     :plan/unknown {:value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
+     :plan/probably-not {:value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class)}
+     :plan/definitely-not {:value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class)}
+     :plan/not-interested {:value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black")}
+     :plan/no-response {:value (name :plan/no-response) :icon icon/minus :icon-class (ui/cs icon-class  size-class "text-gray-500")}}))
+
 (defn attendance-opts [tr size]
   (let [icon-class "mr-3 text-gray-400"
         size-class (if (= size :large) "w-5 h-5" "w-3 h-3")
@@ -332,7 +345,9 @@
      [:div {:class "col-span-2 align-middle"}
       [:a {:href (url/link-member member-id) :class "text-blue-500 hover:text-blue-600 align-middle"}
        (ui/member-nick member)]]
-     [:div {:class "col-span-1"} (:attendance/plan attendance)]
+     [:div {:class "col-span-1"}
+      (let [{:keys [icon icon-class]} (get (plan-icons) (:attendance/plan attendance))]
+        (icon {:class icon-class}))]
      [:div {:class "col-span-1"} (:attendance/motivation attendance)]
      [:div {:class "col-span-1 "} (:attendance/comment attendance)]]))
 
@@ -896,15 +911,18 @@ on change if I match <:checked/>
   (when-let [topic-id (:forum.topic/topic-id gig)
              ;; (:id  (discourse/topic-for-gig system gig))
              ]
-    [:div {:class "divide-y divide-gray-200"}
-     (comment-header tr)
-     (list
-      [:div {:id "discourse-comments"
-             :class "mb-6"}]
-      [:script {:type "text/javascript"}
-       (hiccup.util/raw-string
-        (format
-         "
+    [:section {:aria-labelledby "notes-title"}
+     [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg mb-6"}
+      [:div {:class "px-4 py-5 sm:px-6 "}
+       [:div {:class "divide-y divide-gray-200"}
+        (comment-header tr)
+        (list
+         [:div {:id "discourse-comments"
+                :class "mb-6"}]
+         [:script {:type "text/javascript"}
+          (hiccup.util/raw-string
+           (format
+            "
   DiscourseEmbed = { discourseUrl: 'https://forum.streetnoise.at/',
                      topicId: '%s' };
 
@@ -913,7 +931,7 @@ on change if I match <:checked/>
     d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
   })();
-" topic-id))])]))
+" topic-id))])]]]]))
 
 (ctmx/defcomponent ^:endpoint gig-detail-page [{:keys [tr db] :as req} ^:boolean show-committed?]
   gig-details-edit-form gig-delete gig-details-edit-post gig-detail-info-section-hxget
@@ -929,11 +947,13 @@ on change if I match <:checked/>
 
     [:div {:id (util/id :comp/gig-detail-page)}
      (gig-detail-info-section req (:gig req))
-     (cond probe?
-           (gigs-detail-page-probeplan req)
-           gig?
-           (gigs-detail-page-setlist req scheduled-songs)
-           :else nil)
+     (cond
+       archived? nil
+       probe?
+       (gigs-detail-page-probeplan req)
+       gig?
+       (gigs-detail-page-setlist req scheduled-songs)
+       :else nil)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
 ;;;; Attendance Section
@@ -952,16 +972,12 @@ on change if I match <:checked/>
                         :centered? true
                         :attr {:hx-get endpoint-self :hx-target (util/hash :comp/gig-detail-page) :hx-vals {:show-committed? (not show-committed?)}})])]
 
-         [:div {:class "border-t border-gray-200"}
+         [:div {:class "border-t border-gray-200 mb-4"}
           (if archived?
             (rt/map-indexed gig-attendance-archived req attendances-by-section)
             (rt/map-indexed gig-attendance req attendances-by-section))]]]
 ;;;; Comments Section
-       [:section {:aria-labelledby "notes-title"}
-        [:div {:class "bg-white shadow sm:overflow-hidden sm:rounded-lg mb-6"}
-         [:div {:class "px-4 py-5 sm:px-6 "}
-          (discourse-comment-embed req gig)]
-         #_(gigs-detail-page-comment req gig)]]]]]))
+       (discourse-comment-embed req gig)]]]))
 
 ;;;; Create Gig
 (ctmx/defcomponent ^:endpoint gig-create-page [{:keys [tr db] :as req}]
