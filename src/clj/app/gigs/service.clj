@@ -23,7 +23,8 @@
    [app.jobs.gig-events :as gig.events]
    [app.debug :as debug]
    [app.discourse :as discourse]
-   [clojure.set :as set]))
+   [clojure.set :as set]
+   [app.gigs.routes :as gigs]))
 
 (def str->plan (zipmap (map name domain/plans) domain/plans))
 (def str->motivation (zipmap (map name domain/motivations) domain/motivations))
@@ -331,21 +332,32 @@
       (gig.events/trigger-gig-created req notify? gig-id)
       result)))
 
-(defn delete-gig! [{:keys [datomic-conn db] :as req}]
-  (let [gig-id      (common/path-param-uuid! req :gig/gig-id)
-        gig-ref     [:gig/gig-id gig-id]
-        attendances (mapv (fn [{:attendance/keys [gig+member]}]
-                            [:db/retractEntity [:attendance/gig+member gig+member]])  (q/attendances-for-gig db gig-id))
-        played      (mapv (fn [{:played/keys [play-id]}]
-                            [:db/retractEntity [:played/play-id play-id]]) (q/plays-by-gig db gig-id))
-        txs         (concat attendances played
-                            [[:db/retractEntity [:setlist/gig gig-ref]]
-                             [:db/retractEntity [:probeplan/gig gig-ref]]
-                             [:db/retractEntity gig-ref]])]
-    (datomic/transact datomic-conn {:tx-data txs})
-    (when (> (count played) 0)
-      (stats/calc-play-stats-in-bg! datomic-conn))
-    true))
+(defn -delete-gig! [{:keys [datomic-conn db]} gig-id]
+  (try
+    (let [gig-ref     [:gig/gig-id gig-id]
+          gig (q/retrieve-gig db gig-id)
+          _ (tap> {:got-gig gig})
+          attendances (mapv (fn [{:attendance/keys [gig+member]}]
+                              [:db/retractEntity [:attendance/gig+member gig+member]])  (q/attendances-for-gig db gig-id))
+          played      (mapv (fn [{:played/keys [play-id]}]
+                              [:db/retractEntity [:played/play-id play-id]]) (q/plays-by-gig db gig-id))
+          txs         (concat attendances played
+                              [[:db/retractEntity [:setlist/gig gig-ref]]
+                               [:db/retractEntity [:probeplan/gig gig-ref]]
+                               [:db/retractEntity gig-ref]])]
+
+      (datomic/transact datomic-conn {:tx-data txs})
+      (when (> (count played) 0)
+        (stats/calc-play-stats-in-bg! datomic-conn))
+      true)
+    (catch Throwable t
+      (if
+       (re-find #".*Cannot resolve key.*" (ex-message t))
+        true
+        (throw t)))))
+
+(defn delete-gig! [req]
+  (-delete-gig! req (common/path-param-uuid! req :gig/gig-id)))
 
 (defn reconcile-setlist [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
@@ -458,5 +470,20 @@
          (q/attendance-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q6uCQw"
                                "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")})
 
-  ;;
+  (gigs-past-page db 0 100)
+  (gigs-past-page db 0 100)
+
+  (->>
+   (d/find-all (datomic/db conn) :gig/gig-id q/gig-detail-pattern)
+   (map first)
+   (filter (fn [{:gig/keys [date]}]
+             (t/< date (t/<< (q/date-midnight-today!) (t/new-duration 2 :days)))))
+   (map :gig/gig-id)
+   (map (partial -delete-gig! {:datomic-conn conn :db (datomic/db conn)}))
+   (doall))
+
+  (q/retrieve-gig (datomic/db conn) #uuid "01860c05-7101-8e35-a230-d7561dd146ca")
+  (q/plays-by-gig (datomic/db conn) #uuid "01860c05-7101-8e35-a230-d7561dd146ca")
+
+;;
   )

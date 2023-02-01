@@ -155,6 +155,10 @@
   (gig.domain/db->gig
    (d/find-by db :gig/gig-id (util/ensure-uuid gig-id) gig-detail-pattern)))
 
+(defn retrieve-gig-by-gigo [db gigo-id]
+  (gig.domain/db->gig
+   (d/find-by db :gig/gigo-id gigo-id gig-detail-pattern)))
+
 (defn gigs-missing-id [db]
   (mapv first
         (d/q '[:find (pull ?e pattern)
@@ -213,7 +217,7 @@
   (gigs-before db (date-midnight-today!)))
 
 (defn gig+member [gig-id member-id]
-  (pr-str [gig-id member-id]))
+  (pr-str [(str gig-id) (str member-id)]))
 
 (defn retrieve-member [db member-id]
   (d/find-by db :member/member-id member-id member-detail-pattern))

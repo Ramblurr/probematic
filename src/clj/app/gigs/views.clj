@@ -977,7 +977,7 @@ on change if I match <:checked/>
 (ctmx/defcomponent ^:endpoint gigs-list-page [{:keys [tr db] :as req}]
   (let [future-gigs (q/gigs-future db)
         offset 0
-        limit 20
+        limit 200
         past-gigs (service/gigs-past-page db offset limit)]
     [:div
      (ui/page-header :title (tr [:gigs/title])

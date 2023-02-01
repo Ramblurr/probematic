@@ -97,7 +97,9 @@
 (defn gig-attendance-tx [db {:keys [id attendance]}]
   (assert db)
   (let [gig (d/find-by db :gig/gigo-id id q/gig-detail-pattern)]
-    (map (partial attendance-person-tx db gig) attendance)))
+    (->> attendance
+         (map (partial attendance-person-tx db gig))
+         (remove #(= :plan/unknown (:attendance/plan %))))))
     ;;
 
 (defn update-gigs-attendance-db! [conn gigs]

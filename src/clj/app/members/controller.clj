@@ -98,7 +98,8 @@
 (defn create-member! [{:keys [system] :as req}]
   (let [tr (i18n/tr-from-req req)]
     (try
-      (let [{:keys [create-sno-id phone email name nick username section-name active?] :as params} (-> req :params) member-id (str (sq/generate-squuid))
+      (let [{:keys [create-sno-id phone email name nick username section-name active?] :as params} (-> req :params)
+            member-id (sq/generate-squuid)
             txs [{:member/name name
                   :member/nick nick
                   :member/member-id member-id

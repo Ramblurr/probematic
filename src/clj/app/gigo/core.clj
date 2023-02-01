@@ -142,7 +142,7 @@
       401 (handle-401)
       nil)))
 
-(def plan->attendance-kw {0 :plan/unknown
+(def plan->attendance-kw {0 :plan/no-response
                           1 :plan/definitely          ; green
                           2 :plan/probably            ; green circle
                           3 :plan/dont-know           ; question mark
