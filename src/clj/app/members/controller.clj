@@ -192,8 +192,11 @@
                      :member/invite-code
                      (second (str/split key #":")))))))
 
+(defn -delete-invitation [redis code]
+  (redis/wcar  (redis/del (str "invite:" code))))
+
 (defn delete-invitation [req]
-  (redis/wcar (-> req :system :redis) (redis/del (str "invite:" (-> req :params :invite-code)))))
+  (-delete-invitation (-> req :system :redis) (-> req :params :invite-code)))
 
 (defn load-invite
   "Load the invitation from the request, returns nil if it is not valid."
@@ -222,7 +225,8 @@
                                               :invite-data {:member member :invite-code invite-code}}))
           (let [new-user (keycloak/create-new-member! (keycloak/kc-from-req req) member password true)]
             (:member (transact-member! req member-id [[:db/add [:member/member-id member-id]
-                                                       :member/keycloak-id (:user/user-id new-user)]]))))))))
+                                                       :member/keycloak-id (:user/user-id new-user)]]))
+            (-delete-invitation (-> req :system :redis) invite-code)))))))
 
 (comment
   (do
