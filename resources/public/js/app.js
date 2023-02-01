@@ -18,10 +18,11 @@ function initWidgets(evt) {
     }
   } else {
     DropdownAll();
-    ActionMenu2All()
-    listen('click', '[data-action-menu-trigger]', ActionMenu);
     listen('click', '[data-flyout-trigger]', Flyout);
   }
+
+  ActionMenu2All()
+  listen('click', '[data-action-menu-trigger]', ActionMenu);
 }
 
 document.body.addEventListener('htmx:beforeSwap', function(evt) {

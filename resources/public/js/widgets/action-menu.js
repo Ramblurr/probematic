@@ -9,7 +9,6 @@ export function ActionMenu2(dropdownTrigger) {
     const button = dropdownTrigger
     let tippyInstance;
     let onClick;
-    console.log("ctionmenu2", "init")
     tippy(button, {
         content: menu.innerHTML ,
         allowHTML: true,
