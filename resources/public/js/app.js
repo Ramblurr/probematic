@@ -1,12 +1,28 @@
 import {$, listen} from "./utils.js"
 import {Dropdown, DropdownAll} from "./widgets/attendance-dropdown.js"
-import {ActionMenu,Flyout} from "./widgets/action-menu.js"
+import {ActionMenu2All, ActionMenu,Flyout} from "./widgets/action-menu.js"
 
 //// SETUP
 htmx.onLoad(function(content) {
   htmx.config.defaultSettleDelay = 0;
   htmx.config.defaultSwapStyle = 'outerHTML';
 })
+
+function initWidgets(event) {
+  if (event) {
+    if(event.target.querySelector(".dropdown")) {
+      DropdownAll(evt.target)
+    }
+    if(event.target.querySelector(".sortable")) {
+      initSortable(evt.target);
+    }
+  } else {
+    DropdownAll();
+    ActionMenu2All()
+    listen('click', '[data-action-menu-trigger]', ActionMenu);
+    listen('click', '[data-flyout-trigger]', Flyout);
+  }
+}
 
 document.body.addEventListener('htmx:beforeSwap', function(evt) {
     if(evt.detail.xhr.status === 404){
@@ -36,12 +52,7 @@ document.body.addEventListener("htmx:beforeSwap", function(evt) {
 document.body.addEventListener("htmx:afterSettle", function(evt) {
   NProgress.done();
   setTimeout(() => NProgress.remove(), 1000)
-  if(evt.target.querySelector(".dropdown")) {
-    DropdownAll(evt.target)
-  }
-  if(evt.target.querySelector(".sortable")) {
-    initSortable(evt.target);
-  }
+  initWidgets();
 })
 
 const initSortable = (target) => {
@@ -64,7 +75,6 @@ const initSortable = (target) => {
     }
 }
 
-
 document.body.addEventListener("htmx:responseError", function(evt) {
   NProgress.done();
   NProgress.remove();
@@ -76,12 +86,7 @@ document.body.addEventListener("htmx:sendError", function(evt) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-  if (document.querySelector('.dropdown')) {
-    DropdownAll();
-  }
-
-  listen('click', '[data-action-menu-trigger]', ActionMenu);
-  listen('click', '[data-flyout-trigger]', Flyout);
+  initWidgets();
 });
 
 document.addEventListener('newDropdown', function(evt) {

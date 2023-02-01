@@ -90,8 +90,9 @@
     (str server-url "/admin/master/console/#/" realm "/users/" keycloak-id "/setttings")))
 
 (defn get-user! [{:keys [client realm]} keycloak-id]
-  (-> (admin/get-user client realm keycloak-id)
-      (user-representation->)))
+  (when keycloak-id
+    (-> (admin/get-user client realm keycloak-id)
+        (user-representation->))))
 
 (defn- user-for-update [{:keys [username first-name last-name email enabled email-verified]}]
   (keycloak.utils/hint-typed-doto "org.keycloak.representations.idm.UserRepresentation" (UserRepresentation.)

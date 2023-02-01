@@ -1,5 +1,44 @@
 import {$, enter, leave} from "../utils.js"
 // based on https://sebastiandedeyne.com/javascript-framework-diet/enter-leave-transitions/
+//
+export function ActionMenu2(dropdownTrigger) {
+
+    const selector = dropdownTrigger.getAttribute("data-action-menu2-trigger")
+    const dropdownList = $(selector);
+    const menu = dropdownList
+    const button = dropdownTrigger
+    let tippyInstance;
+    let onClick;
+    console.log("ctionmenu2", "init")
+    tippy(button, {
+        content: menu.innerHTML ,
+        allowHTML: true,
+        interactive: true,
+        trigger: 'click',
+        placement: 'bottom',
+        offset: [0, 0],
+        arrow: false,
+        theme: "translucent",
+        popperOptions: {
+            strategy: 'fixed',
+            modifiers: [
+                {
+                    name: 'flip',
+                    options: {
+                        fallbackPlacements: ["top", "left"],
+                    },
+                },
+                {
+                    name: 'preventOverflow',
+                    options: {
+                        altAxis: true,
+                        tether: false,
+                    },
+                },
+            ],
+        },
+      })
+}
 
 export function ActionMenu(event, dropdownTrigger) {
     const selector = dropdownTrigger.getAttribute("data-action-menu-trigger")
@@ -73,4 +112,9 @@ export async function Flyout(event, flyoutTrigger) {
         window.addEventListener('click', handleClick);
         closeButton.addEventListener('click', handleClickButton);
     });
+}
+
+
+export const ActionMenu2All = (target) => {
+    (target || document).querySelectorAll('[data-action-menu2-trigger]').forEach(ActionMenu2)
 }

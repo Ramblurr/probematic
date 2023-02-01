@@ -15,7 +15,8 @@
    [clojure.string :as str]
    [clojure.set :as set]
    [medley.core :as m]
-   [app.auth :as auth]))
+   [app.auth :as auth]
+   [app.debug :as debug]))
 
 (def query-param-field-mapping
   {"name" :member/name
@@ -38,6 +39,16 @@
                        (mapv parse-sort-param))]
     (when (seq sort-spec)
       sort-spec)))
+
+(comment
+  {:fields []
+   :preset ""
+   :search ""})
+
+(defn filter-param [{:keys [query-params] :as req}]
+  {:preset (get query-params "filter-preset" "all")
+   :search (get query-params "q" nil)
+   :fields []})
 
 (defn order-invert [o]
   (get {:asc :desc
@@ -153,7 +164,7 @@
                                                     (ui/input :name (path "email") :label "" :value email :type :email)
                                                     email))
                  (ui/dl-item (tr [:member/phone]) (if edit?
-                                                    (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+[\\d-]+" :title
+                                                    (ui/input :type :tel :name (path "phone") :label "" :value phone :pattern "\\+?[\\d\\s-]+" :title
                                                               (tr [:member/phone-validation]))
                                                     phone))
                  (ui/dl-item (tr [:member/username])
@@ -253,7 +264,7 @@
       )]))
 
 (ctmx/defcomponent ^:endpoint member-table-rw [{:keys [db] :as req}]
-  (let [members (controller/members db nil)
+  (let [members (controller/members db nil nil)
         tr (i18n/tr-from-req req)
         table-headers (member-table-headers-rw tr)]
     (list
@@ -262,7 +273,7 @@
       (rt/map-indexed member-row-rw req (map :member/member-id members))))))
 
 (ctmx/defcomponent ^:endpoint member-table-ro [{:keys [tr db] :as req}]
-  (let [members (controller/members db (sort-param req))
+  (let [members (controller/members db (sort-param req) (filter-param req))
         table-headers (member-table-headers-ro req tr)]
     (list
      (ui/table-row-head table-headers)
@@ -332,6 +343,20 @@
   (when (util/post? req)
     (-member-create req)))
 
+(defn member-table-action-button [{:keys [tr] :as req}]
+  (let [filter-spec (filter-param req)
+        active-preset (:preset filter-spec)
+        active-preset-label (get {"all" :member/filter-all
+                                  "active" :member/filter-active
+                                  "inactive" :member/filter-inactive} active-preset :member/filter-all)]
+    (ui/action-menu :button-icon icon/users-solid
+                    :label (tr [active-preset-label])
+                    :hx-boost "true"
+                    :sections [{:items [{:label (tr [:member/filter-all]) :href "?filter-preset=all" :active? (= active-preset "all")}
+                                        {:label (tr [:member/filter-active]) :href "?filter-preset=active"  :active? (= active-preset "active")}
+                                        {:label (tr [:member/filter-inactive]) :href "?filter-preset=inactive" :active? (= active-preset "inactive")}]}]
+                    :id "member-table-actions")))
+
 (ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req} ^:boolean edit?]
   (when (util/delete? req) (controller/delete-invitation req))
   (let [tr (i18n/tr-from-req req)
@@ -371,6 +396,8 @@
 
       [:div {:class "px-4 sm:px-6 lg:px-8 mt-4"}
        (when (seq open-invitations) (ui/divider-left (tr [:nav/members]) nil))
+
+       ;; table actions row 1
        [:div {:class "flex items-center justify-end"}
         [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row space-x-4"}
          (ui/toggle :label (tr [:action/quick-edit]) :active? edit? :id "member-table-edit-toggle" :hx-target (hash ".") :hx-get (comp-name) :hx-vals {"edit?" (not edit?)})
@@ -378,42 +405,23 @@
            (ui/button :label (tr [:action/add]) :priority :primary :class "" :icon icon/plus :centered? true
                       :attr {:data-flyout-trigger (hash "slideover")}))]]
 
-       #_[:div {:class "flex items-center justify-between pb-4"}
-          [:div
-           [:button {:id "dropdownRadioButton", :data-dropdown-toggle "dropdownRadio", :class "inline-flex items-center text-gray-500 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700", :type "button"}
-            [:svg {:class "w-4 h-4 mr-2 text-gray-400", :aria-hidden "true", :fill "currentColor", :viewbox "0 0 20 20", :xmlns "http://www.w3.org/2000/svg"}
-             [:path {:fill-rule "evenodd", :d "M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z", :clip-rule "evenodd"}]] "Last 30 days"
-            [:svg {:class "w-3 h-3 ml-2", :aria-hidden "true", :fill "none", :stroke "currentColor", :viewbox "0 0 24 24", :xmlns "http://www.w3.org/2000/svg"}
-             [:path {:stroke-linecap "round", :stroke-linejoin "round", :stroke-width "2", :d "M19 9l-7 7-7-7"}]]]
-         ;; "<!-- Dropdown menu -->"
-           [:div {:id "dropdownRadio", :class "z-10 hidden w-48 bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600", :data-popper-reference-hidden , :data-popper-escaped , :data-popper-placement "top", :style "position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate3d(522.5px, 3847.5px, 0px);"}
-            [:ul {:class "p-3 space-y-1 text-sm text-gray-700 dark:text-gray-200", :aria-labelledby "dropdownRadioButton"}
-             [:li
-              [:div {:class "flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600"}
-               [:input {:id "filter-radio-example-1", :type "radio",  :name "filter-radio", :class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"}]
-               [:label {:for "filter-radio-example-1", :class "w-full ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300"} "Last day"]]]
-             [:li
-              [:div {:class "flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600"}
-               [:input {:checked true , :id "filter-radio-example-2", :type "radio",  :name "filter-radio", :class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"}]
-               [:label {:for "filter-radio-example-2", :class "w-full ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300"} "Last 7 days"]]]
-             [:li
-              [:div {:class "flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600"}
-               [:input {:id "filter-radio-example-3", :type "radio",  :name "filter-radio", :class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"}]
-               [:label {:for "filter-radio-example-3", :class "w-full ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300"} "Last 30 days"]]]
-             [:li
-              [:div {:class "flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600"}
-               [:input {:id "filter-radio-example-4", :type "radio",  :name "filter-radio", :class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"}]
-               [:label {:for "filter-radio-example-4", :class "w-full ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300"} "Last month"]]]
-             [:li
-              [:div {:class "flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600"}
-               [:input {:id "filter-radio-example-5", :type "radio",  :name "filter-radio", :class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"}]
-               [:label {:for "filter-radio-example-5", :class "w-full ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300"} "Last year"]]]]]]
-          [:label {:for "table-search", :class "sr-only"} "Search"]
-          [:div {:class "relative"}
-           [:div {:class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"}
-            [:svg {:class "w-5 h-5 text-gray-500 dark:text-gray-400", :aria-hidden "true", :fill "currentColor", :viewbox "0 0 20 20", :xmlns "http://www.w3.org/2000/svg"}
-             [:path {:fill-rule "evenodd", :d "M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z", :clip-rule "evenodd"}]]]
-           [:input {:type "text", :id "table-search", :class "block p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500", :placeholder "Search for items"}]]]
+       ;; table actions row 2
+       [:div {:class "flex flex-col space-y-4 sm:flex-row sm:items-center justify-between pb-4 mt-4"}
+        [:div ;; search container
+         [:label {:for "table-search", :class "sr-only"} (tr [:action/search])]
+         [:div {:class "relative"}
+          [:div {:class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"}
+           (icon/search {:class  "w-5 h-5 text-gray-500 dark:text-gray-400"})]
+          [:input {:type "text" :id "table-search", :class "block p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-md w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                   :name "q"
+                   :hx-get (comp-name)
+                   :value (get-in req [:query-params "q"])
+                   :hx-trigger "keyup changed delay:500ms"
+                   :hx-vals (util/remove-nils {:filter-preset (get-in req [:query-params "filter-preset"])
+                                               :sort  (get-in req [:query-params "sort"])})
+                   :hx-target (hash ".")
+                   :placeholder (tr [:action/search])}]]]
+        (member-table-action-button req)]
 
        [:div {:class "mt-4"}
         [:table {:class "min-w-full divide-y divide-gray-300"}

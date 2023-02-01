@@ -37,10 +37,32 @@
                            ((apply juxt (map :field sorting)) v))) coll)]
     (if asc? r (reverse r))))
 
-(defn members [db sorting]
-  (let [sorting (or sorting [{:field :member/name :order :asc}])]
+(def filter-preset-pred
+  {"all" (constantly true)
+   "active" #(-> % :member/active?)
+   "inactive" #(not (-> % :member/active?))})
+
+(defn search-member [q member]
+  (->> (select-keys member [:member/username :member/name :member/email :member/nick :member/phone])
+       (map str/lower-case)
+       (some #(str/includes? % q))))
+
+(defn search-members [in coll]
+  (filter (partial search-member  (str/lower-case in)) coll))
+
+(defn filter-by-spec [{:keys [fields preset search]} coll]
+  ;; fields NYI
+  (let [preset-pred (get filter-preset-pred preset)]
+    (cond->> coll
+      preset-pred  (filter preset-pred)
+      search (search-members search))))
+
+(defn members [db sorting filtering]
+  (let [sorting (or sorting [{:field :member/name :order :asc}])
+        filtering (or filtering {:fields [] :preset "all" :search nil})]
     (->> (d/find-all db :member/member-id q/member-pattern)
          (mapv #(first %))
+         (filter-by-spec filtering)
          (sort-by-spec sorting))))
 
 (defn keycloak-attrs-changed? [before-m after-m]
@@ -125,10 +147,13 @@
         current-user-admin? (auth/current-user-admin? req)
         {:keys [sno-id-enabled? name phone nick email active? section-name keycloak-id username]} (http.util/unwrap-params req)
         member-ref [:member/member-id member-id]
+        old-phone (-> req :member :member/phone)
         tx-data [(merge
                   {:db/id member-ref
                    :member/name name
-                   :member/phone phone
+                   :member/phone (if (not=  old-phone phone)
+                                   (twilio/clean-number (-> req :system :env) phone)
+                                   old-phone)
                    :member/nick nick
                    :member/email (clean-email email)
                    :member/active? (http.util/check->bool active?)

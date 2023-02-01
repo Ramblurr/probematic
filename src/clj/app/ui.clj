@@ -956,3 +956,35 @@
         (when buttons
           [:div {:class "flex flex-shrink-0 justify-end px-4 py-4 space-x-3"}
            buttons])]]]]]])
+
+(defn action-menu-item [id idx {:keys [label href attr active?]}]
+  [:a (merge {:href href :class
+              (cs
+               "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm"
+               (when active? "font-medium bg-gray-100 text-gray-900 ")) :role "menuitem" :tabindex "-1" :id (str id "-" idx)}
+             (or attr {}))
+   label])
+
+(defn action-menu-section [id section]
+  [:div {:class "z-10 py-1 mt-2 w-48  divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+         :role "none"}
+   (map-indexed (partial action-menu-item id) (:items section))])
+
+(defn action-menu
+  "An action menu drop down.
+
+      :section - a list of maps containing the :items key. The value of :items should be another list of maps"
+
+  [& {:keys [id button-icon sections hx-boost label]}]
+  [:div {:class "flex items-center" :hx-boost hx-boost}
+   [:div {:class "relative"}
+    [:div
+     [:button {:class "inline-flex items-center text-gray-500 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-md text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700", :type "button"
+               :data-action-menu2-trigger (str "#" id)}
+      (when button-icon
+        (button-icon {:class "w-4 h-4 mr-2 text-gray-400"}))
+      label
+      (icon/chevron-down {:class "w-3 h-3 ml-2"})]]
+    [:div {:id id :data-action-menu2 true
+           :class "hidden" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
+     (map (partial action-menu-section id) sections)]]])
