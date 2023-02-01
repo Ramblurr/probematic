@@ -253,6 +253,7 @@
       ;; update the gig list in the db
       ;; we don't store all of the gig data, just what is necessary to manage the dialogflow entities
       (update-gigs-db! conn @gigo/gigs-cache)
+      (update-gigs-attendance-db! conn @gigo/gigs-cache)
       ;; update discourse avatars too
       (discourse/sync-avatars! {:env env :conn conn})
       (log/info :job-syncing-gigs-done)
