@@ -19,6 +19,7 @@
    [integrant.core :as ig]
    [io.pedestal.http :as server]
    [ol.system :as system]
+   [ol.jobs.ig]
    [reitit.http :as http]
    [sentry-clj.core :as sentry]
    [taoensso.carmine :as car]))

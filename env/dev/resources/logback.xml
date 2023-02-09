@@ -103,6 +103,7 @@
     <logger name="io.pedestal" level="DEBUG" />
     <logger name="com.walmartlabs.lacinia" level="WARN" />
     <logger name="com.walmartlabs.lacinia.pedestal.subscriptions" level="WARN" />
+    <logger name="io.pedestal.http.cors" level="error" />
     <logger name="migratus" level="INFO" />
 
     <!-- Enable some verbose logs for our namespaces -->
