@@ -22,11 +22,12 @@
   (let [new-system (update-system req)]
     (discourse/upsert-thread-for-gig! new-system gig-id)))
 
-(defn handle-gig-created [req notify? gig-id]
+(defn handle-gig-created [req notify? thread? gig-id]
   (let [new-system (update-system req)]
     (when notify?
       (email/send-gig-created! req gig-id))
-    (discourse/upsert-thread-for-gig! new-system gig-id)))
+    (when thread?
+      (discourse/upsert-thread-for-gig! new-system gig-id))))
 
 (defn exec-later [fn-name & args]
   (chime/chime-at [(.plusSeconds (Instant/now) 1)]
@@ -43,5 +44,5 @@
 (defn trigger-gig-edited [req gig-id edit-type]
   (exec-later handle-gig-edited req gig-id edit-type))
 
-(defn trigger-gig-created [req notify? gig-id]
-  (exec-later handle-gig-created req notify? gig-id))
+(defn trigger-gig-created [req notify? thread? gig-id]
+  (exec-later handle-gig-created req notify? thread? gig-id))

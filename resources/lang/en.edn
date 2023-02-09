@@ -74,6 +74,7 @@
        :more-details-placeholder "who? what? where? when? why?"
        :email-about-change? "Email members about change?"
        :email-about-new? "Email members about this new gig?"
+       :create-a-forum-thread? "Create a thread in the forum?"
        :setlist "Set List"
        :description "Public Gig Description"
        :description-help "This text will be used on the website under upcoming gigs."

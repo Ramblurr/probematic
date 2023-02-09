@@ -717,7 +717,10 @@ on change if I match <:checked/>
            (when false
              (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name (path "setlist") :required? false) "sm:col-span-3"))
            (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name (path "description") :required? false) "sm:col-span-3")
-           (ui/dl-item nil (ui/checkbox :label (tr [:gig/email-about-new?]) :id (path "notify?")) "sm:col-span-3")
+           (ui/dl-item nil
+                       [:div
+                        (ui/checkbox :label (tr [:gig/email-about-new?]) :id (path "notify?"))
+                        (ui/checkbox :label (tr [:gig/create-a-forum-thread?]) :checked? true :id (path "thread?"))] "sm:col-span-3")
            ;;
            )]]
         [:div {:class "px-4 py-5 sm:px-6"}
