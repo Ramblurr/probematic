@@ -174,19 +174,19 @@ GO TO PROBEMATIC!!
     :leader leader
     :planned-songs  planned-songs
     :planned-songs-title (if (domain/setlist-gig? gig) "Setlist" "Probeplan")
-    :counts  (map (fn [[plan count]]
-                    {:icon
-                     (get
-                      {:plan/no-response "**—**"
-                       :plan/definitely ":gruener_kreis:"
-                       :plan/probably ":gruener_ringel:"
-                       :plan/unknown ":fragezeichen:"
-                       :plan/probably-not ":roter_quadratischer_umriss:"
-                       :plan/definitely-not ":rotes_quadrat:"
-                       :plan/not-interested ":schwarz_kreuz:"} plan)
-                     :value (str count)})
-
-                  attendance-summary)}))
+    :counts  (->> attendance-summary
+                  (map (fn [[plan count]]
+                         (when-let [icon (get
+                                          {:plan/no-response "**—**"
+                                           :plan/definitely ":gruener_kreis:"
+                                           :plan/probably ":gruener_ringel:"
+                                           :plan/unknown ":fragezeichen:"
+                                           :plan/probably-not ":roter_quadratischer_umriss:"
+                                           :plan/definitely-not ":rotes_quadrat:"
+                                           :plan/not-interested ":schwarz_kreuz:"} plan)]
+                           {:icon icon
+                            :value (str count)})))
+                  (remove nil?))}))
 
 (defn topic-for-gig [{:keys [env]} gig-id]
   (try
