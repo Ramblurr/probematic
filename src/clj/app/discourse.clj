@@ -215,6 +215,15 @@ GO TO PROBEMATIC!!
                      :edit_reason "something changed in probematic"})})
   nil)
 
+(defn reset-bump-date! [env id]
+  (request! env
+            {:method :put
+             :url (format "/topics/bulk")
+             :headers {"content-type" "application/x-www-form-urlencoded; charset=UTF-8"
+                       "accept" "application/json"}
+             :form-params {"topic_ids[]" id
+                           "operation[type]" "reset_bump_dates"}}))
+
 (defn format-topic-title [gig]
   (str (:gig/title gig) " " (ui/gig-date-plain gig)))
 
@@ -289,7 +298,9 @@ GO TO PROBEMATIC!!
     (if-let [post-id (:id (first-post-for-topic topic))]
       (do
         (update-topic-for-gig env gig topic)
-        (update-post-for-gig env gig post-id))
+        (update-post-for-gig env gig post-id)
+        (reset-bump-date! env (:id topic)))
+
       (let [topic-id (str (new-thread-for-gig! env gig))]
         (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
                                                               :forum.topic/topic-id topic-id]]})))))
