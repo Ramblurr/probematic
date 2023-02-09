@@ -46,7 +46,8 @@
                            [?a :attendance/gig ?gig]
                            [?a :attendance/member ?member]
                            [?a :attendance/plan ?plan]
-                           [(!= ?plan :plan/no-response)]]
+                           [(!= ?plan :plan/no-response)]
+                           [(!= ?plan :plan/unknown)]]
                          db (d/ref member) (q/date-midnight-today!) q/gig-pattern))
    (map (partial attach-attendance db member))))
 
