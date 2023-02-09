@@ -4,6 +4,7 @@
    [app.auth :as auth]
    [app.config :as config]
    [app.datomic :as d]
+   [app.discourse :as discourse]
    [app.gigs.domain :as domain]
    [app.jobs.gig-events :as gig.events]
    [app.probeplan.domain :as probeplan.domain]
@@ -309,6 +310,7 @@
                    (set/rename-keys {:gig/topic-id :forum.topic/topic-id})
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
+                   (update :forum.topic/topic-id discourse/parse-topic-id)
                    (m/update-existing :gig/contact (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)]))
                    (domain/gig->db))
             result (transact-gig! datomic-conn [tx] gig-id)]

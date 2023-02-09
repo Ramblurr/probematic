@@ -293,6 +293,17 @@ GO TO PROBEMATIC!!
       (let [topic-id (str (new-thread-for-gig! env gig))]
         (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
                                                               :forum.topic/topic-id topic-id]]})))))
+(defn parse-topic-id [v]
+  (if-let [[_ topic-id] (re-matches #".*/(\d+)+ *$" v)]
+    topic-id
+    (when-let [[_ topic-id] (re-matches #"(\d+)+ *$" v)]
+      topic-id)))
+(comment
+  (parse-topic-id "/3009")
+  (parse-topic-id "3009")
+  (parse-topic-id "https://forum.streetnoise.at/t/probe-22-2-2023-abstimmung-programm-2023/2729")
+  ;;
+  )
 
 (comment
 

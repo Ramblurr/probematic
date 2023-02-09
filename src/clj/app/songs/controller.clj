@@ -1,5 +1,6 @@
 (ns app.songs.controller
   (:require
+   [app.discourse :as discourse]
    [app.datomic :as d]
    [app.file-utils :as fu]
    [app.probeplan.stats :as stats]
@@ -41,7 +42,7 @@
                               :song/title title
                               :song/active? (rt/parse-boolean active?)
                               :song/origin origin
-                              :forum.topic/topic-id topic-id
+                              :forum.topic/topic-id (discourse/parse-topic-id topic-id)
                               :song/solo-count (when-not (string/blank? solo-count) (Long/parseLong solo-count))})
         result (datomic/transact datomic-conn {:tx-data [tx]})]
 
