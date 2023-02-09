@@ -161,6 +161,7 @@
           :comment "Comment"
           :add "Add"
           :create "Create"
+          :create-gig "Create Gig"
           :continue "Continue"
           :duplicate "Duplicate"
           :view "View"

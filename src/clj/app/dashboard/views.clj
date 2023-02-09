@@ -78,11 +78,10 @@
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list
-                                (when false ;; TODO
-                                  (ui/button :label (tr [:action/create])
-                                             :priority :primary
-                                             :centered? true
-                                             :attr {:href (url/link-gig-create)} :icon icon/plus))))
+                                (ui/button :tag :a :label (tr [:action/create-gig])
+                                           :priority :primary
+                                           :centered? true
+                                           :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
 
      (when (seq need-answer-gigs)
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
