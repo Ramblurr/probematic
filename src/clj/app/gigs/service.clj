@@ -313,6 +313,7 @@
                    (update :gig/gig-type str->gig-type)
                    (update :forum.topic/topic-id discourse/parse-topic-id)
                    (m/update-existing :gig/contact (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)]))
+                   (util/remove-nils)
                    (domain/gig->db))
             result (transact-gig! datomic-conn [tx] gig-id)]
         (gig.events/trigger-gig-details-edited req notify? result)
@@ -336,7 +337,7 @@
       (gig.events/trigger-gig-created req notify? thread? gig-id)
       result)))
 
-(defn -delete-gig! [{:keys [datomic-conn db]} gig-id]
+(defn -delete-gig! [{:keys [datomic-conn db] :as req} gig-id]
   (try
     (let [gig-ref     [:gig/gig-id gig-id]
           gig (q/retrieve-gig db gig-id)
@@ -352,6 +353,7 @@
       (datomic/transact datomic-conn {:tx-data txs})
       (when (> (count played) 0)
         (stats/calc-play-stats-in-bg! datomic-conn))
+      (gig.events/trigger-gig-deleted req gig-id)
       true)
     (catch Throwable t
       (if

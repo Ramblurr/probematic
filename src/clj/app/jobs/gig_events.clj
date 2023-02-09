@@ -16,18 +16,22 @@
     (when notify?
       (email/send-gig-updated! req gig-id
                                (keys (second (clojure.data/diff gig-before gig)))))
-    (discourse/upsert-thread-for-gig! new-system gig-id)))
+    (discourse/update-topic-for-gig! new-system gig-id)))
 
 (defn handle-gig-edited [req gig-id edit-type]
   (let [new-system (update-system req)]
-    (discourse/upsert-thread-for-gig! new-system gig-id)))
+    (discourse/update-topic-for-gig! new-system gig-id)))
 
 (defn handle-gig-created [req notify? thread? gig-id]
   (let [new-system (update-system req)]
     (when notify?
       (email/send-gig-created! req gig-id))
     (when thread?
-      (discourse/upsert-thread-for-gig! new-system gig-id))))
+      (discourse/create-topic-for-gig! new-system gig-id))))
+
+(defn handle-gig-deleted [req gig-id]
+  (let [new-system (update-system req)]
+    (discourse/maybe-delete-topic-for-gig! new-system gig-id)))
 
 (defn exec-later [fn-name & args]
   (chime/chime-at [(.plusSeconds (Instant/now) 1)]
@@ -43,6 +47,9 @@
 
 (defn trigger-gig-edited [req gig-id edit-type]
   (exec-later handle-gig-edited req gig-id edit-type))
+
+(defn trigger-gig-deleted [req gig-id]
+  (exec-later handle-gig-deleted req gig-id))
 
 (defn trigger-gig-created [req notify? thread? gig-id]
   (exec-later handle-gig-created req notify? thread? gig-id))

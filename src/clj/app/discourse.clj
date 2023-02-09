@@ -188,11 +188,11 @@ GO TO PROBEMATIC!!
 
                   attendance-summary)}))
 
-(defn topic-for-gig [{:keys [env]} gig]
+(defn topic-for-gig [{:keys [env]} gig-id]
   (try
     (request! env
               {:method :get
-               :url (format "/t/external_id/%s.json" (:gig/gig-id gig))})
+               :url (format "/t/external_id/%s.json" gig-id)})
     (catch Throwable e
       (if (= 404 (-> (ex-data e) :resp :status))
         nil
@@ -212,17 +212,23 @@ GO TO PROBEMATIC!!
              :headers {"content-type" "application/json"}
              :body (j/write-value-as-string
                     {:raw (gig->markdown-post env gig)
+                     :post_type "small_action"
                      :edit_reason "something changed in probematic"})})
   nil)
 
-(defn reset-bump-date! [env id]
+(defn reset-bump-date! [env topic-id]
+  #_(request! env
+              {:method :put
+               :url (format "/topics/bulk")
+               :headers {"content-type" "application/x-www-form-urlencoded; charset=UTF-8"
+                         "accept" "application/json"}
+               :form-params {"topic_ids[]" topic-id
+                             "operation[type]" "reset_bump_dates"}}))
+(defn delete-topic! [env topic-id]
   (request! env
-            {:method :put
-             :url (format "/topics/bulk")
-             :headers {"content-type" "application/x-www-form-urlencoded; charset=UTF-8"
-                       "accept" "application/json"}
-             :form-params {"topic_ids[]" id
-                           "operation[type]" "reset_bump_dates"}}))
+            {:method :delete
+             :url (format "/t/%s.json" topic-id)
+             :headers {"content-type" "application/json"}}))
 
 (defn format-topic-title [gig]
   (str (:gig/title gig) " " (ui/gig-date-plain gig)))
@@ -253,19 +259,23 @@ GO TO PROBEMATIC!!
                             {:title topic-title
                              :category_id category-id})}))))
 
-(defn new-thread-for-gig!
+(defn form-params-for-gig [env {:gig/keys [gig-id] :as gig}]
+  {:title (format-topic-title gig)
+   :raw (gig->markdown-post env gig)
+   :category (category-for (config/dev-mode? env) gig)
+   :embed_url (url/absolute-link-gig env gig-id)
+   :external_id gig-id})
+
+(defn create-topic-for-gig!
   "Creates a new topic for the gig, returns the topic id."
-  [env gig]
-  (let [gig-id (:gig/gig-id gig)]
-    (:topic_id
-     (request! env
-               {:method :post
-                :url "/posts.json"
-                :form-params {:title (format-topic-title gig)
-                              :raw (gig->markdown-post env gig)
-                              :category (category-for (config/dev-mode? env) gig)
-                              :embed_url (url/absolute-link-gig env gig-id)
-                              :external_id gig-id}}))))
+  [{:keys [env] :as sys} gig]
+  (let [topic-id
+        (str (:topic_id (request! env
+                                  {:method :post
+                                   :url "/posts.json"
+                                   :form-params (form-params-for-gig env gig)})))]
+    (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
+                                                          :forum.topic/topic-id topic-id]]})))
 
 (defn summarize-attendance [gig {:keys [db]}]
   (assert db)
@@ -285,8 +295,7 @@ GO TO PROBEMATIC!!
                  :extra (when (= :probeplan.emphasis/intensive emphasis) (str " (intensive)"))})
               (q/planned-songs-for-gig db (:gig/gig-id gig)))))
 
-(defn upsert-thread-for-gig!
-  "If a thread was created, returns the topic id, otherwise nil."
+(defn update-topic-for-gig!
   [{:keys [env db] :as sys} gig-id]
   (assert db)
   (assert env)
@@ -294,21 +303,33 @@ GO TO PROBEMATIC!!
   (let [gig (-> (q/retrieve-gig db gig-id)
                 (summarize-attendance sys)
                 (planned-songs sys))
-        topic (topic-for-gig {:env env} gig)]
-    (if-let [post-id (:id (first-post-for-topic topic))]
+        topic (topic-for-gig {:env env} (:gig/gig-id gig))]
+    (when-let [post-id (:id (first-post-for-topic topic))]
       (do
         (update-topic-for-gig env gig topic)
         (update-post-for-gig env gig post-id)
-        (reset-bump-date! env (:id topic)))
+        (reset-bump-date! env (:id topic))))))
 
-      (let [topic-id (str (new-thread-for-gig! env gig))]
-        (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
-                                                              :forum.topic/topic-id topic-id]]})))))
 (defn parse-topic-id [v]
   (if-let [[_ topic-id] (re-matches #".*/(\d+)+ *$" v)]
     topic-id
     (when-let [[_ topic-id] (re-matches #"(\d+)+ *$" v)]
       topic-id)))
+
+(defn should-delete-topic? [our-username topic]
+  (let [{:keys [highest_post_number details]} topic
+        {:keys [username]} (:created_by details)]
+    (and
+     ;; we created it
+     (= username our-username)
+     ;; only one post.. our post!
+     (= highest_post_number 1))))
+
+(defn maybe-delete-topic-for-gig! [{:keys [env db] :as sys} gig-id]
+  (let [topic (topic-for-gig sys gig-id)]
+    (when (and topic (should-delete-topic? (-> env :discourse :username) topic))
+      (delete-topic! env (:id topic)))))
+
 (comment
   (parse-topic-id "/3009")
   (parse-topic-id "3009")
@@ -334,7 +355,8 @@ GO TO PROBEMATIC!!
   (d/find-all db :member/member-id [:member/name :member/email :member/member-id :member/avatar-template :member/discourse-id :member/nick])
 
   (def g (q/retrieve-gig db "01860302-7e21-8c75-915a-ab04fc38d0c0"))
-  (def g2 (q/retrieve-gig db "01860302-7e21-8c75-915a-ab04fc38d0c1"))
+  (def g2 (q/retrieve-gig db "01860c2a-5c88-8b92-9c42-0c6a1f42ae5c"))
+  (def g3 (q/retrieve-gig db "01860c2a-5c88-8b92-9c42-0c6a1f42ae65"))
   (:id (first-post-for-topic (topic-for-gig {:env env} g)))
 
   (ui/gig-time g2)
@@ -343,9 +365,8 @@ GO TO PROBEMATIC!!
                           (first
                            (q/planned-songs-for-gig db (:gig/gig-id g2))))
 
-  (:category_id
-   (topic-for-gig {:env env} g2))
-  (upsert-thread-for-gig! {:env env :db db} (:gig/gig-id g2)) ;; rcf
+  (should-delete-topic? (-> env :discourse :username)
+                        (topic-for-gig {:env env} (:gig/gig-id g3)))
 
   ;;
   )
