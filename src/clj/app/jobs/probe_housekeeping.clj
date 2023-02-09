@@ -3,6 +3,7 @@
    [app.gigs.domain :as domain]
    [app.probeplan :as probeplan]
    [app.queries :as q]
+   [app.routes.errors :as errors]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
@@ -26,7 +27,7 @@
 
 (defn newprobe-tx [date]
   (domain/gig->db
-   {:gig/gig-id (str (sq/generate-squuid))
+   {:gig/gig-id (sq/generate-squuid)
     :gig/title  "Probe"
     :gig/status :gig.status/confirmed
     :gig/date date
@@ -42,11 +43,15 @@
     (datomic/transact conn {:tx-data txs})))
 
 (defn- probe-housekeeping-job [{:keys [datomic] :as system} _]
-  (let [conn (:conn datomic)]
-    (let [probes (q/next-probes (datomic/db conn))
-          num-probes (count probes)]
-      (when (< num-probes minimum-gigs)
-        (create-probes! conn probes)))))
+  (try
+    (let [conn (:conn datomic)]
+      (let [probes (q/next-probes (datomic/db conn))
+            num-probes (count probes)]
+        (when (< num-probes minimum-gigs)
+          (create-probes! conn probes))))
+    (catch Throwable e
+      (tap> e)
+      (errors/report-error! e))))
 
 (defn make-probe-housekeeping-job [system]
   (fn [{:job/keys [frequency initial-delay]}]
