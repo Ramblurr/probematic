@@ -217,13 +217,13 @@ GO TO PROBEMATIC!!
   nil)
 
 (defn reset-bump-date! [env topic-id]
-  #_(request! env
-              {:method :put
-               :url (format "/topics/bulk")
-               :headers {"content-type" "application/x-www-form-urlencoded; charset=UTF-8"
-                         "accept" "application/json"}
-               :form-params {"topic_ids[]" topic-id
-                             "operation[type]" "reset_bump_dates"}}))
+  (request! env
+            {:method :put
+             :url (format "/topics/bulk")
+             :headers {"content-type" "application/x-www-form-urlencoded; charset=UTF-8"
+                       "accept" "application/json"}
+             :form-params {"topic_ids[]" topic-id
+                           "operation[type]" "reset_bump_dates"}}))
 (defn delete-topic! [env topic-id]
   (request! env
             {:method :delete
