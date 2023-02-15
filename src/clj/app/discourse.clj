@@ -239,10 +239,10 @@ GO TO PROBEMATIC!!
                         :gig.type/meeting 9
                         :gig.type/gig 6} gig-type)]
 
-    (if dev-mode? 4
-        21
-        ;; v
-        )
+    (if dev-mode?
+      4                                 ;; technik admin
+      ;; 21; PROBEMATIC beta test
+      v)
     (throw (ex-info "Unknown discourse category for gig type" {:gig-type gig-type
                                                                :gig-id gig-id}))))
 
