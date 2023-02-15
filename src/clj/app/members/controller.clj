@@ -16,7 +16,8 @@
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
    [taoensso.carmine :as redis]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [clojure.tools.logging :as log]))
 
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
@@ -195,8 +196,8 @@
 (defn -delete-invitation [redis code]
   (redis/wcar  (redis/del (str "invite:" code))))
 
-(defn delete-invitation [req]
-  (-delete-invitation (-> req :system :redis) (-> req :params :invite-code)))
+(defn delete-invitation! [req]
+  (-delete-invitation (-> req :system :redis) (-> req :params :code)))
 
 (defn load-invite
   "Load the invitation from the request, returns nil if it is not valid."
@@ -212,6 +213,11 @@
       (tap> {:ex e})
       (errors/log-error! req e)
       nil)))
+
+(defn resend-invitation! [req]
+  (let [{:keys [member invite-code] :as data} (load-invite req)]
+    (log/info "resending email invitation" data)
+    (email/send-new-user-email! req member invite-code)))
 
 (defn setup-account [{:keys [datomic-conn system params db] :as req}]
   (let [{:keys [password password-confirm invite-code]} params

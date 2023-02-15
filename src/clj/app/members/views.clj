@@ -358,7 +358,8 @@
                     :id "member-table-actions")))
 
 (ctmx/defcomponent ^:endpoint members-index-page [{:keys [db] :as req} ^:boolean edit?]
-  (when (util/delete? req) (controller/delete-invitation req))
+  (when (util/delete? req) (controller/delete-invitation! req))
+  (when (util/post? req) (controller/resend-invitation! req))
   (let [tr (i18n/tr-from-req req)
         comp-name (util/comp-namer #'members-index-page)
         sections (controller/sections db)
@@ -390,9 +391,12 @@
                                [:td {:class "px-3 py-4"} email]
                                [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
                                 [:span {:class "flex flex-row space-x-2"}
+                                 [:button {:type "submit" :class "text-green-600 hover:text-sno-orange-900 cursor-pointer"
+                                           :hx-target (hash ".")
+                                           :hx-post (comp-name) :hx-vals {:code invite-code}} "Resend Invite"]
                                  [:button {:type "submit" :class "text-red-600 hover:text-sno-orange-900 cursor-pointer"
                                            :hx-target (hash ".")
-                                           :hx-delete (comp-name) :hx-vals {:invite-code invite-code}} (tr [:action/delete])]]]]) req open-invitations))]]])
+                                           :hx-delete (comp-name) :hx-vals {:code invite-code}} (tr [:action/delete])]]]]) req open-invitations))]]])
 
       [:div {:class "px-4 sm:px-6 lg:px-8 mt-4"}
        (when (seq open-invitations) (ui/divider-left (tr [:nav/members]) nil))
