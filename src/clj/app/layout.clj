@@ -229,7 +229,7 @@
 
 (defn app-shell [req body]
   (let [member (auth/get-current-member req)]
-    (render/html5-response {:title "Probematic"}
+    (render/html5-response {:title "SNOrga"}
                            [:div {:class "min-h-full"}
                             (mobile-menu req)
                             (desktop-menu req member)
@@ -237,7 +237,7 @@
 
 (defn centered-content [req body]
   (let [uri-prefix (config/app-base-url (-> req :system :env))]
-    (render/html5-response-absolute {:title "Probematic"
+    (render/html5-response-absolute {:title "SNOrga"
                                      :uri-prefix uri-prefix}
                                     [:div {:class "h-full bg-gray-50"}
                                      [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
