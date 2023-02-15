@@ -158,7 +158,7 @@ GO TO PROBEMATIC!!
 {% endif %}
 
 
-[**:arrow_right: More info in the Probematic**]({{probematic-link}})
+[**:arrow_right: More info on SNOrga**]({{probematic-link}})
 
 "
    {:confirmed
@@ -213,7 +213,7 @@ GO TO PROBEMATIC!!
              :body (j/write-value-as-string
                     {:raw (gig->markdown-post env gig)
                      :post_type "small_action"
-                     :edit_reason "something changed in probematic"})})
+                     :edit_reason "something changed in snorga"})})
   nil)
 
 (defn reset-bump-date! [env topic-id]

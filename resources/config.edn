@@ -1,4 +1,4 @@
-{:name            "probematic"
+{:name            "SNOrga"
  :secrets         #include #or [#env APP_SECRETS_FILE "../secrets.edn"]
  :admin-email     #ref [:secrets :admin-email]
  :app-base-url    #ref [:secrets :app-base-url]

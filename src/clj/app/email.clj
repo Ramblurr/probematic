@@ -95,8 +95,8 @@
     (queue-email! (sys-from-req req)
                   (build-generic-email (sys-from-req req)
                                        admin-email
-                                       (str "Probematic Error from " member-name)
-                                       (format "There was a probematic error that needs attention from %s with human-id %s" member-name req-human-id)
+                                       (str "SNOrga Error from " member-name)
+                                       (format "There was a SNOrga error that needs attention from %s with human-id %s" member-name req-human-id)
                                        nil
                                        nil))))
 
