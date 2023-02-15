@@ -13,7 +13,8 @@
    [io.pedestal.http.ring-middlewares :as ring-middlewares]
    [jsonista.core :as j]
    [medley.core :as m]
-   [org.httpkit.client :as http]))
+   [org.httpkit.client :as http]
+   [app.routes.errors :as errors]))
 
 (defn throw-unauthorized
   ([msg data]
@@ -146,21 +147,25 @@
    (buddy-keys/jwk->public-key)))
 
 (defn oauth2-callback-handler [env oauth2 {:keys [session params] :as request}]
-  (let [{:keys [state code]} params
-        oauth2-cookie (secret-box/decrypt (get-in request [:cookies "oauth2" :value]) (config/app-secret-key env))
-        expected-state (:oauth2/state oauth2-cookie)]
-    (if-not (= expected-state state)
-      (restart-login env)
-      (let [original-redirect-uri (:oauth2/redirect-uri oauth2-cookie)
-            post-login-uri (or  (:oauth2/post-login-uri oauth2-cookie) "/")
-            token (code->token oauth2 code original-redirect-uri)]
-        (if (or (nil? token) (:error token))
-          (restart-login env)
-          (render/post-login-client-side-redirect
-           (build-oauth2-session token
-                                 (oauth2-load-certificate oauth2)
-                                 (config/oauth2-known-roles env))
-           {"oauth2" (expire-oauth2-cookie env)} post-login-uri))))))
+  (try
+    (let [{:keys [state code]} params
+          oauth2-cookie (secret-box/decrypt (get-in request [:cookies "oauth2" :value]) (config/app-secret-key env))
+          expected-state (:oauth2/state oauth2-cookie)]
+      (if-not (= expected-state state)
+        (restart-login env)
+        (let [original-redirect-uri (:oauth2/redirect-uri oauth2-cookie)
+              post-login-uri (or  (:oauth2/post-login-uri oauth2-cookie) "/")
+              token (code->token oauth2 code original-redirect-uri)]
+          (if (or (nil? token) (:error token))
+            (restart-login env)
+            (render/post-login-client-side-redirect
+             (build-oauth2-session token
+                                   (oauth2-load-certificate oauth2)
+                                   (config/oauth2-known-roles env))
+             {"oauth2" (expire-oauth2-cookie env)} post-login-uri)))))
+    (catch Throwable e
+      (errors/send-sentry! request e)
+      (restart-login env))))
 
 (defn routes [system]
   [""

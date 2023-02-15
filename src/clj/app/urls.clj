@@ -1,8 +1,6 @@
 (ns app.urls
   (:import [java.net URLEncoder])
-  (:require [app.config :as config]
-            [clojure.string :as str]
-            [app.auth :as auth]))
+  (:require [app.config :as config]))
 
 (defn link-helper
   ([prefix id-key maybe-id]
