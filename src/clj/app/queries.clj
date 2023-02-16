@@ -636,5 +636,8 @@
                [(missing? $ ?e :member/keycloak-id)]]
              db member-pattern))
 
+  (d/find-all db :member/email member-detail-pattern)
+  (d/find-all db :gig/gig-id gig-detail-pattern)
+
 ;;
   )

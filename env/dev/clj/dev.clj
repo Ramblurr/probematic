@@ -108,7 +108,7 @@
   (refresh)
 
   (require '[datomic.dev-local :as dl])
-  (dl/release-db {:system "dev" :db-name "probematic"})
+  (dl/release-db {:system "app" :db-name "probematic"})
   (md/start! schemas/malli-opts)
   (md/stop!)
 

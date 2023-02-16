@@ -20,6 +20,14 @@
             :plan/definitely-not
             :plan/not-interested])
 
+(def plan-priority-sorting [:plan/definitely
+                            :plan/probably
+                            :plan/unknown
+                            :plan/probably-not
+                            :plan/definitely-not
+                            :plan/not-interested
+                            :plan/no-response])
+
 (def motivations [:motivation/none
                   :motivation/very-high
                   :motivation/high

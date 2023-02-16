@@ -145,7 +145,7 @@
 (def plan->attendance-kw {0 :plan/no-response
                           1 :plan/definitely          ; green
                           2 :plan/probably            ; green circle
-                          3 :plan/dont-know           ; question mark
+                          3 :plan/unknown             ; question mark
                           4 :plan/probably-not        ; red square
                           5 :plan/definitely-not      ; red
                           6 :plan/not-interested      ; x

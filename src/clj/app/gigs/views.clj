@@ -944,9 +944,13 @@ on change if I match <:checked/>
         probe? (#{:gig.type/probe :gig.type/extra-probe} gig-type)
         gig? (#{:gig.type/gig} gig-type)
         scheduled-songs (when gig? (q/setlist-song-ids-for-gig db gig-id))
-        attendances-by-section (if archived?
-                                 (q/attendance-plans-by-section-for-gig db (q/attendances-for-gig db gig-id) false)
-                                 (q/attendance-plans-by-section-for-gig db (q/attendance-for-gig-with-all-active-members db gig-id) show-committed?))]
+        attendances-for-gig (if archived?
+                              (q/attendances-for-gig db gig-id)
+                              (q/attendance-for-gig-with-all-active-members db gig-id))
+        attendances-by-section (q/attendance-plans-by-section-for-gig db  attendances-for-gig (if archived? false  show-committed?))
+        attendance-summary (->> attendances-for-gig
+                                (group-by :attendance/plan)
+                                (m/map-vals count))]
 
     [:div {:id (util/id :comp/gig-detail-page)}
      (gig-detail-info-section req (:gig req))
@@ -976,6 +980,13 @@ on change if I match <:checked/>
                         :attr {:hx-get endpoint-self :hx-target (util/hash :comp/gig-detail-page) :hx-vals {:show-committed? (not show-committed?)}})])]
 
          [:div {:class "border-t border-gray-200 mb-4"}
+          [:div {:class "flex gap-4 md:gap-10 justify-center pt-4 lg:pt-6"}
+           (map (fn [plan]
+                  (let [{:keys [icon icon-class]} (get (plan-icons) plan)]
+                    [:div {:class "flex gap-1"}
+                     (icon {:class (str  icon-class " mr-0")})
+                     [:span {:class ""} (get attendance-summary plan 0)]])) domain/plan-priority-sorting)]
+
           (if archived?
             (rt/map-indexed gig-attendance-archived req attendances-by-section)
             (rt/map-indexed gig-attendance req attendances-by-section))]]]
