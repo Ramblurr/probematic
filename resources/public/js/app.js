@@ -121,7 +121,7 @@ function unsetPageDirty() {
 
 function AutoSizeTextAreas() {
 
-  function onTextraAreaInput() {
+  function onTextAreaInput() {
     this.style.height = 0;
     this.style.height = (this.scrollHeight) + "px";
   }
@@ -129,7 +129,7 @@ function AutoSizeTextAreas() {
   const txs = document.querySelectorAll("textarea[data-auto-size]");
   for (let i = 0; i < txs.length; i++) {
     txs[i].setAttribute("style", "height:" + (txs[i].scrollHeight) + "px;overflow-y:hidden;");
-    txs[i].addEventListener("input", OnInput, false);
+    txs[i].addEventListener("input", onTextAreaInput, false);
   }
 }
 
