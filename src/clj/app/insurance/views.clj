@@ -313,7 +313,7 @@
                     [:dt {:class "sr-only"} (:name instrument)]
                     [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
 
-    {:label "Owner" :priority :important :key :owner}
+    {:label "Owner" :priority :low :key :owner}
     {:label "Make" :priority :low :key :value}
     {:label "Model" :priority :low :key :value}
     {:label "Build Year" :priority :low :key :value}
@@ -326,8 +326,8 @@
           {:label (:insurance.coverage.type/name ct)
            :variant :number
            :key (:insurance.coverage.type/name ct)
-           :priority :normal}) coverage-types)
-   [{:label "Total Cost" :priority :low :key :value :variant :number}]
+           :priority :low}) coverage-types)
+   [{:label "Total Cost" :priority :important :key :value :variant :number}]
    [{:label "Edit" :priority :important :variant :action :key :action}]))
 
 (defn band-or-private [private?]
@@ -335,24 +335,25 @@
 
 (defn shared-static-columns [tr coverage]
   (let [{:instrument.coverage/keys [private?]
-         :instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
+         :instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)
+        member-name  (-> owner :member/name)]
     (list
      [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6"
                          (ui/table-row-priorities :important))}
-      name
+      [:span {:class "hidden xl:block"}
+       name]
       [:dl {:class "font-normal xl:hidden"}
        [:dt {:class "sr-only"} (tr [:band-private])]
-       [:dd {:class "mt-1 truncate text-gray-700 sm:hidden"} (band-or-private private?)]
+       [:dd {:class "mt-1 truncate text-gray-700 sm:hidden font-bold"} member-name]
+       [:dt {:class "sr-only"} (tr [:band-private])]
+       [:dd {:class "mt-1 truncate text-gray-700 sm:hidden"} name
+        (when private? " (private)")]
        [:dt {:class "sr-only"} (tr [:insurance/make])]
-       [:dd {:class "mt-1 truncate text-gray-700"} make]
-       [:dt {:class "sr-only sm:hidden"} (tr [:insurance/model])]
-       [:dd {:class "mt-1 truncate text-gray-500"} model]
-       [:dt {:class "sr-only sm:hidden"} (tr [:insurance/build-year])]
-       [:dd {:class "mt-1 truncate text-gray-500"} build-year]
-       [:dt {:class "sr-only sm:hidden"} (tr [:insurance/serial-number])]
-       [:dd {:class "mt-1 truncate text-gray-500"} serial-number]]]
-     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :important))}
-      (-> owner :member/name)]
+       [:dd {:class "mt-1 truncate text-gray-700"}
+        [:span
+         (str/join " " (util/remove-empty-strings [make model build-year serial-number]))]]]]
+     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))}
+      member-name]
      [:td {:class (ui/cs  "px-3 py-4" (ui/table-row-priorities :low))} make]
      [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} model]
      [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} build-year]
@@ -363,7 +364,7 @@
 (defn shared-static-columns-end [coverage]
   (let [{:instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
     (list
-     [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :low))}
+     [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :important))}
       (ui/money (:instrument.coverage/cost coverage) :EUR)]
       ;;
      )))
@@ -497,7 +498,7 @@
                  [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :medium))}
                   (ui/money (:instrument.coverage/value coverage) :EUR)]]
                 (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                        [:td {:class "px-3 py-4 text-right"}
+                        [:td {:class (ui/cs  "px-3 py-4 text-right" (ui/table-row-priorities :low))}
                          (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
                            [:div (ui/money (:insurance.coverage.type/cost coverage-type) :EUR)]
                            (icon/xmark {:class "w-5 h-5 inline"}))])
