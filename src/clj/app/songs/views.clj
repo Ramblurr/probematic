@@ -222,14 +222,14 @@
                     (ui/dl
                      (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
                      (ui/dl-item (tr [:song/composition-credits])
-                                 (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false))
+                                 (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false :fit-height? true))
                      (ui/dl-item (tr [:song/arrangement-credits])
-                                 (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false))
+                                 (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false :fit-height? true))
                      (ui/dl-item (tr [:song/origin])
                                  (ui/textarea :label "" :name (path "origin") :value origin :required? false)
                                  "sm:col-span-3")
                      (ui/dl-item (tr [:song/arrangement-notes])
-                                 (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false)
+                                 (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true)
                                  "sm:col-span-3")))
           (ui/panel {:title "Advanced"}
                     (ui/dl
@@ -237,12 +237,14 @@
          (ui/panel {:title (tr [:song/background-title])}
                    (ui/dl
                     (ui/dl-item (tr [:song/solo-count]) solo-count)
-                    (ui/dl-item (tr [:song/composition-credits]) composition-credits)
-                    (ui/dl-item (tr [:song/arrangement-credits]) arrangement-credits)
+                    (ui/dl-item (tr [:song/composition-credits]) composition-credits
+                                "whitespace-pre-wrap")
+                    (ui/dl-item (tr [:song/arrangement-credits]) arrangement-credits
+                                "whitespace-pre-wrap")
                     (ui/dl-item (tr [:song/origin]) origin
-                                "sm:col-span-3")
+                                "whitespace-pre-wrap sm:col-span-3")
                     (ui/dl-item (tr [:song/arrangement-notes]) arrangement-notes
-                                "sm:col-span-3"))))
+                                "whitespace-pre-wrap sm:col-span-3"))))
        (ui/panel {:title (tr [:song/play-stats-title])}
                  (ui/dl
                   (ui/dl-item (tr [:song/total-plays]) total-plays)

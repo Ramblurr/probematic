@@ -230,14 +230,16 @@
          (map #(merge {:name id :model value :required? required?} %))
          (map-indexed radio-button))]])
 
-(defn textarea [& {:keys [label value hint id name rows placeholder]
+(defn textarea [& {:keys [label value hint id name rows placeholder fit-height?]
                    :or {rows 3}}]
   [:div {:class "sm:col-span-6"}
    [:label {:for name :class "block text-sm font-medium text-gray-700"} label]
    [:div {:class "mt-1"}
     [:textarea {:id id :name name :rows rows
                 :placeholder placeholder
-                :class "block w-full rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}
+                :data-auto-size (when  fit-height? "true")
+                :class
+                "block w-full rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}
      (when value value)]]
    (when hint
      [:p {:class "mt-2 text-sm text-gray-500"}

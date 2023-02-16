@@ -792,11 +792,11 @@ on change if I match <:checked/>
             (when-not (str/blank? outfit)
               (ui/dl-item (tr [:gig/outfit]) outfit))
             (when-not (str/blank? more-details)
-              (ui/dl-item (tr [:gig/more-details]) more-details "col-span-3"))
+              (ui/dl-item (tr [:gig/more-details]) more-details "col-span-3 whitespace-pre-wrap"))
             (when-not (str/blank? setlist)
-              (ui/dl-item (tr [:gig/setlist]) (interpose [:br] (str/split-lines setlist)) "col-span-3"))
+              (ui/dl-item (tr [:gig/setlist]) (interpose [:br] (str/split-lines setlist)) "col-span-3  whitespace-pre-wrap"))
             (when-not (str/blank? post-gig-plans)
-              (ui/dl-item (tr [:gig/post-gig-plans]) post-gig-plans "col-span-3")))
+              (ui/dl-item (tr [:gig/post-gig-plans]) post-gig-plans "col-span-3 whitespace-pre-wrap")))
            ;;
            ]]]]]]]))
 (ctmx/defcomponent ^:endpoint  gig-details-edit-post [req]
@@ -891,7 +891,7 @@ on change if I match <:checked/>
              (ui/dl-item (tr [:gig/pay-deal]) (ui/text :value pay-deal :name  "pay-deal" :required? false))
              (ui/dl-item (tr [:gig/leader]) (ui/text :label "" :value leader :name  "leader" :required? false))
              (ui/dl-item (tr [:gig/post-gig-plans]) (ui/text :value post-gig-plans :name  "post-gig-plans" :required? false) "sm:col-span-2")
-             (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name  "more-details" :required? false :placeholder (tr [:gig/more-details-placeholder])) "sm:col-span-3")
+             (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name  "more-details" :required? false :placeholder (tr [:gig/more-details-placeholder]) :fit-height? true) "sm:col-span-3")
              (when false
                (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name  "setlist" :required? false) "sm:col-span-3"))
              (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name  "description" :required? false) "sm:col-span-3")

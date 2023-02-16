@@ -23,6 +23,7 @@ function initWidgets(evt) {
 
   ActionMenu2All()
   listen('click', '[data-action-menu-trigger]', ActionMenu);
+  AutoSizeTextAreas();
 }
 
 document.body.addEventListener('htmx:beforeSwap', function(evt) {
@@ -117,6 +118,21 @@ function setPageDirty() {
 function unsetPageDirty() {
   document.removeEventListener('beforeunload', pageDirtyHandler);
 }
+
+function AutoSizeTextAreas() {
+
+  function onTextraAreaInput() {
+    this.style.height = 0;
+    this.style.height = (this.scrollHeight) + "px";
+  }
+
+  const txs = document.querySelectorAll("textarea[data-auto-size]");
+  for (let i = 0; i < txs.length; i++) {
+    txs[i].setAttribute("style", "height:" + (txs[i].scrollHeight) + "px;overflow-y:hidden;");
+    txs[i].addEventListener("input", OnInput, false);
+  }
+}
+
 
 document.addEventListener('setPageDirty', function(evt) {
   setPageDirty();
