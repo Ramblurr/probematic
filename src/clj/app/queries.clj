@@ -177,13 +177,16 @@
                [(missing? $ ?e :member/member-id)]]
              db member-pattern)))
 
-(defn gigs-before [db instant]
-  (results->gigs  (d/q '[:find (pull ?e pattern)
-                         :in $ ?time pattern
-                         :where
-                         [?e :gig/gig-id _]
-                         [?e :gig/date ?date]
-                         [(< ?date ?time)]] db instant gig-pattern)))
+(defn gigs-before
+  ([db instant]
+   (gigs-before db instant gig-pattern))
+  ([db instant pattern]
+   (results->gigs  (d/q '[:find (pull ?e pattern)
+                          :in $ ?time pattern
+                          :where
+                          [?e :gig/gig-id _]
+                          [?e :gig/date ?date]
+                          [(< ?date ?time)]] db instant pattern))))
 
 (defn gigs-after
   ([db instant]
@@ -215,8 +218,11 @@
 (defn gigs-future [db]
   (gigs-after db (date-midnight-today!)))
 
-(defn gigs-past [db]
-  (gigs-before db (date-midnight-today!)))
+(defn gigs-past
+  ([db]
+   (gigs-before db (date-midnight-today!)))
+  ([db pattern]
+   (gigs-before db (date-midnight-today!) pattern)))
 
 (defn gig+member [gig-id member-id]
   (pr-str [(str gig-id) (str member-id)]))
@@ -518,19 +524,37 @@
 
 (defn next-probes
   "Return the future confirmed probes"
-  [db]
-  (->> (gigs-after db (date-midnight-today!))
-       (filter #(= :gig.type/probe (:gig/gig-type %)))
-       (filter #(= :gig.status/confirmed (:gig/status %)))))
+  [db pattern]
+  (->> (gigs-after db (date-midnight-today!) pattern)
+       (filter gig.domain/normal-probe?)
+       (filter gig.domain/confirmed?)))
+
+(defn previous-probes
+  "Returns the past confirmed normal probes (not extra-probes)"
+  [db pattern]
+  (->>
+   (gigs-past db pattern)
+   (filter gig.domain/normal-probe?)
+   (filter gig.domain/confirmed?)))
 
 (defn next-probes-with-plan
   "Return the future confirmed probes"
   [db comp]
   (->>
-   (next-probes db)
+   (next-probes db gig-pattern)
    (map (fn [gig]
           (assoc gig :songs (->> (probeplan-songs-for-gig db (:gig/gig-id gig))
                                  (sort-by :emphasis comp)))))))
+
+(defn next-probe
+  "Returns the probe that will occur next including today!"
+  [db]
+  (first (next-probes db gig-detail-pattern)))
+
+(defn previous-probe
+  "Returns the last probe that occurred."
+  [db]
+  (last (previous-probes db gig-detail-pattern)))
 
 ;;;; END
 (comment
@@ -641,5 +665,7 @@
   (d/find-all db :member/email member-detail-pattern)
   (d/find-all db :gig/gig-id gig-detail-pattern)
 
-;;
+  (previous-probe db)
+
+  ;;
   )

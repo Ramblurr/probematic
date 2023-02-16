@@ -300,6 +300,10 @@
     [:post-gig-plans {:optional true} :string]
     [:topic-id {:optional true} :string]]))
 
+(defn maybe-remove-association-tx [eid attr v]
+  (when-not v
+    [:db/retract eid attr]))
+
 (defn update-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (common/path-param-uuid! req :gig/gig-id)
         params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id)
@@ -307,6 +311,7 @@
                      (update :rehearsal-leader1 util/blank->nil)
                      (update :rehearsal-leader2 util/blank->nil)
                      (update :end-date util/blank->nil))
+        gig-ref [:gig/gig-id gig-id]
         notify? (rt/parse-boolean (:notify? params))
         decoded  (util/remove-nils (s/decode UpdateGig params))]
     (if (s/valid? UpdateGig decoded)
@@ -322,7 +327,10 @@
                    (m/update-existing :gig/rehearsal-leader2 resolve-member-ref)
                    (util/remove-nils)
                    (domain/gig->db))
-            result (transact-gig! datomic-conn [tx] gig-id)]
+            extra-txs (util/remove-nils [(maybe-remove-association-tx gig-ref :gig/contact (:contact params))
+                                         (maybe-remove-association-tx gig-ref :gig/rehearsal-leader1 (:rehearsal-leader1 params))
+                                         (maybe-remove-association-tx gig-ref :gig/rehearsal-leader2 (:rehearsal-leader2 params))])
+            result (transact-gig! datomic-conn (conj extra-txs tx) gig-id)]
         (gig.events/trigger-gig-details-edited req notify? result)
         result)
       (s/throw-error "Cannot update the gig. The gig data is invalid." nil  UpdateGig decoded))))

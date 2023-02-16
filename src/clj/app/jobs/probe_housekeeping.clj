@@ -7,7 +7,8 @@
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [app.datomic :as d]))
 
 (def minimum-gigs 4)
 (def maximum-create 4)
@@ -42,13 +43,24 @@
         txs (take maximum-create (map newprobe-tx probe-dates))]
     (datomic/transact conn {:tx-data txs})))
 
+(defn assign-rehearsal-leaders! [conn]
+  (let [db (datomic/db conn)
+        prev-probe (q/previous-probe db)
+        next-probe (q/next-probe db)
+        last-leader2 (:gig/rehearsal-leader2 prev-probe)
+        next-leader1 (:gig/rehearsal-leader1 next-probe)]
+    (when (and (some? last-leader2)  (nil? next-leader1))
+      (datomic/transact conn {:tx-data [[:db/add (d/ref next-probe) :gig/rehearsal-leader1 (d/ref last-leader2)]]}))))
+
 (defn- probe-housekeeping-job [{:keys [datomic] :as system} _]
   (try
-    (let [conn (:conn datomic)]
-      (let [probes (q/next-probes (datomic/db conn))
-            num-probes (count probes)]
-        (when (< num-probes minimum-gigs)
-          (create-probes! conn probes))))
+    (let [conn (:conn datomic)
+          probes (q/next-probes (datomic/db conn) q/gig-detail-pattern)
+          num-probes (count probes)]
+      (when (< num-probes minimum-gigs)
+        (create-probes! conn probes))
+      (assign-rehearsal-leaders! conn)
+      :done)
     (catch Throwable e
       (tap> e)
       (errors/report-error! e))))
@@ -63,7 +75,7 @@
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db  (datomic/db conn))) ;; rcf
 
-  (q/next-probes db)
   (probe-housekeeping-job {:conn conn} nil)
+  (assign-rehearsal-leaders! conn)
   ;;
   )

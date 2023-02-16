@@ -1,10 +1,8 @@
 (ns app.gigs.domain
   (:require
-   [medley.core :as m]
-   [tick.core :as t]
    [app.schemas :as s]
-   [malli.util :as mu]
-   [app.debug :as debug]))
+   [medley.core :as m]
+   [tick.core :as t]))
 
 (def statuses [:gig.status/unconfirmed
                :gig.status/confirmed
@@ -131,8 +129,14 @@
 (defn probe? [gig]
   (#{:gig.type/probe :gig.type/extra-probe} (:gig/gig-type gig)))
 
+(defn normal-probe? [gig]
+  (#{:gig.type/probe} (:gig/gig-type gig)))
+
 (defn meeting? [gig]
   (#{:gig.type/meeting} (:gig/gig-type gig)))
 
 (defn gig? [gig]
   (#{:gig.type/gig} (:gig/gig-type gig)))
+
+(defn confirmed? [gig]
+  (= :gig.status/confirmed (:gig/status gig)))
