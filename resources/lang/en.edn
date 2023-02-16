@@ -64,6 +64,8 @@
        :gig-type "Type"
        :end-date "End Date"
        :leader "Leader"
+       :rehearsal-leader1 "Probeleitung 1"
+       :rehearsal-leader2 "Probeleitung 2"
        :call-time "Call Time"
        :set-time "Set Time"
        :end-time "End Time"

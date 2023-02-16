@@ -291,6 +291,8 @@
     [:set-time {:optional true} ::s/time]
     [:end-time {:optional true} ::s/time]
     [:leader {:optional true} :string]
+    [:rehearsal-leader1 {:optional true} :string]
+    [:rehearsal-leader2 {:optional true} :string]
     [:pay-deal {:optional true} :string]
     [:outfit {:optional true} :string]
     [:more-details {:optional true} :string]
@@ -302,17 +304,22 @@
   (let [gig-id (common/path-param-uuid! req :gig/gig-id)
         params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id)
                      (update :contact util/blank->nil)
+                     (update :rehearsal-leader1 util/blank->nil)
+                     (update :rehearsal-leader2 util/blank->nil)
                      (update :end-date util/blank->nil))
         notify? (rt/parse-boolean (:notify? params))
         decoded  (util/remove-nils (s/decode UpdateGig params))]
     (if (s/valid? UpdateGig decoded)
-      (let [tx (-> decoded
+      (let [resolve-member-ref  (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)])
+            tx (-> decoded
                    (common/ns-qualify-key :gig)
                    (set/rename-keys {:gig/topic-id :forum.topic/topic-id})
                    (update :gig/status str->status)
                    (update :gig/gig-type str->gig-type)
                    (update :forum.topic/topic-id discourse/parse-topic-id)
-                   (m/update-existing :gig/contact (fn [member-id] [:member/member-id (util/ensure-uuid! member-id)]))
+                   (m/update-existing :gig/contact resolve-member-ref)
+                   (m/update-existing :gig/rehearsal-leader1 resolve-member-ref)
+                   (m/update-existing :gig/rehearsal-leader2 resolve-member-ref)
                    (util/remove-nils)
                    (domain/gig->db))
             result (transact-gig! datomic-conn [tx] gig-id)]

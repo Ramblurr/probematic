@@ -136,8 +136,18 @@
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :gig/leader
-    :db/doc "Who is in charge"
+    :db/doc "DEPRECATED. Who is in charge (this is an old gigo-matic free form field)"
     :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/rehearsal-leader1
+    :db/doc "The first rehearsal leader"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :gig/rehearsal-leader2
+    :db/doc "The second rehearsal leader"
+    :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :gig/post-gig-plans

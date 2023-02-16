@@ -64,6 +64,8 @@
     [:gig/set-time {:optional true} ::s/minute-time]
     [:gig/end-time {:optional true} ::s/time]
     [:gig/leader {:optional true :max 4096} :string]
+    [:gig/rehearsal-leader1 {:optional true} ::s/datomic-ref]
+    [:gig/rehearsal-leader2 {:optional true} ::s/datomic-ref]
     [:gig/pay-deal {:optional true :max 4096} :string]
     [:gig/outfit {:optional true :max 4096} :string]
     [:gig/more-details {:optional true :max 4096} :string]
@@ -125,3 +127,12 @@
 (defn gig-archived? [{:gig/keys [date]}]
   (when date
     (t/< date (t/<< (t/date) (t/new-period 14 :days)))))
+
+(defn probe? [gig]
+  (#{:gig.type/probe :gig.type/extra-probe} (:gig/gig-type gig)))
+
+(defn meeting? [gig]
+  (#{:gig.type/meeting} (:gig/gig-type gig)))
+
+(defn gig? [gig]
+  (#{:gig.type/gig} (:gig/gig-type gig)))

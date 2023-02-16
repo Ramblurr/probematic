@@ -745,6 +745,7 @@ on change if I match <:checked/>
 (defn gig-detail-info-section [{:keys [tr] :as req}  gig]
   (let [{:gig/keys [title date end-date status gig-type
                     contact pay-deal call-time set-time end-time
+                    rehearsal-leader1 rehearsal-leader2
                     outfit location setlist leader post-gig-plans
                     more-details]} gig
         archived? (domain/gig-archived? gig)]
@@ -787,6 +788,10 @@ on change if I match <:checked/>
             (ui/dl-item (tr [:gig/end-time]) (ui/time end-time))
             (when-not (str/blank? leader)
               (ui/dl-item (tr [:gig/leader]) leader))
+            (when (domain/probe? gig)
+              (list
+               (ui/dl-item (tr [:gig/rehearsal-leader1]) (ui/member-nick rehearsal-leader1))
+               (ui/dl-item (tr [:gig/rehearsal-leader2]) (ui/member-nick rehearsal-leader2))))
             (when-not (str/blank? pay-deal)
               (ui/dl-item (tr [:gig/pay-deal]) pay-deal))
             (when-not (str/blank? outfit)
@@ -809,6 +814,7 @@ on change if I match <:checked/>
    (let [{:gig/keys [title date end-date status gig-type
                      contact pay-deal call-time set-time end-time
                      outfit description location setlist leader post-gig-plans
+                     rehearsal-leader1 rehearsal-leader2
                      more-details] :as gig} (:gig req)
          archived? (domain/gig-archived? gig)
          member-select-vals (q/members-for-select-active (:db req))
@@ -889,7 +895,12 @@ on change if I match <:checked/>
              (ui/dl-item (tr [:gig/location]) (ui/text :value location :name  "location"))
              (ui/dl-item (tr [:gig/outfit]) (ui/text :value (or outfit (tr [:orange-and-green])) :name  "outfit" :required? false))
              (ui/dl-item (tr [:gig/pay-deal]) (ui/text :value pay-deal :name  "pay-deal" :required? false))
-             (ui/dl-item (tr [:gig/leader]) (ui/text :label "" :value leader :name  "leader" :required? false))
+             (when-not (str/blank? leader)
+               (ui/dl-item (tr [:gig/leader]) (ui/text :label "" :value leader :name  "leader" :required? false)))
+             (when (domain/probe? gig)
+               (list
+                (ui/dl-item (tr [:gig/rehearsal-leader1]) (ui/member-select :value (:member/member-id rehearsal-leader1) :label "" :id  "rehearsal-leader1" :members member-select-vals :with-empty-opt? true))
+                (ui/dl-item (tr [:gig/rehearsal-leader2]) (ui/member-select :value (:member/member-id rehearsal-leader2) :label "" :id  "rehearsal-leader2" :members member-select-vals :with-empty-opt? true))))
              (ui/dl-item (tr [:gig/post-gig-plans]) (ui/text :value post-gig-plans :name  "post-gig-plans" :required? false) "sm:col-span-2")
              (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name  "more-details" :required? false :placeholder (tr [:gig/more-details-placeholder]) :fit-height? true) "sm:col-span-3")
              (when false
@@ -941,9 +952,7 @@ on change if I match <:checked/>
   (let [{:gig/keys [gig-id gig-type] :as gig} (:gig req)
         endpoint-self (util/endpoint-path gig-detail-page)
         archived? (domain/gig-archived? gig)
-        probe? (#{:gig.type/probe :gig.type/extra-probe} gig-type)
-        gig? (#{:gig.type/gig} gig-type)
-        scheduled-songs (when gig? (q/setlist-song-ids-for-gig db gig-id))
+        scheduled-songs (when (domain/gig? gig) (q/setlist-song-ids-for-gig db gig-id))
         attendances-for-gig (if archived?
                               (q/attendances-for-gig db gig-id)
                               (q/attendance-for-gig-with-all-active-members db gig-id))
@@ -956,9 +965,9 @@ on change if I match <:checked/>
      (gig-detail-info-section req (:gig req))
      (cond
        archived? nil
-       probe?
+       (domain/probe? gig)
        (gigs-detail-page-probeplan req)
-       gig?
+       (domain/gig? gig)
        (gigs-detail-page-setlist req scheduled-songs)
        :else nil)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
