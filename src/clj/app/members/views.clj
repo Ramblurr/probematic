@@ -46,7 +46,7 @@
    :search ""})
 
 (defn filter-param [{:keys [query-params] :as req}]
-  {:preset (get query-params "filter-preset" "all")
+  {:preset (get query-params "filter-preset" "active")
    :search (get query-params "q" nil)
    :fields []})
 
@@ -348,7 +348,7 @@
         active-preset (:preset filter-spec)
         active-preset-label (get {"all" :member/filter-all
                                   "active" :member/filter-active
-                                  "inactive" :member/filter-inactive} active-preset :member/filter-all)]
+                                  "inactive" :member/filter-inactive} active-preset :member/filter-active)]
     (ui/action-menu :button-icon icon/users-solid
                     :label (tr [active-preset-label])
                     :hx-boost "true"

@@ -60,7 +60,7 @@
 
 (defn members [db sorting filtering]
   (let [sorting (or sorting [{:field :member/name :order :asc}])
-        filtering (or filtering {:fields [] :preset "all" :search nil})]
+        filtering (or filtering {:fields [] :preset "active" :search nil})]
     (->> (d/find-all db :member/member-id q/member-pattern)
          (mapv #(first %))
          (filter-by-spec filtering)
