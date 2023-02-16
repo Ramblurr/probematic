@@ -792,11 +792,11 @@ on change if I match <:checked/>
             (when-not (str/blank? outfit)
               (ui/dl-item (tr [:gig/outfit]) outfit))
             (when-not (str/blank? more-details)
-              (ui/dl-item (tr [:gig/more-details]) more-details "sm:col-span-3"))
+              (ui/dl-item (tr [:gig/more-details]) more-details "col-span-3"))
             (when-not (str/blank? setlist)
-              (ui/dl-item (tr [:gig/setlist]) (interpose [:br] (str/split-lines setlist)) "sm:col-span-3"))
+              (ui/dl-item (tr [:gig/setlist]) (interpose [:br] (str/split-lines setlist)) "col-span-3"))
             (when-not (str/blank? post-gig-plans)
-              (ui/dl-item (tr [:gig/post-gig-plans]) post-gig-plans "sm:col-span-3")))
+              (ui/dl-item (tr [:gig/post-gig-plans]) post-gig-plans "col-span-3")))
            ;;
            ]]]]]]]))
 (ctmx/defcomponent ^:endpoint  gig-details-edit-post [req]
