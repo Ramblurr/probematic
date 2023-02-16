@@ -155,7 +155,7 @@
   :comment "Kommentar",
   :confirm-generic "Bist du sicher?",
   :confirm-delete-gig "Möchten Sie den Gig %1 wirklich löschen?",
-  :cancel "Absagen",
+  :cancel "Abbrechen",
   :add "Hinzufügen",
   :download "Herunterladen",
   :confirm-delete-song "Möchten Sie das Lied %1 wirklich löschen?",

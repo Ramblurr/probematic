@@ -826,7 +826,7 @@ msgstr "Möchten Sie den Gig %1 wirklich löschen?"
 #, ycp-format
 msgctxt ":action/cancel"
 msgid "Cancel"
-msgstr "Absagen"
+msgstr "Abbrechen"
 
 #: :action/add
 #, ycp-format
