@@ -374,7 +374,7 @@
    [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
     buttons]])
 
-(defn page-header-full [& {:keys [title subtitle buttons] :as args}]
+(defn page-header-full [& {:keys [title subtitle buttons buttons-class] :as args}]
   [:div {:class "px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 bg-white"}
    [:div {:class "flex items-center space-x-5 w-full sm:w-1/2"}
     [:div {:class "w-full"}
@@ -382,7 +382,10 @@
      (when subtitle
        [:p {:class "text-sm font-medium text-gray-500 w-full"}
         subtitle])]]
-   [:div {:class "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"}
+   [:div {:class
+          (cs
+           "justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3"
+           buttons-class)}
     buttons]])
 
 (defn member-nick

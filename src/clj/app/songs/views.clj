@@ -182,7 +182,16 @@
                      total-plays total-performances total-rehearsals
                      origin solo-count]
          :forum.topic/keys [topic-id]} song
-        comp-name                        (util/comp-namer #'song-detail-page)]
+        comp-name                        (util/comp-namer #'song-detail-page)
+        buttons (list
+                 (ui/button :label (tr [:action/delete]) :priority :white-destructive :centered? true
+                            :hx-confirm (tr [:action/confirm-delete-song] [title])
+                            :class "mt-10 sm:mt-0 sm:ml-8 md:ml-0 md:mr-10"
+                            :hx-delete (comp-name) :hx-target (hash "."))
+                 (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
+                            :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})
+                 (ui/button :label (tr [:action/save]) :priority :primary  :centered? true))]
+
     (if (util/delete? req)
       (do
         (controller/delete-song! req song-id)
@@ -194,15 +203,8 @@
                               :subtitle [:div {:class "mt-2"}
                                          (ui/toggle-checkbox :label (tr [:song/active]) :name (path "active?") :checked? active?)]
 
-                              :buttons
-                              (list
-                               (ui/button :label (tr [:action/delete]) :priority :white-destructive :centered? true
-                                          :hx-confirm (tr [:action/confirm-delete-song] [title])
-                                          :class "mt-10 sm:mt-0 sm:ml-8 md:ml-0 md:mr-10"
-                                          :hx-delete (comp-name) :hx-target (hash "."))
-                               (ui/button :label (tr [:action/cancel]) :priority :white :centered? true
-                                          :attr {:hx-get (comp-name) :hx-vals {:edit? false} :hx-target (hash ".")})
-                               (ui/button :label (tr [:action/save]) :priority :primary  :centered? true)))
+                              :buttons-class "hidden sm:flex"
+                              :buttons buttons)
 
          (ui/page-header :title title
                          :subtitle (ui/song-active-bubble song)
@@ -219,21 +221,26 @@
        (if edit?
          (list
           (ui/panel {:title (tr [:song/background-title])}
-                    (ui/dl
-                     (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
-                     (ui/dl-item (tr [:song/composition-credits])
-                                 (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false :fit-height? true))
-                     (ui/dl-item (tr [:song/arrangement-credits])
-                                 (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false :fit-height? true))
-                     (ui/dl-item (tr [:song/origin])
-                                 (ui/textarea :label "" :name (path "origin") :value origin :required? false)
-                                 "sm:col-span-3")
-                     (ui/dl-item (tr [:song/arrangement-notes])
-                                 (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true)
-                                 "sm:col-span-3")))
+                    (list
+                     (ui/dl
+                      (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
+                      (ui/dl-item (tr [:song/composition-credits])
+                                  (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false :fit-height? true))
+                      (ui/dl-item (tr [:song/arrangement-credits])
+                                  (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false :fit-height? true))
+                      (ui/dl-item (tr [:song/origin])
+                                  (ui/textarea :label "" :name (path "origin") :value origin :required? false)
+                                  "sm:col-span-3")
+                      (ui/dl-item (tr [:song/arrangement-notes])
+                                  (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true)
+                                  "sm:col-span-3"))
+                     [:div {:class "px-4 sm:px-6"}
+                      [:div {:class "justify-stretch mt-6 flex flex-col space-y-4 space-y-4 sm:hidden"}
+                       buttons]]))
           (ui/panel {:title "Advanced"}
                     (ui/dl
                      (ui/dl-item "Forum Topic ID" (ui/text :label "" :name (path "topic-id") :value topic-id :required? false)))))
+
          (ui/panel {:title (tr [:song/background-title])}
                    (ui/dl
                     (ui/dl-item (tr [:song/solo-count]) solo-count)

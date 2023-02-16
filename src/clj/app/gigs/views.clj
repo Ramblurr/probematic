@@ -858,7 +858,7 @@ on change if I match <:checked/>
               (concat [{:label "-" :value ""}]
                       (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))
               (map (fn [m] {:label (tr [m]) :value (name m)}) domain/gig-types))))]]]
-       [:dil {:class
+       [:div {:class
               "hidden sm:flex justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row-reverse md:space-x-reverse"}
 
         (when-not archived?
