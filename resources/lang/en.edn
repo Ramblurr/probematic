@@ -244,7 +244,11 @@
          :sign-off "Mit groovigen Grüßen — SNObot"
          :invite-expired "Sorry, the invitation code has expired. Please ask for a new one!"
          :invite-new-user-intro "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
-         :invite-new-user-intro2 "Click the link below to setup your account."}
+         :invite-new-user-intro2 "Click the link below to setup your account."
+         :subject-log-plays "What did we play at the Probe?"
+         :body-log-plays "Please tell SNOrga what we played at the Probe on %1. It only takes 1 minute."
+         :cta-log-plays "Click here!"}
+
  :account {:create-sno-id-title "Create SNO ID"
            :create-sno-id-subtitle "You're only a few steps away from your new SNO ID!"
            :password-instructions "Must be at least 8 characters"

@@ -99,9 +99,11 @@
                                              :mailgun #ig/ref :app.ig/mailgun}
                    :app.ig/webdav-sardine   {:env #ig/ref :app.ig/env}
                    :app.ig/keycloak         {:env #ig/ref :app.ig/env}
-                   :app.ig.jobs/definitions {:env     #ig/ref :app.ig/env
-                                             :gigo    #ig/ref :app.ig/gigo-client
-                                             :datomic #ig/ref :app.ig/datomic-db}}
+                   :app.ig.jobs/definitions {:env        #ig/ref :app.ig/env
+                                             :gigo       #ig/ref :app.ig/gigo-client
+                                             :datomic    #ig/ref :app.ig/datomic-db
+                                             :i18n-langs #ig/ref :app.ig/i18n-langs
+                                             :redis      #ig/ref :app.ig/redis}}
  :jobs            {:job/sync-gigs          {:job/frequency     [60 :minutes]
                                             :job/initial-delay [2 :seconds]}
                    :job/sync-members       {:job/frequency     [8 :hours]

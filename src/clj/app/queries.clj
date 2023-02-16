@@ -44,8 +44,8 @@
                          {:gig/comments [{:comment/author [:member/name :member/nick :member/member-id :member/avatar-template]}
                                          :comment/body :comment/comment-id :comment/created-at]}
                          {:gig/contact [:member/name :member/member-id :member/nick]}
-                         {:gig/rehearsal-leader1 [:member/name :member/member-id :member/nick]}
-                         {:gig/rehearsal-leader2 [:member/name :member/member-id :member/nick]}])
+                         {:gig/rehearsal-leader1 [:member/name :member/member-id :member/nick :member/email]}
+                         {:gig/rehearsal-leader2 [:member/name :member/member-id :member/nick :member/email]}])
 
 (def play-pattern [{:played/gig gig-pattern}
                    {:played/song [:song/song-id :song/title]}

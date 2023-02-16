@@ -5,11 +5,13 @@
    [app.email.templates :as tmpl]
    [app.i18n :as i18n]
    [app.queries :as q]
+   [app.ui :as ui]
+   [app.urls :as url]
    [app.util :as util]
+   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [tick.core :as t]
-   [clojure.tools.logging :as log]))
+   [tick.core :as t]))
 
 (defn queue-email! [sys email]
   (email-worker/queue-mail! (:redis sys) email))
@@ -99,6 +101,17 @@
                                        (format "There was a SNOrga error that needs attention from %s with human-id %s" member-name req-human-id)
                                        nil
                                        nil))))
+(defn send-rehearsal-leader-email! [{:keys [i18n-langs env redis]} gig leader-member]
+  (assert gig)
+  (assert leader-member)
+  (let [tr (i18n/tr-with i18n-langs [:en])
+        sys {:tr tr :env  env :redis redis}]
+    (build-generic-email sys
+                         (:member/email leader-member)
+                         (tr [:email/subject-log-plays])
+                         (tr [:email/body-log-plays] [(ui/gig-date-plain gig)])
+                         (tr [:email/cta-log-plays])
+                         (url/absolute-link-gig env (:gig/gig-id gig)))))
 
 (comment
 
@@ -157,5 +170,5 @@
 
   (generate-invite-code env "0185ee9c-7e67-8733-82f6-7a74aa588a92")
 
-  ;;
+;;
   )

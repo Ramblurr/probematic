@@ -1,14 +1,19 @@
 (ns app.jobs.probe-housekeeping
   (:require
+   [app.datomic :as d]
+   [app.email :as email]
    [app.gigs.domain :as domain]
    [app.probeplan :as probeplan]
    [app.queries :as q]
    [app.routes.errors :as errors]
+   [chime.core :as chime]
+   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
-   [tick.core :as t]
-   [app.datomic :as d]))
+   [tick.core :as t])
+  (:import
+   (java.time DayOfWeek LocalTime Period ZonedDateTime ZoneId)))
 
 (def minimum-gigs 4)
 (def maximum-create 4)
@@ -65,17 +70,55 @@
       (tap> e)
       (errors/report-error! e))))
 
+(defn notify-rehearsal-leader! [{:keys [datomic] :as system}]
+  (try
+    (let [conn (:conn datomic)
+          db (datomic/db conn)
+          next-probe (q/next-probe db)]
+      (log/info (format  "notifying rehearsal leaders! for probe %s" (str (:gig/date next-probe))))
+      (if (= (:gig/date next-probe) (t/date))
+        (do
+          (when (:gig/rehearsal-leader1 next-probe)
+            (email/send-rehearsal-leader-email! system next-probe (:gig/rehearsal-leader1 next-probe))
+            (log/info (format "notified rehearsal leader %s" (-> next-probe :gig/rehearsal-leader1 :member/nick))))
+          (when (:gig/rehearsal-leader2 next-probe)
+            (email/send-rehearsal-leader-email! system next-probe (:gig/rehearsal-leader2 next-probe))
+            (log/info (format "notified rehearsal leader %s" (-> next-probe :gig/rehearsal-leader2 :member/nick)))))
+        (throw (ex-info  "notify rehearsal leaders condition failed!"
+                         {:probe-date (:gig/date next-probe)
+                          :current-date (t/date)}))))
+    (catch Throwable e
+      (errors/report-error! e))))
+
+(defn- start-rehearsal-leader-notify [system]
+  (let [next-wednesdays-at-10-pm (->> (chime/periodic-seq (-> (LocalTime/of 22 0 0)
+                                                              (.adjustInto (ZonedDateTime/now (ZoneId/of "Europe/Berlin")))
+                                                              .toInstant)
+                                                          (Period/ofDays 1))
+                                      (map #(.atZone % (ZoneId/of "Europe/Berlin")))
+                                      (filter (comp #{DayOfWeek/WEDNESDAY}
+                                                    #(.getDayOfWeek %))))]
+    (log/info "starting rehearsal-leader-notify-job next trigger at" (first next-wednesdays-at-10-pm))
+    (chime/chime-at next-wednesdays-at-10-pm
+                    (fn [_] (notify-rehearsal-leader! system)))))
+
 (defn make-probe-housekeeping-job [system]
   (fn [{:job/keys [frequency initial-delay]}]
+    (start-rehearsal-leader-notify system)
     (jobs/make-repeating-job (partial probe-housekeeping-job system) frequency initial-delay)))
 
 (comment
   (do
     (require '[integrant.repl.state :as state])
     (def conn (-> state/system :app.ig/datomic-db :conn))
-    (def db  (datomic/db conn))) ;; rcf
+    (def db  (datomic/db conn))
+    (def system {:datomic {:conn conn}
+                 :redis (-> state/system :app.ig/redis)
+                 :i18n-langs (-> state/system :app.ig/i18n-langs)
+                 :env (-> state/system :app.ig/env)})) ;; rcf
 
   (probe-housekeeping-job {:conn conn} nil)
   (assign-rehearsal-leaders! conn)
+  (notify-rehearsal-leader! system)
   ;;
   )
