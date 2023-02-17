@@ -16,15 +16,12 @@ RUN groupadd --gid 1000 probematic \
 
 WORKDIR /app
 COPY ./docker/scripts/entrypoint.sh /entrypoint.sh
-RUN chmod +rx /*.sh
-
-ARG GIT_HASH
-COPY ./target/probematic-${GIT_HASH}.jar /app/probematic.jar
-RUN chown -R probematic:probematic /app
-
+RUN set -ex; chmod +rx /*.sh; chown -R probematic:probematic /app
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/entrypoint.sh"]
 
+ARG GIT_HASH
+COPY --chown=probematic:probematic ./target/probematic-${GIT_HASH}.jar /app/probematic.jar
 # these are down at the bottom so changes to them don't cause a full rebuild
 ARG DOCKER_IMAGE_TAG
 ARG GIT_BRANCH
