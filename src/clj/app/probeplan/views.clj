@@ -78,7 +78,7 @@
               "The probeplan generator works like this:"
               [:ul {:class "list-disc max-w-lg"}
                [:li {:class "ml-8"} "The probematic generates an infinite amount of future probeplans, based on various parameters. " [:br] "(number of plays, days since last play, etc)"]
-               [:li {:class "ml-8"} "The next 4 probes are assigned probeplans and these are not changed automatically by the system they are \"fixed\"."]
+               [:li {:class "ml-8"} "The next 4 probes are assigned probeplans and these are not changed automatically by the system. They are \"fixed\" (but you can manually change them)."]
                [:li {:class "ml-8"} "A human (you!) can edit the plans for the next 4 probes."]
                [:li {:class "ml-8"} "The system will update all probeplans after the next 4 based on the parameters mentioned before"]
                [:li {:class "ml-8"} "The Gigs column shows the number of gigs taking place after the Probe, but before the next one."]
