@@ -369,11 +369,7 @@
     [:div
      (ui/page-header :title (tr [:song/list-title])
                      :buttons (list
-                               (ui/button :tag :a :label (tr [:song/log-play])
-                                          :priority :primary
-                                          :centered? true
-                                          :attr {:href "/songs/log-play/"}
-                                          :icon icon/plus)
+
                                (ui/button :tag :a :label (tr [:song/create-title])
                                           :priority :white
                                           :centered? true
