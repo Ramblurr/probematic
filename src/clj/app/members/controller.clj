@@ -194,7 +194,7 @@
                      (second (str/split key #":")))))))
 
 (defn -delete-invitation [redis code]
-  (redis/wcar  (redis/del (str "invite:" code))))
+  (redis/wcar redis (redis/del (str "invite:" code))))
 
 (defn delete-invitation! [req]
   (-delete-invitation (-> req :system :redis) (-> req :params :code)))
