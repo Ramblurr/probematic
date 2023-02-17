@@ -508,26 +508,26 @@
 
 (defn load-play-stats [db]
   (->>
-   (d/find-all db :song/song-id [:song/song-id
-                                 :song/title
-                                 :song/total-plays
-                                 :song/total-performances
-                                 :song/total-rehearsals
-                                 :song/total-rating-good
-                                 :song/total-rating-bad
-                                 :song/total-rating-ok
-                                 :song/six-month-total-rating-good
-                                 :song/six-month-total-rating-bad
-                                 :song/six-month-total-rating-ok
-                                 :song/days-since-performed
-                                 :song/days-since-rehearsed
-                                 :song/days-since-intensive
-                                 :song/last-played-on
-                                 {:song/last-performance [:gig/gig-id :gig/date]}
-                                 {:song/last-rehearsal [:gig/gig-id :gig/date]}
-                                 {:song/last-intensive [:gig/gig-id :gig/date]}
-                                 {:song/first-performance [:gig/gig-id :gig/date]}
-                                 {:song/first-rehearsal [:gig/gig-id :gig/date]}])
+   (d/find-all-by db :song/active? true [:song/song-id
+                                         :song/title
+                                         :song/total-plays
+                                         :song/total-performances
+                                         :song/total-rehearsals
+                                         :song/total-rating-good
+                                         :song/total-rating-bad
+                                         :song/total-rating-ok
+                                         :song/six-month-total-rating-good
+                                         :song/six-month-total-rating-bad
+                                         :song/six-month-total-rating-ok
+                                         :song/days-since-performed
+                                         :song/days-since-rehearsed
+                                         :song/days-since-intensive
+                                         :song/last-played-on
+                                         {:song/last-performance [:gig/gig-id :gig/date]}
+                                         {:song/last-rehearsal [:gig/gig-id :gig/date]}
+                                         {:song/last-intensive [:gig/gig-id :gig/date]}
+                                         {:song/first-performance [:gig/gig-id :gig/date]}
+                                         {:song/first-rehearsal [:gig/gig-id :gig/date]}])
    (mapv first)))
 
 (defn next-probes
