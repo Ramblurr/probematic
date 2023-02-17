@@ -254,7 +254,7 @@
  :band-instrument "Band-Instrument",
  :none "Keiner",
  :song
- {:last-played "Zuletzt gespielter Gig",
+ {:last-played "Zuletzt gespielt am",
   :other-sheet-music "Musescore, etc",
   :last-played-gig "Zuletzt gespielter Gig",
   :composition-credits "Komposition von",

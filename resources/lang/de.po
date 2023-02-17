@@ -1352,7 +1352,7 @@ msgstr "Keiner"
 #, ycp-format
 msgctxt ":song/last-played"
 msgid "Last Played"
-msgstr "Zuletzt gespielter Gig"
+msgstr "Zuletzt gespielt am"
 
 #: :song/other-sheet-music
 #, ycp-format
