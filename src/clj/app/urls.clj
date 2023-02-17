@@ -38,10 +38,10 @@
   (str (config/app-base-url env) "/song/" song-id "/"))
 
 (defn absolute-gig-answer-link-base [env]
-  (str (config/app-base-url env) "/gig/answer-link"))
+  (str (config/app-base-url env) "/answer-link"))
 
 (defn absolute-gig-answer-link-undo [env]
-  (str (config/app-base-url env) "/gig/answer-link-undo"))
+  (str (config/app-base-url env) "/answer-link-undo"))
 
 (defn absolute-link-new-user-invite [env invite-code]
   (str (config/app-base-url env) "/invite-accept?code=" invite-code))

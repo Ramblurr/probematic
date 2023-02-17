@@ -23,13 +23,18 @@
 (def gigs-interceptors {:name ::gigs--interceptor
                         :enter (fn [ctx]
                                  (let [conn (-> ctx :request :datomic-conn)
+                                       _ (assert conn "datomic connection not available")
                                        db (d/db conn)
-                                       gig-id (http.util/path-param-uuid! (:request ctx) :gig/gig-id)
-                                       gig (q/retrieve-gig db gig-id)]
-                                   (if gig
-                                     (assoc-in ctx [:request :gig] gig)
-                                     (throw (ex-info "Gig not found" {:app/error-type :app.error.type/not-found
-                                                                      :gig/gig-id gig-id})))))})
+                                       is-answer-link-workaround? (= "answer-link" (http.util/path-param (:request ctx) :gig/gig-id))]
+                                   (if is-answer-link-workaround?
+                                     ;;  tmp workaround, will remove later
+                                     ctx
+                                     (let [gig-id (http.util/path-param-uuid! (:request ctx) :gig/gig-id)
+                                           gig (q/retrieve-gig db gig-id)]
+                                       (if gig
+                                         (assoc-in ctx [:request :gig] gig)
+                                         (throw (ex-info "Gig not found" {:app/error-type :app.error.type/not-found
+                                                                          :gig/gig-id gig-id})))))))})
 
 (defn gigs-list-route []
   (ctmx/make-routes
@@ -48,7 +53,9 @@
   (ctmx/make-routes
    "/{gig/gig-id}/"
    (fn [req]
-     (layout/app-shell req (view/gig-detail-page req false)))))
+     (if (= "answer-link" (http.util/path-param req :gig/gig-id))
+       (view/gig-answer-link req)
+       (layout/app-shell req (view/gig-detail-page req false))))))
 
 (defn routes []
   ["" {:app.route/name :app/gigs}
