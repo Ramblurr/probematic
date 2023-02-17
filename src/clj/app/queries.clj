@@ -465,27 +465,34 @@
        (mapv first)))
 
 (defn sheet-music-for-song
+  "Returns a list of sections. If the section has sheet music, then the map will have a :sheet-music/_section key with the sheet music for that section."
   [db song-id]
-  (let [sections-with-sheets
-        (->>
-         (d/q '[:find  (pull ?section pattern)
-                :in $ ?song pattern
-                :where
-                [?sm :sheet-music/song ?song]
-                [?sm :sheet-music/section ?section]]
-              db
-              [:song/song-id song-id]
-              [:section/name :section/position :section/default? {:sheet-music/_section [:sheet-music/sheet-id :sheet-music/title :file/webdav-path]}])
-         (mapv first))
+  (let [sections-with-sheets (->>
+                              (d/q '[:find
+                                     (pull ?sm pattern)
+                                     :in $ ?song pattern
+                                     :where
+                                     [?sm :sheet-music/section ?section]
+                                     [?sm :sheet-music/song ?song]]
+                                   db
+                                   [:song/song-id song-id]
+                                   [:sheet-music/sheet-id :sheet-music/title :file/webdav-path {:sheet-music/section [:section/name  :section/position :section/default?]}])
+                              (mapv first)
+                              (group-by :sheet-music/section)
+                              (mapv (fn [[k v]] (assoc k :sheet-music/_section v))))
         sections-with-no-sheets (->> (d/q '[:find (pull ?section pattern)
                                             :in $ ?song pattern
                                             :where
                                             [?section :section/name _]
                                             [?section :section/active? true]
-                                            (not-join [?section ?song]
-                                                      [_ :sheet-music/section ?section]
-                                                      [_ :sheet-music/song ?song])] db [:song/song-id song-id] [:section/name :section/default? :section/position])
+                                            (not-join [?song ?section]
+                                                      [?sm :sheet-music/song ?song]
+                                                      [?sm :sheet-music/section ?section]
+                                                      ;;
+                                                      )]
+                                          db [:song/song-id song-id] [:section/name :section/default? :section/position])
                                      (mapv first))]
+
     (->> (concat sections-with-no-sheets sections-with-sheets)
          (sort-by :section/position))))
 
@@ -563,6 +570,22 @@
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  (let [sheets (->>
+                (d/q '[:find
+                       (pull ?sm pattern)
+                       :in $ ?song pattern
+                       :where
+                       [?sm :sheet-music/section ?section]
+                       [?sm :sheet-music/song ?song]]
+                     db
+                     [:song/song-id (parse-uuid "01844740-3eed-856d-84c1-c26f07068209")]
+                     [:sheet-music/sheet-id :sheet-music/title :file/webdav-path {:sheet-music/section [:section/name  :section/position :section/default?]}])
+                (mapv first))
+        section-sheets (group-by :sheet-music/section sheets)
+        section-sheets (map (fn [[k v]]
+                              (assoc k :sheet-music/_section v)) section-sheets)]
+    section-sheets)
 
   (load-play-stats db)
   (sheet-music-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068207")

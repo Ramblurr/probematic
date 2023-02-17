@@ -131,6 +131,7 @@
         sections-sheets                       (q/sheet-music-for-song db song-id)
         default-section                       (m/find-first :section/default? sections-sheets)
         sections-sheets                       (remove :section/default? sections-sheets)]
+
     (ui/panel {:title   (tr [:song/sheet-music-title]) :id id
                :buttons (ui/button :label (tr [:action/edit]) :priority :white :centered? true
                                    :attr {:hx-get (util/comp-name #'song-sheet-music-edit) :hx-vals {:edit? true} :hx-target (hash ".")})}
