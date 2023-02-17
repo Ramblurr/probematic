@@ -759,7 +759,7 @@ on change if I match <:checked/>
                                           :centered? true
                                           :class "items-center justify-center"
                                           :attr {:href (url/link-gig gig "/log-play/")})
-                               (when-not archived?
+                               (when (or (auth/current-user-admin? req) (not archived?))
                                  (ui/button :label (tr [:action/edit])
                                             :priority :white
                                             :centered? true
@@ -867,7 +867,7 @@ on change if I match <:checked/>
        [:div {:class
               "hidden sm:flex justify-stretch mt-6 flex flex-col-reverse space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-y-0 sm:space-x-3 sm:space-x-reverse md:mt-0 md:flex-row-reverse md:space-x-reverse"}
 
-        (when-not archived?
+        (when (service/can-edit-gig? req)
           buttons)]]
 
       [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
@@ -909,9 +909,10 @@ on change if I match <:checked/>
              (ui/dl-item nil (ui/checkbox :label (tr [:gig/email-about-change?]) :id  "notify?"))
              ;;
              )]]
-          [:div {:class "px-4 py-5 sm:px-6"}
-           [:div {:class "justify-stretch mt-6 flex flex-col space-y-4 space-y-4 sm:hidden"}
-            buttons]]]]]]
+          (when (service/can-edit-gig? req)
+            [:div {:class "px-4 py-5 sm:px-6"}
+             [:div {:class "justify-stretch mt-6 flex flex-col space-y-4 space-y-4 sm:hidden"}
+              buttons]])]]]]
       (ui/panel {:title "Advanced"}
                 [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
                  (list

@@ -304,7 +304,18 @@
   (when-not v
     [:db/retract eid attr]))
 
+(defn can-edit-gig? [req]
+  (cond
+    (auth/current-user-admin? req) true
+    (not (domain/gig-archived? (:gig req))) true
+    :else false))
+
+(defn can-edit-gig?! [req]
+  (when-not (can-edit-gig? req)
+    (throw "Not allowed to edit gig")))
+
 (defn update-gig! [{:keys [datomic-conn] :as req}]
+  (can-edit-gig?! req)
   (let [gig-id (common/path-param-uuid! req :gig/gig-id)
         params   (-> req common/unwrap-params util/remove-nils (assoc :gig-id gig-id)
                      (update :contact util/blank->nil)
