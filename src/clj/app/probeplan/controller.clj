@@ -3,9 +3,8 @@
    [app.gigs.service :as gig.service]
    [app.probeplan.domain :as domain]
    [app.queries :as q]
-   [datomic.client.api :as datomic]
    [app.util :as util]
-   [app.gigs.domain :as gig.domain]))
+   [datomic.client.api :as datomic]))
 
 (defn generate-probeplan! [db]
   (let [play-stats (q/load-play-stats db)]
@@ -20,8 +19,8 @@
       (if-let [probe (first probes)]
         (if (empty? (:songs probe))
           (recur (rest probes)
-                 (drop 5 probeplan)
-                 (conj result (assoc probe :songs (take 5 probeplan))))
+                 (drop domain/MAX-SONGS probeplan)
+                 (conj result (assoc probe :songs (take domain/MAX-SONGS probeplan))))
           (recur (rest probes)
                  probeplan
                  (conj result probe)))

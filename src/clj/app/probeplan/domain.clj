@@ -60,8 +60,8 @@
 
 (defn future-probeplans [all-songs future-probes]
   (let [num-probes        20
-        num-songs-p-probe 5
-        num-songs-needed  (* 20 5)
+        num-songs-p-probe MAX-SONGS
+        num-songs-needed  (* 20 MAX-SONGS)
         num-fixed         4
         num-floating      (- num-probes 4)
         probe-dates       (mapv t/date (take num-probes (drop num-fixed (pp/wednesday-sequence (t/date)))))
