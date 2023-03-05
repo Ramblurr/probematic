@@ -6,6 +6,7 @@
    [app.gigs.service :as service]
    [app.icons :as icon]
    [app.layout :as layout]
+   [app.markdown :as markdown]
    [app.probeplan.domain :as probeplan.domain]
    [app.queries :as q]
    [app.ui :as ui]
@@ -780,8 +781,8 @@ on change if I match <:checked/>
                         (if end-date
                           (ui/daterange date end-date)
                           (ui/datetime date)))
-
-            (ui/dl-item (tr [:gig/location]) location "break-words")
+            (ui/dl-item (tr [:gig/location])
+                        (markdown/render-one-line location) "break-words")
             (ui/dl-item (tr [:gig/contact]) (ui/member-nick contact))
             (ui/dl-item (tr [:gig/call-time]) (ui/time call-time))
             (ui/dl-item (tr [:gig/set-time]) (ui/time set-time))
@@ -797,7 +798,9 @@ on change if I match <:checked/>
             (when-not (str/blank? outfit)
               (ui/dl-item (tr [:gig/outfit]) outfit))
             (when-not (str/blank? more-details)
-              (ui/dl-item (tr [:gig/more-details]) more-details "col-span-3 whitespace-pre-wrap"))
+              (ui/dl-item (tr [:gig/more-details])
+                          (markdown/render more-details)
+                          "col-span-3 whitespace-pre-wrap"))
             (when-not (str/blank? setlist)
               (ui/dl-item (tr [:gig/setlist]) (interpose [:br] (str/split-lines setlist)) "col-span-3  whitespace-pre-wrap"))
             (when-not (str/blank? post-gig-plans)

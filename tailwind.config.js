@@ -1,3 +1,4 @@
+const colors = require('tailwindcss/colors')
 const defaultTheme = require('tailwindcss/defaultTheme')
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -10,6 +11,14 @@ module.exports = {
     },
     theme: {
         extend: {
+            typography: ({ theme }) => ({
+                blue: {
+                    css: {
+                        '--tw-prose-links': colors.blue[600],
+                        '--tw-prose-invert-links': colors.blue[500],
+                    },
+                }
+            }),
             colors: {
                 "sno-orange": {
                     50: "#fff7ed",

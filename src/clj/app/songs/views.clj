@@ -12,7 +12,8 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [hiccup.util]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.markdown :as markdown]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -245,13 +246,16 @@
          (ui/panel {:title (tr [:song/background-title])}
                    (ui/dl
                     (ui/dl-item (tr [:song/solo-count]) solo-count)
-                    (ui/dl-item (tr [:song/composition-credits]) composition-credits
+                    (ui/dl-item (tr [:song/composition-credits])
+                                composition-credits
                                 "whitespace-pre-wrap")
                     (ui/dl-item (tr [:song/arrangement-credits]) arrangement-credits
                                 "whitespace-pre-wrap")
-                    (ui/dl-item (tr [:song/origin]) origin
+                    (ui/dl-item (tr [:song/origin])
+                                (markdown/render origin)
                                 "whitespace-pre-wrap sm:col-span-3")
-                    (ui/dl-item (tr [:song/arrangement-notes]) arrangement-notes
+                    (ui/dl-item (tr [:song/arrangement-notes])
+                                (markdown/render arrangement-notes)
                                 "whitespace-pre-wrap sm:col-span-3"))))
        (ui/panel {:title (tr [:song/play-stats-title])}
                  (ui/dl
