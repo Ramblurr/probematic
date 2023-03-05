@@ -21,7 +21,7 @@
           :email "E-Mail"
           :active? "Active?"
           :gigs-attended "Gigs Attended"
-          :probes-attended "Probes Attended"
+          :probes-attended "Proben Attended"
           :new-member "New Member"
           :phone-validation "Phone number starting with +country code. Only spaces, dashes, and numbers"
           :username-validation "Username can only have A-Z, 0-9 _, ., -, or @. No spaces."
@@ -96,7 +96,7 @@
        :was-planned-to-play "It was planned to play these songs:"}
  :orange-and-green "orange and green"
 
- :gigs {:title "Gigs & Probes"
+ :gigs {:title "Gigs & Proben"
         :upcoming "Upcoming"
         :past "Past"
         :no-past "No gigs/probes in the past 2 weeks"
@@ -129,7 +129,7 @@
               :create-title "New Instrument"
               :create-subtitle "Enter details for the Instrument"}
  :nav {:home "Home"
-       :gigs "Gigs & Probes"
+       :gigs "Gigs & Proben"
        :probeplan "Probenplan"
        :songs "Repertoire"
        :members "Members"
@@ -193,7 +193,7 @@
         :play-stats-title "Play Stats"
         :total-plays "Total Play Count"
         :total-performances "Total Performances"
-        :total-rehearsals "Total Probes"
+        :total-rehearsals "Total Proben"
         :probe-count "Probe Count"
         :gig-count "Gig Count"
         :last-played "Last Played"
