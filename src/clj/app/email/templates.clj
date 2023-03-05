@@ -23,7 +23,7 @@
   (str "plan_" (get plans-template-key attendance-plan)))
 
 (defn template-link-gig-attendance [env attendance-plan]
-  (str (url/absolute-gig-answer-link-base env) "/?answer=%recipient." (template-key-gig-attendance attendance-plan) "%"))
+  (str (url/absolute-gig-answer-link-base env) "?answer=%recipient." (template-key-gig-attendance attendance-plan) "%"))
 
 (defn payload-for-attendance [env gig-id member-id attendance-plan]
   (secret-box/encrypt

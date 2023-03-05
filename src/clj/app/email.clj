@@ -120,7 +120,7 @@
     (require '[integrant.repl.state :as state])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))
-    (def gig (q/retrieve-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDcytW4CQw"))
+    (def gig (q/retrieve-gig db "01863829-2527-89fb-a582-4bd00f40c6b2"))
     (def gig2 {:gig/status :gig.status/confirmed
                :gig/call-time (t/time "18:47")
                :gig/title "Probe"
@@ -151,14 +151,14 @@
          "\n++++\n"
          (tmpl/gig-created-email-plain sys gig)
          "\n++++\n"
-         (tmpl/gig-created-email-plain sys gig2))) ;; rcf
+         (tmpl/gig-created-email-plain sys gig2)))
 
   (spit "plain-email.txt"
         (str
          "\n++++\n"
          (tmpl/gig-updated-email-plain sys gig [:gig/status])
          "\n++++\n"
-         (tmpl/gig-updated-email-plain sys gig2 [:gig/status]))) ;; rcf
+         (tmpl/gig-updated-email-plain sys gig2 [:gig/status])))
 
   (build-gig-created-email sys gig [member])
   :email/recipient-variables
@@ -169,6 +169,9 @@
   (queue-email! {:redis redis-opts} (debug/xxx (build-gig-updated-email sys gig2 [member2] [:gig/status :gig/location])))
 
   (generate-invite-code env "0185ee9c-7e67-8733-82f6-7a74aa588a92")
+
+  (tmpl/payload-for-attendance env (:gig/gig-id gig) (:member/member-id
+                                                      (q/member-by-email db "CHANGEME")) :plan/definitely)
 
 ;;
   )
