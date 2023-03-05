@@ -71,4 +71,7 @@
   [""
    ["/answer-link" {:app.route/name :app/gig-answer-link
                     :handler  (fn [req]
-                                (view/gig-answer-link req))}]])
+                                (view/gig-answer-link req))}]
+   ["/answer-link/" {:app.route/name :app/gig-answer-link2
+                     :handler  (fn [req]
+                                 (view/gig-answer-link req))}]])
