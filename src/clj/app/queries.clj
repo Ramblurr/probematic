@@ -480,7 +480,7 @@
                      (mapv first)
                      first)]
     (when first-sheet
-      (str "/" (.getParent (io/file (:file/webdav-path first-sheet))) "/nope"))))
+      (str "/" (.getParent (io/file (:file/webdav-path first-sheet)))))))
 
 (defn sheet-music-for-song
   "Returns a list of sections. If the section has sheet music, then the map will have a :sheet-music/_section key with the sheet music for that section."
