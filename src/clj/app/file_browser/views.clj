@@ -57,10 +57,21 @@
                                  :class "ml-0 text-sm font-medium text-gray-500 hover:text-gray-700"} name]]]))
                  (fu/component-paths current-dir))]])
 
+(defn- dir-exists? [webdav dir]
+  (try
+    (sardine/list-directory webdav dir)
+    true
+    (catch com.github.sardine.impl.SardineException e
+      false)))
+
 (defn- file-picker-main
   [req target-params root-dir current-dir]
   (let [tr (i18n/tr-from-req req)
-        files (sardine/list-directory (:webdav req) current-dir)]
+        current-dir-exists? (dir-exists? (:webdav req) current-dir)
+        files (if current-dir-exists?
+                (sardine/list-directory (:webdav req) current-dir)
+                (sardine/list-directory (:webdav req) root-dir))
+        current-dir (if current-dir-exists? current-dir root-dir)]
     [:div {:id "file-picker"}
      (file-breadcrumb tr target-params root-dir current-dir)
      (file-table tr target-params root-dir current-dir files)]))
