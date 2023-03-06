@@ -154,6 +154,7 @@
           :search "Search"
           :quick-edit "Quick Edit"
           :done "Done"
+          :select-all "Select All"
           :download "Download"
           :reorder "Reorder"
           :delete "Delete"
