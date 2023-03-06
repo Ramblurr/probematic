@@ -3,7 +3,8 @@
    [app.debug :as debug]
    [medley.core :as m]
    [nextjournal.markdown :as md]
-   [nextjournal.markdown.transform :as md.transform]))
+   [nextjournal.markdown.transform :as md.transform]
+   [clojure.string :as str]))
 
 (defn nop [_ _] "")
 
@@ -21,9 +22,11 @@
 
 (defn render [text]
   [:div {:class "prose prose-blue"}
-   (md.transform/->hiccup default-renderers (md/parse text))])
+   (when-not (str/blank? text)
+     (md.transform/->hiccup default-renderers (md/parse text)))])
 
 (defn render-one-line [text]
   [:span {:class "prose prose-blue"}
-   (md.transform/->hiccup one-line-renderers
-                          (md/parse text))])
+   (when-not (str/blank? text)
+     (md.transform/->hiccup one-line-renderers
+                            (md/parse text)))])
