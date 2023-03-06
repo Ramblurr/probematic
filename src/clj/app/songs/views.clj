@@ -75,6 +75,7 @@
           db-after (controller/add-sheet-music! req song-id  section-name selected-path)]
       (song-sheet-music-edit (assoc req :db db-after)))))
 
+(declare song-sheet-music)
 (ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db] :as req} section-name selected-path]
   (when (util/post? req)
     (let [tr (i18n/tr-from-req req)
@@ -82,8 +83,12 @@
           song-dir (or (q/sheet-music-dir-for-song db song-id) "/Noten - Scores/aktuelle Stücke")]
       (file.browser.view/file-picker-panel req
                                            {:target-params
-                                            {:endpoint (util/comp-name #'song-sheet-music-selected) :values {:section-name section-name} :target (hash ".")}
-                                            :id id
+                                            {:endpoint (util/comp-name #'song-sheet-music-selected)
+                                             :values {:section-name section-name}
+                                             :target (util/hash :comp/song-sheet-music-picker)
+                                             :cancel-endpoint (util/comp-name #'song-sheet-music)
+                                             :cancel-target (util/hash :comp/song-sheet-music-picker)}
+                                            :id :comp/song-sheet-music-picker
                                             :title (tr [:song/choose-sheet-music-title])
                                             :subtitle (tr [:song/choose-sheet-music-subtitle] [section-name])
                                             :root-dir "/Noten - Scores"
@@ -118,15 +123,18 @@
         song-id         (util.http/path-param-uuid! req :song-id)
         sections        (q/sheet-music-for-song db song-id)
         default-section (m/find-first :section/default? sections)
-        sections        (remove :section/default? sections)]
+        sections        (remove :section/default? sections)
+        target          (util/hash :comp/song-sheet-music)]
     (ui/panel
-     {:title   (tr [:song/sheet-music-title]) :id id
+     {:title   (tr [:song/sheet-music-title]) :id :comp/song-sheet-music
       :buttons (ui/button :label (tr [:action/done]) :priority :primary :centered? true
-                          :attr {:hx-get (util/comp-name #'song-sheet-music) :hx-vals {:edit? false} :hx-target (hash ".")})}
+                          :attr {:hx-get (util/comp-name #'song-sheet-music)
+                                 :hx-vals {:edit? false}
+                                 :hx-target target})}
      [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2"}
 
-      (sheet-music-section-rw (hash ".") tr default-section)
-      (map (partial sheet-music-section-rw (hash ".") tr) sections)])))
+      (sheet-music-section-rw target tr default-section)
+      (map (partial sheet-music-section-rw target tr) sections)])))
 
 (ctmx/defcomponent ^:endpoint song-sheet-music [{:keys [db] :as req}]
   song-sheet-music-edit
@@ -137,9 +145,11 @@
         default-section                       (m/find-first :section/default? sections-sheets)
         sections-sheets                       (remove :section/default? sections-sheets)]
 
-    (ui/panel {:title   (tr [:song/sheet-music-title]) :id id
+    (ui/panel {:title   (tr [:song/sheet-music-title]) :id :comp/song-sheet-music
                :buttons (ui/button :label (tr [:action/edit]) :priority :white :centered? true
-                                   :attr {:hx-get (util/comp-name #'song-sheet-music-edit) :hx-vals {:edit? true} :hx-target (hash ".")})}
+                                   :attr {:hx-get (util/comp-name #'song-sheet-music-edit)
+                                          :hx-vals {:edit? true}
+                                          :hx-target (util/hash :comp/song-sheet-music)})}
               [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2"}
                (ui/dl-item (tr [:song/other-sheet-music])
                            (ui/rich-ul {}

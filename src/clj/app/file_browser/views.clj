@@ -85,6 +85,7 @@
   target-params is a map containing
      :endpoint - the endpoint to POST the :selected-path too
      :values   - a map of values that are POSTed alongside the :selected-path
+     :cancel-endpoint  - endpoint to GET to abort the file picking process
      :target (optional) - the hx-target to swap at after the file is selected
   "
   [req target-params root-dir current-dir]
@@ -105,7 +106,9 @@
   (let [tr (i18n/tr-from-req req)]
     (ui/panel {:title title :id id
                :subtitle subtitle
-               :buttons (ui/button :label (tr [:action/cancel]) :priority :white)}
+               :buttons (ui/link-button :class "cursor-pointer" :label (tr [:action/cancel]) :priority :white
+                                        :hx-target (:cancel-target target-params)
+                                        :hx-get (:cancel-endpoint target-params))}
               (file-picker-main req target-params root-dir current-dir))))
 
 (ctmx/defcomponent ^:endpoint traverse-dir [req root-dir current-dir target-dir ^:edn target-params]
