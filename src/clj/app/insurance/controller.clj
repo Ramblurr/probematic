@@ -161,12 +161,26 @@
 (defn retrieve-policy [db policy-id]
   (->policy (d/find-by db :insurance.policy/policy-id policy-id q/policy-pattern)))
 
-(defn duplicate-policy [{:keys [db datomic-conn] :as req}]
+(defn duplicate-policy! [{:keys [db datomic-conn] :as req}]
   (let [params (common/unwrap-params req)
         old-pol-id (common/ensure-uuid (:policy-id params))
         old-policy (retrieve-policy db old-pol-id)
         new-policy-tx (duplicate-policy-tx old-policy)]
     (transact-policy! datomic-conn new-policy-tx)))
+
+(defn delete-policy! [{:keys [db datomic-conn] :as req}]
+  (try
+    (let
+     [params (common/unwrap-params req)
+      policy-id (common/ensure-uuid (:policy-id params))
+      policy-ref     [:insurance.policy/policy-id policy-id]]
+      (datomic/transact datomic-conn {:tx-data [[:db/retractEntity policy-ref]]})
+      true)
+    (catch Throwable t
+      (if
+       (re-find #".*Cannot resolve key.*" (ex-message t))
+        true
+        (throw t)))))
 
 (defn create-policy! [{:keys [db datomic-conn] :as req}]
   (let [params (common/unwrap-params req)

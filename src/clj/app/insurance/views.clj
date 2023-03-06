@@ -34,12 +34,23 @@
                                         ;(icon/calendar {:class style-icon})
                                         ;[:p "Last Played "]
         ]]]]))
+
+(ctmx/defcomponent ^:endpoint insurance-policy-delete [{:keys [db] :as req}]
+  (when (util/delete? req)
+    (controller/delete-policy! req)
+    (response/hx-redirect (url/link-insurance))))
+
+(ctmx/defcomponent ^:endpoint insurance-policy-duplicate [{:keys [db] :as req}]
+  (when (util/post? req)
+    (let [new-policy-id (->  (controller/duplicate-policy! req) :policy :insurance.policy/policy-id)]
+      (response/hx-redirect (url/link-policy new-policy-id)))))
+
 (defn policy-row [tr {:insurance.policy/keys [policy-id name effective-at effective-until]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href  (url/link-policy policy-id) , :class "block hover:bg-gray-50"}
+    [:div {:class "block"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:p {:class "truncate text-sm font-medium text-sno-orange-600"}
+       [:a {:href  (url/link-policy policy-id) :class "truncate text-sm font-medium text-sno-orange-600 hover:text-sno-orange-900"}
         name]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
@@ -52,14 +63,14 @@
                                         ;(icon/calendar {:class style-icon})
                                         ;[:p "Last Played "]
         ]
-       [:div {:class "ml-2 flex flex-shrink-0"}
-        [:form {:hx-post "/insurance-policy-duplicate/insurance-policy-duplicate"}
-         [:input {:type :hidden :name "policy-id" :value policy-id}]
-         (ui/button :attr {:href "#"} :label (tr [:action/duplicate])  :priority :white-rounded :size :small)]]]]]))
-
-(ctmx/defcomponent ^:endpoint insurance-policy-duplicate [{:keys [db] :as req}]
-  (let [new-policy-id (controller/duplicate-policy req)]
-    (response/hx-redirect (url/link-policy new-policy-id))))
+       [:div {:class "ml-2 flex flex-shrink-0 gap-4"}
+        (ui/button :label (tr [:action/delete])  :priority :white-destructive :size :small
+                   :hx-delete (util/comp-name #'insurance-policy-delete)
+                   :hx-confirm (tr [:action/confirm-delete-policy] [name])
+                   :hx-vals {:policy-id (str policy-id)})
+        (ui/button :label (tr [:action/duplicate])  :priority :white :size :small
+                   :hx-post (util/comp-name #'insurance-policy-duplicate)
+                   :hx-vals {:policy-id (str policy-id)})]]]]))
 
 (ctmx/defcomponent ^:endpoint policy-edit [{:keys [db] :as req}]
   (let [policy-id (-> req :path-params :policy-id parse-uuid)
@@ -743,7 +754,9 @@
               (ui/text :label "" :name (path "serial-number") :value serial-number  :required? false)
               serial-number)]]]]]])))
 
-(defn insurance-index-page [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint  insurance-index-page [{:keys [db] :as req}]
+  insurance-policy-duplicate
+  insurance-policy-delete
   (let [tr (i18n/tr-from-req req)]
     [:div
      (ui/page-header :title (tr [:insurance/title]))

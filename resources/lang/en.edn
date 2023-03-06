@@ -170,6 +170,7 @@
           :view "View"
           :confirm-generic "Are you sure?"
           :confirm-delete-song "Are you sure you want to delete the song %1?"
+          :confirm-delete-policy "Are you sure you want to delete the insurance policy %1?"
           :confirm-delete-gig "Are you sure you want to delete the gig %1? "}
  :motivation {:none "-"
               :very-high "Sehr motiviert!"

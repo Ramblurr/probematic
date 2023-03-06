@@ -135,7 +135,8 @@
     ([s]
      (str (-> var meta :name) s))))
 
-(defn comp-name [var]
+(defn comp-name
+  [var]
   ((comp-namer var)))
 
 (defn hash [kw]

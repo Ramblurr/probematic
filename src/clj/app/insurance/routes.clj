@@ -8,7 +8,7 @@
 
 (defn insurance-detail []
   (ctmx/make-routes
-   "/insurance/{policy-id}/"
+   "/insurance-policy/{policy-id}/"
    (fn [req]
      (layout/app-shell req
                        (view/insurance-detail-page req)))))
@@ -53,10 +53,10 @@
 (defn routes []
   ["" {:app.route/name :app/insurance
        :interceptors insurance-interceptors}
-   (ctmx/make-routes
-    "/insurance-policy-duplicate/"
-    (fn [req]
-      (view/insurance-policy-duplicate req)))
+   ;; (ctmx/make-routes
+   ;;  "/insurance-policy-duplicate/"
+   ;;  (fn [req]
+   ;;    (view/insurance-policy-duplicate req)))
    (insurance-index)
    (insurance-create)
    (insurance-detail)
