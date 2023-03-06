@@ -59,8 +59,7 @@
 
 (ctmx/defcomponent ^:endpoint insurance-policy-duplicate [{:keys [db] :as req}]
   (let [new-policy-id (controller/duplicate-policy req)]
-    ;; (response/hx-redirect (url/link-policy new-policy-id))
-    nil))
+    (response/hx-redirect (url/link-policy new-policy-id))))
 
 (ctmx/defcomponent ^:endpoint policy-edit [{:keys [db] :as req}]
   (let [policy-id (-> req :path-params :policy-id parse-uuid)
