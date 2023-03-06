@@ -8,6 +8,7 @@
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
+   [app.util.http :as util.http]
    [clojure.string :as clojure.string]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
@@ -70,12 +71,15 @@
 
 (ctmx/defcomponent ^:endpoint song-sheet-music-selected [{:keys [db] :as req} section-name selected-path]
   (when (util/post? req)
-    (let [db-after (controller/add-sheet-music! req (parse-uuid (-> req :path-params :song-id))  section-name selected-path)]
+    (let [song-id (util.http/path-param-uuid! req :song-id)
+          db-after (controller/add-sheet-music! req song-id  section-name selected-path)]
       (song-sheet-music-edit (assoc req :db db-after)))))
 
 (ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db] :as req} section-name selected-path]
   (when (util/post? req)
-    (let [tr (i18n/tr-from-req req)]
+    (let [tr (i18n/tr-from-req req)
+          song-id (util.http/path-param-uuid! req :song-id)
+          song-dir (or (q/sheet-music-dir-for-song db song-id) "/Noten - Scores/aktuelle Stücke")]
       (file.browser.view/file-picker-panel req
                                            {:target-params
                                             {:endpoint (util/comp-name #'song-sheet-music-selected) :values {:section-name section-name} :target (hash ".")}
@@ -83,7 +87,7 @@
                                             :title (tr [:song/choose-sheet-music-title])
                                             :subtitle (tr [:song/choose-sheet-music-subtitle] [section-name])
                                             :root-dir "/Noten - Scores"
-                                            :current-dir "/Noten - Scores/aktuelle Stücke"}))))
+                                            :current-dir song-dir}))))
 (ctmx/defcomponent ^:endpoint song-sheet-music-remove [req sheet-id]
   (when (util/delete? req)
     (let [db-after (controller/remove-sheet-music! req (parse-uuid sheet-id))]
@@ -111,7 +115,7 @@
   song-sheet-music-picker
   song-sheet-music-remove
   (let [tr              (i18n/tr-from-req req)
-        song-id         (parse-uuid (-> req :path-params :song-id))
+        song-id         (util.http/path-param-uuid! req :song-id)
         sections        (q/sheet-music-for-song db song-id)
         default-section (m/find-first :section/default? sections)
         sections        (remove :section/default? sections)]
@@ -126,7 +130,7 @@
 
 (ctmx/defcomponent ^:endpoint song-sheet-music [{:keys [db] :as req}]
   song-sheet-music-edit
-  (let [song-id                               (parse-uuid (-> req :path-params :song-id))
+  (let [song-id         (util.http/path-param-uuid! req :song-id)
         {:song/keys [title active?] :as song} (q/retrieve-song db song-id)
         tr                                    (i18n/tr-from-req req)
         sections-sheets                       (q/sheet-music-for-song db song-id)
@@ -175,8 +179,8 @@
 " topic-id))])))])
 
 (ctmx/defcomponent ^:endpoint song-detail-page [{:keys [tr db] :as req} ^:boolean edit?]
-  (let [song-id                          (parse-uuid (-> req :path-params :song-id))
-        song                             (if (util/post? req) (controller/update-song! req (parse-uuid (-> req :path-params :song-id)))
+  (let [song-id (util.http/path-param-uuid! req :song-id)
+        song                             (if (util/post? req) (controller/update-song! req song-id)
                                              (q/retrieve-song db song-id))
         {:song/keys [title active? composition-credits
                      arrangement-credits arrangement-notes

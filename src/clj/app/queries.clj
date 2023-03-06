@@ -5,7 +5,8 @@
    [app.util :as util]
    [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [clojure.java.io :as io]))
 
 (def section-pattern [:section/name :section/default? :section/position])
 
@@ -465,6 +466,22 @@
   (->> (d/find-all-by db :sheet-music/song  [:song/song-id song-id] play-pattern)
        (mapv first)))
 
+(defn sheet-music-dir-for-song [db song-id]
+  (let [first-sheet (->>
+                     (d/q '[:find
+                            (pull ?sm pattern)
+                            :in $ ?song pattern
+                            :where
+                            [?sm :sheet-music/section ?section]
+                            [?sm :sheet-music/song ?song]]
+                          db
+                          [:song/song-id song-id]
+                          [:sheet-music/sheet-id :sheet-music/title :file/webdav-path {:sheet-music/section [:section/name  :section/position :section/default?]}])
+                     (mapv first)
+                     first)]
+    (when first-sheet
+      (str "/" (.getParent (io/file (:file/webdav-path first-sheet))) "/nope"))))
+
 (defn sheet-music-for-song
   "Returns a list of sections. If the section has sheet music, then the map will have a :sheet-music/_section key with the sheet music for that section."
   [db song-id]
@@ -590,6 +607,7 @@
 
   (load-play-stats db)
   (sheet-music-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068207")
+  (sheet-music-dir-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068209") ;; rcf
 
   (retrieve-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCQw")
 
