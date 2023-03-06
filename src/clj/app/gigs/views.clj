@@ -455,6 +455,9 @@
                              (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                                         :buttons (ui/button :class "pulse-delay" :label (tr [:action/continue]) :priority :primary :form id)}
                                        [:form {:hx-target "#setlist-container" :hx-put (comp-name) :id id}
+                                        [:div {:class "flex justify-end"}
+                                         (ui/link-button :class "cursor-pointer" :label "Select all" :priority :white :attr {:_ "on click set <input[type=checkbox] />'s checked to true"})]
+
                                         [:ul {:class "p-0 m-0 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-y-0 md:gap-x-2"}
                                          (map-indexed (partial setlist-song-checkbox selected-songs) all-songs)]]))))))
 
