@@ -28,14 +28,14 @@
                             {:instrument/_owner [:instrument/name :instrument/instrument-id
                                                  {:instrument/category [:instrument.category/name]}]}])
 
-(def song-pattern [:song/title :song/song-id :song/active? :song/solo-count
+(def song-pattern [:song/title :song/song-id :song/active? :song/solo-info
                    :song/last-played-on :song/total-plays :song/total-performances :song/total-rehearsals])
 (def song-pattern-detail [:song/title :song/song-id
                           :song/total-plays :song/total-performances :song/total-rehearsals :song/last-played-on
                           :forum.topic/topic-id
                           {:song/last-rehearsal [:gig/gig-id :gig/title :gig/date]}
                           {:song/last-performance [:gig/gig-id :gig/title]}
-                          :song/active? :song/composition-credits :song/arrangement-credits :song/arrangement-notes :song/origin :song/solo-count])
+                          :song/active? :song/composition-credits :song/arrangement-credits :song/arrangement-notes :song/origin  :song/solo-info])
 
 (def gig-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/end-date :gig/call-time :gig/set-time :gig/location :gig/gig-type :gig/gigo-id])
 (def gig-detail-pattern [:gig/gig-id :gig/title :gig/status :gig/date :gig/location :gig/gigo-id

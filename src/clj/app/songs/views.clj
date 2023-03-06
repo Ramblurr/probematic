@@ -182,7 +182,7 @@
                      arrangement-credits arrangement-notes
                      last-rehearsal last-performance
                      total-plays total-performances total-rehearsals
-                     origin solo-count]
+                     origin solo-info]
          :forum.topic/keys [topic-id]} song
         comp-name                        (util/comp-namer #'song-detail-page)
         buttons (list
@@ -225,7 +225,7 @@
           (ui/panel {:title (tr [:song/background-title])}
                     (list
                      (ui/dl
-                      (ui/dl-item (tr [:song/solo-count]) (ui/input :type "number" :min "0" :step "1" :label "" :name (path "solo-count") :value solo-count :required? false))
+                      (ui/dl-item (tr [:song/solo-count]) (ui/text :label "" :name (path "solo-info") :value solo-info :required? false))
                       (ui/dl-item (tr [:song/composition-credits])
                                   (ui/text :label "" :name (path "composition-credits") :value composition-credits :required? false :fit-height? true))
                       (ui/dl-item (tr [:song/arrangement-credits])
@@ -245,7 +245,7 @@
 
          (ui/panel {:title (tr [:song/background-title])}
                    (ui/dl
-                    (ui/dl-item (tr [:song/solo-count]) solo-count)
+                    (ui/dl-item (tr [:song/solo-count]) solo-info)
                     (ui/dl-item (tr [:song/composition-credits])
                                 composition-credits
                                 "whitespace-pre-wrap")
