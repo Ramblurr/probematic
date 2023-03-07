@@ -2,6 +2,7 @@
 
 .instrgrid--grid {
     grid-template-columns:
+        22px /* checkbox */
         22px /* icon */
         minmax(150px, 1fr) /* name */
         15px /* band/private */
@@ -11,6 +12,7 @@
 @media screen(sm) {
     .instrgrid--grid {
         grid-template-columns:
+        22px /* checkbox */
             22px /* icon */
             minmax(150px, 1fr) /* name */
             15px /* band/private */
@@ -23,6 +25,7 @@
 @media screen(md) {
     .instrgrid--grid {
         grid-template-columns:
+        22px /* checkbox */
             22px /* icon */
             minmax(150px, 1fr) /*name*/
             15px /* band/private */

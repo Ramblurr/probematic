@@ -10,6 +10,10 @@
    [medley.core :as m]
    [tick.core :as t]))
 
+(def statuses [:instrument.coverage.status/needs-review
+               :instrument.coverage.status/reviewed
+               :instrument.coverage.status/coverage-active])
+
 (defn sum-by [ms k]
   ;; (tap> {:ms ms :k k})
   (when (seq ms)

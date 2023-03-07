@@ -425,11 +425,18 @@
             [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
             [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]]))
 
+(defn coverage-status-icon [status]
+  (get {:instrument.coverage.status/needs-review  (icon/circle-question-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"})
+        :instrument.coverage.status/reviewed (icon/circle-dot-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"})
+        :instrument.coverage.status/coverage-active (icon/circle-check-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"})}
+       status))
+
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db] :as req}]
   (let [policy (:policy req)
         coverage-types (:insurance.policy/coverage-types policy)
         ;; _ (tap> {:types coverage-types})
-        grouped-by-owner (->>  (:insurance.policy/covered-instruments policy)
+        covered-instruments (:insurance.policy/covered-instruments policy)
+        grouped-by-owner (->>  covered-instruments
                                (util/group-by-into-list :coverages (fn [c] (get-in c [:instrument.coverage/instrument :instrument/owner])))
                                (mapv (fn [r] (update r :coverages  #(sort-by (fn [c] (get-in c [:instrument.coverage/instrument :instrument/name])) %))))
                                (mapv (fn [r] (update r :coverages (fn [coverages]
@@ -446,20 +453,74 @@
                                        (assoc person :total (controller/sum-by coverages :instrument.coverage/cost))))
                                (sort-by :member/name))
         total-cost (controller/sum-by grouped-by-owner :total)
-        total-instruments (count (:insurance.policy/covered-instruments policy))
-        total-private-count (count (filter :instrument.coverage/private? (:insurance.policy/covered-instruments policy)))
+        total-instruments (count covered-instruments)
+        total-private-count (count (filter :instrument.coverage/private? covered-instruments))
         total-band-count (- total-instruments total-private-count)
+        total-needs-review (count (filter #(= :instrument.coverage.status/needs-review (:instrument.coverage/status %)) covered-instruments))
+        total-reviewed (count (filter #(= :instrument.coverage.status/reviewed (:instrument.coverage/status %)) covered-instruments))
+        total-coverage-active (count (filter #(= :instrument.coverage.status/coverage-active (:instrument.coverage/status %)) covered-instruments))
         grid-class "grid instrgrid--grid"
         col-all ""
         col-sm "hidden sm:block"
         col-md "hidden md:block"
         spacing "pl-2 md:pl-4 pr-2 md:pr-4 py-1"
+        center-all "flex items-center justify-center"
+        center-vertical "flex items-center"
         number "text-right"
         number-total "border-double border-t-4 border-gray-300"]
     ;; (tap> {:g grouped-by-owner})
     (list
      [:div {:class "instrgrid border-collapse overflow-hidden m-w-full "}
+      [:div {:class (ui/cs "instrgrid--header min-w-full py-4 bg-gray-100  text-sm truncate gap-1 grid grid-cols-[22px_minmax(0,_1fr)_minmax(0,_1fr)]"  spacing)}
+       [:div {:class (ui/cs col-all center-all)}
+        [:input {:type "checkbox" :id "instr-select-all"
+                 :_ "on checkboxChanged
+                     if length of <div.instrgrid--body input[type=checkbox]:checked/> > 0
+                       set .status-selected.innerHTML to `${length of <div.instrgrid--body input[type=checkbox]:checked/>} selected`
+                       then add .hidden to .status-totals
+                       then remove .hidden from .status-selected
+                       then remove .hidden from .actions-selected
+                       then set my.indeterminate to true
+                     else
+                       set .status-selected.innerHTML to ''
+                       then remove .hidden from .status-totals
+                       then add .hidden to .status-selected
+                       then add .hidden to .actions-selected
+                       then set my.indeterminate to false
+                     then
+                       if length of <div.instrgrid--body input[type=checkbox]:checked/> == <div.instrgrid--body input[type=checkbox]/>
+                         set my.indeterminate to false
+                         then set my.checked to true
+                       end
+                     end
+                     on click set the checked of <div.instrgrid--body input[type=checkbox]/> to my.checked
+                       then if length of <div.instrgrid--body input[type=checkbox]:checked/> == <div.instrgrid--body input[type=checkbox]/>
+                            set my.checked to true
+                            end
+                       then trigger checkboxChanged on me"
+
+                 :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
+
+       [:div {:class (ui/cs  col-all "flex gap-4")}
+        [:div {:class (ui/cs  "status-selected hidden py-2 pl-2" center-vertical)}]
+        [:div {:class (ui/cs  "status-totals" center-vertical "gap-6")}
+         [:span  {:class (ui/cs "py-2 flex" (when (> total-needs-review 0) "font-medium"))}
+          (coverage-status-icon :instrument.coverage.status/needs-review) total-needs-review " Todo"]
+         [:span  {:class "flex"}
+          (coverage-status-icon :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]
+         [:span  {:class "flex"}
+          (coverage-status-icon :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]
+       [:div {:class (ui/cs  col-all "flex justify-end gap-4 actions-selected hidden")}
+        (ui/action-menu
+         :label "Mark As"
+         :sections [{:items [{:label "Todo" :href "foo" :active? false}
+                             {:label "Reviewed" :href "foo" :active? false}
+                             {:label "Active" :href "foo" :active? false}]}]
+         :id "member-table-actions")]]
+
       [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
+       [:div {:class (ui/cs col-all center-all)}]
+
        [:div {:class (ui/cs col-all)} ""]
        [:div {:class (ui/cs col-all "truncate")} "Instrument"]
        [:div {:class (ui/cs col-all)} "Band?"]
@@ -474,10 +535,19 @@
                 [:span name]
                 [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
                [:div {:class "divide-y"}
-                (map-indexed (fn [idx {:instrument.coverage/keys [private? value instrument cost] :keys [types]}]
-                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1" grid-class spacing)}
-                                [:div {:class (ui/cs col-all)} (icon/circle-dot {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"})]
-                                [:div {:class (ui/cs col-all "truncate")} (:instrument/name instrument)]
+                (map-indexed (fn [idx {:instrument.coverage/keys [status private? value instrument cost] :keys [types]}]
+                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-100" grid-class spacing)}
+                                [:div {:class (ui/cs col-all center-all)}
+                                 [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+                                          :_ "on click trigger checkboxChanged on #instr-select-all"
+                                          ;; :checked (if (= 0 idx) true false)
+                                          }]]
+                                [:div {:class (ui/cs col-all)}
+                                 (coverage-status-icon :instrument.coverage.status/needs-review)]
+
+                                [:div {:class (ui/cs col-all "truncate")}
+                                 [:a {:href "#" :class "text-medium"}
+                                  (:instrument/name instrument)]]
                                 [:div {:class (ui/cs col-all)} (band-or-private private?)]
                                 [:div {:class (ui/cs col-sm number)} 2]
                                 [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
@@ -487,6 +557,7 @@
 
                              coverages)]
                [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
+                [:div {:class (ui/cs col-all)}]
                 [:div {:class (ui/cs col-all)}]
                 [:div {:class (ui/cs col-all)}]
                 [:div {:class (ui/cs col-all)}]
