@@ -316,10 +316,10 @@
             covered-instruments)
      all-instruments)))
 
-(defn band-or-private [private?]
+(defn band-or-private [tr private?]
   (if private?
-    [:span {:class "text-red-500" :title "Privat"} "P"]
-    [:span {:class "text-green-500" :title "Band"} "B"]))
+    [:span {:class "text-red-500" :title (tr [:private-instrument])} "P"]
+    [:span {:class "text-green-500" :title (tr [:band-instrument])} "B"]))
 
 (defn coverage-create-form [{:keys [tr]} non-covered-instruments coverage-types]
   [:div {:class "flex flex-1 flex-col justify-between"}
@@ -425,13 +425,14 @@
             [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
             [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]]))
 
-(defn coverage-status-icon [status]
-  (get {:instrument.coverage.status/needs-review  (icon/circle-question-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"})
-        :instrument.coverage.status/reviewed (icon/circle-dot-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"})
-        :instrument.coverage.status/coverage-active (icon/circle-check-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"})}
-       status))
+(defn coverage-status-icon [tr status]
+  [:span {:title (tr [status])}
+   (get {:instrument.coverage.status/needs-review  (icon/circle-question-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"})
+         :instrument.coverage.status/reviewed (icon/circle-dot-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"})
+         :instrument.coverage.status/coverage-active (icon/circle-check-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"})}
+        status)])
 
-(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db] :as req}]
+(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db tr] :as req}]
   (let [policy (:policy req)
         coverage-types (:insurance.policy/coverage-types policy)
         ;; _ (tap> {:types coverage-types})
@@ -474,9 +475,9 @@
       [:div {:class (ui/cs "instrgrid--header min-w-full py-4 bg-gray-100  text-sm truncate gap-1 grid grid-cols-[22px_minmax(0,_1fr)_minmax(0,_1fr)]"  spacing)}
        [:div {:class (ui/cs col-all center-all)}
         [:input {:type "checkbox" :id "instr-select-all"
-                 :_ "on checkboxChanged
+                 :_ (format "on checkboxChanged
                      if length of <div.instrgrid--body input[type=checkbox]:checked/> > 0
-                       set .status-selected.innerHTML to `${length of <div.instrgrid--body input[type=checkbox]:checked/>} selected`
+                       set .status-selected.innerHTML to `${length of <div.instrgrid--body input[type=checkbox]:checked/>} %s`
                        then add .hidden to .status-totals
                        then remove .hidden from .status-selected
                        then remove .hidden from .actions-selected
@@ -497,7 +498,7 @@
                        then if length of <div.instrgrid--body input[type=checkbox]:checked/> == <div.instrgrid--body input[type=checkbox]/>
                             set my.checked to true
                             end
-                       then trigger checkboxChanged on me"
+                       then trigger checkboxChanged on me" (tr [:selected]))
 
                  :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
 
@@ -505,29 +506,29 @@
         [:div {:class (ui/cs  "status-selected hidden py-2 pl-2" center-vertical)}]
         [:div {:class (ui/cs  "status-totals" center-vertical "gap-6")}
          [:span  {:class (ui/cs "py-2 flex" (when (> total-needs-review 0) "font-medium"))}
-          (coverage-status-icon :instrument.coverage.status/needs-review) total-needs-review " Todo"]
+          (coverage-status-icon tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]
          [:span  {:class "flex"}
-          (coverage-status-icon :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]
+          (coverage-status-icon tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]
          [:span  {:class "flex"}
-          (coverage-status-icon :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]
+          (coverage-status-icon tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]
        [:div {:class (ui/cs  col-all "flex justify-end gap-4 actions-selected hidden")}
         (ui/action-menu
-         :label "Mark As"
-         :sections [{:items [{:label "Todo" :href "foo" :active? false}
-                             {:label "Reviewed" :href "foo" :active? false}
-                             {:label "Active" :href "foo" :active? false}]}]
+         :label (tr [:action/mark-as])
+         :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :href "foo" :active? false}
+                             {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false}
+                             {:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false}]}]
          :id "member-table-actions")]]
 
       [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
        [:div {:class (ui/cs col-all center-all)}]
 
        [:div {:class (ui/cs col-all)} ""]
-       [:div {:class (ui/cs col-all "truncate")} "Instrument"]
+       [:div {:class (ui/cs col-all "truncate")} (tr [:instrument/instrument])]
        [:div {:class (ui/cs col-all)} "Band?"]
-       [:div {:class (ui/cs col-sm number)} "Count"]
-       [:div {:class (ui/cs col-sm number)} "Value"]
+       [:div {:class (ui/cs col-sm number)} (tr [:insurance/count])]
+       [:div {:class (ui/cs col-sm number)} (tr [:insurance/value])]
        (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
-       [:div {:class (ui/cs col-all number)} "Total"]]
+       [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
       [:div {:class "instrgrid--body divide-y"}
        (map (fn [{:member/keys [name] :keys [coverages total]}]
               [:div {:class "instrgrid--group"}
@@ -536,19 +537,19 @@
                 [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
                [:div {:class "divide-y"}
                 (map-indexed (fn [idx {:instrument.coverage/keys [status private? value instrument cost] :keys [types]}]
-                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-100" grid-class spacing)}
+                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
                                 [:div {:class (ui/cs col-all center-all)}
                                  [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
                                           :_ "on click trigger checkboxChanged on #instr-select-all"
                                           ;; :checked (if (= 0 idx) true false)
                                           }]]
                                 [:div {:class (ui/cs col-all)}
-                                 (coverage-status-icon :instrument.coverage.status/needs-review)]
+                                 (coverage-status-icon tr :instrument.coverage.status/needs-review)]
 
                                 [:div {:class (ui/cs col-all "truncate")}
                                  [:a {:href "#" :class "text-medium"}
                                   (:instrument/name instrument)]]
-                                [:div {:class (ui/cs col-all)} (band-or-private private?)]
+                                [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
                                 [:div {:class (ui/cs col-sm number)} 2]
                                 [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
                                 (map (fn [ct] [:div {:class (ui/cs col-sm number)}
