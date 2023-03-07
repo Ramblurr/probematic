@@ -534,18 +534,28 @@
                                            (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
                                 (coverage-create-form {:tr tr :path path}  non-covered-instruments (:insurance.policy/coverage-types policy)))
 
-       [:div {:class "mt-2 pt-8 bg-white"}
+       [:div {:class "mt-8 grid w-full grid-cols-1 gap-6  lg:grid-flow-col-dense lg:grid-cols-3" :id id}
+        [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
+         [:section
+          [:div {:class "bg-white shadow"}
+           [:div {:class "px-4 py-5 px-6  flex items-center justify-between "}
+            [:div
+             [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} (tr [:insurance/covered-instruments])]]
+            [:div {:class "space-x-2 flex"}
+             (list
+              (ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
+                         :attr {:data-flyout-trigger (hash "slideover")}))]]
+           [:div {:class "border-t border-gray-200 py-5"}
+            [:div {:class "mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:mx-0 md:rounded-lg"}
+             (insurance-instrument-coverage-table req)]]]]]]
+
+       [:div {:class "mt-2 pt-8 bg-white w-full"}
         [:div {:class ""}
          [:div {:class "px-4 sm:px-6 lg:px-8 sm:flex sm:items-center"}
           [:div {:class "sm:flex-auto"}
-           [:h1 {:class "text-2xl font-semibold text-gray-900"} (tr [:insurance/covered-instruments])]
+           [:h1 {:class "text-2xl font-semibold text-gray-900"}]
            [:p {:class "mt-2 text-sm text-gray-700"} ""]]
-          [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}
-           (ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
-                      :attr {:data-flyout-trigger (hash "slideover")})]]
-
-         [:div {:class "mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:mx-0 md:rounded-lg"}
-          (insurance-instrument-coverage-table req)]]
+          [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}]]]
 
         [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
          (when (empty? instrument-coverages)
