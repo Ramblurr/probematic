@@ -245,6 +245,11 @@
        (with-out-str)
        (str "\n")))
 
+(defn group-by-into-list [new-k f coll]
+  (->> coll
+       (group-by f)
+       (mapv (fn [[k v]] (assoc k new-k v)))))
+
 (comment
   (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])
 

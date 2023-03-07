@@ -11,9 +11,11 @@
    [tick.core :as t]))
 
 (defn sum-by [ms k]
-  (->> ms
-       (map k)
-       (reduce + 0)))
+  ;; (tap> {:ms ms :k k})
+  (when (seq ms)
+    (->> ms
+         (map k)
+         (reduce + 0))))
 
 (defn make-category-factor-lookup
   "Given a policy, create a map where the keys are the category ids and the values are the category factors"
@@ -26,10 +28,11 @@
                  (assoc r (:instrument.category/category-id m) (:insurance.category.factor/factor m))) {})))
 
 (defn update-coverage-price [category-factor base-premium-factor coverage]
+  (assert category-factor)
   ;; (tap> {:coverage coverage :base-factor base-premium-factor :category category-factor})
   (assoc coverage :instrument.coverage/types
          (map (fn [coverage-type]
-                ;; (tap> {:type coverage-type})
+                ;; (tap> {:type coverage-type :cov coverage :cat-f category-factor :base base-premium-factor})
                 (assoc coverage-type :insurance.coverage.type/cost
                        (* (:instrument.coverage/value coverage)
                           category-factor
@@ -42,10 +45,14 @@
     ;;  value * category factor * premium factor * coverage factor
   (let [category-id (-> instrument :instrument/category :instrument.category/category-id)
         category-factor (get  (make-category-factor-lookup policy) category-id)
+        ;; _ (tap> {:facts (make-category-factor-lookup policy) :cat-id category-id})
+        _  (assert category-factor)
         ;; _ (tap> {:cat-id category-id :cat-fact category-factor :lookup (make-category-factor-lookup policy) :policy policy})
         premium-factor (-> policy :insurance.policy/premium-factor)
         coverage  (update-coverage-price category-factor premium-factor coverage)
+        ;; _ (tap> {:cov coverage})
         total-cost (sum-by (:instrument.coverage/types coverage) :insurance.coverage.type/cost)]
+
     (assoc coverage :instrument.coverage/cost total-cost)))
 
 (defn create-policy-txs [{:keys [name effective-at effective-until

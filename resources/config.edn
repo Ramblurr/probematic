@@ -30,7 +30,8 @@
                    :base                     #ref [:secrets :airtable :base]
                    :all-people-table         {:name "People" :view "All People"}
                    :gigo-linked-people-table {:name "People" :view "Gigo Linked"}
-                   :gigo-table               {:name "Gigo" :view "All"}}
+                   :gigo-table               {:name "Gigo" :view "All"}
+                   :instruments-table        {:name "Instruments" :view "All Instruments"}}
  :gigo            {:username #ref [:secrets :gigo :username]
                    :password #ref [:secrets :gigo :password]}
  :twilio          {:bot-number     #ref [:secrets :twilio :bot-number]

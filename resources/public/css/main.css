@@ -12,6 +12,8 @@
 @import "./choices@10.1.0.css";
  **/
 
+@import "./tablegrid.css";
+
 
 :root {
   --yellow-400: #F5F569;

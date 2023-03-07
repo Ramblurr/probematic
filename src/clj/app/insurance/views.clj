@@ -11,7 +11,8 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [tick.core :as t]))
+   [tick.core :as t]
+   [medley.core :as m]))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -313,71 +314,10 @@
             covered-instruments)
      all-instruments)))
 
-(defn coverage-table-headers [{:insurance.policy/keys [coverage-types]}]
-  (concat
-   [{:label "Name" :priority :important :key :name
-     :render-fn (fn [_ instrument]
-                  (list
-                   (:name instrument)
-                   [:dl {:class "font-normal sm:hidden"}
-                    [:dt {:class "sr-only"} (:name instrument)]
-                    [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
-
-    {:label "Owner" :priority :low :key :owner}
-    {:label "Make" :priority :low :key :value}
-    {:label "Model" :priority :low :key :value}
-    {:label "Build Year" :priority :low :key :value}
-    {:label "Serial Number" :priority :low :key :value}
-    {:label "Band/Private" :priority :medium :key :value}
-    {:label "Value" :priority :medium :key :value :variant :number}
-    ;;
-    ]
-   (map (fn [ct]
-          {:label (:insurance.coverage.type/name ct)
-           :variant :number
-           :key (:insurance.coverage.type/name ct)
-           :priority :low}) coverage-types)
-   [{:label "Total Cost" :priority :important :key :value :variant :number}]
-   [{:label "Edit" :priority :important :variant :action :key :action}]))
-
 (defn band-or-private [private?]
-  (if private? "private" "band"))
-
-(defn shared-static-columns [tr coverage]
-  (let [{:instrument.coverage/keys [private?]
-         :instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)
-        member-name  (-> owner :member/name)]
-    (list
-     [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6"
-                         (ui/table-row-priorities :important))}
-      [:span {:class "hidden xl:block"}
-       name]
-      [:dl {:class "font-normal xl:hidden"}
-       [:dt {:class "sr-only"} (tr [:band-private])]
-       [:dd {:class "mt-1 truncate text-gray-700 sm:hidden font-bold"} member-name]
-       [:dt {:class "sr-only"} (tr [:band-private])]
-       [:dd {:class "mt-1 truncate text-gray-700 sm:hidden"} name
-        (when private? " (private)")]
-       [:dt {:class "sr-only"} (tr [:insurance/make])]
-       [:dd {:class "mt-1 truncate text-gray-700"}
-        [:span
-         (str/join " " (util/remove-empty-strings [make model build-year serial-number]))]]]]
-     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))}
-      member-name]
-     [:td {:class (ui/cs  "px-3 py-4" (ui/table-row-priorities :low))} make]
-     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} model]
-     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} build-year]
-     [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :low))} serial-number]
-     ;;
-     )))
-
-(defn shared-static-columns-end [coverage]
-  (let [{:instrument/keys [name owner make model build-year serial-number]} (:instrument.coverage/instrument coverage)]
-    (list
-     [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :important))}
-      (ui/money (:instrument.coverage/cost coverage) :EUR)]
-      ;;
-     )))
+  (if private?
+    [:span {:class "text-red-500" :title "Privat"} "P"]
+    [:span {:class "text-green-500" :title "Band"} "B"]))
 
 (defn coverage-create-form [{:keys [tr]} non-covered-instruments coverage-types]
   [:div {:class "flex flex-1 flex-col justify-between"}
@@ -483,63 +423,87 @@
             [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
             [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]]))
 
-(ctmx/defcomponent ^:endpoint coverage-table-row [{:keys [tr db] :as req} idx coverage-id]
-  (let [policy (:policy req)
-        post? (util/post? req)
-        delete? (util/delete? req)
-        comp-name (util/comp-namer #'coverage-table-row)
-        coverage-types (:insurance.policy/coverage-types policy)
-        coverage (cond post?
-                       (controller/update-instrument-coverage! req)
-                       :else
-                       (controller/retrieve-coverage db coverage-id))
-        coverage (controller/update-total-coverage-price policy coverage)]
-    (if delete?
-      (do (controller/remove-instrument-coverage! req coverage-id)
-          "")
-      (into [] (concat
-
-                [:tr {:id id}
-                 (shared-static-columns tr coverage)
-
-                 [:td {:class (ui/cs "px-3 py-4" (ui/table-row-priorities :medium))}
-
-                  (band-or-private (:instrument.coverage/private? coverage))]
-                 [:td {:class (ui/cs "px-3 py-4 text-right" (ui/table-row-priorities :medium))}
-                  (ui/money (:instrument.coverage/value coverage) :EUR)]]
-                (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                        [:td {:class (ui/cs  "px-3 py-4 text-right" (ui/table-row-priorities :low))}
-                         (if-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
-                           [:div (ui/money (:insurance.coverage.type/cost coverage-type) :EUR)]
-                           (icon/xmark {:class "w-5 h-5 inline"}))])
-
-                      coverage-types)
-
-                (shared-static-columns-end coverage)
-                (list
-                 [:td {:class "py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"}
-                  [:div {:class "text-left"}
-                   (ui/slideover-panel-form {:title "Edit Instrument Coverage" :id (path "slideover")
-                                             :form-attrs {:hx-post (comp-name) :hx-target (hash ".")}
-                                             :buttons (list
-                                                       (ui/button {:label (tr [:action/delete]) :priority :white-destructive :hx-delete (comp-name) :hx-target (hash ".") :hx-confirm (tr [:action/confirm-generic])})
-                                                       (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
-                                                       (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
-                                            (coverage-edit-form {:tr tr :path path} coverage-types coverage))]
-                  [:span {:class "flex flex-row space-x-2"}
-                   [:button {:type "submit" :class "text-blue-600 hover:text-sno-orange-900 cursor-pointer"
-                             :data-flyout-trigger (hash "slideover")} "Edit"]]]))))))
-
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db] :as req}]
   (let [policy (:policy req)
-        instrument-coverages (:insurance.policy/covered-instruments policy)
-        table-headers (coverage-table-headers policy)]
+        coverage-types (:insurance.policy/coverage-types policy)
+        ;; _ (tap> {:types coverage-types})
+        grouped-by-owner (->>  (:insurance.policy/covered-instruments policy)
+                               (util/group-by-into-list :coverages (fn [c] (get-in c [:instrument.coverage/instrument :instrument/owner])))
+                               (mapv (fn [r] (update r :coverages  #(sort-by (fn [c] (get-in c [:instrument.coverage/instrument :instrument/name])) %))))
+                               (mapv (fn [r] (update r :coverages (fn [coverages]
+                                                                    (mapv (fn [coverage]
+                                                                            (let [coverage (controller/update-total-coverage-price policy coverage)]
+                                                                              (assoc coverage :types
+                                                                                     (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                                                                                             (when-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
+                                                                                               coverage-type))
+                                                                                           coverage-types))))
+                                                                          coverages)))))
 
+                               (mapv (fn [{:keys [coverages] :as person}]
+                                       (assoc person :total (controller/sum-by coverages :instrument.coverage/cost))))
+                               (sort-by :member/name))
+        total-cost (controller/sum-by grouped-by-owner :total)
+        total-instruments (count (:insurance.policy/covered-instruments policy))
+        total-private-count (count (filter :instrument.coverage/private? (:insurance.policy/covered-instruments policy)))
+        total-band-count (- total-instruments total-private-count)
+        grid-class "grid instrgrid--grid"
+        col-all ""
+        col-sm "hidden sm:block"
+        col-md "hidden md:block"
+        spacing "pl-2 md:pl-4 pr-2 md:pr-4 py-1"
+        number "text-right"
+        number-total "border-double border-t-4 border-gray-300"]
+    ;; (tap> {:g grouped-by-owner})
     (list
+     [:div {:class "instrgrid border-collapse overflow-hidden m-w-full "}
+      [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
+       [:div {:class (ui/cs col-all)} ""]
+       [:div {:class (ui/cs col-all "truncate")} "Instrument"]
+       [:div {:class (ui/cs col-all)} "Band?"]
+       [:div {:class (ui/cs col-sm number)} "Count"]
+       [:div {:class (ui/cs col-sm number)} "Value"]
+       (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
+       [:div {:class (ui/cs col-all number)} "Total"]]
+      [:div {:class "instrgrid--body divide-y"}
+       (map (fn [{:member/keys [name] :keys [coverages total]}]
+              [:div {:class "instrgrid--group"}
+               [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
+                [:span name]
+                [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
+               [:div {:class "divide-y"}
+                (map-indexed (fn [idx {:instrument.coverage/keys [private? value instrument cost] :keys [types]}]
+                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1" grid-class spacing)}
+                                [:div {:class (ui/cs col-all)} (icon/circle-dot {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"})]
+                                [:div {:class (ui/cs col-all "truncate")} (:instrument/name instrument)]
+                                [:div {:class (ui/cs col-all)} (band-or-private private?)]
+                                [:div {:class (ui/cs col-sm number)} 2]
+                                [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
+                                (map (fn [ct] [:div {:class (ui/cs col-sm number)}
+                                               (when ct (ui/money  (:insurance.coverage.type/cost ct) :EUR))]) types)
+                                [:div {:class (ui/cs col-all number)} (ui/money cost :EUR)]])
 
-     (ui/table-row-head table-headers)
-     (ui/table-body
-      (rt/map-indexed coverage-table-row req (map :instrument.coverage/coverage-id instrument-coverages))))))
+                             coverages)]
+               [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
+                [:div {:class (ui/cs col-all)}]
+                [:div {:class (ui/cs col-all)}]
+                [:div {:class (ui/cs col-all)}]
+                [:div {:class (ui/cs col-sm)}]
+                [:div {:class (ui/cs col-sm)}]
+                (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
+                [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
+
+            grouped-by-owner)]
+      [:div {:class "instragrid--footer"}
+       [:div {:class (ui/cs grid-class "min-w-full bg-gray-100  text-sm gap-1" spacing)}
+        [:div {:class (ui/cs col-all)}]
+        [:div {:class (ui/cs col-all)}]
+        [:div {:class (ui/cs col-all number number-total)}
+         [:span {:class "text-red-500" :title "Privat"} (str  "P" total-private-count " ")]  [:span {:class "text-green-500" :title "Band"} (str  "B" total-band-count)]]
+        [:div {:class (ui/cs col-sm number number-total)} total-instruments]
+        [:div {:class (ui/cs col-sm)}]
+        (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
+        [:div {:class (ui/cs col-all number number-total)} (ui/money total-cost :EUR)]]]])))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req}]
   (let [policy-id (-> req :policy :insurance.policy/policy-id)
@@ -568,9 +532,9 @@
                                            (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
                                 (coverage-create-form {:tr tr :path path}  non-covered-instruments (:insurance.policy/coverage-types policy)))
 
-       [:div {:class "mt-2"}
-        [:div {:class "px-4 sm:px-6 lg:px-8"}
-         [:div {:class "sm:flex sm:items-center"}
+       [:div {:class "mt-2 pt-8 bg-white"}
+        [:div {:class ""}
+         [:div {:class "px-4 sm:px-6 lg:px-8 sm:flex sm:items-center"}
           [:div {:class "sm:flex-auto"}
            [:h1 {:class "text-2xl font-semibold text-gray-900"} (tr [:insurance/covered-instruments])]
            [:p {:class "mt-2 text-sm text-gray-700"} ""]]
@@ -578,9 +542,8 @@
            (ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
                       :attr {:data-flyout-trigger (hash "slideover")})]]
 
-         [:div {:class "-mx-4 mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:-mx-6 md:mx-0 md:rounded-lg"}
-          [:table {:class "min-w-full divide-y divide-gray-300"}
-           (insurance-instrument-coverage-table req)]]]
+         [:div {:class "mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:mx-0 md:rounded-lg"}
+          (insurance-instrument-coverage-table req)]]
 
         [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
          (when (empty? instrument-coverages)
