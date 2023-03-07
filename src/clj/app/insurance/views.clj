@@ -123,7 +123,7 @@
                                            :priority :white
                                            :centered? true
                                            :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}}))}
-                   (ui/dl
+                   [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-3"}
                     (ui/dl-item (tr [:insurance/effective-at])
                                 (if edit?
                                   [:input {:type "date" :name "effective-at" :id "effective-at"
@@ -145,7 +145,7 @@
                                            :step "0.00000001" :min "0" :max "2.0"
                                            :required true
                                            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:max-w-xs sm:text-sm"}]
-                                  premium-factor))))]))))
+                                  premium-factor))])]))))
 
 (ctmx/defcomponent  insurance-coverage-types-item-ro [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
   (ui/dl-item name premium-factor))
@@ -201,7 +201,8 @@
                                            :attr {:hx-get (comp-name) :hx-vals {:add? true}  :hx-target (hash ".")})))}
                    (when (seq coverage-types)
                      [:form {:hx-post (comp-name) :hx-target (hash ".") :id (path "editform")}
-                      (ui/dl (rt/map-indexed (if edit? insurance-coverage-types-item-rw insurance-coverage-types-item-ro) req coverage-types))])
+                      [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8"}
+                       (rt/map-indexed (if edit? insurance-coverage-types-item-rw insurance-coverage-types-item-ro) req coverage-types)]])
                    (when add?
                      [:form {:hx-put (comp-name) :hx-target (hash ".")}
                       (ui/dl
@@ -292,7 +293,8 @@
 
                    (when (seq category-factors)
                      [:form {:hx-post (comp-name) :hx-target (hash ".") :id (path "editform")}
-                      (ui/dl (rt/map-indexed (if edit? insurance-category-factors-item-rw  insurance-category-factors-item-ro) req category-factors))])
+                      [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-3"}
+                       (rt/map-indexed (if edit? insurance-category-factors-item-rw  insurance-category-factors-item-ro) req category-factors)]])
                    (when add?
                      [:form {:hx-put (comp-name) :hx-target (hash ".")}
                       (ui/dl
