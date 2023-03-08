@@ -12,7 +12,10 @@
    [ctmx.response :as response]
    [ctmx.rt :as rt]
    [tick.core :as t]
-   [medley.core :as m]))
+   [medley.core :as m]
+   [app.util.http :as util.http]
+   [app.auth :as auth]
+   [hiccup.util :as hiccup.util]))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -150,12 +153,14 @@
 (ctmx/defcomponent  insurance-coverage-types-item-ro [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
   (ui/dl-item name premium-factor))
 
-(ctmx/defcomponent insurance-coverage-types-item-rw [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name premium-factor type-id]}]
+(ctmx/defcomponent insurance-coverage-types-item-rw [{:keys [db] :as req} idx {:insurance.coverage.type/keys [name description premium-factor type-id]}]
   (let [tr (i18n/tr-from-req req)]
     (ui/dl-item
-     (ui/text :label "Coverage Name" :name (path "name") :value name)
-     [:div {:class "mt-2"}
+     ""
+     [:div {:class "mt-2 flex flex-col gap-4"}
+      (ui/text :label "Coverage Name" :name (path "name") :value name)
       (ui/factor-input :label  (tr [:insurance/premium-factor]) :name (path "premium-factor") :value premium-factor)
+      (ui/text :label (tr [:insurance/coverage-type-description]) :name (path "description") :value description)
       (let [delete-id (path "delete")]
         [:div {:class "mt-2 relative flex items-start"}
          [:input {:type "hidden" :value type-id :name (path "type-id")}]
@@ -201,7 +206,7 @@
                                            :attr {:hx-get (comp-name) :hx-vals {:add? true}  :hx-target (hash ".")})))}
                    (when (seq coverage-types)
                      [:form {:hx-post (comp-name) :hx-target (hash ".") :id (path "editform")}
-                      [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8"}
+                      [:dl {:class (ui/cs "grid gap-x-4 gap-y-8" (if edit? "grid-cols-1" "grid-cols-3"))}
                        (rt/map-indexed (if edit? insurance-coverage-types-item-rw insurance-coverage-types-item-ro) req coverage-types)]])
                    (when add?
                      [:form {:hx-put (comp-name) :hx-target (hash ".")}
@@ -308,122 +313,65 @@
       (ui/trigger-response "refreshCoverages" body-result)
       body-result)))
 
-(defn remove-covered-instruments [all-instruments instrument-coverages]
-  (let [covered-instruments (map :instrument.coverage/instrument instrument-coverages)]
-    (remove
-     #(some (fn [covered-i]
-              (= (:instrument/instrument-id %) (:instrument/instrument-id covered-i)))
-            covered-instruments)
-     all-instruments)))
+#_(defn remove-covered-instruments [all-instruments instrument-coverages]
+    (let [covered-instruments (map :instrument.coverage/instrument instrument-coverages)]
+      (remove
+       #(some (fn [covered-i]
+                (= (:instrument/instrument-id %) (:instrument/instrument-id covered-i)))
+              covered-instruments)
+       all-instruments)))
 
 (defn band-or-private [tr private?]
   (if private?
     [:span {:class "text-red-500" :title (tr [:private-instrument])} "P"]
     [:span {:class "text-green-500" :title (tr [:band-instrument])} "B"]))
 
-(defn coverage-create-form [{:keys [tr]} non-covered-instruments coverage-types]
-  [:div {:class "flex flex-1 flex-col justify-between"}
-   [:div {:class "divide-y divide-gray-200 px-4 sm:px-6"}
-    [:div {:class "space-y-6 pt-6 pb-5"}
-     [:div
-      (ui/instrument-select :id "instrument-id" :instruments non-covered-instruments)]
+(defn instrument-form [{:keys [tr db] :as req} error {:instrument/keys [name owner make model build-year serial-number description] :as instrument}]
 
-     [:div
-      (ui/money-input :id "value" :label "Value" :required? true)]
+  (let [owner-id (if (:member/member-id owner)
+                   (:member/member-id owner)
+                   (:member/member-id (auth/get-current-member req)))]
 
-     [:fieldset
-      [:legend {:class "text-sm font-medium text-gray-900"} (tr [:insurance/coverage-types])]
-      [:div {:class "mt-2 space-y-5"}
-       (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
-                      [:div {:class "relative flex items-start"}
-                       [:div {:class "absolute flex h-5 items-center"}
-                        [:input {:id type-id :name "coverage-types" :type "checkbox"
-                                 :value type-id
-                                 :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
-                       [:div {:class "pl-7 text-sm"}
-                        [:label {:for type-id :class "font-medium text-gray-900"} name]
-                        [:p {:class "text-gray-500"} ""]]])
+    (list
+     (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error)
+     (ui/member-select :variant :left :label (tr [:instrument/owner]) :id "owner-member-id" :value owner-id :members (q/members-for-select db) :error error)
+     (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :categories (controller/instrument-categories db) :error error)
+     (ui/text-left :label (tr [:instrument/make]) :id  "make" :value make  :error error)
+     (ui/text-left :label (tr [:instrument/model]) :hint (tr [:instrument/if-available]) :id  "model" :value model :required? false :error error)
+     (ui/text-left :label (tr [:instrument/serial-number]) :hint (tr [:instrument/if-available]) :id  "serial-number" :value serial-number :required? false :error error)
+     (ui/text-left :label (tr [:instrument/build-year]) :hint (tr [:instrument/if-available]) :id  "build-year" :value build-year :required? false :error error)
+     (ui/textarea-left :label (tr [:instrument/description]) :hint (tr [:instrument/description-hint]) :name "description" :id "description" :value description :required? false :error error))))
 
-                    coverage-types)]]
+(defn coverage-form [{:keys [tr]} error coverage  coverage-types]
+  (let [{:instrument.coverage/keys [value private? instrument item-count types]} coverage
+        {:instrument/keys [name]} instrument]
+    (list
+     (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or  item-count 1) :error error)
+     (ui/money-input-left :id "value" :label (tr [:insurance/value]) :label-hint (tr [:insurance/value-hint]) :required? true :value value :error error)
+     (ui/checkbox-group-left :label (tr [:band-private]) :id "label-private-band"
+                             :label-hint (tr [:private-instrument-payment])
+                             :checkboxes (list
+                                          (ui/radio-left :name "private-band" :id "private" :value "private" :label (tr [:private-instrument]) :checked? private?
+                                                         :hint (tr [:private-instrument-description]))
+                                          (ui/radio-left :name "private-band" :id "band" :value "band" :label (tr [:band-instrument]) :checked? (not  private?)
+                                                         :hint (tr [:band-instrument-description]))))
+     [:input {:type :hidden :name "coverage-types" :value "00000000-0000-0000-0000-000000000000"}]
+     (ui/checkbox-group-left :label (tr [:insurance/coverage-types]) :id "coverage-type"
+                             :label-hint (tr [:private-instrument-payment])
+                             :checkboxes (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name description]}]
 
-     [:fieldset
-      [:legend {:class "text-sm font-medium text-gray-900"} (tr [:band-private])]
-      [:div {:class "mt-2 space-y-5"}
-       [:div {:class "relative flex items-start"}
-        [:div {:class "absolute flex h-5 items-center"}
-         [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
-        [:div {:class "pl-7 text-sm"}
-         [:label {:for "bandprivate-band" :class "font-medium text-gray-900"} (tr [:band-instrument])]
-         [:p {:class "text-gray-500"} (tr [:band-instrument-description])]]]
-       [:div
-        [:div {:class "relative flex items-start"}
-         [:div {:class "absolute flex h-5 items-center"}
-          [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
-         [:div {:class "pl-7 text-sm"}
-          [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
-          [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]])
+                                                        (let [checked? (m/find-first (fn [assigned-type]
+                                                                                       (= (:insurance.coverage.type/type-id assigned-type) type-id)) types)]
 
-(defn coverage-edit-form [{:keys [tr]} coverage-types coverage]
-  (let [{:instrument/keys [name make model build-year serial-number] :as instrument} (:instrument.coverage/instrument coverage)]
-    [:div {:class "flex flex-1 flex-col justify-between"}
-     [:div {:class "divide-y divide-gray-200 px-4 sm:px-6"}
-      [:div {:class "space-y-6 pt-6 pb-5"}
-       [:div
-        [:label {:class "block text-sm font-medium text-gray-900"} (tr [:instrument/name])]
-        [:div {:class "font-normal mt-2"}
-         [:p  name]
-         [:p
-          (str/join ", "
-                    (util/remove-nils
-                     (util/remove-empty-strings
-                      [make
-                       model
-                       build-year
-                       serial-number])))]]]
+                                                          (list
+                                                           (when (= 0 type-idx)
+                                                             [:input {:type :hidden :name "coverage-types" :value type-id}])
+                                                           (ui/checkbox-left :id type-id :label name :name "coverage-types"
+                                                                             :value type-id  :hint description
+                                                                             :checked? (if (= 0 type-idx) true checked?)
+                                                                             :disabled? (= 0 type-idx)))))
 
-       [:div
-        [:label {:class "block text-sm font-medium text-gray-900"} (tr [:instrument/owner])]
-        [:div {:class "mt-2 space-y-5 font-normal"}
-         (-> instrument :instrument/owner :member/name)]]
-
-       [:div
-        (ui/money-input :id "value" :label "Value" :required? true :value (:instrument.coverage/value coverage))]
-
-       [:fieldset
-        [:legend {:class "text-sm font-medium text-gray-900"} (tr [:insurance/coverage-types])]
-        [:div {:class "mt-2 space-y-5"}
-         [:input {:type "hidden" :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
-         (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name]}]
-                        [:div {:class "relative flex items-start"}
-                         [:div {:class "absolute flex h-5 items-center"}
-                          [:input {:id type-id :name "coverage-types" :type "checkbox"
-                                   :value type-id
-                                   :checked (some? (controller/get-coverage-type-from-coverage coverage type-id))
-                                   :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
-                         [:div {:class "pl-7 text-sm"}
-                          [:label {:for type-id :class "font-medium text-gray-900"} name]
-                          [:p {:class "text-gray-500"} ""]]])
-
-                      coverage-types)]]
-
-       [:fieldset
-        [:legend {:class "text-sm font-medium text-gray-900"} (tr [:band-private])]
-        [:div {:class "mt-2 space-y-5"}
-         [:div {:class "relative flex items-start"}
-          [:div {:class "absolute flex h-5 items-center"}
-           [:input {:id "bandprivate-band" :value "band" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
-                    :checked (not (:instrument.coverage/private? coverage))}]]
-          [:div {:class "pl-7 text-sm"}
-           [:label {:for "bandprivate-band" :class "font-medium text-gray-900"} (tr [:band-instrument])]
-           [:p {:class "text-gray-500"} (tr [:band-instrument-description])]]]
-         [:div
-          [:div {:class "relative flex items-start"}
-           [:div {:class "absolute flex h-5 items-center"}
-            [:input {:id "bandprivate-private" :value "private" :name "band-or-private" :type "radio" :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
-                     :checked (:instrument.coverage/private? coverage)}]]
-           [:div {:class "pl-7 text-sm"}
-            [:label {:for "bandprivate-private" :class "font-medium text-gray-900"} (tr [:private-instrument])]
-            [:p {:class "text-gray-500"} (tr [:private-instrument-description])]]]]]]]]]))
+                                                      coverage-types)))))
 
 (defn coverage-status-icon [tr status]
   [:span {:title (tr [status])}
@@ -525,8 +473,8 @@
        [:div {:class (ui/cs col-all)} ""]
        [:div {:class (ui/cs col-all "truncate")} (tr [:instrument/instrument])]
        [:div {:class (ui/cs col-all)} "Band?"]
-       [:div {:class (ui/cs col-sm number)} (tr [:insurance/count])]
-       [:div {:class (ui/cs col-sm number)} (tr [:insurance/value])]
+       [:div {:class (ui/cs col-sm number)} (tr [:insurance/item-count])]
+       [:div {:class (ui/cs col-sm number)} [:span {:title (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
        (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
        [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
       [:div {:class "instrgrid--body divide-y"}
@@ -536,21 +484,19 @@
                 [:span name]
                 [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
                [:div {:class "divide-y"}
-                (map-indexed (fn [idx {:instrument.coverage/keys [status private? value instrument cost] :keys [types]}]
+                (map-indexed (fn [idx {:instrument.coverage/keys [status private? value item-count instrument cost] :keys [types] :as coverage}]
                                [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
                                 [:div {:class (ui/cs col-all center-all)}
                                  [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
-                                          :_ "on click trigger checkboxChanged on #instr-select-all"
-                                          ;; :checked (if (= 0 idx) true false)
-                                          }]]
+                                          :_ "on click trigger checkboxChanged on #instr-select-all"}]]
                                 [:div {:class (ui/cs col-all)}
-                                 (coverage-status-icon tr :instrument.coverage.status/needs-review)]
+                                 (coverage-status-icon tr status)]
 
                                 [:div {:class (ui/cs col-all "truncate")}
-                                 [:a {:href "#" :class "text-medium"}
+                                 [:a {:href (url/link-coverage coverage) :class "text-medium"}
                                   (:instrument/name instrument)]]
                                 [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
-                                [:div {:class (ui/cs col-sm number)} 2]
+                                [:div {:class (ui/cs col-sm number)} item-count]
                                 [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
                                 (map (fn [ct] [:div {:class (ui/cs col-sm number)}
                                                (when ct (ui/money  (:insurance.coverage.type/cost ct) :EUR))]) types)
@@ -576,8 +522,151 @@
          [:span {:class "text-red-500" :title "Privat"} (str  "P" total-private-count " ")]  [:span {:class "text-green-500" :title "Band"} (str  "B" total-band-count)]]
         [:div {:class (ui/cs col-sm number number-total)} total-instruments]
         [:div {:class (ui/cs col-sm)}]
-        (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
+        (map (fn [_] [:div {:class (ui/cs col-md)}]) coverage-types)
         [:div {:class (ui/cs col-all number number-total)} (ui/money total-cost :EUR)]]]])))
+
+(ctmx/defcomponent ^:endpoint insurance-coverage-delete [{:keys [db tr] :as req}]
+  (when (util/delete? req)
+    (response/hx-redirect (url/link-policy (:policy (controller/delete-coverage! req))))))
+
+(ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
+  insurance-coverage-delete
+  (let [post? (util/post? req)
+        result (when post? (controller/update-instrument-and-coverage! req))
+        error (:error result)]
+    (if (and post? (not error))
+      (response/hx-redirect (url/link-policy (:policy result)))
+      (let [coverage-id (util.http/path-param-uuid! req :coverage-id)
+            coverage (controller/retrieve-coverage db coverage-id)
+            instrument (:instrument.coverage/instrument coverage)
+            policy (:insurance.policy/_covered-instruments coverage)
+            coverage-types (:insurance.policy/coverage-types policy)]
+        (assert coverage)
+        [:div {:id id}
+         (ui/panel {:title "Edit Instrument Coverage"}
+                   [:form {:hx-post (path ".") :class "space-y-8"  :hx-target (hash ".")}
+                    [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
+                     [:div {:class "space-y-6 sm:space-y-5"}
+                      [:div {:class "space-y-6 sm:space-y-5"}
+                       [:input {:type :hidden :name "policy-id" :value (:insurance.policy/policy-id policy)}]
+                       [:input {:type :hidden :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
+                       [:input {:type :hidden :name "instrument-id" :value (:instrument/instrument-id instrument)}]
+                       (ui/form-left-section :label (tr [:instrument/instrument]) :hint (tr [:instrument/create-subtitle]))
+                       (instrument-form req error instrument)
+                       (ui/form-left-section :label (tr [:insurance/instrument-coverage]) :hint (tr [:insurance/coverage-for] [(:insurance.policy/name policy)]))
+                       (coverage-form {:tr tr :path path} error coverage coverage-types)
+                       (ui/form-buttons
+                        :buttons-left (list
+                                       (ui/button {:label (tr [:action/delete]) :priority :white-destructive
+                                                   :hx-delete (util/endpoint-path insurance-coverage-delete)
+                                                   :hx-target (hash ".")
+                                                   :hx-vals {:coverage-id (str coverage-id)}
+                                                   :hx-confirm (tr [:action/confirm-generic])}))
+                        :buttons-right (list
+                                        (ui/link-button {:label (tr [:action/cancel]) :priority :white
+                                                         :attr {:href (url/link-policy policy)}})
+                                        (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
+
+(ctmx/defcomponent ^:endpoint insurance-coverage-create-page3 [{:keys [db tr] :as req}]
+  (let [post? (util/post? req)
+        result (when post? (controller/upsert-coverage! req))
+        error (:error result)]
+    (if (and post? (not error))
+      (response/hx-redirect (url/link-policy (:policy result)))
+      (let [policy-id (util.http/path-param-uuid! req :policy-id)
+            instrument-id  (util.http/path-param-uuid! req :instrument-id)
+            policy (controller/retrieve-policy db policy-id)
+            coverage-types (:insurance.policy/coverage-types policy)]
+        [:div {:id id}
+         [:div {:class "flex justify-center items-center mt-10"}
+          (ui/step-circles 3 3)]
+         (ui/panel {:title (tr [:insurance/instrument-coverage])}
+                   [:form {:hx-post (path ".") :class "space-y-8" :hx-target (hash ".")}
+                    [:input {:type :hidden :name "policy-id" :value policy-id}]
+                    [:input {:type :hidden :name "instrument-id" :value instrument-id}]
+                    (coverage-form {:tr tr :path path} error nil coverage-types)
+                    (ui/form-buttons
+                     :buttons-left
+                     (list
+                      (ui/link-button {:attr {:href (url/link-coverage-create2 policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                     :buttons-right
+                     (list
+                      (ui/button {:label (tr [:action/save]) :priority :primary-orange})))])]))))
+
+(ctmx/defcomponent ^:endpoint image-upload [{:keys [db tr] :as req}]
+  (let [post? (util/post? req)
+        ;; result (when post? (controller/update-instrument-and-coverage! req))
+        ;; error (:error result)
+        instrument-id  (util.http/path-param-uuid! req :instrument-id)
+        policy-id (util.http/path-param-uuid! req :policy-id)
+        result nil
+        error nil]
+    ;; (tap> {:instrument-id instrument-id})
+    ;; (when error (tap> error))
+    (if (and post?)
+      (response/hx-redirect (url/link-coverage-create3 policy-id instrument-id))
+
+      (let [comp-name (util/comp-namer #'image-upload)
+            policy-id (util.http/path-param-uuid! req :policy-id)
+            policy (controller/retrieve-policy db policy-id)
+            instrument nil]
+        [:div {:id id}
+         [:div {:class "flex justify-center items-center mt-10"}
+          (ui/step-circles 3 2)]
+         (ui/panel {:title (tr [:instrument/photo-upload-title])
+                    :subtitle (tr [:instrument/photo-upload-subtitle])}
+                   [:script
+                    (hiccup.util/raw-string
+                     "
+document.addEventListener('DOMContentLoaded', function() {
+console.log('wut');
+  Dropzone.options.imageUpload = {
+    paramName: 'file',
+    maxFileSize: 10, //MB
+    addRemoveLinks: true,
+  };
+});
+")]
+                   [:form {:action (path ".") :class "dropzone space-y-8" :id (util/id :comp/imageUpload)}
+                    [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
+                     [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
+                      [:div {:class "space-y-1 text-center"}
+                       [:svg {:class "mx-auto h-12 w-12 text-gray-400", :stroke "currentColor", :fill "none", :viewbox "0 0 48 48", :aria-hidden "true"}
+                        [:path {:d "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", :stroke-width "2", :stroke-linecap "round", :stroke-linejoin "round"}]]
+                       [:div {:class "flex text-sm text-gray-600 justify-center"}
+                        [:label {:for "file-upload" :class "relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500"}
+                         [:span "Upload a file"]]
+                        [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
+                       [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]
+                   (ui/form-buttons
+                    :buttons-left
+                    (list
+                     (ui/link-button {:attr {:href (url/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                    :buttons-right
+                    (list
+                     (ui/link-button {:attr {:href (url/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))))
+
+(ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
+  (let [post? (util/post? req)
+        result (when post? (controller/upsert-instrument! req))
+        error (:error result)
+        instrument-id (if post?
+                        (-> result :instrument :instrument/instrument-id)
+                        (util.http/query-param-uuid req :instrument-id))
+        policy-id (util.http/path-param-uuid! req :policy-id)]
+    (if (and post? (not error))
+      (response/hx-redirect (url/link-coverage-create2 policy-id instrument-id))
+      (let [instrument (when instrument-id (controller/retrieve-instrument db instrument-id))]
+        [:div {:id id}
+         [:div {:class "flex justify-center items-center mt-10"}
+          (ui/step-circles 3 1)]
+         (ui/panel {:title (tr [:instrument/create-title])}
+                   [:form {:hx-post (path ".") :class "space-y-8" :hx-target (hash ".")}
+                    [:input {:type :hidden :name "instrument-id" :value instrument-id}]
+                    (instrument-form req error instrument)
+                    (ui/form-buttons :buttons-right
+                                     (list
+                                      (ui/button {:label (tr [:action/next]) :priority :primary-orange})))])]))))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req}]
   (let [policy-id (-> req :policy :insurance.policy/policy-id)
@@ -593,19 +682,10 @@
                   (controller/update-coverage-types! req policy-id))
                  :else
                  (:policy req))
-        instrument-coverages (:insurance.policy/covered-instruments policy)
-        non-covered-instruments (remove-covered-instruments (controller/instruments db) instrument-coverages)]
+        instrument-coverages (:insurance.policy/covered-instruments policy)]
     (if (and put? policy)
       ctmx.response/hx-refresh
       [:div {:id id :hx-trigger "refreshCoverages from:body" :hx-get (comp-name)}
-       (ui/slideover-panel-form {:title "Edit Instrument Coverage" :id (path "slideover")
-                                 :form-attrs {:hx-put (comp-name) :hx-target (hash ".")}
-                                 :buttons (list
-                                           (ui/button {:label (tr [:action/delete]) :priority :white-destructive :hx-delete (comp-name) :hx-target (hash ".") :hx-confirm (tr [:action/confirm-generic])})
-                                           (ui/button {:label (tr [:action/cancel]) :priority :white :attr {:_ (ui/slideover-extra-close-script (path "slideover")) :type "button"}})
-                                           (ui/button {:label (tr [:action/save]) :priority :primary-orange}))}
-                                (coverage-create-form {:tr tr :path path}  non-covered-instruments (:insurance.policy/coverage-types policy)))
-
        [:div {:class "mt-8 grid w-full grid-cols-1 gap-6  lg:grid-flow-col-dense lg:grid-cols-3" :id id}
         [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}
          [:section
@@ -615,8 +695,8 @@
              [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} (tr [:insurance/covered-instruments])]]
             [:div {:class "space-x-2 flex"}
              (list
-              (ui/button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
-                         :attr {:data-flyout-trigger (hash "slideover")}))]]
+              (ui/link-button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
+                              :attr {:href (url/link-coverage-create policy-id)}))]]
            [:div {:class "border-t border-gray-200 py-5"}
             [:div {:class "mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:mx-0 md:rounded-lg"}
              (insurance-instrument-coverage-table req)]]]]]]
@@ -635,9 +715,9 @@
             [:div
              "You should add a coverage to an instrument"]
             [:div
-             (ui/button :label (tr [:insurance/instrument-coverage])
-                        :priority :primary :icon icon/plus
-                        :attr {:data-flyout-trigger (hash "slideover")})]])]]])))
+             (ui/link-button :label (tr [:insurance/instrument-coverage])
+                             :attr {:href (url/link-coverage-create policy-id)}
+                             :priority :primary :icon icon/plus)]])]]])))
 
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
   [:div
@@ -700,106 +780,106 @@
                      (tr [:action/create])]]]])])))
 
 (ctmx/defcomponent ^:endpoint instrument-create-page [{:keys [tr db] :as req}]
-  (if (util/post? req)
-    (do
-      (response/hx-redirect (url/link-instrument
-                             (:instrument (controller/create-instrument! req)))))
+  #_(if (util/post? req)
+      (do
+        (response/hx-redirect (url/link-instrument
+                               (:instrument (controller/create-instrument! req)))))
 
-    [:div
-     (ui/page-header :title (tr [:instrument/create-title])
-                     :subtitle (tr [:instrument/create-subtitle]))
-     (ui/panel {}
-               [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
-                [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
-                 [:div {:class "space-y-6 sm:space-y-5"}
-                  [:div
-                   [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
-                   [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
-                  [:div {:class "space-y-6 sm:space-y-5"}
-                   (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-member-id") :members (q/members-for-select db) :variant :left)
-                   (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
-                   (ui/text-left :label (tr [:instrument/name]) :id (path "name"))
-                   (ui/text-left :label (tr [:instrument/make]) :id (path "make"))
-                   (ui/text-left :label (tr [:instrument/model]) :id (path "model"))
-                   (ui/text-left :label (tr [:instrument/serial-number]) :id (path "serial-number") :required? false)
-                   (ui/text-left :label (tr [:instrument/build-year]) :id (path "build-year") :required? false)]]]
+      [:div
+       (ui/page-header :title (tr [:instrument/create-title])
+                       :subtitle (tr [:instrument/create-subtitle]))
+       (ui/panel {}
+                 [:form {:hx-post (path ".") :class "space-y-8 divide-y divide-gray-200"}
+                  [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
+                   [:div {:class "space-y-6 sm:space-y-5"}
+                    [:div
+                     [:h3 {:class "text-lg font-medium leading-6 text-gray-900"}]
+                     [:p {:class "mt-1 max-w-2xl text-sm text-gray-500"}]]
+                    [:div {:class "space-y-6 sm:space-y-5"}
+                     (ui/member-select :label (tr [:instrument/owner])  :id (path "owner-member-id") :members (q/members-for-select db) :variant :left)
+                     (ui/instrument-category-select :variant :left :id (path "category-id") :categories (controller/instrument-categories db))
+                     (ui/text-left :label (tr [:instrument/name]) :id (path "name"))
+                     (ui/text-left :label (tr [:instrument/make]) :id (path "make"))
+                     (ui/text-left :label (tr [:instrument/model]) :id (path "model"))
+                     (ui/text-left :label (tr [:instrument/serial-number]) :id (path "serial-number") :required? false)
+                     (ui/text-left :label (tr [:instrument/build-year]) :id (path "build-year") :required? false)]]]
 
-                [:div {:class "pt-5"}
-                 [:div {:class "flex justify-end"}
-                  [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-                   (tr [:action/cancel])]
-                  [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
-                   (tr [:action/create])]]]])]))
+                  [:div {:class "pt-5"}
+                   [:div {:class "flex justify-end"}
+                    [:a {:href "/insurance" :class "rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
+                     (tr [:action/cancel])]
+                    [:button {:type "submit" :class "ml-3 inline-flex justify-center rounded-md border border-transparent bg-sno-orange-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-sno-orange-700 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"}
+                     (tr [:action/create])]]]])]))
 
 (ctmx/defcomponent ^:endpoint instrument-detail-page [{:keys [db] :as req} ^:boolean edit?]
-  (let [post? (util/post? req)
-        comp-name (util/comp-namer #'instrument-detail-page)
-        tr (i18n/tr-from-req req)
-        instrument-id  (parse-uuid  (-> req :path-params :instrument-id))
-        {:instrument/keys [name make build-year model serial-number] :as instrument} (controller/retrieve-instrument db instrument-id)
-        result (and post? (controller/update-instrument! req instrument-id))]
-    (if (:instrument result)
-      (response/hx-redirect (url/link-instrument instrument-id))
-      [(if edit? :form :div)
-       (if edit?
-         {:hx-post (comp-name) :hx-target (hash ".") :id id}
-         {:hx-target "this" :id id})
-       (ui/page-header :title (if edit?
-                                (ui/text :label "Name" :name (path "name") :value name)
-                                name)
-                       :buttons (if edit?
-                                  (list
-                                   (ui/button :label "Cancel"
-                                              :priority :white
-                                              :centered? true
-                                              :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? false}})
-                                   (ui/button :label "Save"
-                                              :priority :primary
-                                              :centered? true))
-                                  (ui/button :label "Edit"
-                                             :priority :white
-                                             :centered? true
-                                             :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}})))
+  #_(let [post? (util/post? req)
+          comp-name (util/comp-namer #'instrument-detail-page)
+          tr (i18n/tr-from-req req)
+          instrument-id  (parse-uuid  (-> req :path-params :instrument-id))
+          {:instrument/keys [name make build-year model serial-number] :as instrument} (controller/retrieve-instrument db instrument-id)
+          result (and post? (controller/update-instrument! req instrument-id))]
+      (if (:instrument result)
+        (response/hx-redirect (url/link-instrument instrument-id))
+        [(if edit? :form :div)
+         (if edit?
+           {:hx-post (comp-name) :hx-target (hash ".") :id id}
+           {:hx-target "this" :id id})
+         (ui/page-header :title (if edit?
+                                  (ui/text :label "Name" :name (path "name") :value name)
+                                  name)
+                         :buttons (if edit?
+                                    (list
+                                     (ui/button :label "Cancel"
+                                                :priority :white
+                                                :centered? true
+                                                :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? false}})
+                                     (ui/button :label "Save"
+                                                :priority :primary
+                                                :centered? true))
+                                    (ui/button :label "Edit"
+                                               :priority :white
+                                               :centered? true
+                                               :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}})))
 
-       [:div {:class "mt-6 sm:px-6 lg:px-8"}
-        [:div {:class "mx-auto mt-6 max-w-5xl px-4 py-4 sm:px-6 lg:px-8 bg-white rounded-md"}
-         [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
-          [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/owner])]
-           [:dd {:class "mt-1 text-sm text-gray-900"}
-            (if edit?
-              (ui/member-select :variant :inline-no-label :id (path "owner-member-id") :members (q/members-for-select db))
-              (-> instrument :instrument/owner :member/name))]]
-          [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/category])]
-           [:dd {:class "mt-1 text-sm text-gray-900"}
-            (if edit?
-              (ui/instrument-category-select :variant :inline-no-label :id (path "category-id") :categories (controller/instrument-categories db))
-              (-> instrument :instrument/category :instrument.category/name))]]
-          [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/make])]
-           [:dd {:class "mt-1 text-sm text-gray-900"}
-            (if edit?
-              (ui/text :label "" :name (path "make") :value make)
-              make)]]
-          [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/model])]
-           [:dd {:class "mt-1 text-sm text-gray-900"}
-            (if edit?
-              (ui/text :label "" :name (path "model") :value model :required? false)
-              model)]]
-          [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/build-year])]
-           [:dd {:class "mt-1 text-sm text-gray-900"}
-            (if edit?
-              (ui/text :label "" :name (path "build-year") :value build-year :required? false)
-              build-year)]]
-          [:div {:class "sm:col-span-1"}
-           [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/serial-number])]
-           [:dd {:class "mt-1 text-sm text-gray-900"}
-            (if edit?
-              (ui/text :label "" :name (path "serial-number") :value serial-number  :required? false)
-              serial-number)]]]]]])))
+         [:div {:class "mt-6 sm:px-6 lg:px-8"}
+          [:div {:class "mx-auto mt-6 max-w-5xl px-4 py-4 sm:px-6 lg:px-8 bg-white rounded-md"}
+           [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/owner])]
+             [:dd {:class "mt-1 text-sm text-gray-900"}
+              (if edit?
+                (ui/member-select :variant :inline-no-label :id (path "owner-member-id") :members (q/members-for-select db))
+                (-> instrument :instrument/owner :member/name))]]
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/category])]
+             [:dd {:class "mt-1 text-sm text-gray-900"}
+              (if edit?
+                (ui/instrument-category-select :variant :inline-no-label :id (path "category-id") :categories (controller/instrument-categories db))
+                (-> instrument :instrument/category :instrument.category/name))]]
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/make])]
+             [:dd {:class "mt-1 text-sm text-gray-900"}
+              (if edit?
+                (ui/text :label "" :name (path "make") :value make)
+                make)]]
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/model])]
+             [:dd {:class "mt-1 text-sm text-gray-900"}
+              (if edit?
+                (ui/text :label "" :name (path "model") :value model :required? false)
+                model)]]
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/build-year])]
+             [:dd {:class "mt-1 text-sm text-gray-900"}
+              (if edit?
+                (ui/text :label "" :name (path "build-year") :value build-year :required? false)
+                build-year)]]
+            [:div {:class "sm:col-span-1"}
+             [:dt {:class "text-sm font-medium text-gray-500"} (tr [:instrument/serial-number])]
+             [:dd {:class "mt-1 text-sm text-gray-900"}
+              (if edit?
+                (ui/text :label "" :name (path "serial-number") :value serial-number  :required? false)
+                serial-number)]]]]]])))
 
 (ctmx/defcomponent ^:endpoint  insurance-index-page [{:keys [db] :as req}]
   insurance-policy-duplicate
@@ -824,17 +904,17 @@
                    [:li
                     (policy-row tr policy)]) policies)])]])
 
-     (let [instruments (controller/instruments db)]
-       [:div {:class "mt-6 sm:px-6 lg:px-8"}
-        (ui/divider-left (tr [:instruments]) (ui/link-button :label (tr [:instrument/instrument])
-                                                             :priority :white-rounded
-                                                             :centered? true
-                                                             :attr {:href "/instrument-new/"} :icon icon/plus))
-        [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"
-               :id "songs-list"}
-         (if (empty? instruments)
-           "No Instruments"
-           [:ul {:role "list", :class "divide-y divide-gray-200"}
-            (map (fn [instrument]
-                   [:li
-                    (instrument-row instrument)]) instruments)])]])]))
+     #_(let [instruments (controller/instruments db)]
+         [:div {:class "mt-6 sm:px-6 lg:px-8"}
+          (ui/divider-left (tr [:instruments]) (ui/link-button :label (tr [:instrument/instrument])
+                                                               :priority :white-rounded
+                                                               :centered? true
+                                                               :attr {:href "/instrument-new/"} :icon icon/plus))
+          [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"
+                 :id "songs-list"}
+           (if (empty? instruments)
+             "No Instruments"
+             [:ul {:role "list", :class "divide-y divide-gray-200"}
+              (map (fn [instrument]
+                     [:li
+                      (instrument-row instrument)]) instruments)])]])]))

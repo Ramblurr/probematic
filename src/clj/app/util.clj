@@ -250,6 +250,11 @@
        (group-by f)
        (mapv (fn [[k v]] (assoc k new-k v)))))
 
+(def dummy-uuid #uuid "00000000-0000-0000-0000-000000000000")
+
+(defn remove-dummy-uuid [coll]
+  (remove #(= dummy-uuid %) coll))
+
 (comment
   (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])
 

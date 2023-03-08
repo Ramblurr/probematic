@@ -11,11 +11,10 @@
 
 (defn xxx
   ([x msg]
-   (tap> msg)
-   (tap> x)
+   (tap> {:msg msg :xxx x})
    x)
   ([x]
-   (tap> x)
+   (tap> {:xxx x})
    x))
 
 (defmacro debug* [args]

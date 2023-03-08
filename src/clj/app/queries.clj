@@ -58,23 +58,41 @@
 
 (def instrument-coverage-detail-pattern
   [:instrument.coverage/coverage-id
+   :instrument.coverage/private?
+   :instrument.coverage/value
+   :instrument.coverage/item-count
+   {:insurance.policy/_covered-instruments
+    [:insurance.policy/policy-id
+     :insurance.policy/currency
+     :insurance.policy/name
+     :insurance.policy/effective-at
+     :insurance.policy/effective-until
+     :insurance.policy/premium-factor
+     {:insurance.policy/coverage-types
+      [:insurance.coverage.type/name :insurance.coverage.type/description :insurance.coverage.type/premium-factor :insurance.coverage.type/type-id]}
+     {:insurance.policy/category-factors
+      [{:insurance.category.factor/category
+        [:instrument.category/name
+         :instrument.category/category-id]}
+       :insurance.category.factor/factor
+       :insurance.category.factor/category-factor-id]}]}
    {:instrument.coverage/instrument
     [:instrument/name
      :instrument/instrument-id
      :instrument/make
      :instrument/model
+     :instrument/description
      :instrument/serial-number
      :instrument/build-year
-     {:instrument/owner [:member/name]}
+     {:instrument/owner [:member/name :member/member-id]}
      {:instrument/category [:instrument.category/category-id
                             :instrument.category/code
                             :instrument.category/name]}]}
    {:instrument.coverage/types
     [:insurance.coverage.type/name
+     :insurance.coverage.type/description
      :insurance.coverage.type/type-id
-     :insurance.coverage.type/premium-factor]}
-   :instrument.coverage/private?
-   :instrument.coverage/value])
+     :insurance.coverage.type/premium-factor]}])
 (def policy-pattern [:insurance.policy/policy-id
                      :insurance.policy/currency
                      :insurance.policy/name
@@ -83,6 +101,10 @@
                      :insurance.policy/premium-factor
                      {:insurance.policy/covered-instruments
                       [:instrument.coverage/coverage-id
+                       :instrument.coverage/private?
+                       :instrument.coverage/value
+                       :instrument.coverage/item-count
+                       :instrument.coverage/status
                        {:instrument.coverage/instrument
                         [:instrument/name
                          :instrument/instrument-id
@@ -92,12 +114,11 @@
                                                 :instrument.category/name]}]}
                        {:instrument.coverage/types
                         [:insurance.coverage.type/name
+                         :insurance.coverage.type/description
                          :insurance.coverage.type/type-id
-                         :insurance.coverage.type/premium-factor]}
-                       :instrument.coverage/private?
-                       :instrument.coverage/value]}
+                         :insurance.coverage.type/premium-factor]}]}
                      {:insurance.policy/coverage-types
-                      [:insurance.coverage.type/name :insurance.coverage.type/premium-factor :insurance.coverage.type/type-id]}
+                      [:insurance.coverage.type/description :insurance.coverage.type/name :insurance.coverage.type/premium-factor :insurance.coverage.type/type-id]}
                      {:insurance.policy/category-factors
                       [{:insurance.category.factor/category
                         [:instrument.category/name
@@ -116,6 +137,7 @@
                                 :instrument/instrument-id
                                 :instrument/make
                                 :instrument/model
+                                :instrument/description
                                 :instrument/build-year
                                 :instrument/serial-number
                                 {:instrument/owner [:member/name :member/member-id]}
@@ -265,6 +287,15 @@
               db pattern
               (d/ref member :member/member-id)
               (d/ref policy :insurance.policy/policy-id))
+   (map first)))
+
+(defn coverages-for-instrument [db instrument-id pattern]
+  (->>
+   (datomic/q '[:find (pull ?coverages pattern)
+                :in $ pattern ?instrument
+                :where
+                [?coverages :instrument.coverage/instrument ?instrument]]
+              db pattern [:instrument/instrument-id instrument-id])
    (map first)))
 
 (defn retrieve-all-songs [db]

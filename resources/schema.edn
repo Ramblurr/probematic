@@ -558,6 +558,11 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :instrument/description
+    :db/doc "A longer description of the instrument"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :instrument/instrument-id
     :db/doc "The id of the instrument"
     :db/unique :db.unique/identity
@@ -615,9 +620,19 @@
     :db/valueType :db.type/uuid
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :instrument.coverage/status
+    :db/doc "The workflow status of this coverage."
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :instrument.coverage/instrument
     :db/doc "The instrument that is covered"
     :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.coverage/item-count
+    :db/doc "The number of items this entity represents"
+    :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :instrument.coverage/types
@@ -633,6 +648,11 @@
    {:db/ident :instrument.coverage/value
     :db/doc "The value of the instrument"
     :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :instrument.coverage/insurer-id
+    :db/doc "The ID used by the insurance provider"
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
 ;;;; Insurance - Policy

@@ -1,9 +1,9 @@
 (ns app.util.http
   (:require
-   [ctmx.form :as form]
-   [medley.core :as m]
+   [app.util :as util]
    [clojure.string :as str]
-   [app.util :as util]))
+   [ctmx.form :as form]
+   [medley.core :as m]))
 
 (defn unwrap-params
   ([req] (-> req :form-params form/json-params-pruned))
@@ -15,14 +15,28 @@
   [req k]
   (-> req :path-params k))
 
+(defn query-param
+  "Fetches the query param k"
+  [req k]
+  (-> req :params k))
+
+(defn query-param-uuid
+  "Fetches the  param k coerced as a uuid"
+  [req k]
+  (util/ensure-uuid (query-param req k)))
+
+(defn query-param-uuid!
+  "Like query-param-uuid but throws if the param doesn't exist."
+  [req k]
+  (util/ensure-uuid! (query-param req k)))
+
 (defn path-param-uuid
   "Fetches the path param k coerced as a uuid"
   [req k]
-  (util/ensure-uuid
-   (path-param req k)))
+  (util/ensure-uuid (path-param req k)))
 
 (defn path-param-uuid!
-  "Like path-param uuid but throws if the param doesn't exist."
+  "Like path-param-uuid but throws if the param doesn't exist."
   [req k]
   (util/ensure-uuid! (path-param req k)))
 

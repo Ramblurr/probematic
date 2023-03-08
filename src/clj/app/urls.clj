@@ -21,6 +21,7 @@
 
 (def link-policy (partial link-helper "/insurance-policy/" :insurance.policy/policy-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
+(def link-coverage (partial link-helper "/insurance-coverage/" :instrument.coverage/coverage-id))
 
 (defn link-gigs-home [] "/gigs/")
 (defn link-songs-home [] "/songs/")
@@ -28,6 +29,11 @@
 (defn link-gig-create [] "/gigs/new/")
 (defn link-gig-archive [] "/gigs/archive/")
 (defn link-insurance [] "/insurance/")
+(defn link-coverage-create
+  ([policy-id] (link-coverage-create policy-id nil))
+  ([policy-id instrument-id] (str "/insurance-coverage-create/" policy-id "/" (when instrument-id (str "?instrument-id=" instrument-id)))))
+(defn link-coverage-create2 [policy-id instrument-id] (str "/insurance-coverage-create2/" policy-id "/" instrument-id "/"))
+(defn link-coverage-create3 [policy-id instrument-id] (str "/insurance-coverage-create3/" policy-id "/" instrument-id "/"))
 
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))

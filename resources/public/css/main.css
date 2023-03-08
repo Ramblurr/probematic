@@ -14,6 +14,27 @@
 
 @import "./tablegrid.css";
 
+/*@import "./dropzone@6.0.0-beta.2.css";*/
+@import "./dropzone@6.0.0-beta.2.css";
+
+.dropzone {
+    /*@apply sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5;
+     */
+  @apply border-2 border-dashed border-gray-300 ;
+}
+.dropzone .dz-preview .dz-image {
+    @apply rounded;
+    overflow: hidden;
+    width: 120px;
+    height: 120px;
+    position: relative;
+    display: block;
+    z-index: 10;
+}
+.dz-remove {
+  @apply relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500;
+}
+
 
 :root {
   --yellow-400: #F5F569;

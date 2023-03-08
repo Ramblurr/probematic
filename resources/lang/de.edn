@@ -51,6 +51,7 @@
  :instrument
  {:category "Kategorie",
   :build-year "Baujahr",
+  :if-available "falls bekannt"
   :serial-number "Seriennummer",
   :make "Marke",
   :instrument "Instrument",

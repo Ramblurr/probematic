@@ -56,6 +56,7 @@
    [:script {:src (str relative-prefix "/js/popperjs@2-dev.js")}]
    [:script {:src (str relative-prefix "/js/tippy@6-dev.js")}]
    [:script {:src (str relative-prefix "/js/sortable@1.14.0.js")}]
+   [:script {:src (str relative-prefix "/js/dropzone@6.0.0-beta.2.min.js")}]
    [:script {:src (str relative-prefix "/js/app.js") :type :module}]))
 
 (defn html5-response
