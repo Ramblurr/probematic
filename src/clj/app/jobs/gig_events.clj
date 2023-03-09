@@ -4,7 +4,7 @@
    [app.email :as email]
    [chime.core :as chime]
    [clojure.data]
-   [app.routes.errors :as errors]
+   [app.errors :as errors]
    [datomic.client.api :as datomic])
   (:import [java.time Instant]))
 

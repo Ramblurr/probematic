@@ -1,25 +1,25 @@
 (ns app.jobs.sync-gigs
-  (:require [app.debug :as debug]
-            [app.features :as f]
-            [app.gigo :as gigo]
-            [app.gigo.core :as gigo.core]
-            [app.gigs.domain :as domain]
-            [app.util :as util]
-            [clojure.set :as set]
-            [clojure.string :as s]
-            [datomic.client.api :as datomic]
-            [app.datomic :as d]
-            [integrant.repl.state :as state]
-            [ol.jobs-util :as jobs]
-            [tick.core :as t]
-            [app.discourse :as discourse]
-            [clojure.tools.logging :as log]
-            [app.routes.errors :as errors]
-            [com.yetanalytics.squuid :as sq]
-            [app.queries :as q]
-            [app.gigs.service :as service])
-
-  (:import (java.time DayOfWeek)))
+  (:require
+   [app.datomic :as d]
+   [app.discourse :as discourse]
+   [app.errors :as errors]
+   [app.features :as f]
+   [app.gigo :as gigo]
+   [app.gigo.core :as gigo.core]
+   [app.gigs.domain :as domain]
+   [app.gigs.service :as service]
+   [app.queries :as q]
+   [app.util :as util]
+   [clojure.set :as set]
+   [clojure.string :as s]
+   [clojure.tools.logging :as log]
+   [com.yetanalytics.squuid :as sq]
+   [datomic.client.api :as datomic]
+   [integrant.repl.state :as state]
+   [ol.jobs-util :as jobs]
+   [tick.core :as t])
+  (:import
+   (java.time DayOfWeek)))
 
 (defn at-midnight [d]
   (when d

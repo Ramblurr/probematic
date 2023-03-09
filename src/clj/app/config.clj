@@ -1,8 +1,4 @@
-(ns app.config
-  (:require
-
-   [app.debug :as debug]
-   [clojure.string :as str]))
+(ns app.config)
 
 (defn profile [env]
   (-> env :ig/system :app.ig/profile))

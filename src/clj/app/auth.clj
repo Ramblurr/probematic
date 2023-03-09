@@ -2,6 +2,7 @@
   (:require
    [app.config :as config]
    [app.render :as render]
+   [app.errors :as errors]
    [app.secret-box :as secret-box]
    [app.session :refer [redis-store]]
    [app.util :as util]
@@ -13,8 +14,7 @@
    [io.pedestal.http.ring-middlewares :as ring-middlewares]
    [jsonista.core :as j]
    [medley.core :as m]
-   [org.httpkit.client :as http]
-   [app.routes.errors :as errors]))
+   [org.httpkit.client :as http]))
 
 (defn throw-unauthorized
   ([msg data]

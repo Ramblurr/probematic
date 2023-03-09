@@ -8,7 +8,8 @@
             [app.demo :as demo]
             [medley.core :as m]
             [clojure.tools.logging :as log]
-            [integrant.repl.state :as state]))
+            [integrant.repl.state :as state]
+            [app.auth :as auth]))
 
 (defn ident-has-attr?
   [db ident attr]

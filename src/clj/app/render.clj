@@ -1,11 +1,10 @@
 (ns app.render
   (:require
-
+   [clojure.java.io :as io]
    [ctmx.render :as ctmx.render]
    [hiccup.page :as hiccup.page]
    [hiccup.util :as hiccup.util]
-   [hiccup2.core :refer [html]]
-   [clojure.java.io :as io]))
+   [hiccup2.core :refer [html]]))
 
 (defmacro html5-safe
   "Create a HTML5 document with the supplied contents. Using hiccup2.core/html to auto escape strings"

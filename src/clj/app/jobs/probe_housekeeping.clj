@@ -5,7 +5,7 @@
    [app.gigs.domain :as domain]
    [app.probeplan :as probeplan]
    [app.queries :as q]
-   [app.routes.errors :as errors]
+   [app.errors :as errors]
    [chime.core :as chime]
    [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]

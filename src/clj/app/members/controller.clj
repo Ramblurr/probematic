@@ -6,7 +6,7 @@
    [app.i18n :as i18n]
    [app.keycloak :as keycloak]
    [app.queries :as q]
-   [app.routes.errors :as errors]
+   [app.errors :as errors]
    [app.secret-box :as secret-box]
    [app.twilio :as twilio]
    [app.util :as util]
