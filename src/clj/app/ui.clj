@@ -1001,7 +1001,7 @@
   (when dt
     (let [local-dt (cond (inst? dt) (t/date-time dt)
                          :else dt)]
-      [:time {:datetime (str local-dt)}
+      [:time {:datetime (str local-dt) :title (format-dt dt)}
        (humanize/from local-dt)])))
 
 (defn dl-item

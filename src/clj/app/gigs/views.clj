@@ -605,9 +605,9 @@ on change if I match <:checked/>
                [:ul {:class "sortable p-0 m-0 grid grid-cols-1 gap-y-0 md:gap-x-2 max-w-sm"}
                 (rt/map-indexed gig-probeplan-sort-item req selected-songs)]])))
 
-(defn gigs-detail-page-probeplan-list-ro [selected-songs]
+(defn gigs-detail-page-probeplan-list-ro [tr selected-songs]
   [:div {:class "mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2" :hx-boost "true"}
-   (map (fn [{:song/keys [title] :keys [emphasis] :as song}]
+   (map (fn [{:song/keys [title last-played-on] :keys [emphasis] :as song}]
           (let [intensive? (= emphasis :probeplan.emphasis/intensive)]
             [:div {:class
                    (ui/cs
@@ -620,7 +620,8 @@ on change if I match <:checked/>
               [:a {:href (url/link-song song) :class "focus:outline-none"  :hx-boost "true"}
                [:span {:class "absolute inset-0" :aria-hidden "true"}]
                [:p {:class "text-sm font-medium text-gray-900"} title]
-               [:p {:class "truncate text-sm text-gray-500"} "Last Played: never"]]]]))
+               [:p {:class "truncate text-sm text-gray-500"}
+                (str (tr [:song/last-played])) ": " (ui/humanize-dt last-played-on)]]]]))
         selected-songs)])
 
 (defn serialize-probeplan-selected-songs [songs]
@@ -657,7 +658,7 @@ on change if I match <:checked/>
                    (ui/button :label (tr [:gig/create-probeplan]) :priority :primary :icon icon/plus
                               :attr {:hx-get (util/endpoint-path gig-probeplan-choose-songs)
                                      :hx-target target})]]
-                 (gigs-detail-page-probeplan-list-ro songs))])))
+                 (gigs-detail-page-probeplan-list-ro tr songs))])))
 
 (ctmx/defcomponent ^:endpoint gig-delete [{:keys [db] :as req}]
   (when
