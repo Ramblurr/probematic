@@ -1183,4 +1183,5 @@
      (map (fn [src]
             [:div {:class "flex w-1/3 flex-wrap"}
              [:div {:class "w-full p-1 md:p-2"}
-              [:img {:alt "gallery" :class "block h-full w-full rounded-lg object-cover object-center" :src src}]]]) photos)]]])
+              [:a {:href src :target :_blank}
+               [:img {:alt "gallery" :class "block h-full w-full rounded-lg object-cover object-center" :src src}]]]]) photos)]]])
