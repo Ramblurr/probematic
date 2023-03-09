@@ -1,13 +1,17 @@
 (ns app.sardine
-  (:import [com.github.sardine DavResource]
-           [com.github.sardine.impl SardineImpl SardineException]
-           [java.net URLEncoder]
-           [org.apache.http.client.utils URIBuilder])
   (:require
-   [app.file-utils :as fu] [clojure.string :as string]
-   [app.routes.errors :as errors]))
+   [app.file-utils :as fu]
+   [app.routes.errors :as errors]
+   [clojure.java.io :as io]
+   [clojure.string :as string])
+  (:import
+   (com.github.sardine DavResource)
+   (com.github.sardine.impl SardineException SardineImpl)
+   (java.net URLEncoder)
+   (org.apache.http.client.utils URIBuilder)))
 
 (defn build-full-path [{:keys [webdav-base-path]} remote-path]
+  (assert (string/starts-with? webdav-base-path "/") "webdav base path must start and end with a slash")
   (fu/path-join webdav-base-path (fu/strip-leading-slash remote-path)))
 
 (defn build-uri [{:keys [host]} full-path]
@@ -62,6 +66,13 @@
           (remove #(= (fu/add-trailing-slash full-path) (get % :full-path)))
           (sort-by (juxt :file? :name))))))
 
+(defn dir-exists? [webdav dir]
+  (try
+    (list-directory webdav dir)
+    true
+    (catch com.github.sardine.impl.SardineException e
+      false)))
+
 (defn stream-file [{:keys [client] :as webdav-config} remote-path]
   (let [uri (build-uri webdav-config (build-full-path webdav-config remote-path))]
     (-> client (.get uri))))
@@ -87,6 +98,29 @@
           :else
           (errors/unknown-error req (ex-info "Error fetching nextcloud file" {:file-path path} e)))))))
 
+(defn mkdirs [{:keys [client] :as webdav-config} remote-path]
+  (doseq [component (fu/component-paths remote-path)]
+    (when-not (dir-exists? webdav-config component)
+      (-> client (.createDirectory (build-uri webdav-config (build-full-path webdav-config component)))))))
+
+(defn- upload-file [{:keys [client] :as webdav-config} remote-path in content-type]
+  (assert (string/starts-with? remote-path "/") "remote-path must start with a slash")
+  (when-not (dir-exists? webdav-config (fu/dirname remote-path))
+    (mkdirs webdav-config (fu/dirname remote-path)))
+  (try
+    (-> client (.put (build-uri webdav-config (build-full-path webdav-config remote-path))
+                     in content-type))
+    (catch Exception e
+      ;; ignoring exceptions until this bug is fixed
+      ;; https://github.com/nextcloud/server/issues/35931
+      ))
+  :ok)
+
+(defn upload [webdav base-path {:keys [filename tempfile content-type]}]
+  (let [remote-path (fu/path-join base-path filename)]
+    (fu/validate-base-path! base-path remote-path)
+    (upload-file webdav remote-path (io/input-stream tempfile) content-type)))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -98,5 +132,9 @@
   (list-directory webdav-config "/Noten - Scores")
   (map (juxt  :content-type :name)
        (list-directory webdav-config "/Audio"))
+
+  (upload-file webdav-config "/Dokumente/snorga-data/insurance-test/folder/tuba-robot.jpg"
+               (io/input-stream (io/file "/var/home/ramblurr/src/sno/probematic/resources/public/img/tuba-robot-boat.jpg"))
+               "image/jpg") ;; rcf
   ;;
   )

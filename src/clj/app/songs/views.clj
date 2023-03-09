@@ -77,12 +77,13 @@
       (song-sheet-music-edit (assoc req :db db-after)))))
 
 (declare song-sheet-music)
-(ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db env] :as req} section-name selected-path]
+(ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db] :as req} section-name selected-path]
   (when (util/post? req)
     (let [tr (i18n/tr-from-req req)
+          env (-> req :system :env)
           song-id (util.http/path-param-uuid! req :song-id)
           song-dir (or (q/sheet-music-dir-for-song db song-id)
-                       (config/nextcloud-path-current-songs (:env req)))]
+                       (config/nextcloud-path-current-songs env))]
       (file.browser.view/file-picker-panel req
                                            {:target-params
                                             {:endpoint (util/comp-name #'song-sheet-music-selected)

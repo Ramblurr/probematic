@@ -1,10 +1,11 @@
 (ns app.insurance.routes
   (:require
-   [app.layout :as layout]
+   [app.insurance.controller :as controller]
    [app.insurance.views :as view]
+   [app.layout :as layout]
    [ctmx.core :as ctmx]
    [datomic.client.api :as d]
-   [app.insurance.controller :as controller]))
+   [reitit.ring.malli]))
 
 (defn insurance-detail []
   (ctmx/make-routes
@@ -102,7 +103,12 @@
         :interceptors [policy-interceptor]}
     (insurance-coverage-create)
     (insurance-coverage-create2)
-    (insurance-coverage-create3)]
+    (insurance-coverage-create3)
+    ["/instrument-image/{policy-id}/{instrument-id}/"
+     {:post {:summary "Upload an image for an instrument"
+             :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]}
+             :handler (fn [req] (view/image-upload-handler req))}}]]
+
    ["" {:app.route/name :app/insurance2
         :interceptors [policy-interceptor instrument-interceptor]}
     ;; (ctmx/make-routes

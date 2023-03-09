@@ -1,21 +1,23 @@
 (ns app.insurance.views
   (:require
+   [app.auth :as auth]
+   [app.config :as config]
+   [app.file-utils :as fu]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.insurance.controller :as controller]
    [app.queries :as q]
+   [app.sardine :as sardine]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
-   [clojure.string :as str]
+   [app.util.http :as util.http]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [tick.core :as t]
+   [hiccup.util :as hiccup.util]
    [medley.core :as m]
-   [app.util.http :as util.http]
-   [app.auth :as auth]
-   [hiccup.util :as hiccup.util]))
+   [tick.core :as t]))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -595,6 +597,7 @@
               [:div {:class "flex justify-between py-3 text-sm font-medium border-double border-t-4 border-gray-300"}
                [:dt {:class "text-gray-500"} (tr [:insurance/total])]
                [:dd {:class "whitespace-nowrap text-gray-900"} (ui/money (:instrument.coverage/cost coverage) :EUR)]]]]))
+
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
   insurance-coverage-delete
   (let [post? (util/post? req)
@@ -679,58 +682,50 @@
                      (list
                       (ui/button {:label (tr [:action/save]) :priority :primary-orange})))])]))))
 
-(ctmx/defcomponent ^:endpoint image-upload [{:keys [db tr] :as req}]
-  (let [post? (util/post? req)
-        ;; result (when post? (controller/update-instrument-and-coverage! req))
-        ;; error (:error result)
-        instrument-id  (util.http/path-param-uuid! req :instrument-id)
-        policy-id (util.http/path-param-uuid! req :policy-id)
-        result nil
-        error nil]
-    ;; (tap> {:instrument-id instrument-id})
-    ;; (when error (tap> error))
-    (if (and post?)
-      (response/hx-redirect (url/link-coverage-create3 policy-id instrument-id))
+(defn image-upload-handler [{:keys [system webdav] :as req}]
+  (let [instrument-id (util.http/path-param-uuid! req :instrument-id)]
+    (sardine/upload webdav (fu/path-join (config/nextcloud-path-insurance-upload (:env system)) "instrument" (str instrument-id))
+                    (get-in req [:parameters :multipart :file]))
+    {:status 201}))
 
-      (let [comp-name (util/comp-namer #'image-upload)
-            policy-id (util.http/path-param-uuid! req :policy-id)
-            policy (controller/retrieve-policy db policy-id)
-            instrument nil]
-        [:div {:id id}
-         [:div {:class "flex justify-center items-center mt-10"}
-          (ui/step-circles 3 2)]
-         (ui/panel {:title (tr [:instrument/photo-upload-title])
-                    :subtitle (tr [:instrument/photo-upload-subtitle])}
-                   [:script
-                    (hiccup.util/raw-string
-                     "
+(ctmx/defcomponent ^:endpoint image-upload [{:keys [tr] :as req}]
+  (let [instrument-id (util.http/path-param-uuid! req :instrument-id)
+        policy-id (util.http/path-param-uuid! req :policy-id)]
+    [:div {:id id}
+     [:div {:class "flex justify-center items-center mt-10"}
+      (ui/step-circles 3 2)]
+     (ui/panel {:title (tr [:instrument/photo-upload-title])
+                :subtitle (tr [:instrument/photo-upload-subtitle])}
+               [:script
+                (hiccup.util/raw-string
+                 "
 document.addEventListener('DOMContentLoaded', function() {
-console.log('wut');
   Dropzone.options.imageUpload = {
     paramName: 'file',
+    acceptedFiles: '.jpeg,.jpg,.png,.gif',
     maxFileSize: 10, //MB
     addRemoveLinks: true,
   };
 });
 ")]
-                   [:form {:action (path ".") :class "dropzone space-y-8" :id (util/id :comp/imageUpload)}
-                    [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
-                     [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
-                      [:div {:class "space-y-1 text-center"}
-                       [:svg {:class "mx-auto h-12 w-12 text-gray-400", :stroke "currentColor", :fill "none", :viewbox "0 0 48 48", :aria-hidden "true"}
-                        [:path {:d "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", :stroke-width "2", :stroke-linecap "round", :stroke-linejoin "round"}]]
-                       [:div {:class "flex text-sm text-gray-600 justify-center"}
-                        [:label {:for "file-upload" :class "relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500"}
-                         [:span "Upload a file"]]
-                        [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
-                       [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]
-                   (ui/form-buttons
-                    :buttons-left
-                    (list
-                     (ui/link-button {:attr {:href (url/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
-                    :buttons-right
-                    (list
-                     (ui/link-button {:attr {:href (url/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))))
+               [:form {:action (format "/instrument-image/%s/%s/" policy-id instrument-id) :class "dropzone space-y-8" :id (util/id :comp/imageUpload) :enctype "multipart/form-data"}
+                [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
+                 [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
+                  [:div {:class "space-y-1 text-center"}
+                   [:svg {:class "mx-auto h-12 w-12 text-gray-400", :stroke "currentColor", :fill "none", :viewbox "0 0 48 48", :aria-hidden "true"}
+                    [:path {:d "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", :stroke-width "2", :stroke-linecap "round", :stroke-linejoin "round"}]]
+                   [:div {:class "flex text-sm text-gray-600 justify-center"}
+                    [:label {:for "file-upload" :class "relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500"}
+                     [:span "Upload a file"]]
+                    [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
+                   [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]
+               (ui/form-buttons
+                :buttons-left
+                (list
+                 (ui/link-button {:attr {:href (url/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                :buttons-right
+                (list
+                 (ui/link-button {:attr {:href (url/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
   (let [post? (util/post? req)

@@ -60,3 +60,29 @@
   "Given a path /foo/bar/baz returns baz"
   ^String [^String path]
   (.getName (file path)))
+
+(defn dirname
+  "Given a path /foo/bar/baz returns /foo"
+  ^String [^String path]
+  (.getParent (file path)))
+
+(defn validate-base-path
+  "Helper to prevent path traversal attacks. If full-path is not contained inside base-path, will return false, otherwise true"
+  [base-path full-path]
+  (str/starts-with? (-> (file full-path) (.getCanonicalPath))
+                    base-path))
+
+(defn validate-base-path!
+  "Helper to prevent path traversal attacks. If full-path is not contained inside base-path, will throw an exception"
+  [base-path full-path]
+  (when-not (validate-base-path base-path full-path)
+    (throw (ex-info "Path traversal attack detected" {:base-path base-path
+                                                      :full-path full-path}))))
+
+(comment
+  (= true (validate-base-path "/" "/foo/bar"))
+  (= true (validate-base-path "/foo/bar" "/foo/bar"))
+  (= false (validate-base-path "/foo/bar/baz" "/foo/bar"))
+
+  ;;
+  )
