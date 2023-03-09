@@ -134,13 +134,14 @@
                                            (assoc m (:old-type-id tx) (:db/id tx))) {} coverage-type-txs)
         coverage-type-txs (map #(dissoc % :old-type-id) coverage-type-txs)
 
-        covered-instruments-txs (map-indexed (fn [idx {:instrument.coverage/keys [instrument types private? value]}]
+        covered-instruments-txs (map-indexed (fn [idx {:instrument.coverage/keys [status instrument types private? value]}]
                                                {:db/id (str "coverage_" idx)
                                                 :instrument.coverage/coverage-id (sq/generate-squuid)
                                                 :instrument.coverage/instrument (d/ref instrument :instrument/instrument-id)
                                                 :instrument.coverage/types (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
                                                                                    (get coverage-type-old-to-new type-id)) types)
                                                 :instrument.coverage/private? private?
+                                                :instrument.coverage/status status
                                                 :instrument.coverage/value value})
                                              covered-instruments)
 
