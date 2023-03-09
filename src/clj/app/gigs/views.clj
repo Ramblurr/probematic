@@ -187,7 +187,7 @@
           (ui/datetime date))]]]]))
 
 (defn plan-icons []
-  (let [icon-class "mr-3 text-gray-400"
+  (let [icon-class "mr-3"
         size-class "w-5 h-5"
         red-class "text-red-500 group-hover:text-red-500"
         green-class "text-green-500 group-hover:text-green-500"]
@@ -200,7 +200,7 @@
      :plan/no-response {:value (name :plan/no-response) :icon icon/minus :icon-class (ui/cs icon-class  size-class "text-gray-500")}}))
 
 (defn attendance-opts [tr size]
-  (let [icon-class "mr-3 text-gray-400"
+  (let [icon-class "mr-3"
         size-class (if (= size :large) "w-5 h-5" "w-3 h-3")
         red-class "text-red-500 group-hover:text-red-500"
         green-class "text-green-500 group-hover:text-green-500"]
