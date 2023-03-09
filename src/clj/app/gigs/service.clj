@@ -349,8 +349,8 @@
 (defn create-gig! [{:keys [datomic-conn] :as req}]
   (let [gig-id (str (sq/generate-squuid))
         params (-> req util/unwrap-params util/remove-empty-strings util/remove-nils (assoc :gig-id gig-id))
-        notify? (:notify? params)
-        thread? (:thread? params)
+        notify? (= "on" (:notify? params))
+        thread? (= "on" (:thread? params))
         decoded (util/remove-nils (s/decode UpdateGig params))
         tx (-> decoded
                (common/ns-qualify-key :gig)
@@ -358,10 +358,10 @@
                (update :gig/status str->status)
                (update :gig/gig-type str->gig-type)
                (m/update-existing :gig/contact (fn [member-id] [:member/member-id member-id]))
-               (domain/gig->db))]
-    (let [result (transact-gig! datomic-conn [tx] gig-id)]
-      (gig.events/trigger-gig-created req notify? thread? gig-id)
-      result)))
+               (domain/gig->db))
+        result (transact-gig! datomic-conn [tx] gig-id)]
+    (gig.events/trigger-gig-created req notify? thread? gig-id)
+    result))
 
 (defn -delete-gig! [{:keys [datomic-conn db] :as req} gig-id]
   (try

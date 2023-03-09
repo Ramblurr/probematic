@@ -266,17 +266,6 @@ GO TO PROBEMATIC!!
    :embed_url (url/absolute-link-gig env gig-id)
    :external_id gig-id})
 
-(defn create-topic-for-gig!
-  "Creates a new topic for the gig, returns the topic id."
-  [{:keys [env] :as sys} gig]
-  (let [topic-id
-        (str (:topic_id (request! env
-                                  {:method :post
-                                   :url "/posts.json"
-                                   :form-params (form-params-for-gig env gig)})))]
-    (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
-                                                          :forum.topic/topic-id topic-id]]})))
-
 (defn summarize-attendance [gig {:keys [db]}]
   (assert db)
   (assert gig)
@@ -294,6 +283,19 @@ GO TO PROBEMATIC!!
                  :position (when position (inc position))
                  :extra (when (= :probeplan.emphasis/intensive emphasis) (str " (intensive)"))})
               (q/planned-songs-for-gig db (:gig/gig-id gig)))))
+(defn create-topic-for-gig!
+  "Creates a new topic for the gig, returns the topic id."
+  [{:keys [env db] :as sys} gig-id]
+  (let [gig  (-> (q/retrieve-gig db gig-id)
+                 (summarize-attendance sys)
+                 (planned-songs sys))
+        topic-id
+        (str (:topic_id (request! env
+                                  {:method :post
+                                   :url "/posts.json"
+                                   :form-params (form-params-for-gig env gig)})))]
+    (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
+                                                          :forum.topic/topic-id topic-id]]})))
 
 (defn update-topic-for-gig!
   [{:keys [env db] :as sys} gig-id]
