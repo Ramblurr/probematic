@@ -104,10 +104,18 @@
     (insurance-coverage-create)
     (insurance-coverage-create2)
     (insurance-coverage-create3)
-    ["/instrument-image/{policy-id}/{instrument-id}/"
+    ["/instrument-image/{instrument-id}"
      {:post {:summary "Upload an image for an instrument"
-             :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]}
-             :handler (fn [req] (view/image-upload-handler req))}}]]
+             :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
+                          :path [:map [:instrument-id :uuid]]}
+             :handler (fn [req] (view/image-upload-handler req))}}]
+    ["/instrument-image/{instrument-id}/{filename}"
+     {:get {:summary "Get instrument images"
+            :parameters {:path [:map
+                                [:instrument-id :uuid]
+                                [:filename :string]]}
+            :handler (fn [req]
+                       (view/image-fetch-handler req))}}]]
 
    ["" {:app.route/name :app/insurance2
         :interceptors [policy-interceptor instrument-interceptor]}

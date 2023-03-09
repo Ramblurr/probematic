@@ -36,6 +36,9 @@
 (defn link-coverage-create2 [policy-id instrument-id] (str "/insurance-coverage-create2/" policy-id "/" instrument-id "/"))
 (defn link-coverage-create3 [policy-id instrument-id] (str "/insurance-coverage-create3/" policy-id "/" instrument-id "/"))
 
+(defn link-instrument-image-upload [instrument-id]
+  (format "/instrument-image/%s"  instrument-id))
+
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))
 
@@ -53,6 +56,9 @@
 
 (defn absolute-link-new-user-invite [env invite-code]
   (str (config/app-base-url env) "/invite-accept?code=" invite-code))
+
+(defn absolute-link-instrument-image [env instrument-id filename]
+  (format "%s/instrument-image/%s/%s" (config/app-base-url env) instrument-id filename))
 
 (defn link-logout [] "/logout")
 (defn link-login [] "/login")

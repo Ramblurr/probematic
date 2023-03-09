@@ -598,6 +598,20 @@
                [:dt {:class "text-gray-500"} (tr [:insurance/total])]
                [:dd {:class "whitespace-nowrap text-gray-900"} (ui/money (:instrument.coverage/cost coverage) :EUR)]]]]))
 
+(defn instrument-image-remote-path
+  "Return the remote nextcloud path for the image upload dir or a specific file"
+  ([req instrument-id]
+   (fu/path-join (config/nextcloud-path-insurance-upload (-> req :system :env)) "instrument" (str instrument-id)))
+  ([req instrument-id filename]
+   (let [base-path (instrument-image-remote-path req instrument-id)
+         path (fu/path-join base-path filename)]
+     (fu/validate-base-path! base-path path)
+     path)))
+
+(defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
+  (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))
+       (map #(url/absolute-link-instrument-image (:env system) instrument-id  %))))
+
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
   insurance-coverage-delete
   (let [post? (util/post? req)
@@ -610,8 +624,8 @@
             policy (:insurance.policy/_covered-instruments coverage)
             coverage-types (:insurance.policy/coverage-types policy)
             coverage (first (enrich-coverages policy coverage-types [coverage]))
-            instrument (:instrument.coverage/instrument coverage)]
-
+            {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
+            photos (list-image-uris req instrument-id)]
         (assert coverage)
         [:div {:id id}
          (ui/panel {:title (:instrument/name instrument)
@@ -633,27 +647,7 @@
                                 (:instrument/build-year instrument))
                     (ui/dl-item (tr [:instrument/description])
                                 (:instrument/description instrument) "sm:col-span-3"))
-                   [:section {:class "overflow-hidden text-neutral-700"}
-                    [:div {:class "container mx-auto px-5 py-2 lg:px-32 lg:pt-12"}
-                     [:div {:class "-m-1 flex flex-wrap md:-m-2"}
-                      [:div {:class "flex w-1/3 flex-wrap"}
-                       [:div {:class "w-full p-1 md:p-2"}
-                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(73).webp"}]]]
-                      [:div {:class "flex w-1/3 flex-wrap"}
-                       [:div {:class "w-full p-1 md:p-2"}
-                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(74).webp"}]]]
-                      [:div {:class "flex w-1/3 flex-wrap"}
-                       [:div {:class "w-full p-1 md:p-2"}
-                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(75).webp"}]]]
-                      [:div {:class "flex w-1/3 flex-wrap"}
-                       [:div {:class "w-full p-1 md:p-2"}
-                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(70).webp"}]]]
-                      [:div {:class "flex w-1/3 flex-wrap"}
-                       [:div {:class "w-full p-1 md:p-2"}
-                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(76).webp"}]]]
-                      [:div {:class "flex w-1/3 flex-wrap"}
-                       [:div {:class "w-full p-1 md:p-2"}
-                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(72).webp"}]]]]]])
+                   (ui/photo-grid photos))
          (coverage-panel tr coverage policy)]))))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page3 [{:keys [db tr] :as req}]
@@ -682,11 +676,20 @@
                      (list
                       (ui/button {:label (tr [:action/save]) :priority :primary-orange})))])]))))
 
-(defn image-upload-handler [{:keys [system webdav] :as req}]
-  (let [instrument-id (util.http/path-param-uuid! req :instrument-id)]
-    (sardine/upload webdav (fu/path-join (config/nextcloud-path-insurance-upload (:env system)) "instrument" (str instrument-id))
-                    (get-in req [:parameters :multipart :file]))
-    {:status 201}))
+(defn image-fetch-handler [{:keys [parameters] :as req}]
+  (let [{:keys [filename instrument-id]} (:path parameters)]
+    (sardine/fetch-file-response req
+                                 (instrument-image-remote-path req instrument-id filename)
+                                 true)))
+
+(defn image-upload-handler [{:keys [webdav parameters] :as req}]
+  (let [instrument-id (-> parameters :path :instrument-id)
+        file (->  parameters :multipart :file)]
+    (assert instrument-id)
+    (sardine/upload webdav
+                    (instrument-image-remote-path req instrument-id)
+                    file))
+  {:status 201})
 
 (ctmx/defcomponent ^:endpoint image-upload [{:keys [tr] :as req}]
   (let [instrument-id (util.http/path-param-uuid! req :instrument-id)
@@ -708,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 });
 ")]
-               [:form {:action (format "/instrument-image/%s/%s/" policy-id instrument-id) :class "dropzone space-y-8" :id (util/id :comp/imageUpload) :enctype "multipart/form-data"}
+               [:form {:action (url/link-instrument-image-upload instrument-id) :class "dropzone space-y-8" :id (util/id :comp/imageUpload) :enctype "multipart/form-data"}
                 [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
                  [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
                   [:div {:class "space-y-1 text-center"}
@@ -719,13 +722,10 @@ document.addEventListener('DOMContentLoaded', function() {
                      [:span "Upload a file"]]
                     [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
                    [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]
-               (ui/form-buttons
-                :buttons-left
-                (list
-                 (ui/link-button {:attr {:href (url/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
-                :buttons-right
-                (list
-                 (ui/link-button {:attr {:href (url/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
+               (ui/form-buttons :buttons-left (list
+                                               (ui/link-button {:attr {:href (url/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                                :buttons-right (list
+                                                (ui/link-button {:attr {:href (url/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
   (let [post? (util/post? req)

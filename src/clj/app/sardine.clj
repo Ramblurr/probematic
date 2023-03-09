@@ -80,23 +80,26 @@
 (defn content-disposition-filename [prefix name]
   (format "%s; filename*=UTF-8''%s" prefix (URLEncoder/encode name "UTF-8")))
 
+(defn fetch-file-response [{:keys [webdav] :as req} path inline?]
+  (try
+    (let [{:keys [content-type content-length name]} (list-directory webdav path)]
+      {:status 200
+       :headers {"Content-Disposition" (content-disposition-filename (if inline?
+                                                                       "inline" "attachment")
+                                                                     name)
+                 "Content-Type" content-type
+                 "Content-Length" (str content-length)}
+       :body (stream-file (:webdav req) path)})
+    (catch SardineException e
+      (cond
+        (string/includes? (ex-message e) "404")
+        (errors/not-found-error req (ex-info "Nextcloud file not found" {:file-path path} e))
+        :else
+        (errors/unknown-error req (ex-info "Error fetching nextcloud file" {:file-path path} e))))))
+
 (defn fetch-file-handler [req inline?]
   (let [path (-> req :params :path)]
-    (try
-      (let [{:keys [content-type content-length name] :as file-info} (list-directory (:webdav req) path)]
-        {:status 200
-         :headers {"Content-Disposition" (content-disposition-filename (if inline?
-                                                                         "inline" "attachment")
-                                                                       name)
-                   "Content-Type" content-type
-                   "Content-Length" (str content-length)}
-         :body (stream-file (:webdav req) path)})
-      (catch SardineException e
-        (cond
-          (string/includes? (ex-message e) "404")
-          (errors/not-found-error req (ex-info "Nextcloud file not found" {:file-path path} e))
-          :else
-          (errors/unknown-error req (ex-info "Error fetching nextcloud file" {:file-path path} e)))))))
+    (fetch-file-response req path inline?)))
 
 (defn mkdirs [{:keys [client] :as webdav-config} remote-path]
   (doseq [component (fu/component-paths remote-path)]
@@ -111,7 +114,7 @@
     (-> client (.put (build-uri webdav-config (build-full-path webdav-config remote-path))
                      in content-type))
     (catch Exception e
-      ;; ignoring exceptions until this bug is fixed
+      ;; ignoring exceptions until this bug is fixed because an exception is always being throwed even on success
       ;; https://github.com/nextcloud/server/issues/35931
       ))
   :ok)
@@ -120,6 +123,15 @@
   (let [remote-path (fu/path-join base-path filename)]
     (fu/validate-base-path! base-path remote-path)
     (upload-file webdav remote-path (io/input-stream tempfile) content-type)))
+
+(defn list-photos [webdav remote-path]
+  (try
+    (->> (list-directory webdav remote-path)
+         (filter #(string/starts-with? (:content-type %) "image/"))
+         (map #(str "/" (:path %)))
+         (map fu/basename))
+    (catch SardineException e
+      [])))
 
 (comment
   (do
