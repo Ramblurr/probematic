@@ -43,3 +43,12 @@
 
 (defn discourse-forum-url [env]
   (-> env :discourse :forum-url))
+
+(defn nextcloud-path-current-songs [env]
+  (-> env :nextcloud :current-songs-path))
+
+(defn nextcloud-path-sheet-music [env]
+  (-> env :nextcloud :sheet-music-path))
+
+(defn nextcloud-path-insurance-upload [env]
+  (-> env :nextcloud :insurance-upload-path))

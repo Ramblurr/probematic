@@ -21,11 +21,7 @@
  :discourse       {:api-key   #ref [:secrets :discourse :api-key]
                    :username  #ref [:secrets :discourse :username]
                    :forum-url "https://forum.streetnoise.at"}
- :nextcloud       {:password         #ref [:secrets :nextcloud :password]
-                   :username         #ref [:secrets :nextcloud :username]
-                   :token            #ref [:secrets :nextcloud :token]
-                   :host             #ref [:secrets :nextcloud :host]
-                   :webdav-base-path #ref [:secrets :nextcloud :webdav-base-path]}
+ :nextcloud       #ref [:secrets :nextcloud]
  :airtable        {:token                    #ref [:secrets :airtable :token]
                    :base                     #ref [:secrets :airtable :base]
                    :all-people-table         {:name "People" :view "All People"}

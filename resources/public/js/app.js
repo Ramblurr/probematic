@@ -24,7 +24,6 @@ function initWidgets(evt) {
   ActionMenu2All()
   listen('click', '[data-action-menu-trigger]', ActionMenu);
   AutoSizeTextAreas();
-console.log('after');
   Dropzone.discover();
 }
 

@@ -14,7 +14,8 @@
    [ctmx.response :as response]
    [hiccup.util]
    [medley.core :as m]
-   [app.markdown :as markdown]))
+   [app.markdown :as markdown]
+   [app.config :as config]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -76,11 +77,12 @@
       (song-sheet-music-edit (assoc req :db db-after)))))
 
 (declare song-sheet-music)
-(ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db] :as req} section-name selected-path]
+(ctmx/defcomponent ^:endpoint song-sheet-music-picker [{:keys [db env] :as req} section-name selected-path]
   (when (util/post? req)
     (let [tr (i18n/tr-from-req req)
           song-id (util.http/path-param-uuid! req :song-id)
-          song-dir (or (q/sheet-music-dir-for-song db song-id) "/Noten - Scores/aktuelle Stücke")]
+          song-dir (or (q/sheet-music-dir-for-song db song-id)
+                       (config/nextcloud-path-current-songs (:env req)))]
       (file.browser.view/file-picker-panel req
                                            {:target-params
                                             {:endpoint (util/comp-name #'song-sheet-music-selected)
@@ -91,7 +93,7 @@
                                             :id :comp/song-sheet-music-picker
                                             :title (tr [:song/choose-sheet-music-title])
                                             :subtitle (tr [:song/choose-sheet-music-subtitle] [section-name])
-                                            :root-dir "/Noten - Scores"
+                                            :root-dir (config/nextcloud-path-sheet-music env)
                                             :current-dir song-dir}))))
 (ctmx/defcomponent ^:endpoint song-sheet-music-remove [req sheet-id]
   (when (util/delete? req)
