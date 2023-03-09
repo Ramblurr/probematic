@@ -284,7 +284,7 @@
     [:date ::s/date]
     [:end-date {:optional true} ::s/date]
     [:location ::s/non-blank-string]
-    [:contact {:optional true} :string]
+    [:contact {:optional true} :uuid]
     [:gig-type (s/enum-from (map name domain/gig-types))]
     [:status (s/enum-from (map name domain/statuses))]
     [:call-time ::s/time]
