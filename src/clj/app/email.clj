@@ -162,13 +162,10 @@
 
   (build-gig-created-email sys gig [member])
   :email/recipient-variables
-  (get "me@example.com")
   (build-gig-updated-email sys gig [member member2] [:gig/status])
 
   (queue-email! {:redis redis-opts} (debug/xxx (build-gig-created-email sys gig2 [member2])))
   (queue-email! {:redis redis-opts} (debug/xxx (build-gig-updated-email sys gig2 [member2] [:gig/status :gig/location])))
-
-  (generate-invite-code env "0185ee9c-7e67-8733-82f6-7a74aa588a92")
 
   (tmpl/payload-for-attendance env (:gig/gig-id gig) (:member/member-id
                                                       (q/member-by-email db "CHANGEME")) :plan/definitely)

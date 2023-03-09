@@ -922,6 +922,8 @@ on change if I match <:checked/>
       (ui/panel {:title "Advanced"}
                 [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3"}
                  (list
+                  (ui/dl-item "Takeover Forum Topic"
+                              (ui/checkbox :label "" :id "takeover-topic?" :required? false))
                   (ui/dl-item "Forum Topic ID"
                               (ui/text  :name  "topic-id" :value (:forum.topic/topic-id gig) :required? false) "sm:col-span-2"))])])])
 

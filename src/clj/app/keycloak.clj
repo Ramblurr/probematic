@@ -199,8 +199,6 @@
                       :member/active? true
                       :member/name "Testuser Testing"})
 
-  (admin/delete-user-by-id! (client kc) (realm kc))
-
   (user-account-enabled? kc "e0acd2e3-1362-4854-b4fe-46813adced84")
 
   ;;

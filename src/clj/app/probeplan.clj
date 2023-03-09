@@ -97,8 +97,6 @@
   (let [song-cycle (make-song-cycle db)]
     (take 7 song-cycle))
 
-  (partition)
-
   (take 5 (nthrest (make-song-cycle db) 2))
 
   (gen-classic-fresh (make-song-cycle db))

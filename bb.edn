@@ -2,7 +2,7 @@
 
  :paths ["scripts"]
  :tasks
- {; backend
+ {lint (shell "clj-kondo --lint src")
   repl  (shell "clojure -A:dev -M:inspect/reveal-cider")
   repl-portal  (shell "clojure -A:dev -M:inspect/portal-cli-cider")
   repl-term  (shell "clojure -A:test -A:dev -M:repl/cider-refactor")

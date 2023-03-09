@@ -11,16 +11,16 @@
 (defn update-system [{:keys [system]}]
   (assoc system :db (datomic/db (-> system :datomic :conn))))
 
-(defn handle-gig-details-edited [req notify? gig-id {:keys [gig-before gig db-after]}]
+(defn handle-gig-details-edited [req notify? takeover-topic? gig-id {:keys [gig-before gig db-after]}]
   (let [new-system (update-system req)]
     (when notify?
       (email/send-gig-updated! req gig-id
                                (keys (second (clojure.data/diff gig-before gig)))))
-    (discourse/update-topic-for-gig! new-system gig-id)))
+    (discourse/update-topic-for-gig! new-system gig-id takeover-topic?)))
 
 (defn handle-gig-edited [req gig-id edit-type]
   (let [new-system (update-system req)]
-    (discourse/update-topic-for-gig! new-system gig-id)))
+    (discourse/update-topic-for-gig! new-system gig-id false)))
 
 (defn handle-gig-created [req notify? thread? gig-id]
   (let [new-system (update-system req)]
@@ -42,8 +42,8 @@
                         (tap> e)
                         (errors/report-error! e))))))
 
-(defn trigger-gig-details-edited [req notify? transact-result]
-  (exec-later handle-gig-details-edited req notify? (-> transact-result :gig :gig/gig-id) transact-result))
+(defn trigger-gig-details-edited [req notify? takeover-topic? transact-result]
+  (exec-later handle-gig-details-edited req notify? takeover-topic? (-> transact-result :gig :gig/gig-id) transact-result))
 
 (defn trigger-gig-edited [req gig-id edit-type]
   (exec-later handle-gig-edited req gig-id edit-type))

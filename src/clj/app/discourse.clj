@@ -93,12 +93,12 @@ DONT EDIT THIS POST!!
 WHY?
 
 
-PROBEMATIC AUTOMATICALLY UPDATES IT.
+SNORGA AUTOMATICALLY UPDATES IT.
 
 
 IF YOU WANT TO CHANGE SOMETHING..
 
-EDIT IT IN PROBEMATIC
+EDIT IT IN SNORGA
 
 
 
@@ -127,7 +127,7 @@ WHY ARE YOU STILL HERE?
 
 
 
-GO TO PROBEMATIC!!
+GO TO SNORGA!!
 
 
 {{probematic-link}}
@@ -297,8 +297,11 @@ GO TO PROBEMATIC!!
     (datomic/transact (-> sys :datomic :conn) {:tx-data [[:db/add (d/ref gig)
                                                           :forum.topic/topic-id topic-id]]})))
 
+(defn we-own-topic? [our-username topic]
+  (= (-> topic :details :created_by :username) our-username))
+
 (defn update-topic-for-gig!
-  [{:keys [env db] :as sys} gig-id]
+  [{:keys [env db] :as sys} gig-id takeover-topic?]
   (assert db)
   (assert env)
   (assert gig-id)
@@ -306,11 +309,16 @@ GO TO PROBEMATIC!!
                 (summarize-attendance sys)
                 (planned-songs sys))
         topic (topic-for-gig {:env env} (:gig/gig-id gig))]
-    (when-let [post-id (:id (first-post-for-topic topic))]
-      (do
+    (cond
+      (and (not topic) takeover-topic?)
+      (create-topic-for-gig! sys gig-id)
+      ;; create topic
+      (or (we-own-topic? (-> env :discourse :username) topic) takeover-topic?)
+      (when-let [post-id (:id (first-post-for-topic topic))]
         (update-topic-for-gig env gig topic)
         (update-post-for-gig env gig post-id)
-        (reset-bump-date! env (:id topic))))))
+        (reset-bump-date! env (:id topic)))
+      :else nil)))
 
 (defn parse-topic-id [v]
   (if-let [[_ topic-id] (re-matches #".*/(\d+)+ *$" v)]
@@ -360,12 +368,6 @@ GO TO PROBEMATIC!!
   (def g2 (q/retrieve-gig db "01860c2a-5c88-8b92-9c42-0c6a1f42ae5c"))
   (def g3 (q/retrieve-gig db "01860c2a-5c88-8b92-9c42-0c6a1f42ae65"))
   (:id (first-post-for-topic (topic-for-gig {:env env} g)))
-
-  (ui/gig-time g2)
-  (url/absolute-link-song env
-                          (:song/song-id)
-                          (first
-                           (q/planned-songs-for-gig db (:gig/gig-id g2))))
 
   (should-delete-topic? (-> env :discourse :username)
                         (topic-for-gig {:env env} (:gig/gig-id g3)))
