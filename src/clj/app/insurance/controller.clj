@@ -404,6 +404,7 @@
                  :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
                  :instrument.coverage/value (bigdec value)
                  :instrument.coverage/item-count item-count
+                 :instrument.coverage/status :instrument.coverage.status/needs-review
                  :instrument.coverage/private? (= "private" private-band)
                  :db/id "covered_instrument"}
                 [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
@@ -419,18 +420,18 @@
     :instrument/owner [:member/member-id owner-member-id]
     :instrument/category [:instrument.category/category-id category-id]}])
 
-(defn upsert-instrument! [{:keys [datomic-conn db] :as req}]
+(defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (common/unwrap-params req)))]
     (if (s/valid? UpdateInstrument decoded)
       (let [instrument-id (if (str/blank? (:instrument-id decoded))
                             (sq/generate-squuid)
                             (:instrument-id decoded))
-            txs (update-instrument-txs decoded instrument-id)]
-        (let [{:keys [db-after]} (datomic/transact datomic-conn {:tx-data  txs})]
-          {:instrument (retrieve-instrument db-after instrument-id)}))
+            txs (update-instrument-txs decoded instrument-id)
+            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+        {:instrument (retrieve-instrument db-after instrument-id)})
       {:error (s/explain-human UpdateInstrument decoded)})))
 
-(defn upsert-coverage! [{:keys [datomic-conn db] :as req}]
+(defn upsert-coverage! [{:keys [db] :as req}]
   (let [params (common/unwrap-params req)
         decoded (util/remove-nils (s/decode UpdateCoverage params))
         coverage-id (:coverage-id decoded)
@@ -441,12 +442,12 @@
                   (update-coverage-txs decoded (retrieve-coverage db coverage-id))
                   ;; create
                   (create-coverage-txs decoded))
-            {:keys [db-after]} (datomic/transact datomic-conn {:tx-data txs})]
+            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
         {:policy (retrieve-policy db-after policy-id)})
       {:error (s/explain-human UpdateCoverage decoded)
        :policy (retrieve-policy db policy-id)})))
 
-(defn update-instrument-and-coverage! [{:keys [datomic-conn db] :as req}]
+(defn update-instrument-and-coverage! [{:keys [db] :as req}]
   (let [params (common/unwrap-params req)
         decoded  (util/remove-nils (s/decode UpdateInstrumentAndCoverage params))]
     (if (s/valid? UpdateInstrumentAndCoverage decoded)
@@ -454,20 +455,20 @@
             _ (assert coverage)
             txs (concat (update-coverage-txs decoded coverage)
                         (update-instrument-txs decoded (:instrument-id decoded)))
-            {:keys [db-after]} (datomic/transact datomic-conn {:tx-data txs})]
+            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
         {:policy (retrieve-policy db-after (:policy-id decoded))})
 
       {:error (s/explain-human UpdateInstrumentAndCoverage decoded)
        :policy (retrieve-policy db (:policy-id decoded))})))
 
-(defn delete-coverage! [{:keys [datomic-conn db] :as req}]
+(defn delete-coverage! [{:keys [db] :as req}]
   (let [coverage-id (-> req (common/unwrap-params) :coverage-id util/ensure-uuid!)
         ;; TODO  do we want to remove the instrument if there are no other coverages?
         coverage (retrieve-coverage db coverage-id)
         #_related-coverages #_(->> (q/coverages-for-instrument db (-> coverage :instrument.coverage/instrument :instrument/instrument-id) q/instrument-coverage-detail-pattern)
                                    (remove #(= coverage-id (:instrument.coverage/coverage-id %))))
         txs [[:db/retractEntity [:instrument.coverage/coverage-id coverage-id]]]
-        result (datomic/transact datomic-conn {:tx-data txs})]
+        result (d/transact-wrapper req {:tx-data txs})]
     {:policy (retrieve-policy (:db-after result) (-> coverage :insurance.policy/_covered-instruments  :insurance.policy/policy-id))}))
 
 (defn get-coverage-type-from-coverage [instrument-coverage type-id]
@@ -662,6 +663,39 @@
    (-> policy
        :insurance.policy/covered-instruments
        first))
+
+  (defn ident [db attr]
+    (:db/ident (datomic/pull db '[:db/ident] attr)))
+
+  (defn ref? [db attr]
+    (= :db.type/ref
+       (->
+        (datomic/pull db '[*] attr)
+        :db/valueType
+        :db/ident)))
+
+  (defn resolve-ref [db eid]
+    (datomic/pull db '[*] eid))
+
+  (let [db (datomic/db conn)]
+    (->> (datomic/q '{:find  [?tx ?attr ?val ?added]
+                      :in    [$ ?coverage-id]
+                      :where [[?e     :instrument.coverage/coverage-id  ?coverage-id]
+                              [?e     ?attr       ?val        ?tx ?added]]}
+                    (datomic/history db)
+                    #uuid "0186c248-07ba-82c0-bfda-237986a75705")
+         (group-by first)
+         (map (fn [[tx transactions]]
+                (let [tx-info (datomic/pull db '[*] tx)]
+                  {:timestamp  (:db/txInstant tx-info)
+                   :audit  (select-keys tx-info [:audit/user])
+                   :changes   (->> transactions
+                                   (map (fn [[_ attr val added]]
+                                          [(ident db attr) (if (ref? db attr)
+                                                             (resolve-ref db val)
+                                                             val) (if added :added :retracted)]))
+                                   (sort-by last))})))
+         (sort-by :timestamp)))
 
   ;; end
   )

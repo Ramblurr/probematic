@@ -1,15 +1,16 @@
 (ns app.datomic
   (:refer-clojure :exclude [ref])
-  (:require [datomic.client.api :as d]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [com.yetanalytics.squuid :as sq]
-            [app.config :as config]
-            [app.demo :as demo]
-            [medley.core :as m]
-            [clojure.tools.logging :as log]
-            [integrant.repl.state :as state]
-            [app.auth :as auth]))
+  (:require
+   [app.auth :as auth]
+   [app.config :as config]
+   [app.demo :as demo]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [clojure.tools.logging :as log]
+   [com.yetanalytics.squuid :as sq]
+   [datomic.client.api :as d]
+   [integrant.repl.state :as state]
+   [medley.core :as m]))
 
 (defn ident-has-attr?
   [db ident attr]
@@ -37,6 +38,17 @@
       {:error (ex-data e)
        :exception e
        :msg (ex-message e)})))
+
+(defn audit-txs [req comment]
+  (filterv #(some? %)
+           [[:db/add "datomic.tx" :audit/user [:member/member-id (:member/member-id (auth/get-current-member req))]]
+            (when comment [:db/add "datomic.tx" :audit/comment comment])]))
+
+(defn transact-wrapper
+  ([req opts]
+   (transact-wrapper req opts nil))
+  ([{:keys [datomic-conn] :as req} opts comment]
+   (d/transact datomic-conn (update opts :tx-data concat (audit-txs req comment)))))
 
 (defn unique-error? [error]
   (= :db.error/unique-conflict (-> error :error :db/error)))

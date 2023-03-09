@@ -726,6 +726,14 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+;;;; Audit Schema
+   {:db/ident       :audit/user
+    :db/cardinality :db.cardinality/one
+    :db/valueType   :db.type/ref}
+
+   {:db/ident       :audit/comment
+    :db/cardinality :db.cardinality/one
+    :db/valueType   :db.type/string}
    ;;
    ]
 

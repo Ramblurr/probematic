@@ -144,5 +144,12 @@
 
   (def user0 (second))
 
-  ;;
+  (do
+    (require '[portal.api :as p])
+    (def p (p/open {:theme :portal.colors/gruvbox}))
+    (add-tap #'p/submit))
+  (p/clear)
+  (tap> {:test 1})
+
+;;
   )
