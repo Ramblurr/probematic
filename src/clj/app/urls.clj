@@ -22,6 +22,7 @@
 (def link-policy (partial link-helper "/insurance-policy/" :insurance.policy/policy-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
 (def link-coverage (partial link-helper "/insurance-coverage/" :instrument.coverage/coverage-id))
+(def link-coverage-edit (partial link-helper "/insurance-coverage-edit/" :instrument.coverage/coverage-id))
 
 (defn link-gigs-home [] "/gigs/")
 (defn link-songs-home [] "/songs/")

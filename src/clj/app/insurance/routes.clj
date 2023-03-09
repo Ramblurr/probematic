@@ -19,6 +19,12 @@
    (fn [req]
      (layout/app-shell req
                        (view/insurance-coverage-detail-page req)))))
+(defn insurance-coverage-detail-edit []
+  (ctmx/make-routes
+   "/insurance-coverage-edit/{coverage-id}/"
+   (fn [req]
+     (layout/app-shell req
+                       (view/insurance-coverage-detail-page-rw req)))))
 
 (defn insurance-coverage-create []
   (ctmx/make-routes
@@ -106,7 +112,8 @@
     (insurance-index)
     ["" {:app.route/name :app/instrument.coverage
          :interceptors [coverage-interceptor]}
-     (insurance-coverage-detail)]
+     (insurance-coverage-detail)
+     (insurance-coverage-detail-edit)]
     (insurance-create)
     (insurance-detail)
     (instrument-detail)

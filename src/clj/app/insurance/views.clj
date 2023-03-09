@@ -357,7 +357,7 @@
                                                          :hint (tr [:band-instrument-description]))))
      [:input {:type :hidden :name "coverage-types" :value "00000000-0000-0000-0000-000000000000"}]
      (ui/checkbox-group-left :label (tr [:insurance/coverage-types]) :id "coverage-type"
-                             :label-hint (tr [:private-instrument-payment])
+
                              :checkboxes (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name description]}]
 
                                                         (let [checked? (m/find-first (fn [assigned-type]
@@ -380,6 +380,16 @@
          :instrument.coverage.status/coverage-active (icon/circle-check-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"})}
         status)])
 
+(defn enrich-coverages [policy coverage-types coverages]
+  (mapv (fn [coverage]
+          (let [coverage (controller/update-total-coverage-price policy coverage)]
+            (assoc coverage :types
+                   (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                           (when-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
+                             coverage-type))
+                         coverage-types))))
+        coverages))
+
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db tr] :as req}]
   (let [policy (:policy req)
         coverage-types (:insurance.policy/coverage-types policy)
@@ -388,15 +398,7 @@
         grouped-by-owner (->>  covered-instruments
                                (util/group-by-into-list :coverages (fn [c] (get-in c [:instrument.coverage/instrument :instrument/owner])))
                                (mapv (fn [r] (update r :coverages  #(sort-by (fn [c] (get-in c [:instrument.coverage/instrument :instrument/name])) %))))
-                               (mapv (fn [r] (update r :coverages (fn [coverages]
-                                                                    (mapv (fn [coverage]
-                                                                            (let [coverage (controller/update-total-coverage-price policy coverage)]
-                                                                              (assoc coverage :types
-                                                                                     (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                                                                                             (when-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
-                                                                                               coverage-type))
-                                                                                           coverage-types))))
-                                                                          coverages)))))
+                               (mapv (fn [r] (update r :coverages #(enrich-coverages policy coverage-types %))))
 
                                (mapv (fn [{:keys [coverages] :as person}]
                                        (assoc person :total (controller/sum-by coverages :instrument.coverage/cost))))
@@ -529,7 +531,7 @@
   (when (util/delete? req)
     (response/hx-redirect (url/link-policy (:policy (controller/delete-coverage! req))))))
 
-(ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
+(ctmx/defcomponent ^:endpoint insurance-coverage-detail-page-rw [{:keys [db tr] :as req}]
   insurance-coverage-delete
   (let [post? (util/post? req)
         result (when post? (controller/update-instrument-and-coverage! req))
@@ -543,7 +545,8 @@
             coverage-types (:insurance.policy/coverage-types policy)]
         (assert coverage)
         [:div {:id id}
-         (ui/panel {:title "Edit Instrument Coverage"}
+         (ui/panel {:title "Edit Instrument Coverage"
+                    :buttons (list (ui/link-button :href (url/link-coverage coverage) :label (tr [:action/cancel])))}
                    [:form {:hx-post (path ".") :class "space-y-8"  :hx-target (hash ".")}
                     [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
                      [:div {:class "space-y-6 sm:space-y-5"}
@@ -566,6 +569,89 @@
                                         (ui/link-button {:label (tr [:action/cancel]) :priority :white
                                                          :attr {:href (url/link-policy policy)}})
                                         (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
+
+(defn coverage-panel [tr coverage policy]
+  (ui/panel {:title (tr [:insurance/instrument-coverage])
+             :subtitle (tr [:insurance/coverage-for] [(:insurance.policy/name policy)])
+             :buttons (list (ui/link-button :href (url/link-coverage-edit coverage) :label (tr [:action/edit])))}
+            (ui/dl
+             (ui/dl-item (tr [:insurance/item-count])
+                         (:instrument.coverage/item-count coverage))
+             (ui/dl-item (tr [:insurance/value])
+                         (ui/money (:instrument.coverage/value coverage) :EUR))
+             (ui/dl-item (tr [:band-private])
+                         (if (:instrument.coverage/private? coverage)
+                           [:span {:class "text-red-400"} (tr [:private-instrument])]
+                           [:span {:class "text-green-400"} (tr [:band-instrument])])))
+            [:div {:class "mt-4 max-w-xs"}
+             [:h3 {:class "font-medium text-sm text-gray-500"} (tr [:insurance/coverage-types])]
+             [:dl {:class "mt-2  border-t border-b border-gray-200"}
+              (map (fn [{:insurance.coverage.type/keys [cost name]}]
+                     [:div {:class "flex justify-between py-3 text-sm font-medium"}
+                      [:dt {:class "text-gray-500"} name]
+                      [:dd {:class "whitespace-nowrap text-gray-900"}
+                       (ui/money cost :EUR)]]) (:instrument.coverage/types coverage))
+
+              [:div {:class "flex justify-between py-3 text-sm font-medium border-double border-t-4 border-gray-300"}
+               [:dt {:class "text-gray-500"} (tr [:insurance/total])]
+               [:dd {:class "whitespace-nowrap text-gray-900"} (ui/money (:instrument.coverage/cost coverage) :EUR)]]]]))
+(ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
+  insurance-coverage-delete
+  (let [post? (util/post? req)
+        result (when post? (controller/update-instrument-and-coverage! req))
+        error (:error result)]
+    (if (and post? (not error))
+      (response/hx-redirect (url/link-policy (:policy result)))
+      (let [coverage-id (util.http/path-param-uuid! req :coverage-id)
+            coverage (controller/retrieve-coverage db coverage-id)
+            policy (:insurance.policy/_covered-instruments coverage)
+            coverage-types (:insurance.policy/coverage-types policy)
+            coverage (first (enrich-coverages policy coverage-types [coverage]))
+            instrument (:instrument.coverage/instrument coverage)]
+
+        (assert coverage)
+        [:div {:id id}
+         (ui/panel {:title (:instrument/name instrument)
+                    :buttons (list (ui/link-button :href (url/link-coverage-edit coverage) :label (tr [:action/edit])))}
+                   (ui/dl
+                    (ui/dl-item (tr [:instrument/owner])
+                                (:member/name (:instrument/owner instrument)))
+                    (ui/dl-item (tr [:instrument/name])
+                                (:instrument/name instrument))
+                    (ui/dl-item (tr [:instrument/category])
+                                (:instrument.category/name (:instrument/category instrument)))
+                    (ui/dl-item (tr [:instrument/make])
+                                (:instrument/make instrument))
+                    (ui/dl-item (tr [:instrument/model])
+                                (:instrument/model instrument))
+                    (ui/dl-item (tr [:instrument/serial-number])
+                                (:instrument/serial-number instrument))
+                    (ui/dl-item (tr [:instrument/build-year])
+                                (:instrument/build-year instrument))
+                    (ui/dl-item (tr [:instrument/description])
+                                (:instrument/description instrument) "sm:col-span-3"))
+                   [:section {:class "overflow-hidden text-neutral-700"}
+                    [:div {:class "container mx-auto px-5 py-2 lg:px-32 lg:pt-12"}
+                     [:div {:class "-m-1 flex flex-wrap md:-m-2"}
+                      [:div {:class "flex w-1/3 flex-wrap"}
+                       [:div {:class "w-full p-1 md:p-2"}
+                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(73).webp"}]]]
+                      [:div {:class "flex w-1/3 flex-wrap"}
+                       [:div {:class "w-full p-1 md:p-2"}
+                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(74).webp"}]]]
+                      [:div {:class "flex w-1/3 flex-wrap"}
+                       [:div {:class "w-full p-1 md:p-2"}
+                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(75).webp"}]]]
+                      [:div {:class "flex w-1/3 flex-wrap"}
+                       [:div {:class "w-full p-1 md:p-2"}
+                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(70).webp"}]]]
+                      [:div {:class "flex w-1/3 flex-wrap"}
+                       [:div {:class "w-full p-1 md:p-2"}
+                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(76).webp"}]]]
+                      [:div {:class "flex w-1/3 flex-wrap"}
+                       [:div {:class "w-full p-1 md:p-2"}
+                        [:img {:alt "gallery", :class "block h-full w-full rounded-lg object-cover object-center", :src "https://tecdn.b-cdn.net/img/Photos/Horizontal/Nature/4-col/img%20(72).webp"}]]]]]])
+         (coverage-panel tr coverage policy)]))))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page3 [{:keys [db tr] :as req}]
   (let [post? (util/post? req)

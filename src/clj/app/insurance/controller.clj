@@ -64,7 +64,7 @@
     ;;  value * category factor * premium factor * coverage factor
   (let [category-id (-> instrument :instrument/category :instrument.category/category-id)
         category-factor (get  (make-category-factor-lookup policy) category-id)
-        ;; _ (tap> {:facts (make-category-factor-lookup policy) :cat-id category-id})
+        ;; _ (tap> {:lookup (make-category-factor-lookup policy) :cat-id category-id})
         _  (assert category-factor)
         ;; _ (tap> {:cat-id category-id :cat-fact category-factor :lookup (make-category-factor-lookup policy) :policy policy})
         premium-factor (-> policy :insurance.policy/premium-factor)
@@ -696,6 +696,11 @@
                                                              val) (if added :added :retracted)]))
                                    (sort-by last))})))
          (sort-by :timestamp)))
+
+  (map
+   first (d/find-all db  :insurance.category.factor/category-factor-id '[*]))
+
+  (d/find-by db :instrument.coverage/coverage-id #uuid "0186c248-07ba-82c0-bfda-237986a7573b" q/instrument-coverage-detail-pattern)
 
   ;; end
   )

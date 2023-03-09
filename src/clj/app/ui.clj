@@ -360,7 +360,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost form tabindex]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost form tabindex href]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -369,7 +369,8 @@
 
   [tag (merge
         (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :hx-confirm hx-confirm :form form :tabindex tabindex
-                           :hx-boost (when hx-boost "true")})
+                           :hx-boost (when hx-boost "true")
+                           :href href})
         {:class
          (cs
           "inline-flex items-center rounded-md border font-medium"
