@@ -51,7 +51,7 @@
   (let [sri-hash (sha384-resource (str "public/" path))
         suffix (subs sri-hash (- 71 8))]
     [:link (merge {:rel "stylesheet"
-                   :href (str relative-prefix path "?" suffix)
+                   :href (str relative-prefix "/" path "?" suffix)
                    :integrity sri-hash}
                   (apply hash-map extra))]))
 
