@@ -61,8 +61,8 @@
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
    [:title (or title "SNOrga")]
-   (stylesheet relative-prefix "/font/inter/inter.css")
-   (stylesheet relative-prefix "/css/compiled/main.css")])
+   (stylesheet relative-prefix "font/inter/inter.css")
+   (stylesheet relative-prefix "css/compiled/main.css")])
 
 (defn body-end [relative-prefix]
   (list
