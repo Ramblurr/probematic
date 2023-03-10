@@ -57,7 +57,7 @@
 
 (defn decode [schema value]
   (try
-    (m/decode schema value malli-opts (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer))
+    (m/decode schema value malli-opts (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer schemas/vectorize-transformer schemas/namespace-enum-transformer))
     (catch Exception e
       (throw-error "Decode failed" e schema value))))
 
@@ -106,4 +106,20 @@
   (valid? :doc/user invalid-user)
   (explain-human :doc/user invalid-user)
   (valid? ::instant (t/now))
-  (explain-human ::email-address "foo@foo.com"))
+  (explain-human ::email-address "foo@foo.com")
+
+  ([:map
+    [:items       [:vector {:vectorize true} :string]]
+    [:more-items  [:vector {:vectorize true} :string]]
+    [:other-items [:vector :string]]]
+   {:items "a"
+    :more-items ["a" "b"]
+    :other-items "a"} vectorize-transformer)
+
+  (m/decode [:map
+             [:mark-as [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]]
+            {:mark-as "needs-review"}
+            (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer vectorize-transformer namespace-enum-transformer)) ;; rcf
+
+;;
+  )

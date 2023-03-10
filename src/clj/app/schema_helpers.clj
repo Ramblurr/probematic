@@ -2,11 +2,10 @@
   (:require
    [clojure.string :as string]
    [malli.core :as m]
-   [tick.core :as t]
-   [app.debug :as debug]
-   [clojure.string :as str])
+   [malli.transform :as mt]
+   [tick.core :as t])
   (:import
-   [java.time Duration]))
+   (java.time Duration)))
 
 (def EmailAddress (m/-simple-schema {:type            :email-address
                                      :pred            #(and (string? %)
@@ -73,7 +72,7 @@
                                                      :json-schema/format "date"}}))
 
 (defn blank->nil [v]
-  (if (str/blank? v)
+  (if (string/blank? v)
     nil
     v))
 
@@ -154,6 +153,26 @@
    {:registry common-registry :decode/json {:enter '#(with-meta % {:ol/type :interval})}}
    [:beginning :app.schemas/instant]
    [:end {:optional true} [:maybe :app.schemas/instant]]])
+
+(def vectorize-transformer
+  (let [coders {:vector {:compile
+                         (fn [schema _]
+                           (when (some-> schema m/properties (find :vectorize))
+                             #(cond-> % (not (vector? %)) (vector))))}}]
+    (mt/transformer
+     {:decoders coders
+      :encoders coders})))
+
+(def namespace-enum-transformer
+  (let [coders {:enum {:compile
+                       (fn [schema _]
+                         (when (some-> schema m/properties (find :kw-namespace))
+                           (let [ns (namespace (nth  (m/form schema) 2))]
+                             (fn [v]
+                               (keyword  (name ns) (name v))))))}}]
+    (mt/transformer
+     {:decoders coders
+      :encoders coders})))
 
 (comment
   (require

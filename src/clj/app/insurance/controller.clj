@@ -525,10 +525,47 @@
     :instrument.category/name "Streich"
     :instrument.category/code "7"}])
 
+(defn enrich-coverages [policy coverage-types coverages]
+  (mapv (fn [coverage]
+          (let [coverage (update-total-coverage-price policy coverage)]
+            (assoc coverage :types
+                   (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
+                           (when-let [coverage-type (get-coverage-type-from-coverage coverage type-id)]
+                             coverage-type))
+                         coverage-types))))
+        coverages))
+
+(defn coverages-grouped-by-owner [policy]
+  (->> (:insurance.policy/covered-instruments policy)
+       (util/group-by-into-list :coverages (fn [c] (get-in c [:instrument.coverage/instrument :instrument/owner])))
+       (mapv (fn [r] (update r :coverages #(sort-by (fn [c] (get-in c [:instrument.coverage/instrument :instrument/name])) %))))
+       (mapv (fn [r] (update r :coverages #(enrich-coverages policy (:insurance.policy/coverage-types policy) %))))
+       (mapv (fn [{:keys [coverages] :as person}]
+               (assoc person :total (sum-by coverages :instrument.coverage/cost))))
+       (sort-by :member/name)))
+
+(def MarkAsSchema
+  (s/schema
+   [:map {:name ::MarkAs}
+    [:policy-id :uuid]
+    [:mark-as [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]
+    [:coverage-ids [:vector {:vectorize true} :uuid]]]))
+
+(defn mark-coverages-as! [req]
+  (let [{:keys [policy-id coverage-ids mark-as] :as p} (s/decode MarkAsSchema (:params req))]
+    (if (s/valid? MarkAsSchema p)
+      (let [txs (map (fn [cid]
+                       [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/status
+                        mark-as]) coverage-ids)
+            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+        {:policy (retrieve-policy db-after policy-id)
+         :db-after db-after})
+      (s/throw-error "Invalid arguments" nil MarkAsSchema p))))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
-    (require  '[datomic.client.api :as datomic])
+    (require '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
 
@@ -611,7 +648,7 @@
              {:insurance.policy/policy-id (sq/generate-squuid)
               :insurance.policy/currency :currency/EUR
               :insurance.policy/name "2022-2023"
-              :insurance.policy/effective-at  (t/inst)
+              :insurance.policy/effective-at (t/inst)
               :insurance.policy/effective-until
               (t/inst
                (t/>>
@@ -620,19 +657,19 @@
               :insurance.policy/covered-instruments []
               :insurance.policy/coverage-types ["ct_basic" "ct_overnight" "ct_proberaum"]
               :insurance.policy/premium-factor (* (bigdec 1.07) (bigdec 0.00447))
-              :insurance.policy/category-factors  ["cat_factor_blech"]}])
+              :insurance.policy/category-factors ["cat_factor_blech"]}])
 
   (datomic/transact conn {:tx-data txns})
 
   (def policy-ref (d/ref (d/find-by (datomic/db conn) :insurance.policy/name "2022-2023" [:insurance.policy/policy-id])
                          :insurance.policy/policy-id))
 
-  (def caseys-covered-ref    (d/ref
-                              (ffirst
-                               (d/find-all (datomic/db conn)
-                                           :instrument.coverage/coverage-id
-                                           [:instrument.coverage/coverage-id]))
-                              :instrument.coverage/coverage-id))
+  (def caseys-covered-ref (d/ref
+                           (ffirst
+                            (d/find-all (datomic/db conn)
+                                        :instrument.coverage/coverage-id
+                                        [:instrument.coverage/coverage-id]))
+                           :instrument.coverage/coverage-id))
 
   (datomic/transact conn {:tx-data [{:db/id policy-ref
                                      :insurance.policy/covered-instruments [caseys-covered-ref]}]})
@@ -679,27 +716,27 @@
     (datomic/pull db '[*] eid))
 
   (let [db (datomic/db conn)]
-    (->> (datomic/q '{:find  [?tx ?attr ?val ?added]
-                      :in    [$ ?coverage-id]
-                      :where [[?e     :instrument.coverage/coverage-id  ?coverage-id]
-                              [?e     ?attr       ?val        ?tx ?added]]}
+    (->> (datomic/q '{:find [?tx ?attr ?val ?added]
+                      :in [$ ?coverage-id]
+                      :where [[?e :instrument.coverage/coverage-id ?coverage-id]
+                              [?e ?attr ?val ?tx ?added]]}
                     (datomic/history db)
                     #uuid "0186c248-07ba-82c0-bfda-237986a75705")
          (group-by first)
          (map (fn [[tx transactions]]
                 (let [tx-info (datomic/pull db '[*] tx)]
-                  {:timestamp  (:db/txInstant tx-info)
-                   :audit  (select-keys tx-info [:audit/user])
-                   :changes   (->> transactions
-                                   (map (fn [[_ attr val added]]
-                                          [(ident db attr) (if (ref? db attr)
-                                                             (resolve-ref db val)
-                                                             val) (if added :added :retracted)]))
-                                   (sort-by last))})))
+                  {:timestamp (:db/txInstant tx-info)
+                   :audit (select-keys tx-info [:audit/user])
+                   :changes (->> transactions
+                                 (map (fn [[_ attr val added]]
+                                        [(ident db attr) (if (ref? db attr)
+                                                           (resolve-ref db val)
+                                                           val) (if added :added :retracted)]))
+                                 (sort-by last))})))
          (sort-by :timestamp)))
 
   (map
-   first (d/find-all db  :insurance.category.factor/category-factor-id '[*]))
+   first (d/find-all db :insurance.category.factor/category-factor-id '[*]))
 
   (d/find-by db :instrument.coverage/coverage-id #uuid "0186c248-07ba-82c0-bfda-237986a7573b" q/instrument-coverage-detail-pattern)
 

@@ -253,7 +253,7 @@
       :id  "motivation"
       :value (when motivation (name motivation))
       :size :small
-      :extra-attrs {:hx-trigger "change" :hx-post (comp-name) :hx-vals (ui/hx-vals {"member-id" member-id})}
+      :extra-attrs {:hx-trigger "change" :hx-post (comp-name) :hx-vals {:member-id (str member-id)}}
       :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/motivations))]))
 
 (defn comment-endpoint [req {:keys [id hash value]} comp-name gig-id member-id comment edit?]

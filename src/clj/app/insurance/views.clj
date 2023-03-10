@@ -375,36 +375,33 @@
 
                                                       coverage-types)))))
 
-(defn coverage-status-icon [tr status]
+(def coverage-status-data
+  {:instrument.coverage.status/needs-review {:icon  icon/circle-question-outline :class "text-orange-400"}
+   :instrument.coverage.status/reviewed {:icon icon/circle-dot-outline :class "text-gray-400"}
+   :instrument.coverage.status/coverage-active {:icon icon/circle-check-outline :class "text-green-400"}})
+
+(defn coverage-status-icon [status]
+  (let [{:keys [icon class]} (get coverage-status-data status)]
+    (icon {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0")})))
+
+(defn coverage-status-icon-span [tr status]
   [:span {:title (tr [status])}
-   (get {:instrument.coverage.status/needs-review  (icon/circle-question-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"})
-         :instrument.coverage.status/reviewed (icon/circle-dot-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"})
-         :instrument.coverage.status/coverage-active (icon/circle-check-outline {:class "mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"})}
-        status)])
+   (coverage-status-icon status)])
 
-(defn enrich-coverages [policy coverage-types coverages]
-  (mapv (fn [coverage]
-          (let [coverage (controller/update-total-coverage-price policy coverage)]
-            (assoc coverage :types
-                   (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                           (when-let [coverage-type (controller/get-coverage-type-from-coverage coverage type-id)]
-                             coverage-type))
-                         coverage-types))))
-        coverages))
+(declare insurance-instrument-coverage-table)
 
-(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [db tr] :as req}]
+(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table-mark-as [req]
+  (when (util/post? req)
+    (let [{:keys [policy db-after]} (controller/mark-coverages-as! req)]
+      (insurance-instrument-coverage-table (util/make-get-request req {:db db-after :policy policy})))))
+
+(ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [tr] :as req}]
+  insurance-instrument-coverage-table-mark-as
   (let [policy (:policy req)
+        endpoint-mark-as (util/endpoint-path insurance-instrument-coverage-table-mark-as)
         coverage-types (:insurance.policy/coverage-types policy)
-        ;; _ (tap> {:types coverage-types})
         covered-instruments (:insurance.policy/covered-instruments policy)
-        grouped-by-owner (->>  covered-instruments
-                               (util/group-by-into-list :coverages (fn [c] (get-in c [:instrument.coverage/instrument :instrument/owner])))
-                               (mapv (fn [r] (update r :coverages  #(sort-by (fn [c] (get-in c [:instrument.coverage/instrument :instrument/name])) %))))
-                               (mapv (fn [r] (update r :coverages #(enrich-coverages policy coverage-types %))))
-
-                               (mapv (fn [{:keys [coverages] :as person}]
-                                       (assoc person :total (controller/sum-by coverages :instrument.coverage/cost))))
-                               (sort-by :member/name))
+        grouped-by-owner (controller/coverages-grouped-by-owner policy)
         total-cost (controller/sum-by grouped-by-owner :total)
         total-instruments (count covered-instruments)
         total-private-count (count (filter :instrument.coverage/private? covered-instruments))
@@ -421,13 +418,13 @@
         center-vertical "flex items-center"
         number "text-right"
         number-total "border-double border-t-4 border-gray-300"]
-    ;; (tap> {:g grouped-by-owner})
-    (list
-     [:div {:class "instrgrid border-collapse overflow-hidden m-w-full "}
-      [:div {:class (ui/cs "instrgrid--header min-w-full py-4 bg-gray-100  text-sm truncate gap-1 grid grid-cols-[22px_minmax(0,_1fr)_minmax(0,_1fr)]"  spacing)}
-       [:div {:class (ui/cs col-all center-all)}
-        [:input {:type "checkbox" :id "instr-select-all"
-                 :_ (format "on checkboxChanged
+    [:form {:id id
+            :class "instrgrid border-collapse overflow-hidden m-w-full"}
+     [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
+     [:div {:class (ui/cs "instrgrid--header min-w-full py-4 bg-gray-100  text-sm truncate gap-1 grid grid-cols-[22px_minmax(0,_1fr)_minmax(0,_1fr)]"  spacing)}
+      [:div {:class (ui/cs col-all center-all)}
+       [:input {:type "checkbox" :id "instr-select-all"
+                :_ (format "on checkboxChanged
                      if length of <div.instrgrid--body input[type=checkbox]:checked/> > 0
                        set .status-selected.innerHTML to `${length of <div.instrgrid--body input[type=checkbox]:checked/>} %s`
                        then add .hidden to .status-totals
@@ -452,82 +449,90 @@
                             end
                        then trigger checkboxChanged on me" (tr [:selected]))
 
-                 :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
+                :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
 
-       [:div {:class (ui/cs  col-all "flex gap-4")}
-        [:div {:class (ui/cs  "status-selected hidden py-2 pl-2" center-vertical)}]
-        [:div {:class (ui/cs  "status-totals" center-vertical "gap-6")}
-         [:span  {:class (ui/cs "py-2 flex" (when (> total-needs-review 0) "font-medium"))}
-          (coverage-status-icon tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]
-         [:span  {:class "flex"}
-          (coverage-status-icon tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]
-         [:span  {:class "flex"}
-          (coverage-status-icon tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]
-       [:div {:class (ui/cs  col-all "flex justify-end gap-4 actions-selected hidden")}
-        (ui/action-menu
-         :label (tr [:action/mark-as])
-         :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :href "foo" :active? false}
-                             {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false}
-                             {:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false}]}]
-         :id "member-table-actions")]]
+      [:div {:class (ui/cs  col-all "flex gap-4")}
+       [:div {:class (ui/cs  "status-selected hidden py-2 pl-2" center-vertical)}]
+       [:div {:class (ui/cs  "status-totals" center-vertical "gap-6")}
+        [:span  {:class (ui/cs "py-2 flex" (when (> total-needs-review 0) "font-medium"))}
+         (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]
+        [:span  {:class "flex"}
+         (coverage-status-icon-span tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]
+        [:span  {:class "flex"}
+         (coverage-status-icon-span tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]
+      [:div {:class (ui/cs  col-all "flex justify-end gap-4 actions-selected hidden")}
+       (ui/action-menu
+        :label (tr [:action/mark-as])
+        :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
+                             :icon (coverage-status-icon :instrument.coverage.status/needs-review)
+                             :tag :button
+                             :attr {:hx-vals {"mark-as" "needs-review"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                            {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
+                             :tag :button
+                             :attr {:hx-vals {"mark-as" "reviewed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                            {:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
+                             :tag :button
+                             :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
+        :id "coverage-table-actions")]]
 
-      [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
-       [:div {:class (ui/cs col-all center-all)}]
+     [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
+      [:div {:class (ui/cs col-all center-all)}]
 
-       [:div {:class (ui/cs col-all)} ""]
-       [:div {:class (ui/cs col-all "truncate")} (tr [:instrument/instrument])]
-       [:div {:class (ui/cs col-all)} "Band?"]
-       [:div {:class (ui/cs col-sm number)} (tr [:insurance/item-count])]
-       [:div {:class (ui/cs col-sm number)} [:span {:title (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
-       (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
-       [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
-      [:div {:class "instrgrid--body divide-y"}
-       (map (fn [{:member/keys [name] :keys [coverages total]}]
-              [:div {:class "instrgrid--group"}
-               [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
-                [:span name]
-                [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
-               [:div {:class "divide-y"}
-                (map-indexed (fn [idx {:instrument.coverage/keys [status private? value item-count instrument cost] :keys [types] :as coverage}]
-                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
-                                [:div {:class (ui/cs col-all center-all)}
-                                 [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
-                                          :_ "on click trigger checkboxChanged on #instr-select-all"}]]
-                                [:div {:class (ui/cs col-all)}
-                                 (coverage-status-icon tr status)]
+      [:div {:class (ui/cs col-all)} ""]
+      [:div {:class (ui/cs col-all "truncate")} (tr [:instrument/instrument])]
+      [:div {:class (ui/cs col-all)} "Band?"]
+      [:div {:class (ui/cs col-sm number)} (tr [:insurance/item-count])]
+      [:div {:class (ui/cs col-sm number)} [:span {:title (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
+      (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
+      [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
+     [:div {:class "instrgrid--body divide-y"}
+      (map (fn [{:member/keys [name] :keys [coverages total]}]
+             [:div {:class "instrgrid--group"}
+              [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
+               [:span name]
+               [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
+              [:div {:class "divide-y"}
+               (map-indexed (fn [idx {:instrument.coverage/keys [coverage-id status private? value item-count instrument cost] :keys [types] :as coverage}]
+                              [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
+                               [:div {:class (ui/cs col-all center-all)}
+                                [:input {:type "checkbox" :id id :name "coverage-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+                                         :value (str coverage-id)
+                                         :_ "on click trigger checkboxChanged on #instr-select-all"}]]
+                               [:div {:class (ui/cs col-all)}
+                                (coverage-status-icon-span tr status)]
 
-                                [:div {:class (ui/cs col-all "truncate")}
-                                 [:a {:href (url/link-coverage coverage) :class "text-medium"}
-                                  (:instrument/name instrument)]]
-                                [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
-                                [:div {:class (ui/cs col-sm number)} item-count]
-                                [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
-                                (map (fn [ct] [:div {:class (ui/cs col-sm number)}
-                                               (when ct (ui/money  (:insurance.coverage.type/cost ct) :EUR))]) types)
-                                [:div {:class (ui/cs col-all number)} (ui/money cost :EUR)]])
+                               [:div {:class (ui/cs col-all "truncate")}
+                                [:a {:href (url/link-coverage coverage) :class "text-medium"}
+                                 (:instrument/name instrument)]]
+                               [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
+                               [:div {:class (ui/cs col-sm number)} item-count]
+                               [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
+                               (map (fn [ct] [:div {:class (ui/cs col-sm number)}
+                                              (when ct (ui/money  (:insurance.coverage.type/cost ct) :EUR))]) types)
+                               [:div {:class (ui/cs col-all number)} (ui/money cost :EUR)]])
 
-                             coverages)]
-               [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
-                [:div {:class (ui/cs col-all)}]
-                [:div {:class (ui/cs col-all)}]
-                [:div {:class (ui/cs col-all)}]
-                [:div {:class (ui/cs col-all)}]
-                [:div {:class (ui/cs col-sm)}]
-                [:div {:class (ui/cs col-sm)}]
-                (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
-                [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
+                            coverages)]
+              [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
+               [:div {:class (ui/cs col-all)}]
+               [:div {:class (ui/cs col-all)}]
+               [:div {:class (ui/cs col-all)}]
+               [:div {:class (ui/cs col-all)}]
+               [:div {:class (ui/cs col-sm)}]
+               [:div {:class (ui/cs col-sm)}]
+               (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
+               [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
 
-            grouped-by-owner)]
-      [:div {:class "instragrid--footer"}
-       [:div {:class (ui/cs grid-class "min-w-full bg-gray-100  text-sm gap-1" spacing)}
-        [:div {:class (ui/cs col-all)}]
-        [:div {:class (ui/cs col-all)}]
-        [:div {:class (ui/cs col-all number number-total)}
-         [:span {:class "text-red-500" :title "Privat"} (str  "P" total-private-count " ")]  [:span {:class "text-green-500" :title "Band"} (str  "B" total-band-count)]]
-        [:div {:class (ui/cs col-sm number number-total)} total-instruments]
-        [:div {:class (ui/cs col-sm)}]
-        (map (fn [_] [:div {:class (ui/cs col-md)}]) coverage-types)
-        [:div {:class (ui/cs col-all number number-total)} (ui/money total-cost :EUR)]]]])))
+           grouped-by-owner)]
+     [:div {:class "instragrid--footer"}
+      [:div {:class (ui/cs grid-class "min-w-full bg-gray-100  text-sm gap-1" spacing)}
+       [:div {:class (ui/cs col-all)}]
+       [:div {:class (ui/cs col-all)}]
+       [:div {:class (ui/cs col-all number number-total)}
+        [:span {:class "text-red-500" :title "Privat"} (str  "P" total-private-count " ")]  [:span {:class "text-green-500" :title "Band"} (str  "B" total-band-count)]]
+       [:div {:class (ui/cs col-sm number number-total)} total-instruments]
+       [:div {:class (ui/cs col-sm)}]
+       (map (fn [_] [:div {:class (ui/cs col-md)}]) coverage-types)
+       [:div {:class (ui/cs col-all number number-total)} (ui/money total-cost :EUR)]]]]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-delete [{:keys [db tr] :as req}]
   (when (util/delete? req)
@@ -623,7 +628,7 @@
             coverage (controller/retrieve-coverage db coverage-id)
             policy (:insurance.policy/_covered-instruments coverage)
             coverage-types (:insurance.policy/coverage-types policy)
-            coverage (first (enrich-coverages policy coverage-types [coverage]))
+            coverage (first (controller/enrich-coverages policy coverage-types [coverage]))
             {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
             photos (list-image-uris req instrument-id)]
         (assert coverage)

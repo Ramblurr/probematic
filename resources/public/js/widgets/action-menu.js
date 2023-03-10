@@ -18,6 +18,13 @@ export function ActionMenu2(dropdownTrigger) {
         offset: [0, 0],
         arrow: false,
         theme: "translucent",
+        onShown: (instance) => {
+            if(htmx) {
+                const root = htmx.find("[data-tippy-root]");
+                if (root)
+                    htmx.process(root);
+            }
+        },
         popperOptions: {
             strategy: 'fixed',
             modifiers: [

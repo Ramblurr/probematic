@@ -817,13 +817,6 @@
                      (str/replace avatar-template "{size}" "200"))
                 "/img/default-avatar.png")}])
 
-(defn hx-vals
-  "Serializes the passed map as a json object, useful with :hx-vals. Omits nils"
-  [m]
-
-  (j/write-value-as-string
-   (util/remove-nils m)))
-
 (defn divider-center [title]
   [:div {:class "relative"}
    [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
@@ -1108,12 +1101,17 @@
           [:div {:class "flex flex-shrink-0 justify-end px-4 py-4 space-x-3"}
            buttons])]]]]]])
 
-(defn action-menu-item [id idx {:keys [label href attr active?]}]
-  [:a (merge {:href href :class
-              (cs
-               "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm"
-               (when active? "font-medium bg-gray-100 text-gray-900 ")) :role "menuitem" :tabindex "-1" :id (str id "-" idx)}
-             (or attr {}))
+(defn action-menu-item [id idx {:keys [label href attr active? icon tag]
+                                :or {attr {}
+                                     tag :a}}]
+  [tag (merge {:href href :class
+               (cs
+                "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm w-full"
+                (when icon "flex gap-1")
+                (when active? "font-medium bg-gray-100 text-gray-900 ")) :role "menuitem" :tabindex "-1" :id (str id "-" idx)}
+              attr)
+   (when icon
+     icon)
    label])
 
 (defn action-menu-section [id section]
@@ -1130,7 +1128,8 @@
   [:div {:class "flex items-center" :hx-boost hx-boost}
    [:div {:class "relative"}
     [:div
-     [:button {:class "inline-flex items-center text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-md text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700", :type "button"
+     [:button {:class "inline-flex items-center text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-md text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+               :type "button"
                :data-action-menu2-trigger (str "#" id)}
       (when button-icon
         (button-icon {:class "w-4 h-4 mr-2 text-gray-900"}))
