@@ -1,8 +1,7 @@
 (ns app.airtable
   (:require
-   [org.httpkit.client :as client]
    [jsonista.core :as j]
-   [puget.printer :as puget]))
+   [org.httpkit.client :as client]))
 
 (def base-url "https://api.airtable.com/v0/")
 (defn add-auth [req token]
