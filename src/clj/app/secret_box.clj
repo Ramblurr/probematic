@@ -4,7 +4,8 @@
    [buddy.core.codecs :as codecs]
    [buddy.core.hash :as digest]
    [com.yetanalytics.squuid :as sq]
-   [taoensso.nippy :as nippy]))
+   [taoensso.nippy :as nippy]
+   [clojure.java.io :as io]))
 
 (defn bytes->b64u
   "Convert byte array into a URL safe base64 encoded string"
@@ -44,6 +45,15 @@
 (defn sha1-str [in]
   (codecs/bytes->hex (digest/sha1 in)))
 
+(defn sha384-resource [path]
+  (str "sha384-"
+       (-> path
+           io/resource
+           io/input-stream
+           digest/sha384
+           codecs/bytes->b64
+           codecs/bytes->str)))
+
 (comment
   ;; Usage
 
@@ -59,4 +69,7 @@
        :uuid (sq/generate-squuid)}
       (encrypt "hunter2")
       (decrypt "hunter2")) ;; rcf
+
+  (sha384-resource "public/js/app.js") ;; rcf
+  ;;
   )

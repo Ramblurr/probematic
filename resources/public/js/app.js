@@ -1,6 +1,6 @@
 import {$, listen} from "./utils.js"
 import {Dropdown, DropdownAll} from "./widgets/attendance-dropdown.js"
-import {ActionMenu2All, ActionMenu,Flyout} from "./widgets/action-menu.js"
+import {ActionMenu2All, ActionMenu,Flyout} from "./widgets/action-menu.js?v2"
 
 //// SETUP
 htmx.onLoad(function(content) {

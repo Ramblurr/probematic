@@ -1,5 +1,6 @@
 (ns app.render
   (:require
+   [app.secret-box :as secret-box]
    [clojure.java.io :as io]
    [ctmx.render :as ctmx.render]
    [hiccup.page :as hiccup.page]
@@ -37,26 +38,38 @@
                                         ;:body (pretty-print-html body)
     :body  body}))
 
+(def sha384-resource (memoize secret-box/sha384-resource))
+
+(defn script [relative-prefix path & extra]
+  [:script (merge {:src (str relative-prefix "/js/" path)
+                   :integrity  (sha384-resource (str "public/js/" path))}
+                  (apply hash-map extra))])
+
+(defn stylesheet [relative-prefix path & extra]
+  [:link (merge {:rel "stylesheet"
+                 :href (str relative-prefix path)
+                 :integrity (sha384-resource (str "public/" path))}
+                (apply hash-map extra))])
+
 (defn head [title relative-prefix]
   [:head
    [:meta {:charset "utf-8"}]
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
-   [:title (or title "Probematic")]
-   ;; [:link {:rel "stylesheet" :href "https://rsms.me/inter/inter.css"}]
-   [:link {:rel "stylesheet" :href (str relative-prefix "/font/inter/inter.css")}]
-   [:link {:rel "stylesheet" :href (str relative-prefix  "/css/compiled/main.css")}]])
+   [:title (or title "SNOrga")]
+   (stylesheet relative-prefix "/font/inter/inter.css")
+   (stylesheet relative-prefix "/css/compiled/main.css")])
 
 (defn body-end [relative-prefix]
   (list
-   [:script {:src (str relative-prefix "/js/hyperscript.org@0.9.7.js")}]
-   [:script {:src (str relative-prefix "/js/htmx.js")}]
-   [:script {:src (str relative-prefix "/js/nprogress.js")}]
-   [:script {:src (str relative-prefix "/js/popperjs@2-dev.js")}]
-   [:script {:src (str relative-prefix "/js/tippy@6-dev.js")}]
-   [:script {:src (str relative-prefix "/js/sortable@1.14.0.js")}]
-   [:script {:src (str relative-prefix "/js/dropzone@6.0.0-beta.2.min.js")}]
-   [:script {:src (str relative-prefix "/js/app.js") :type :module}]))
+   (script relative-prefix "hyperscript.org@0.9.7.js")
+   (script relative-prefix "htmx.js")
+   (script relative-prefix "nprogress.js")
+   (script relative-prefix "popperjs@2-dev.js")
+   (script relative-prefix "tippy@6-dev.js")
+   (script relative-prefix "sortable@1.14.0.js")
+   (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
+   (script relative-prefix "app.js" :type :module)))
 
 (defn html5-response
   ([body] (html5-response nil body))
