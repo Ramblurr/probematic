@@ -11,9 +11,11 @@
    [clojure.data :as diff]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
+   [co.deps.ring-etag-middleware :as etag]
    [datomic.client.api :as d]
    [io.pedestal.http :as http]
    [io.pedestal.http.ring-middlewares :as middlewares]
+   [io.pedestal.interceptor :as interceptor]
    [io.pedestal.interceptor.chain :as chain]
    [io.pedestal.interceptor.error :as error-int]
    [luminus-transit.time :as time]
@@ -305,6 +307,29 @@
                     ;; multipart
                     (multipart/multipart-interceptor)])))
 
+(def etag-interceptor
+  (interceptor/interceptor
+   {:name ::etag
+    :leave (middlewares/response-fn-adapter
+            (fn [request _opts]
+              (etag/add-file-etag request false)))}))
+
+(def cache-control-interceptor
+  (interceptor/interceptor
+   {:name  ::cache-control
+    :leave (fn [ctx]
+             (if-not (get-in ctx [:response :headers "Cache-Control"])
+               (if-let [content-type (get-in ctx [:response :headers "Content-Type"])]
+                 (let [cacheable-content-type? (fn [content-type]
+                                                 (some
+                                                  #(contains? #{"text/css" "text/javascript" "image/svg+xml"
+                                                                "image/png" "image/x-icon" "text/xml"} %)
+                                                  (str/split content-type #";")))]
+                   (assoc-in ctx [:response :headers "Cache-Control"]
+                             (if (cacheable-content-type? content-type) "max-age=31536000,immutable,public" "no-cache")))
+                 ctx)
+               ctx))}))
+
 (def to-remove #{:io.pedestal.http.route/query-params
                  :io.pedestal.http.route/path-params-decoder
                  :io.pedestal.http/log-request
@@ -314,6 +339,8 @@
       (update ::http/interceptors conj
               service-error-handler
               middlewares/cookies
+              etag-interceptor
+              cache-control-interceptor
               ;; this should be last!
               (pedestal/routing-interceptor router handler))
       ;; remove the pedestal default handler, because now we use the reitit one

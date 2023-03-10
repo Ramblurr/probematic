@@ -41,15 +41,19 @@
 (def sha384-resource (memoize secret-box/sha384-resource))
 
 (defn script [relative-prefix path & extra]
-  [:script (merge {:src (str relative-prefix "/js/" path)
-                   :integrity  (sha384-resource (str "public/js/" path))}
-                  (apply hash-map extra))])
+  (let [sri-hash (sha384-resource (str "public/js/" path))
+        suffix (subs sri-hash  (- 71 8))]
+    [:script (merge {:src (str relative-prefix "/js/" path "?" suffix)
+                     :integrity  sri-hash}
+                    (apply hash-map extra))]))
 
 (defn stylesheet [relative-prefix path & extra]
-  [:link (merge {:rel "stylesheet"
-                 :href (str relative-prefix path)
-                 :integrity (sha384-resource (str "public/" path))}
-                (apply hash-map extra))])
+  (let [sri-hash (sha384-resource (str "public/" path))
+        suffix (subs sri-hash (- 71 8))]
+    [:link (merge {:rel "stylesheet"
+                   :href (str relative-prefix path "?" suffix)
+                   :integrity sri-hash}
+                  (apply hash-map extra))]))
 
 (defn head [title relative-prefix]
   [:head
