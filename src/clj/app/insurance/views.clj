@@ -382,7 +382,8 @@
 
 (defn coverage-status-icon [status]
   (let [{:keys [icon class]} (get coverage-status-data status)]
-    (icon {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0")})))
+    (when icon
+      (icon {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0")}))))
 
 (defn coverage-status-icon-span [tr status]
   [:span {:title (tr [status])}
