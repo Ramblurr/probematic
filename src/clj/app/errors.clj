@@ -61,8 +61,8 @@
                             (assoc :form-params (:form-params req))
                             (assoc :path-params (:path-params req)))))
       (update :request-method name)
-      (select-keys   [:url :query-string :request-method :headers :params])
-      (set/rename-keys  {:request-method :method :params :data})))
+      (select-keys   [:uri :query-string :request-method :headers :params])
+      (set/rename-keys  {:request-method :method :params :data :uri :url})))
 
 (defn send-sentry!
   "Sends a sentry event asynchronously"

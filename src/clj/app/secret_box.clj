@@ -46,13 +46,14 @@
   (codecs/bytes->hex (digest/sha1 in)))
 
 (defn sha384-resource [path]
-  (str "sha384-"
-       (-> path
-           io/resource
-           io/input-stream
-           digest/sha384
-           codecs/bytes->b64
-           codecs/bytes->str)))
+  (if-let [resource (io/resource path)]
+    (str "sha384-"
+         (-> resource
+             io/input-stream
+             digest/sha384
+             codecs/bytes->b64
+             codecs/bytes->str))
+    (throw (ex-info "Cannot load resource %s from classpath" {:path path}))))
 
 (comment
   ;; Usage
