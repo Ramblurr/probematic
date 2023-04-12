@@ -204,16 +204,18 @@
         size-class (if (= size :large) "w-5 h-5" "w-3 h-3")
         red-class "text-red-500 group-hover:text-red-500"
         green-class "text-green-500 group-hover:text-green-500"]
-    {:opts [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class)}
-            {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class)}
-            {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
-            {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class)}
-            {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class)}
-            {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black")}]
-     :default {:label (tr [:plan/no-response]) :value (name :plan/no-response) :icon icon/minus :icon-class (ui/cs icon-class  size-class "text-gray-500")}}))
+    {:opts [{:label (tr [:plan/definitely]) :value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class) :enabled? true}
+            {:label (tr [:plan/probably]) :value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class) :enabled? false}
+            {:label (tr [:plan/unknown]) :value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500") :enabled? true}
+            {:label (tr [:plan/probably-not]) :value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class) :enabled? false}
+            {:label (tr [:plan/definitely-not]) :value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class) :enabled? true}
+            {:label (tr [:plan/not-interested]) :value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black") :enabled? true}]
+     :default {:label (tr [:plan/no-response]) :value (name :plan/no-response) :icon icon/minus :icon-class (ui/cs icon-class  size-class "text-gray-500") :enabled? true}}))
 
-(defn attendance-dropdown-opt [{:keys [label value icon icon-class]}]
-  [:a {:href "#" :data-value value :class "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm", :role "menuitem", :tabindex "-1", :id "menu-item-0"}
+(defn attendance-dropdown-opt [{:keys [label value icon icon-class enabled?]}]
+  [:a {:href "#" :data-value value
+       :class (ui/cs "hover:bg-gray-200 text-gray-700 group flex items-center px-4 py-2 text-sm" (when-not enabled? "hidden"))
+       :role "menuitem" :tabindex "-1" :id "menu-item-0"}
    (icon {:class  icon-class}) label])
 
 (defn attendance-dropdown [& {:keys [member-id gig-id value tr]
