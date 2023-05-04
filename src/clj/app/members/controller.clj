@@ -143,6 +143,13 @@
            (munge-unique-conflict-error tr e)
            :else e))))))
 
+(defn try-clean-number [env phone]
+  (try
+    (twilio/clean-number env phone)
+    (catch clojure.lang.ExceptionInfo e
+      (errors/report-error! e {:twilio-clean-number-failed phone})
+      phone)))
+
 (defn update-member! [req]
   (let [member-id (http.util/path-param-uuid! req :member-id)
         current-user-admin? (auth/current-user-admin? req)
@@ -153,7 +160,7 @@
                   {:db/id member-ref
                    :member/name name
                    :member/phone (if (not=  old-phone phone)
-                                   (twilio/clean-number (-> req :system :env) phone)
+                                   (try-clean-number (-> req :system :env) phone)
                                    old-phone)
                    :member/nick nick
                    :member/email (clean-email email)
