@@ -1,14 +1,9 @@
 (ns app.jobs.reminders
   (:require
-   [app.datomic :as d]
    [app.email :as email]
    [app.gigs.domain :as domain]
-   [app.probeplan :as probeplan]
    [app.queries :as q]
-   [app.errors :as errors]
-   [chime.core :as chime]
    [clojure.tools.logging :as log]
-   [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
    [tick.core :as t]))

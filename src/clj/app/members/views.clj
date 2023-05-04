@@ -473,6 +473,12 @@
       (invite-accept-form req invite-data nil)
       (invite-invalid req))))
 
+(defn post-invite-login-link [env member]
+  (str
+   (url/absolute-link-login env)
+   "?login_hint="
+   (util/url-encode (:member/email member))))
+
 (defn invite-accept-post [{:keys [tr system] :as req}]
   (try
 
@@ -484,7 +490,8 @@
                                 [:div
                                  (ui/link-button :priority :primary :centered? true
                                                  :class "w-full"
-                                                 :label (tr [:login]) :attr {:href (str (url/absolute-link-login (:env system)) "?login_hint=" (util/url-encode (:member/email member)))})]]))
+                                                 :label (tr [:login])
+                                                 :attr {:href (post-invite-login-link (:env system) member)})]]))
 
     (catch Throwable e
       (let [reason (-> e ex-data :reason)]
@@ -492,3 +499,20 @@
           nil (throw e)
           :code-expired (invite-invalid req)
           (invite-accept-form req (->  e ex-data :invite-data) ((i18n/tr-from-req req) [reason])))))))
+
+(comment
+
+  (do
+    (require '[integrant.repl.state :as state])
+    (require '[datomic.client.api :as datomic])
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db  (datomic/db conn))
+    (def system {:datomic {:conn conn}
+                 :redis (-> state/system :app.ig/redis)
+                 :i18n-langs (-> state/system :app.ig/i18n-langs)
+                 :env (-> state/system :app.ig/env)})) ;; rcf
+
+  (post-invite-login-link (:env system) (q/member-by-email db "me@caseylink.com"))
+
+  ;;
+  )

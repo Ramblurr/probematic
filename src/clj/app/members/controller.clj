@@ -226,7 +226,7 @@
     (log/info "resending email invitation" data)
     (email/send-new-user-email! req member invite-code)))
 
-(defn setup-account [{:keys [datomic-conn system params db] :as req}]
+(defn setup-account [{:keys [system params db] :as req}]
   (let [{:keys [password password-confirm invite-code]} params
         member-id (fetch-invite-code system invite-code)]
     (if-not member-id
@@ -236,10 +236,11 @@
         (if-not (= :password/valid pw-validation-result)
           (throw (ex-info "Password invalid" {:reason pw-validation-result
                                               :invite-data {:member member :invite-code invite-code}}))
-          (let [new-user (keycloak/create-new-member! (keycloak/kc-from-req req) member password true)]
-            (:member (transact-member! req member-id [[:db/add [:member/member-id member-id]
-                                                       :member/keycloak-id (:user/user-id new-user)]]))
-            (-delete-invitation (-> req :system :redis) invite-code)))))))
+          (let [new-user (keycloak/create-new-member! (keycloak/kc-from-req req) member password true)
+                tx [:db/add [:member/member-id member-id] :member/keycloak-id (:user/user-id new-user)]
+                member (:member (transact-member! req member-id [tx]))]
+            (-delete-invitation (-> req :system :redis) invite-code)
+            member))))))
 
 (comment
   (do
@@ -250,7 +251,7 @@
     (def redis (-> state/system :app.ig/redis))
     (def db (datomic/db conn))) ;; rcf
 
-  (all-open-invites {:redis redis :db db})
+  (members-with-open-invites {:system {:redis redis} :db db})
   (q/retrieve-member db "2KAOMVbGXP0rB-kv1Z2NUstpzwwTtujD-dnMzSCmHsc")
   (load-invite {:db db :system {:env env} :params {:code
                                                    "TlBZDgvm3XxaegLBrDvZNkQsu3YwVRutJosggNZdC9YmCzL1jt2kUfDxdtElBEgcbhVNCLQipSS7SiOVygPHod6E6xjiDd9a3CjfsU2hEWZzXeoaVaTrEre1StrqfHHqZQXbuYZXd_nNEErC_tobIxAt7MhC7KfjleZ2_-RDzRnPoVlvDHA2sy2vsLP5mHWyeSMlTQZG"}})
