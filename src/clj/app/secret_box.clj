@@ -37,7 +37,8 @@
   (nippy/thaw ciphertext {:password [:cached password]}))
 
 (defn decrypt [ciphertext password]
-  (decrypt-bytes (b64u->bytes ciphertext) password))
+  (when (and ciphertext password)
+    (decrypt-bytes (b64u->bytes ciphertext) password)))
 
 (defn random-str [len]
   (bytes->b64u (util/random-bytes len)))
