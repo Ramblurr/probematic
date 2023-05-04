@@ -1,22 +1,15 @@
 (ns app.probeplan.views
   (:require
-
-   [app.probeplan.domain :as domain]
-   [app.probeplan :as pp]
-   [app.util :as util]
-   [app.urls :as url]
-   [app.ui :as ui]
-   [app.probeplan.controller :as controller]
-   [ctmx.response :as response]
-   [app.icons :as icon]
-   [ctmx.core :as ctmx]
-   [tick.core :as t]
-   [tick.alpha.interval :as t.i]
-   [ctmx.rt :as rt]
-   [medley.core :as m]
-   [app.queries :as q]
    [app.i18n :as i18n]
-   [clojure.set :as set]))
+   [app.probeplan.controller :as controller]
+   [app.ui :as ui]
+   [app.urls :as url]
+   [app.util :as util]
+   [ctmx.core :as ctmx]
+   [ctmx.rt :as rt]
+   [tick.core :as t])
+  (:import
+   (java.util Locale)))
 
 (defn probe-row [songs])
 
@@ -57,7 +50,7 @@
          [:input {:type :hidden :data-form true :name (path "gig-id") :value gig-id}]
          [:input {:type :hidden :data-form true :name (path "date") :value date}]))]
      [:td {:class "font-mono px-2 py-1 bg-green-100"}
-      (let [date-str (t/format (t/formatter "dd.MM") date)]
+      (let [date-str (t/format (t/formatter "dd.MM" Locale/GERMAN) date)]
         (if fixed?
           [:a {:href (url/link-gig gig-id) :class "link-blue underline"} date-str]
           date-str))]

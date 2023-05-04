@@ -44,7 +44,6 @@
   (let [attendance (:attendance gig)
         plan (:attendance/plan attendance)
         gig-id (:gig/gig-id gig)
-        tr (:tr req)
         {:member/keys [member-id]} (:attendance/member attendance)
         {:gig/keys [date end-date status title]} gig]
 

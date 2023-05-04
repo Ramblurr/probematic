@@ -913,35 +913,35 @@
 
 (defn format-dt
   ([dt]
-   (format-dt dt (t/formatter "dd MMM yyyy")))
+   (format-dt dt (t/formatter "E dd MMM yyyy" Locale/GERMAN)))
   ([dt fmt]
    (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
      (t/format fmt  norm-dt))))
 
 (defn format-time [dt]
   (let [norm-dt (if (inst? dt) (t/date-time dt) dt)]
-    (t/format (t/formatter "HH:mm") norm-dt)))
+    (t/format (t/formatter "HH:mm" Locale/GERMAN) norm-dt)))
 
 (defn gig-date-all [{:gig/keys [date call-time]}]
   (cond
     (and date call-time)
     (let [dt (t/at date call-time)]
       [:time {:datetime (str dt)}
-       (t/format (t/formatter "dd.MM.yy E HH:mm") dt)])
+       (t/format (t/formatter "dd.MM.yy E HH:mm" Locale/GERMAN) dt)])
     (some? date)
     [:time {:datetime (str date)}
-     (t/format (t/formatter "dd.MM.yy E") date)]
+     (t/format (t/formatter "dd.MM.yy E" Locale/GERMAN) date)]
     :else nil))
 
 (defn gig-date [{:gig/keys [date call-time]}]
   (when date
-    (t/format (t/formatter "dd.MM.yy E") (t/date date))))
+    (t/format (t/formatter "dd.MM.yy E" Locale/GERMAN) (t/date date))))
 
 (defn gig-time [{:gig/keys [date call-time set-time end-time]}]
   (when-let [time (or call-time set-time)]
-    (let [fmt-start (t/format (t/formatter "HH:mm") (t/at date time))]
+    (let [fmt-start (t/format (t/formatter "HH:mm" Locale/GERMAN) (t/at date time))]
       (if end-time
-        (str fmt-start " - " (t/format (t/formatter "HH:mm") (t/at date end-time)))
+        (str fmt-start " - " (t/format (t/formatter "HH:mm" Locale/GERMAN) (t/at date end-time)))
         fmt-start))))
 
 (defn datetime [dt]
@@ -961,21 +961,21 @@
       (datetime start)
       (and same-month? same-year?)
       [:span
-       (format-dt start (t/formatter "dd"))
+       (format-dt start (t/formatter "E dd" Locale/GERMAN))
        "–"
-       (format-dt end (t/formatter "dd"))
+       (format-dt end (t/formatter "E dd" Locale/GERMAN))
        " "
-       (format-dt start (t/formatter "MMM yyyy"))]
+       (format-dt start (t/formatter "MMM yyyy" Locale/GERMAN))]
       same-year?
       [:span
-       (format-dt start (t/formatter "dd MMM"))
+       (format-dt start (t/formatter "dd MMM" Locale/GERMAN))
        " – "
-       (format-dt end (t/formatter "dd MMM yyyy"))]
+       (format-dt end (t/formatter "dd MMM yyyy" Locale/GERMAN))]
       :else
       [:span
-       (format-dt start (t/formatter "dd MMM yyyy"))
+       (format-dt start (t/formatter "dd MMM yyyy" Locale/GERMAN))
        " – "
-       (format-dt end (t/formatter "dd MMM yyyy"))])))
+       (format-dt end (t/formatter "dd MMM yyyy" Locale/GERMAN))])))
 
 (defn daterange-plain
   "As per: https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Dates_and_numbers#Ranges"
@@ -988,21 +988,21 @@
       (format-dt start)
       (and same-month? same-year?)
       (str
-       (format-dt start (t/formatter "dd"))
+       (format-dt start (t/formatter "dd" Locale/GERMAN))
        "–"
-       (format-dt end (t/formatter "dd"))
+       (format-dt end (t/formatter "dd" Locale/GERMAN))
        " "
-       (format-dt start (t/formatter "MMM yyyy")))
+       (format-dt start (t/formatter "MMM yyyy" Locale/GERMAN)))
       same-year?
       (str
-       (format-dt start (t/formatter "dd MMM"))
+       (format-dt start (t/formatter "dd MMM" Locale/GERMAN))
        " – "
-       (format-dt end (t/formatter "dd MMM yyyy")))
+       (format-dt end (t/formatter "dd MMM yyyy" Locale/GERMAN)))
       :else
       (str
-       (format-dt start (t/formatter "dd MMM yyyy"))
+       (format-dt start (t/formatter "dd MMM yyyy" Locale/GERMAN))
        " – "
-       (format-dt end (t/formatter "dd MMM yyyy"))))))
+       (format-dt end (t/formatter "dd MMM yyyy" Locale/GERMAN))))))
 
 (defn gig-date-plain [{:gig/keys [end-date date]}]
   (if end-date
@@ -1011,7 +1011,7 @@
 
 (defn time [t]
   (when t
-    (t/format (t/formatter "HH:mm") t)))
+    (t/format (t/formatter "HH:mm" Locale/GERMAN) t)))
 
 (defn humanize-dt [dt]
   (when dt
