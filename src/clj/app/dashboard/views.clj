@@ -83,6 +83,7 @@
   gig-attendance-person-comment
   gig-attendance-person-motivation
   gig-attendance-person-plan
+  gig-attendance-snooze
   (gig-attendance-endpoint req id idx gig))
 
 (ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db tr] :as req}]
