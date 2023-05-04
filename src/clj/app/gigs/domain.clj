@@ -122,6 +122,12 @@
 (defn in-future? [{:gig/keys [date]}]
   (t/>= date (t/date)))
 
+(defn in-past? [{:gig/keys [date] :as gig}]
+  (t/< date (t/date)))
+
+(defn cancelled? [{:gig/keys [status]}]
+  (= status :gig.status/cancelled))
+
 (defn gig-archived? [{:gig/keys [date]}]
   (when date
     (t/< date (t/<< (t/date) (t/new-period 14 :days)))))
@@ -140,3 +146,52 @@
 
 (defn confirmed? [gig]
   (= :gig.status/confirmed (:gig/status gig)))
+
+(defn no-response?
+  "Whether or not the member needs to update their plan or not"
+  [plan-or-attendance]
+  (let [plan (or (:attendance/plan plan-or-attendance) plan-or-attendance)]
+    (or (nil? plan)
+        (= plan :plan/unknown)
+        (= plan :plan/no-response))))
+
+(defn committed? [plan-or-attendance]
+  (let [plan (or (:attendance/plan plan-or-attendance) plan-or-attendance)]
+    (= plan :plan/definitely)))
+
+(defn uncommitted? [plan-or-attendance]
+  (let [plan (or (:attendance/plan plan-or-attendance) plan-or-attendance)]
+    (or (nil? plan)
+        (#{nil :plan/definitely-not :plan/unknown :plan/no-response :plan/not-interested :plan/probably-not
+           :plan/probably} plan))))
+
+(def reminder-states #{:reminder-status/pending
+                       :reminder-status/sent
+                       :reminder-status/error
+                       :reminder-status/cancelled})
+
+(def reminder-types #{:reminder-type/gig-attendance})
+
+(def ReminderEntity
+  (s/schema
+   [:map {:name :app.entity/reminder}
+    [:reminder/reminder-id :uuid]
+    [:reminder/reminder-status (s/enum-from reminder-states)]
+    [:reminder/reminder-type (s/enum-from reminder-types)]
+    [:reminder/remind-at ::s/instant]
+    [:reminder/member ::s/datomic-ref]
+    [:reminder/gig ::s/datomic-ref]]))
+
+(defn reminder->db [reminder]
+  (when-not (s/valid? ReminderEntity reminder)
+    (throw
+     (ex-info "Reminder not valid" {:reminder reminder
+                                    :schema ReminderEntity
+                                    :error (s/explain ReminderEntity reminder)
+                                    :human (s/explain-human ReminderEntity reminder)})))
+  (s/encode-datomic ReminderEntity reminder))
+
+(defn db->reminder [reminder]
+  (update
+   (s/decode-datomic ReminderEntity reminder)
+   :reminder/gig db->gig))

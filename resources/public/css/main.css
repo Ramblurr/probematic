@@ -17,6 +17,8 @@
 /*@import "./dropzone@6.0.0-beta.2.css";*/
 @import "./dropzone@6.0.0-beta.2.css";
 
+@import "./sweetalert2@11.7.5.css";
+
 .dropzone {
     /*@apply sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5;
      */
@@ -429,6 +431,31 @@ body {
     animation: pulsate 1s ease-out;
     animation-iteration-count: infinite;
     opacity: 0.5;
+}
+.button-spinner svg.spinner {
+  opacity: 0;
+}
+
+.button-spinner svg.spinner-check {
+  display: none;
+}
+
+.button-spinner.hx-success {
+  @apply border-transparent bg-sno-green-500 text-white shadow-sm hover:bg-sno-green-700 focus:outline-none focus:ring-2 focus:ring-sno-green-500 focus:ring-offset-2 focus:ring-offset-gray-100;
+}
+
+.button-spinner.hx-success svg.spinner-check {
+  display: block;
+  @apply text-green-900;
+}
+.button-spinner.hx-success svg.spinner {
+  opacity: 0;
+  @apply text-green-900;
+}
+
+.htmx-request.button-spinner  svg.spinner {
+  transition: all 1000ms ease-in;
+  opacity: 1;
 }
 
 .pulse-delay {

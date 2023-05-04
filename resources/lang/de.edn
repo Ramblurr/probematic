@@ -42,7 +42,11 @@
   :new-extra-probe-added "Eine neue Extraprobe steht an!",
   :greeting "Hallo!",
   :new-meeting-added "Ein neues Treffen steht an!",
-  :new-gig-added "Ein neuer Gig steht an!"},
+  :new-gig-added "Ein neuer Gig steht an!"
+  :remind-gig "Dies ist eine Erinnerung an einen bevorstehenden Auftritt! Bitte antworten :)"
+  :remind-probe "Dies ist eine Erinnerung an eine bevorstehende Probe! Bitte antworten :)"
+  :remind-extra-probe "Dies ist eine Erinnerung an eine bevorstehende Extraprobe! Bitte antworten :)"
+  :remind-meeting "Dies ist eine Erinnerung an ein bevorstehendes Treffen! Bitte antworten :)"},
  :gig.type
  {:probe "Probe",
   :extra-probe "Extraprobe",
@@ -188,7 +192,9 @@
   :archive "Gig-Archiv"},
  :orange-and-green "orange und grün",
  :email-subject
- {:gig-created "Neuer Gig: %1", :gig-updated "Gig-Bearbeitung: %1"},
+ {:gig-created "Neuer Gig: %1"
+  :gig-updated "Gig-Bearbeitung: %1"
+  :gig-reminder "Gig-Erinnerung: %1"},
  :plan
  {:definitely "Sicher",
   :probably "Wahrscheinlich",
@@ -205,7 +211,7 @@
   :date "Datum",
   :attendance "Teilnahme",
   :end-date "Enddatum",
-  :show-committed "Zeige fixe Zusagen",
+  :show-committed "Zeige fixe",
   :description-help
   "Dieser Text wird auf der Website unter kommende Gigs verwendet.",
   :answer-link-submitted "Deine Antwort wurde gesendet - danke!",
@@ -281,4 +287,10 @@
   :play-stats-title "Statistiken spielen",
   :sheet-music-title "Noten",
   :background-title "Hintergrund",
-  :list-title "Repertoire"}}
+  :list-title "Repertoire"}
+
+ :reminders {:remind-me-in "Erinnere mich an"
+             :remind-all "Sende Erinnerung"
+             :one-day "1 Tag"
+             :three-days "3 Tage"
+             :one-week "1 Woche"}}

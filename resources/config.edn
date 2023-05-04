@@ -108,4 +108,6 @@
                    :job/update-airtable    {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}
                    :job/probe-housekeeping {:job/frequency     [1 :hours]
+                                            :job/initial-delay [2 :seconds]}
+                   :job/reminders          {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}}}

@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [comment])
   (:require
    [app.auth :as auth]
+   [app.email :as email]
    [app.config :as config]
    [app.datomic :as d]
    [app.discourse :as discourse]
@@ -136,6 +137,38 @@
                       (map #(-> % :played/song :song/song-id))
                       (some (fn [p] (= p (:song/song-id song)))))))))
 
+(defn make-reminder [gig-id member-id remind-in-days]
+  (domain/reminder->db
+   {:reminder/reminder-id (sq/generate-squuid)
+    :reminder/gig [:gig/gig-id (common/ensure-uuid gig-id)]
+    :reminder/member [:member/member-id (common/ensure-uuid member-id)]
+    :reminder/reminder-status :reminder-status/pending
+    :reminder/reminder-type :reminder-type/gig-attendance
+    :reminder/remind-at  (t/>> (t/instant) (t/new-period remind-in-days :days))}))
+
+(defn reset-reminder [reminder remind-in-days]
+  (domain/reminder->db
+   (-> reminder
+       (update :reminder/gig (fn [{:gig/keys [gig-id]}] [:gig/gig-id gig-id]))
+       (update :reminder/member (fn [{:member/keys [member-id]}] [:member/member-id member-id]))
+       (assoc :reminder/reminder-status :reminder-status/pending)
+       (assoc :reminder/remind-at (t/>> (t/instant) (t/new-period remind-in-days :days))))))
+
+(defn get-reminder [{:keys [db]} gig-id member-id]
+  (q/gig-reminder-for db gig-id member-id))
+
+(defn set-reminder! [{:keys [datomic-conn db] :as req} gig-id member-id remind-in-days]
+  (let [existing-reminder (q/gig-reminder-for db gig-id member-id)]
+    (when remind-in-days
+      (if existing-reminder
+        (datomic/transact datomic-conn {:tx-data [(reset-reminder existing-reminder remind-in-days)]})
+        (let [reminder (make-reminder gig-id member-id remind-in-days)]
+          (tap> {:new-reminder reminder})
+          (datomic/transact datomic-conn {:tx-data [reminder]}))))))
+
+(defn send-reminder-to-all! [req gig-id]
+  (email/send-gig-reminder-to-all! req gig-id))
+
 (defn get-attendance
   ([db gig-id member-id]
    (get-attendance db (q/gig+member gig-id member-id)))
@@ -189,21 +222,27 @@
   (let [answer-enc (:answer params)
         answer (secret-box/decrypt answer-enc (config/app-secret-key (:env system)))
         member-id (util/ensure-uuid! (:member/member-id answer))
-        gig-id (:gig/gig-id answer)
+        gig-id (util/ensure-uuid! (:gig/gig-id answer))
         gig (q/retrieve-gig db gig-id)
         member (q/retrieve-member db member-id)
+        reminder (:reminder answer)
         plan-kw ((set domain/plans)  (:attendance/plan answer))]
     (assert gig)
     (assert member)
-    (assert plan-kw)
-    (when (domain/in-future? gig)
-      (let [attendance (get-attendance db gig-id member-id)
-            attendance-txs (if attendance
-                             [(update-attendance-plan-tx attendance plan-kw)
-                              (touch-attendance-tx attendance)]
-                             [(create-attendance-plan-tx db  gig-id member-id plan-kw)])]
-        (transact-attendance! req  attendance-txs gig-id member-id)
-        {:gig gig :member member}))))
+    (when (not reminder) (assert plan-kw))
+    (if reminder
+      (do
+        (set-reminder! req gig-id member-id 2)
+        {:gig gig :member member})
+
+      (when (domain/in-future? gig)
+        (let [attendance (get-attendance db gig-id member-id)
+              attendance-txs (if attendance
+                               [(update-attendance-plan-tx attendance plan-kw)
+                                (touch-attendance-tx attendance)]
+                               [(create-attendance-plan-tx db  gig-id member-id plan-kw)])]
+          (transact-attendance! req  attendance-txs gig-id member-id)
+          {:gig gig :member member})))))
 
 (defn create-attendance-comment-tx [db gig-id member-id comment]
   (assoc (create-attendance-tx db gig-id member-id) :attendance/comment comment))

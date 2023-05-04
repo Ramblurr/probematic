@@ -103,7 +103,7 @@
                                       {:name (tr [:gig/pay-deal]) :value pay-deal})
                                     ;;
                                     ])}))
-(defn gig-created-email-html [{:keys [tr env] :as sys} gig]
+(defn gig-created-email-html [{:keys [tr env] :as sys} gig reminder?]
   (let [can-make-it-link (template-link-gig-attendance env :plan/definitely)
         cannot-make-it-link (template-link-gig-attendance env :plan/definitely-not)
         reminder-link (template-link-gig-attendance env :reminder)
@@ -113,10 +113,10 @@
            [:p
             (tr [:email/greeting])]
            [:p (tr [(case (:gig/gig-type gig)
-                      :gig.type/probe :email/new-probe-added
-                      :gig.type/extra-probe :email/new-extra-probe-added
-                      :gig.type/meeting :email/new-meeting-added
-                      :gig.type/gig :email/new-gig-added)])]
+                      :gig.type/probe (if reminder? :email/remind-probe :email/new-probe-added)
+                      :gig.type/extra-probe (if reminder? :email/remind-extra-probe :email/new-extra-probe-added)
+                      :gig.type/meeting (if reminder? :email/remind-meeting  :email/new-meeting-added)
+                      :gig.type/gig (if reminder? :email/remind-gig :email/new-gig-added))])]
            [:p]
            (template-snippet-gig-details sys gig)
            [:p]
@@ -129,7 +129,7 @@
            [:p]
            [:p (tr [:email/sign-off])]]))))
 
-(defn gig-created-email-plain [{:keys [tr env] :as sys} gig]
+(defn gig-created-email-plain [{:keys [tr env] :as sys} gig reminder?]
   (selmer.util/without-escaping
    (let [can-make-it-link (template-link-gig-attendance env :plan/definitely)
          cannot-make-it-link (template-link-gig-attendance env :plan/definitely-not)
@@ -156,10 +156,10 @@
 "
       {:greeting (tr [:email/greeting])
        :intro (tr [(case (:gig/gig-type gig)
-                     :gig.type/probe :email/new-probe-added
-                     :gig.type/extra-probe :email/new-extra-probe-added
-                     :gig.type/meeting :email/new-meeting-added
-                     :gig.type/gig :email/new-gig-added)])
+                     :gig.type/probe (if reminder? :email/remind-probe :email/new-probe-added)
+                     :gig.type/extra-probe (if reminder? :email/remind-extra-probe :email/new-extra-probe-added)
+                     :gig.type/meeting (if reminder? :email/remind-meeting  :email/new-meeting-added)
+                     :gig.type/gig (if reminder? :email/remind-gig :email/new-gig-added))])
        :gig-info (template-snippet-gig-details-plain sys gig)
        :can-you-make-it (tr [:email/can-you-make-it?])
        :can-make-it (tr [:email/can-make-it])

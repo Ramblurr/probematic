@@ -8,7 +8,8 @@
    [app.urls :as url]
    [app.util :as util]
    [ctmx.core :as ctmx]
-   [ctmx.rt :as rt]))
+   [ctmx.rt :as rt]
+   [app.gigs.domain :as domain]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [req gig-id member-id motivation]
   (gig.view/motivation-endpoint req
@@ -32,9 +33,18 @@
                              (util/ensure-uuid! member-id)
                              comment edit?))
 
+(ctmx/defcomponent ^:endpoint gig-attendance-snooze [req gig-id member-id]
+  (gig.view/snooze-endpoint req
+                            {:path path :id id :hash hash :value value}
+                            (util/comp-namer #'gig-attendance-snooze)
+                            (util/ensure-uuid! gig-id)
+                            (util/ensure-uuid! member-id)))
+
 (defn gig-attendance-endpoint [req id idx gig]
   (let [attendance (:attendance gig)
+        plan (:attendance/plan attendance)
         gig-id (:gig/gig-id gig)
+        tr (:tr req)
         {:member/keys [member-id]} (:attendance/member attendance)
         {:gig/keys [date end-date status title]} gig]
 
@@ -57,12 +67,17 @@
       [:div {:class "block md:hidden"} (ui/gig-status-icon status)]
       [:div (gig-attendance-person-plan req gig-id member-id (:attendance/plan attendance))]
       [:div (gig-attendance-person-motivation req gig-id member-id (:attendance/motivation attendance))]
+
+      (when (domain/no-response? plan)
+        [:div (gig-attendance-snooze req gig-id member-id)])
+
       [:div (gig-attendance-person-comment req gig-id member-id (:attendance/comment attendance) false)]]]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-upcoming [req idx gig]
   gig-attendance-person-comment
   gig-attendance-person-motivation
   gig-attendance-person-plan
+  gig-attendance-snooze
   (gig-attendance-endpoint req id idx gig))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-unanswered [req idx gig]

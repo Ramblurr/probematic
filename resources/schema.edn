@@ -734,8 +734,38 @@
    {:db/ident       :audit/comment
     :db/cardinality :db.cardinality/one
     :db/valueType   :db.type/string}
-   ;;
-   ]
+;;;; Reminder Schema
+   {:db/ident :reminder/reminder-id
+    :db/doc "The id of this reminder"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :reminder/member
+    :db/doc "The member to be reminded"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :reminder/gig
+    :db/doc "The gig to be reminded about"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :reminder/remind-at
+    :db/doc "The datetime at which we should try to remind the member"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :reminder/reminder-type
+    :db/doc "The type of the reminder"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :reminder/reminder-status
+    :db/doc "The status of the reminder, whether its pending, sent, errored, or cancelled"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}]
 
 ;; premium basis for an instrument = instrument value x category factor x premium-factor
 ;; premium for additional coverage = premium basis x coverage premium factor
+;;

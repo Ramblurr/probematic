@@ -73,5 +73,6 @@
       (decrypt "hunter2")) ;; rcf
 
   (sha384-resource "public/js/app.js") ;; rcf
+
   ;;
   )

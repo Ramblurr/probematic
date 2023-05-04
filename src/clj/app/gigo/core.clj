@@ -5,7 +5,6 @@
    [org.httpkit.sni-client :as sni-client]
    [org.httpkit.client :as client]
    [jsonista.core :as j]
-   [clojure.string :as s]
    [medley.core :as m]
    [clojure.tools.logging :as log]
    [tick.core :as t]
@@ -361,18 +360,18 @@
 
 (defn wednesday-probe? [g]
   (and
-   (s/includes?
-    (s/lower-case (:title g)) "probe")
+   (clojure.string/includes?
+    (clojure.string/lower-case (:title g)) "probe")
    (= DayOfWeek/WEDNESDAY (-> g :date (t/date) (t/day-of-week)))))
 
 (defn meeting? [g]
-  (s/includes?
-   (s/lower-case (:title g)) "treffen"))
+  (clojure.string/includes?
+   (clojure.string/lower-case (:title g)) "treffen"))
 
 (defn non-wednesday-probe? [g]
   (and
-   (s/includes?
-    (s/lower-case (:title g)) "probe")
+   (clojure.string/includes?
+    (clojure.string/lower-case (:title g)) "probe")
    (not= DayOfWeek/WEDNESDAY (-> g :date (t/date) (t/day-of-week)))))
 
 (defn probe? [g]
@@ -444,7 +443,7 @@
   (set-gig-attendance! config "Casey" (:id gig1) :plan/definitely-not)
   (attendance-kw->plan :plan/probably)
 
-  (s/join "\n" (map first (summarize-attendance attendance)))
+  (clojure.string/join "\n" (map first (summarize-attendance attendance)))
 
   (def just-gigs (get-all-gigs! config))
 

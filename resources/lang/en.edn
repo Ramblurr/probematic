@@ -250,12 +250,17 @@
          :member-unique-phone "A member already has that phone number"}
  :updating "Updating..."
  :email-subject {:gig-created "New Gig: %1"
-                 :gig-updated "Gig Edit: %1"}
+                 :gig-updated "Gig Edit: %1"
+                 :gig-reminder "Gig Reminder: %1"}
  :email {:greeting "Hello!"
          :new-gig-added "A new gig is coming up!"
          :new-probe-added "A new probe is coming up!"
          :new-extra-probe-added "A new extra-probe is coming up!"
          :new-meeting-added "A new meeting is coming up!"
+         :remind-gig "This is a reminder about an upcoming gig! Please respond :)"
+         :remind-probe "This is a reminder about an upcoming probe! Please respond :)"
+         :remind-extra-probe "This is a reminder about an upcoming extra-probe! Please respond :)"
+         :remind-meeting "This is a reminder about an upcoming meeting! Please respond :)"
          :gig-edited "Something has changed about a gig!"
          :gig-edit-type "EDITED"
          :need-to-change-availability? "I need to change my availability"
@@ -285,6 +290,14 @@
             :too-short "The password is too short. It must be at least 8 characters."
             :does-not-match "The passwords do not match."}
  :login "Login"
+ :reminders {:remind-me-in "Remind me in"
+             :remind-all "Remind all"
+             :confirm-remind-all-title "Remind everyone?"
+             :confirm-remind-all "This will email everyone who hasn't responded yet. Are you sure?"
+             :confirm "Yes, email everyone"
+             :one-day "1 Day"
+             :three-days "3 Days"
+             :one-week "1 Week"}
 
- ;;
+;;
  }

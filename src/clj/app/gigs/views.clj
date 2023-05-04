@@ -226,7 +226,10 @@
         button-size-class-small "px-2 py-1 text-xs "]
     [:div {:class "dropdown relative inline-block text-left"}
      [:div
-      [:button {:type "button" :class (ui/cs button-size-class-small "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100 min-h-[25px]")  :aria-expanded "true", :aria-haspopup "true"}
+      [:button {:type "button"
+                :class (ui/cs button-size-class-small
+                              "dropdown-button inline-flex w-full justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100 min-h-[25px]")
+                :aria-expanded "true" :aria-haspopup "true"}
        [:input {:type "hidden" :name "member-id" :value member-id}]
        [:input {:type "hidden" :name "gig-id" :value gig-id}]
        [:input {:type "hidden" :name "plan" :value (:value current-opt) :class "item-input"}]
@@ -241,6 +244,20 @@
              :role "menu" :aria-orientation "vertical" :aria-labelledby "menu-button" :tabindex "-1"}
        [:div {:class "py-1" :role "none"}
         (map attendance-dropdown-opt  opts)]]]]))
+
+(defn snooze-dropdown [& {:keys [member-id gig-id tr snooze-endpoint hx-target remind-in-days]}]
+  (let [hx-attrs {:hx-vals {"member-id" (str member-id) "gig-id" (str gig-id)} :hx-post snooze-endpoint :hx-target hx-target}]
+    (ui/action-menu
+     :button-icon (if remind-in-days icon/bell-alert icon/bell-snooze)
+     :minimal? true :button-icon-class (if remind-in-days "text-sno-green-600" "text-sno-orange-600")
+     :id (str "snooze-" gig-id)
+     :sections [{:label (str (tr [:reminders/remind-me-in]) ":")
+                 :items [{:label (tr [:reminders/one-day]) :tag :button
+                          :attr (assoc-in hx-attrs [:hx-vals "remind-in-days"] 1)}
+                         {:label (tr [:reminders/three-days]) :tag :button
+                          :attr (assoc-in hx-attrs [:hx-vals "remind-in-days"] 3)}
+                         {:label (tr [:reminders/one-week]) :tag :button
+                          :attr (assoc-in hx-attrs [:hx-vals "remind-in-days"] 7)}]}])))
 
 (defn motivation-endpoint [{:keys [tr] :as req} {:keys [id hash value]} comp-name gig-id member-id motivation]
   (let [post?      (util/post? req)
@@ -257,6 +274,22 @@
       :size :small
       :extra-attrs {:hx-trigger "change" :hx-post (comp-name) :hx-vals {:member-id (str member-id)}}
       :options (map (fn [m] {:label (tr [m]) :value (name m)}) domain/motivations))]))
+
+(defn snooze-endpoint [req {:keys [id hash value]} comp-name gig-id member-id]
+  (let [post?      (util/post? req)
+        member-id   (or member-id (value "member-id"))
+        gig-id     (or gig-id (value "gig-id"))
+        remind-in-days (if post? (service/set-reminder! req gig-id member-id
+                                                        (-> req (http.util/unwrap-params) :remind-in-days http.util/parse-long))
+                           (service/get-reminder req gig-id member-id))]
+
+    [:div {:id id}
+     (snooze-dropdown :tr (:tr req)
+                      :member-id member-id
+                      :gig-id gig-id
+                      :hx-target (hash ".")
+                      :remind-in-days remind-in-days
+                      :snooze-endpoint (comp-name))]))
 
 (defn comment-endpoint [req {:keys [id hash value]} comp-name gig-id member-id comment edit?]
   (let [post? (util/post? req)
@@ -326,9 +359,21 @@
                        (util/ensure-uuid! member-id)
                        motivation))
 
+(ctmx/defcomponent ^:endpoint gig-attendance-person-snooze [req member-id]
+  (snooze-endpoint req
+                   {:path path :id id :hash hash :value value}
+                   (util/comp-namer #'gig-attendance-person-snooze)
+                   (gig-id-from-path req)
+                   (util/ensure-uuid! member-id)))
+
 (ctmx/defcomponent ^:endpoint gig-attendance-person [{:keys [db] :as req} idx attendance]
   (let [{:member/keys [member-id] :as member} (:attendance/member attendance)
-        has-comment? (:attendance/comment attendance)]
+        has-comment? (:attendance/comment attendance)
+        ;; current-user           (auth/get-current-member req)
+        ;; is-current-user? (= (:member/member-id current-user) member-id)
+        ]
+    ;; (when is-current-user?
+    ;;   [:div {:class ""} (gig-attendance-person-snooze req member-id)])
     [:div {:id id}
      [:div {:class "grid grid-cols grid-cols-6 gap-x-2"}
       [:div {:class "col-span-2 lg:col-span-1 align-middle"}
@@ -336,7 +381,6 @@
         (ui/member-nick member)]]
       [:div {:class "col-span-1"} (gig-attendance-person-plan req member-id (:attendance/plan attendance))]
       [:div {:class "col-span-2 lg:col-span-1"} (gig-attendance-person-motivation req member-id (:attendance/motivation attendance))]
-      ;; col-start-3 col-span-2 break-words
       ;;;
       (gig-attendance-person-comment req member-id (:attendance/comment attendance) false)
       ;; [:div {:class ""}]
@@ -959,8 +1003,45 @@ on change if I match <:checked/>
   })();
 " topic-id))])]]]]))
 
+(ctmx/defcomponent ^:endpoint gig-detail-page-remind-all-button [{:keys [tr db] :as req} ^:boolean send-reminder?]
+  (let [should-send? (and (util/post? req) send-reminder?)
+        hash (util/hash :comp/gig-detail-page-remind-all-button)
+        escape #(clojure.string/escape % {\' "\\'"})]
+    (when should-send?
+      (service/send-reminder-to-all! req (-> req :gig :gig/gig-id)))
+    (tap> should-send?)
+    (ui/button :label (tr [:reminders/remind-all])
+               :priority :secondary :centered? true :size :xsmall
+               :class (when should-send? "hx-success")
+               :spinner? true
+               :attr {:id (util/id :comp/gig-detail-page-remind-all-button)
+                      :hx-indicator hash
+                      :hx-trigger "click"
+                      :hx-post (util/endpoint-path gig-detail-page-remind-all-button)
+                      :hx-target hash
+                      :hx-vals {:send-reminder? true}
+                      :_ (format "on htmx:confirm(issueRequest)
+                          halt the event
+                          call Swal.fire({
+                            title: '%s',
+                            text: '%s',
+                            confirmButtonText: '%s',
+                            cancelButtonText: '%s',
+                            icon: 'warning',
+                            iconColor: '#e00087',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ea580c',
+                            cancelButtonColor: '#dc2626'
+                          })
+                          if result.isConfirmed issueRequest()"
+                                 (escape (tr [:reminders/confirm-remind-all-title]))
+                                 (escape (tr [:reminders/confirm-remind-all]))
+                                 (escape (tr [:reminders/confirm]))
+                                 (escape (tr [:action/cancel])))})))
+
 (ctmx/defcomponent ^:endpoint gig-detail-page [{:keys [tr db] :as req} ^:boolean show-committed?]
   gig-details-edit-form gig-delete gig-details-edit-post gig-detail-info-section-hxget
+
   (let [{:gig/keys [gig-id gig-type] :as gig} (:gig req)
         endpoint-self (util/endpoint-path gig-detail-page)
         archived? (domain/gig-archived? gig)
@@ -968,10 +1049,14 @@ on change if I match <:checked/>
         attendances-for-gig (if archived?
                               (q/attendances-for-gig db gig-id)
                               (q/attendance-for-gig-with-all-active-members db gig-id))
-        attendances-by-section (q/attendance-plans-by-section-for-gig db  attendances-for-gig (if archived? false  show-committed?))
+        attendances-by-section (q/attendance-plans-by-section-for-gig db  attendances-for-gig (if archived? nil
+                                                                                                  (when show-committed?
+                                                                                                    :committed-only?)))
         attendance-summary (->> attendances-for-gig
                                 (group-by :attendance/plan)
-                                (m/map-vals count))]
+                                (m/map-vals count))
+        send-reminder?
+        req]
 
     [:div {:id (util/id :comp/gig-detail-page)}
      (gig-detail-info-section req (:gig req))
@@ -991,7 +1076,8 @@ on change if I match <:checked/>
           [:h2 {:class "text-lg font-medium leading-6 text-gray-900"}
            (tr [:gig/attendance])]
           (when-not archived?
-            [:div
+            [:div {:class "space-x-2 flex"}
+             (gig-detail-page-remind-all-button req false)
              (ui/button :label (if show-committed?
                                  (tr [:gig/show-all])
                                  (tr [:gig/show-committed]))

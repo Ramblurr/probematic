@@ -38,7 +38,8 @@
                                         ;:body (pretty-print-html body)
     :body  body}))
 
-(def sha384-resource (memoize secret-box/sha384-resource))
+;; (def sha384-resource (memoize secret-box/sha384-resource))
+(def sha384-resource secret-box/sha384-resource)
 
 (defn script [relative-prefix path & extra]
   (let [sri-hash (sha384-resource (str "public/js/" path))
@@ -67,11 +68,13 @@
 (defn body-end [relative-prefix]
   (list
    (script relative-prefix "hyperscript.org@0.9.7.js")
-   (script relative-prefix "htmx.js")
+   (script relative-prefix "htmx@1.9.2.js")
+   ;; (script relative-prefix "htmx.js")
    (script relative-prefix "nprogress.js")
    (script relative-prefix "popperjs@2-dev.js")
    (script relative-prefix "tippy@6-dev.js")
    (script relative-prefix "sortable@1.14.0.js")
+   (script relative-prefix "sweetalert2.all@11.7.5.js")
    (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
    (script relative-prefix "app.js" :type :module)))
 

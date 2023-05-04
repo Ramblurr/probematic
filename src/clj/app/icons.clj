@@ -2,7 +2,9 @@
 
 (defn deficon [svg]
   (fn [{class :class or {class ""}}]
-    (assoc-in svg [1 :class] (str "icon " class))))
+    (update-in svg [1 :class]
+               (fn [existing new]
+                 (str new " " existing)) (str  "icon " class))))
 
 (def clock (deficon
              [:svg {:xmlns "http://www.w3.org/2000/svg" :aria-hidden "true", :focusable "false", :viewbox "0 0 512 512"}
@@ -264,6 +266,18 @@
                  [:svg {:aria-hidden "true" :fill "currentColor" :xmlns "http://www.w3.org/2000/svg", :viewbox "0 0 512 512"}
  ;; "<!--! Font Awesome Pro 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->"
                   [:path {:d "M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"}]]))
+
+;; Hero Icons Copyright (c) 2020 Refactoring UI Inc.  MIT License
+(def bell-snooze (deficon
+                   [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M10.5 8.25h3l-3 4.5h3"}]]))
+
+; Hero Icons Copyright (c) 2020 Refactoring UI Inc.  MIT License
+(def bell-alert (deficon
+                  [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5"}]]))
+(def spinner (deficon
+               [:svg {:class "spinner animate-spin -ml-1 mr-3 h-5 w-5", :xmlns "http://www.w3.org/2000/svg", :fill "none", :viewbox "0 0 24 24"}
+                [:circle {:class "opacity-25", :cx "12", :cy "12", :r "10", :stroke "currentColor", :stroke-width "4"}]
+                [:path {:class "opacity-75", :fill "currentColor", :d "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"}]]))
 
 ;;;;;
 

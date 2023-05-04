@@ -11,7 +11,7 @@
 (def section-pattern [:section/name :section/default? :section/position])
 
 (def attendance-pattern [{:attendance/section [:section/name]}
-                         {:attendance/member [:member/name :member/member-id :member/nick]}
+                         {:attendance/member [:member/name :member/member-id :member/nick :member/email]}
                          :attendance/plan
                          :attendance/gig+member
                          {:attendance/gig [:gig/gig-id]}
@@ -48,6 +48,12 @@
                          {:gig/contact [:member/name :member/member-id :member/nick]}
                          {:gig/rehearsal-leader1 [:member/name :member/member-id :member/nick :member/email]}
                          {:gig/rehearsal-leader2 [:member/name :member/member-id :member/nick :member/email]}])
+
+(def reminder-pattern [:reminder/remind-at :reminder/reminder-id
+                       {:reminder/member member-detail-pattern}
+                       {:reminder/gig gig-detail-pattern}
+                       :reminder/reminder-status
+                       :reminder/reminder-type])
 
 (def play-pattern [{:played/gig gig-pattern}
                    {:played/song [:song/song-id :song/title]}
@@ -379,7 +385,7 @@
 
 (defn attendance-plans-by-section-for-gig
   "Like attendance-for-gig-with-all-active-members, but returns a list of maps, one for each section with :members attendance plans"
-  [db attendance-for-gig committed-only?]
+  [db attendance-for-gig plan-filter]
   (->> attendance-for-gig
        (group-by :attendance/section)
        (reduce (fn [acc [k v]]
@@ -387,7 +393,9 @@
                    (conj acc {:section/name k
                               :members
                               (cond->> v
-                                committed-only? (filter #(= :plan/definitely (:attendance/plan %)))
+                                (= plan-filter :committed-only?) (filter gig.domain/committed?)
+                                (= plan-filter :uncommitted-only?) (filter gig.domain/uncommitted?)
+                                (= plan-filter :no-response?) (filter gig.domain/no-response?)
                                 true (util/isort-by #(-> % :attendance/member member-nick-or-name)))})))
                [])
        (map (fn [as]
@@ -616,6 +624,46 @@
   [db]
   (last (previous-probes db gig-detail-pattern)))
 
+(defn overdue-reminders-by-type
+  ([db]
+   (overdue-reminders-by-type db (t/inst)))
+  ([db as-of]
+   (->>
+    (datomic/q '[:find (pull ?reminder pattern)
+                 :in $ ?as-of pattern
+                 :where
+                 [?reminder :reminder/reminder-status :reminder-status/pending]
+                 [?reminder :reminder/remind-at ?remind-at]
+                 [(< ?remind-at ?as-of)]]
+               db (t/inst as-of) reminder-pattern)
+
+    (map first)
+    (map gig.domain/db->reminder)
+    (sort-by :reminder/remind-at)
+    (group-by :reminder/reminder-type))))
+
+(defn active-reminders-by-type [db]
+  (->>
+   (d/find-all-by db :reminder/reminder-status :reminder-status/pending reminder-pattern)
+   (map first)
+   (map gig.domain/db->reminder)
+   (sort-by :reminder/remind-at)
+   (group-by :reminder/reminder-type)))
+
+(defn gig-reminder-for [db gig-id member-id]
+  (->>
+   (datomic/q '[:find (pull ?reminder pattern)
+                :in $ ?gig-id ?member-id pattern
+                :where
+                [?reminder :reminder/member ?member-id]
+                [?reminder :reminder/gig ?gig-id]
+                [?reminder :reminder/reminder-type :reminder-type/gig-attendance]]
+              db [:gig/gig-id gig-id] [:member/member-id member-id]
+              reminder-pattern)
+   (map first)
+   (map gig.domain/db->reminder)
+   (first)))
+
 ;;;; END
 (comment
   (do
@@ -642,7 +690,7 @@
 
   (load-play-stats db)
   (sheet-music-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068207")
-  (sheet-music-dir-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068209") ;; rcf
+  (sheet-music-dir-for-song db #uuid "01844740-3eed-856d-84c1-c26f07068209")
 
   (retrieve-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCQw")
 
@@ -741,6 +789,8 @@
   (d/find-all db :member/email member-detail-pattern)
   (d/find-all db :gig/gig-id gig-detail-pattern)
 
+  (gig-reminder-for db (parse-uuid "0187e415-7b26-8e55-9371-4391baf9fe09") (parse-uuid "01860c2a-2929-8727-af1a-5545941b1110"))
+  ;;
   (previous-probe db)
 
   ;;

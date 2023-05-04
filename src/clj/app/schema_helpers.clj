@@ -35,17 +35,19 @@
                                                         :encode/string      str
                                                         :decode/json        #(some-> % t/instant)
                                                         :encode/json        str
+                                                        :decode/datomic     #(some-> % t/instant)
+                                                        :encode/datomic     #(some-> % t/inst)
                                                         :json-schema/type   "string"
                                                         :json-schema/format "date-time"}}))
 
 (def InstSchema (m/-simple-schema {:type            :app.schemas/inst
                                    :pred            inst?
-                                   :type-properties {:error/message      "should be a valid inst"
-                                                     :decode/string      #(some-> % t/inst)
-                                                     :encode/string      str
-                                                     :decode/json        #(some-> % t/inst)
-                                                     :encode/json        str
-                                                     :json-schema/type   "string"
+                                   :type-properties {:error/message "should be a valid inst"
+                                                     :decode/string #(some-> % t/inst)
+                                                     :encode/string str
+                                                     :decode/json #(some-> % t/inst)
+                                                     :encode/json str
+                                                     :json-schema/type "string"
                                                      :json-schema/format "date-time"}}))
 
 ;; This is a date stored as an instant. So the time information should always be midnight and not used

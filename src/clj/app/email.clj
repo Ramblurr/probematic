@@ -41,8 +41,8 @@
   (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-created] [(:gig/title gig)])
-   (tmpl/gig-created-email-html sys gig)
-   (tmpl/gig-created-email-plain sys gig)
+   (tmpl/gig-created-email-html sys gig false)
+   (tmpl/gig-created-email-plain sys gig false)
    (tmpl/gig-created-recipient-variables sys gig members)))
 
 (defn build-gig-updated-email [{:keys [tr] :as sys} gig members edited-attrs]
@@ -52,6 +52,14 @@
    (tmpl/gig-updated-email-html sys gig edited-attrs)
    (tmpl/gig-updated-email-plain sys gig edited-attrs)
    (tmpl/gig-updated-recipient-variables sys gig members)))
+
+(defn build-gig-reminder-email [{:keys [tr] :as sys} gig members]
+  (build-batch-emails
+   (mapv :member/email members)
+   (tr [:email-subject/gig-reminder] [(:gig/title gig)])
+   (tmpl/gig-created-email-html sys gig true)
+   (tmpl/gig-created-email-plain sys gig true)
+   (tmpl/gig-created-recipient-variables sys gig members)))
 
 (defn build-new-user-invite [{:keys [tr] :as sys} {:member/keys [email] :as member} invite-code]
   (build-email email
@@ -68,7 +76,8 @@
 (defn- sys-from-req [req]
   {:tr (:tr req)
    :env (-> req :system :env)
-   :redis (-> req :system :redis)})
+   :redis (-> req :system :redis)
+   :datomic-conn (-> req :datomic-conn)})
 
 (defn send-gig-created! [req gig-id]
   (let [db (datomic/db (:datomic-conn req))
@@ -76,6 +85,25 @@
         members (q/active-members db)
         sys (sys-from-req req)]
     (queue-email! sys  (build-gig-created-email sys gig members))))
+
+(defn send-gig-reminder-to! [{:keys [datomic-conn tr env redis]} gig-id members]
+  (assert datomic-conn)
+  (assert env)
+  (assert redis)
+  (let [db (datomic/db datomic-conn)
+        sys {:tr tr :env env :redis redis}
+        gig (q/retrieve-gig db gig-id)]
+    (queue-email! sys (build-gig-reminder-email sys gig members))))
+
+(defn send-gig-reminder-to-all! [{:keys [db] :as req}  gig-id]
+  (let [attendance (q/attendance-for-gig-with-all-active-members db gig-id)
+        members (->> (q/attendance-plans-by-section-for-gig db attendance
+                                                            :no-response?)
+                     (mapcat :members)
+                     (map :attendance/member))]
+    ;; (tap> {:attendance attendance :members members})
+    (send-gig-reminder-to! (sys-from-req req) gig-id members)
+    :done))
 
 (defn send-gig-updated! [req gig-id edited-attrs]
   (when (>  (count edited-attrs) 0)

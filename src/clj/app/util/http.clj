@@ -1,8 +1,10 @@
 (ns app.util.http
+  (:refer-clojure :exclude [parse-long])
   (:require
    [app.util :as util]
    [clojure.string :as str]
    [ctmx.form :as form]
+   [ctmx.rt :as rt]
    [medley.core :as m]))
 
 (defn unwrap-params
@@ -57,3 +59,11 @@
 
 (defn check->bool [v]
   (= "on" v))
+
+(defn parse-long
+  "Attempts to parse a long value. Returns nil if it cannot be parsed"
+  [v]
+  (try
+    (rt/parse-long v)
+    (catch NumberFormatException e
+      nil)))

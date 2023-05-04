@@ -347,6 +347,19 @@
                               "border-transparent bg-orange-600 text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
 
+(def spinner-priority-classes {:secondary
+                               "text-sno-orange-900"
+                               :white
+                               "text-sno-orange-900"
+                               :white-destructive
+                               "text-sno-orange-900"
+                               :primary
+                               "text-white"
+                               :primary-orange
+                               "text-white"
+                               :white-rounded
+                               "text-sno-orange-900"})
+
 (def button-sizes-classes {:2xsmall "px-1.5 py-0.5 text-xs"
                            :xsmall "px-2.5 py-1.5 text-xs"
                            :small "px-3 py-2 text-sm leading-4"
@@ -360,7 +373,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost form tabindex href]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost form tabindex href spinner?]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -378,11 +391,20 @@
           ;; "inline-flex items-center rounded-md border"
           (size button-sizes-classes)
           (priority button-priority-classes)
+          (when spinner? "button-spinner")
           (when centered? "items-center justify-center")
           class)
          :disabled disabled?}
         attr)
    (when icon (icon  {:class (cs (size button-icon-sizes-classes)  (when label "-ml-1 mr-2"))}))
+   (when spinner? (list (icon/spinner {:class (cs "spinner"
+                                                  (size button-icon-sizes-classes)
+                                                  (priority spinner-priority-classes)
+                                                  (when label "-ml-1 mr-2"))})
+                        (icon/checkmark {:class (cs "spinner-check"
+                                                    (size button-icon-sizes-classes)
+                                                    (priority spinner-priority-classes)
+                                                    (when label "-ml-1 mr-2"))})))
    label])
 
 (defn link-button [& opts]
@@ -1106,7 +1128,7 @@
                                      tag :a}}]
   [tag (merge {:href href :class
                (cs
-                "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm w-full"
+                "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm w-full text-left"
                 (when icon "flex gap-1")
                 (when active? "font-medium bg-gray-100 text-gray-900 ")) :role "menuitem" :tabindex "-1" :id (str id "-" idx)}
               attr)
@@ -1115,26 +1137,40 @@
    label])
 
 (defn action-menu-section [id section]
-  [:div {:class "z-10 py-1 mt-2 w-48  divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+  [:div {:class
+         ;; maybe add w-48 to make it wider and more clickable?
+         "z-10 py-1 mt-2 divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
          :role "none"}
+   (when (:label section)
+     [:div {:class "px-4 py-3", :role "none"}
+      [:p {:class "truncate text-sm font-medium text-gray-900", :role "none"}  (:label section)]])
    (map-indexed (partial action-menu-item id) (:items section))])
 
 (defn action-menu
   "An action menu drop down.
 
-      :section - a list of maps containing the :items key. The value of :items should be another list of maps"
+      :minimal? - when true only shows the button-icon
+      :section - a list of maps containing the :items key. The value of :items should be another list of maps
+                 the section map can also have the :label key for a section header"
 
-  [& {:keys [id button-icon sections hx-boost label]}]
+  [& {:keys [id button-icon sections hx-boost label minimal? button-icon-class]
+      :or {minimal? false
+           button-icon-class "text-gray-900"}}]
   [:div {:class "flex items-center" :hx-boost hx-boost}
    [:div {:class "relative"}
     [:div
-     [:button {:class "inline-flex items-center text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-md text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+     [:button {:class
+               (cs (when-not minimal?
+                     "inline-flex items-center text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-md text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"))
                :type "button"
                :data-action-menu2-trigger (str "#" id)}
       (when button-icon
-        (button-icon {:class "w-4 h-4 mr-2 text-gray-900"}))
-      label
-      (icon/chevron-down {:class "w-3 h-3 ml-2"})]]
+        (button-icon {:class (cs  (when minimal? "w-5 h-5")
+                                  (when-not minimal? "w-4 h-4 mr-2")
+                                  button-icon-class)}))
+      (when label label)
+      (when-not minimal?
+        (icon/chevron-down {:class "w-3 h-3 ml-2"}))]]
     [:div {:id id :data-action-menu2 true
            :class "hidden" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
      (map (partial action-menu-section id) sections)]]])
