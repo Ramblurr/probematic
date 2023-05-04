@@ -277,17 +277,18 @@
    first))
 
 (defn instruments-for-member-covered-by [db member policy pattern]
-  (->>
-   (datomic/q '[:find (pull ?coverage pattern)
-                :in $ pattern ?member ?policy-id
-                :where
-                [?policy-id :insurance.policy/covered-instruments ?coverage]
-                [?coverage :instrument.coverage/instrument ?instr]
-                [?instr :instrument/owner ?member]]
-              db pattern
-              (d/ref member :member/member-id)
-              (d/ref policy :insurance.policy/policy-id))
-   (map first)))
+  (when policy
+    (->>
+     (datomic/q '[:find (pull ?coverage pattern)
+                  :in $ pattern ?member ?policy-id
+                  :where
+                  [?policy-id :insurance.policy/covered-instruments ?coverage]
+                  [?coverage :instrument.coverage/instrument ?instr]
+                  [?instr :instrument/owner ?member]]
+                db pattern
+                (d/ref member :member/member-id)
+                (d/ref policy :insurance.policy/policy-id))
+     (map first))))
 
 (defn coverages-for-instrument [db instrument-id pattern]
   (->>
