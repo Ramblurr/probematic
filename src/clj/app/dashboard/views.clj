@@ -59,7 +59,9 @@
         (if end-date
           (ui/daterange date end-date)
           (ui/datetime date))]
-       [:div {:class "md:order-none "} (ui/gig-time gig)]]]
+       [:div {:class "md:order-none "}
+        (when-not end-date
+          (ui/gig-time gig))]]]
      [:div {:class "md:order-none md:font-normal"}
       [:a {:href (url/link-gig gig) :class "link-blue"} title]]
      [:div {:class "order-last md:order-none md:col-span-2 flex gap-x-2 flex-wrap"}
