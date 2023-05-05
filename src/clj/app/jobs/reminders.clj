@@ -96,5 +96,7 @@
     (process-reminders db (:reminder-type/gig-attendance (q/overdue-reminders-by-type db as-of)) as-of))
   (q/active-reminders-by-type db)
   (send-reminders! system nil)
+  (datomic/transact conn {:tx-data
+                          [[:db/retractEntity [:reminder/reminder-id #uuid "0187e791-2bf8-8ca0-ac0d-6eeb435aa78e"]]]})
   ;;
   )

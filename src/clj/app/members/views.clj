@@ -187,6 +187,8 @@
                            :label (tr [:travel-discounts/add-discount]))]])))
 
 (ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}  ^:boolean edit?]
+  travel-discount-panel
+  travel-discount-single
   (let [comp-name (util/comp-namer #'members-detail-page)
         post? (util/post? req)
         tr (i18n/tr-from-req req)
