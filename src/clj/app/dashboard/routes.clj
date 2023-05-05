@@ -1,10 +1,9 @@
 (ns app.dashboard.routes
   (:require
+   [app.auth :as auth]
    [app.dashboard.views :as view]
    [app.layout :as layout]
-   [ctmx.core :as ctmx]
-   [app.gigs.routes :as gig.routes]
-   [app.auth :as auth]))
+   [ctmx.core :as ctmx]))
 
 (defn dashboard-route []
   (ctmx/make-routes

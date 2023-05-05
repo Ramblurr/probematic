@@ -3,6 +3,7 @@
   (:require
    [app.auth :as auth]
    [app.config :as config]
+   [nrepl.server :as nrepl]
    [app.datomic :as datomic]
    [app.email.email-worker :as email-worker]
    [app.i18n :as i18n]
@@ -174,3 +175,20 @@
 (defmethod ig/halt-key! ::keycloak
   [_ sys]
   (keycloak/halt! sys))
+
+(defmethod ig/init-key ::nrepl-server
+  [_ {:keys [port bind ack-port] :as config}]
+  (try
+    (let [server (nrepl/start-server :port port
+                                     :bind bind
+                                     :ack-port ack-port)]
+      (log/info "nREPL server started on port:" port)
+      (assoc config ::server server))
+    (catch Exception e
+      (log/error "failed to start the nREPL server on port:" port)
+      (throw e))))
+
+(defmethod ig/halt-key! ::nrepl-server
+  [_ {::keys [server]}]
+  (nrepl/stop-server server)
+  (log/info "nREPL server stopped"))
