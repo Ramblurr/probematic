@@ -44,6 +44,7 @@
                     :none "No travel discounts"
                     :add-discount-type "Add a ÖBB discount type"
                     :add-discount "Add a ÖBB discount"}
+ :oebb-discount "ÖBB Discount"
 
  :sno-id "SNO ID"
  :gig.status {:confirmed "Confirmed!"

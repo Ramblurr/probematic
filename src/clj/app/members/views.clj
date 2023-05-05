@@ -24,7 +24,8 @@
    "active" :member/active?
    "phone" :member/phone
    "email" :member/email
-   "section" :section})
+   "section" :section
+   "travel-discount" :travel-discount})
 
 (defn parse-sort-param [v]
   (let [[param order] (str/split v #":")
@@ -82,8 +83,9 @@
                      [:dt {:class "sr-only"} (:name instrument)]
                      [:dd {:class "mt-1 truncate text-gray-700"} (:owner instrument)]]))}
 
+     {:label [:a (sort-param-maker :travel-discount) (tr [:oebb-discount])] :priority :medium :key :value}
      {:label [:a (sort-param-maker :member/email) (tr [:Email])] :priority :low :key :owner}
-     {:label [:a (sort-param-maker :member/phone) (tr [:Phone])] :priority :important :key :value}
+     {:label [:a (sort-param-maker :member/phone) (tr [:Phone])] :priority :low :key :value}
      {:label [:a (sort-param-maker :section) (tr [:section])] :priority :medium :key :value}
      {:label [:a (sort-param-maker :member/active?) (tr [:Active])] :priority :low :key :value}
      ;;
@@ -324,24 +326,36 @@
       )]))
 
 (ctmx/defcomponent ^:endpoint member-row-ro [{:keys [db tr] :as req} idx member-id]
-  (let [{:member/keys [name email active? phone section] :as member} (q/retrieve-member db member-id)
+  (let [{:member/keys [name email active? phone section travel-discounts] :as member} (q/retrieve-member db member-id)
+        discounts (->> travel-discounts
+                       ;; (remove #(settings.domain/expired? %))
+                       (map (fn [{:travel.discount/keys [discount-type expiry-date] :as d}]
+                              [:span {:class
+                                      (ui/cs "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                             (if (settings.domain/expired? d) "text-green-800 bg-green-100" "text-red-800 bg-red-100"))}
+                               (:travel.discount.type/discount-type-name discount-type)])))
+
         section-name (:section/name section)
         td-class "px-3 py-4"]
     [:tr {:id id :hx-boost "true"}
      (list
       [:td {:class (ui/cs "w-full max-w-0 py-4 pl-4 pr-3 sm:w-auto   sm:max-w-none sm:pl-6"
                           (ui/table-row-priorities :important))}
-       [:a {:href (url/link-member member) :class "font-medium text-blue-600 hover:text-blue-500"} name]
+       [:a {:href (url/link-member member) :class "font-medium text-blue-600 hover:text-blue-500"} name
+        [:span {:class "xl:hidden"} " " (ui/bool-bubble active?)]]
        [:dl {:class "font-normal xl:hidden"}
         [:dt {:class "sr-only sm:hidden"} (tr [:member/email])]
         [:dd {:class "mt-1 truncate text-gray-500"} email]
         [:dt {:class "sr-only sm:hidden"} (tr [:section])]
         [:dd {:class "mt-1 truncate text-gray-500 sm:hidden"} section-name]
+        [:dd {:class "mt-1 truncate text-gray-500 sm:hidden"} discounts]
         [:dt {:class "sr-only sm:hidden"} (tr [:member/active?])]
-        [:dd {:class "mt-1 truncate text-gray-500"} (ui/bool-bubble active?)]]]
+        [:dd {:class "mt-1 truncate text-gray-500"}]]]
 
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :medium))}
+       discounts]
       [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} email]
-      [:td {:class (ui/cs td-class (ui/table-row-priorities :important))} phone]
+      [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} phone]
       [:td {:class (ui/cs td-class (ui/table-row-priorities :medium))} section-name]
       [:td {:class (ui/cs td-class (ui/table-row-priorities :low))} (ui/bool-bubble active?)]
       ;;
