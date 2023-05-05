@@ -1,5 +1,6 @@
 (ns user
   (:require
+   [app.main :as main]
    [portal.api :as inspect]))
 
 (defn debug-in-prod []
@@ -9,14 +10,14 @@
   (add-tap portal.api/submit))
 
 (comment
+  (debug-in-prod)
+  (keys main/system)
   (require '[clojure.tools.logging :as log])
   (log/info "hello")
-
-  (require '[integrant.repl.state :as state])
 
   (require '[app.dashboard.routes :as dashboard.routes])
   (dashboard.routes/routes)
 
-  (keys state/system)
+  (tap> main/system)
   ;;
   )
