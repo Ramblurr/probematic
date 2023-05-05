@@ -335,7 +335,8 @@
            :required required?
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
-(def button-priority-classes {:secondary
+(def button-priority-classes {:link "font-semibold text-sno-orange-600 hover:text-sno-orange-500"
+                              :secondary
                               "border-transparent bg-sno-orange-100 px-4 py-2  text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"
                               :white
                               "border-gray-300 bg-white px-4 py-2 text-sm  text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sno-green-500 focus:ring-offset-2 focus:ring-offset-gray-100"
@@ -386,7 +387,8 @@
                            :href href})
         {:class
          (cs
-          "inline-flex items-center rounded-md border font-medium"
+          (when-not (= :link priority)
+            "inline-flex items-center rounded-md border font-medium")
           ;; "inline-flex items-center border font-medium"
           ;; "inline-flex items-center rounded-md border"
           (size button-sizes-classes)
@@ -508,6 +510,11 @@
   (let [options (map (fn [{:song/keys [title song-id]}]
                        {:value song-id :label title}) songs)]
     (select :id id :label label :value value :options options :extra-attrs extra-attrs :size size)))
+
+(defn travel-discount-type-select [& {:keys [id value label discount-types size] :or {size :small}}]
+  (let [options (map (fn [{:travel.discount.type/keys [discount-type-id discount-type-name]}]
+                       {:value discount-type-id :label discount-type-name}) discount-types)]
+    (select :id id :label label :value value :options options  :size size)))
 
 (defn instrument-select [& {:keys [id value label instruments variant]
                             :or {label "Instrument"
@@ -806,9 +813,9 @@
    [:span {:class "ml-3"}
     [:span {:class "text-sm font-medium text-gray-900"} label]]])
 
-(defn toggle-checkbox [& {:keys [label checked? name]}]
-  [:label {:for name :class "inline-flex relative items-center cursor-pointer"}
-   [:input {:type "checkbox" :checked checked? :class "sr-only peer" :name name :id name}]
+(defn toggle-checkbox [& {:keys [label checked? name id]}]
+  [:label {:for (or id name) :class "inline-flex relative items-center cursor-pointer"}
+   [:input {:type "checkbox" :checked checked? :class "sr-only peer" :name name :id (or id name)}]
    [:div {:class  (cs
                    "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sno-orange-300 dark:peer-focus:ring-sno-orange-800 rounded-full peer"
                    "dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]"

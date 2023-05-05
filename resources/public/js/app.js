@@ -19,6 +19,7 @@ function initWidgets(evt) {
   } else {
     DropdownAll();
     listen('click', '[data-flyout-trigger]', Flyout);
+    document.querySelectorAll('.sortable-container').forEach(initSortable)
   }
 
   ActionMenu2All()
@@ -62,6 +63,7 @@ const initSortable = (target) => {
     var sortables = target.querySelectorAll(".sortable");
     for (var i = 0; i < sortables.length; i++) {
       var sortable = sortables[i];
+      console.log(sortable)
       new Sortable(sortable, {
         animation: 150,
         ghostClass: 'bg-blue-300',

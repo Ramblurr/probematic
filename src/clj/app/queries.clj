@@ -2,13 +2,14 @@
   (:require
    [app.datomic :as d]
    [app.gigs.domain :as gig.domain]
+   [app.settings.domain :as settings.domain]
    [app.util :as util]
    [datomic.client.api :as datomic]
    [medley.core :as m]
    [tick.core :as t]
    [clojure.java.io :as io]))
 
-(def section-pattern [:section/name :section/default? :section/position])
+(def section-pattern [:section/name :section/default? :section/position :section/active?])
 
 (def attendance-pattern [{:attendance/section [:section/name]}
                          {:attendance/member [:member/name :member/member-id :member/nick :member/email]}
@@ -19,12 +20,21 @@
                          :attendance/motivation
                          :attendance/updated])
 
+(def travel-discount-type-pattern [:travel.discount.type/discount-type-name :travel.discount.type/discount-type-id :travel.discount.type/enabled?])
+(def travel-discount-pattern
+  [{:travel.discount/discount-type [:travel.discount.type/discount-type-name :travel.discount.type/discount-type-id]}
+   :travel.discount/discount-id
+   :travel.discount/expiry-date])
+
 (def member-pattern [:member/member-id :member/username :member/name :member/nick :member/active? :member/phone :member/email :member/avatar-template
                      {:member/section [:section/name]}])
 
 (def member-detail-pattern [:member/member-id :member/name :member/nick :member/active? :member/phone :member/email
                             :member/username :member/keycloak-id
                             :member/discourse-id :member/avatar-template
+                            {:member/travel-discounts [{:travel.discount/discount-type [:travel.discount.type/discount-type-name :travel.discount.type/discount-type-id]}
+                                                       :travel.discount/discount-id
+                                                       :travel.discount/expiry-date]}
                             {:member/section [:section/name]}
                             {:instrument/_owner [:instrument/name :instrument/instrument-id
                                                  {:instrument/category [:instrument.category/name]}]}])
@@ -663,6 +673,20 @@
    (map first)
    (map gig.domain/db->reminder)
    (first)))
+
+(defn retrieve-discount-type [db discount-type-id]
+  (d/find-by db :travel.discount.type/discount-type-id discount-type-id travel-discount-type-pattern))
+
+(defn retrieve-all-discount-types [db]
+  (->>
+   (d/find-all db :travel.discount.type/discount-type-id travel-discount-type-pattern)
+   (map first)
+   (map settings.domain/db->discount-type)
+   (sort-by :travel.discount.type/discount-type-name)))
+
+(defn retrieve-travel-discount [db travel-discount-id]
+  (settings.domain/db->discount
+   (d/find-by db :travel.discount/discount-id travel-discount-id travel-discount-pattern)))
 
 ;;;; END
 (comment

@@ -253,6 +253,7 @@
   :songs "Repertoire",
   :logout "Abmelden",
   :settings "Einstellungen",
+  :band-settings "Band Einstellungen"
   :notifications "Benachrichtigungen",
   :probeplan "Probenplan",
   :members "Mitglieder",

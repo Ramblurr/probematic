@@ -1,22 +1,23 @@
 (ns app.members.views
   (:require
+   [app.auth :as auth]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.keycloak :as keycloak]
    [app.layout :as layout]
    [app.members.controller :as controller]
+   [app.queries :as q]
+   [app.settings.domain :as settings.domain]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
+   [clojure.set :as set]
+   [clojure.string :as str]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
-   [app.queries :as q]
-   [clojure.string :as str]
-   [clojure.set :as set]
    [medley.core :as m]
-   [app.auth :as auth]
-   [app.debug :as debug]))
+   [tick.core :as t]))
 
 (def query-param-field-mapping
   {"name" :member/name
@@ -103,6 +104,86 @@
    ;;
    ])
 
+(ctmx/defcomponent ^:endpoint travel-discount-single [{:keys [db tr] :as req} idx discount-id]
+  (if (util/delete? req)
+    (do
+      (controller/delete-travel-discount! req)
+      [:div])
+    (let  [{:travel.discount/keys [discount-type
+                                   discount-id
+                                   expiry-date]
+            :as discount}  (if (util/post? req)
+                             (controller/update-travel-discount! req)
+                             (q/retrieve-travel-discount db (util/ensure-uuid! discount-id)))
+           {:travel.discount.type/keys [discount-type-name]} discount-type
+           expired? (settings.domain/expired? discount)
+           form-class (str (path ".") "-form")
+           label-class (str (path ".") "-label")]
+      [:form {:class "sm:flex" :id (path ".")
+              :hx-target (hash ".")}
+       [:input {:type :hidden :value discount-id :name "travel-discount-id"}]
+
+       ;; rw
+       [:dt {:class (ui/cs  "hidden mb-2 text-gray-900 sm:w-64 sm:flex-none sm:pr-6" form-class)}
+        [:div {:class "mt-2"}]
+        discount-type-name]
+       [:dd {:class (ui/cs "hidden mt-1 flex  sm:items-center justify-between gap-x-6 sm:mt-0 sm:flex-auto" form-class)}
+        [:div {:class ""}
+         (ui/input :name "expiry-date" :type :date :value (t/date expiry-date) :label (tr [:travel-discounts/expiry-date]))]
+
+        (ui/button :priority :white-destructive :label (tr [:action/delete]) :size :xsmall
+                   :hx-delete (util/endpoint-path travel-discount-single))
+        (ui/button :priority :primary :label (tr [:action/save]) :size :xsmall
+                   :hx-post (util/endpoint-path travel-discount-single))]
+
+       ;; ro
+       [:dt {:class (ui/cs  "text-gray-900 sm:w-64 sm:flex-none sm:pr-6" label-class)}
+        [:div discount-type-name]]
+       [:dd {:class (ui/cs "mt-1 flex sm:items-center justify-between gap-x-6 sm:mt-0 sm:flex-auto" label-class)}
+        [:div {:class "text-gray-900"}
+         [:span {:class
+                 (ui/cs "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                        (if expired? "text-green-800 bg-green-100" "text-red-800 bg-red-100"))}
+          (t/date expiry-date)]]
+        (ui/button :priority :link :label (tr [:action/update])
+                   :attr {:type :button
+                          :_ (format  "on click remove .hidden from .%s then add .hidden to .%s" form-class label-class)})]])))
+
+(ctmx/defcomponent ^:endpoint travel-discount-panel [{:keys [db tr] :as req}]
+  (let [db (if (util/post? req)
+             (controller/add-discount! req)
+             db)
+        member (q/retrieve-member db (-> req :member :member/member-id))
+        discount-types (q/retrieve-all-discount-types db)
+        {:member/keys [travel-discounts]} member
+        req (util/make-get-request req {:db db})]
+    (ui/panel {:title (tr [:travel-discounts/title])
+               :subtitle (tr [:travel-discounts/subtitle])
+               :id (path ".")}
+              [:div
+               (if (seq travel-discounts)
+                 [:dl {:class "divide-y divide-gray-100 text-sm leading-6"}
+                  (rt/map-indexed travel-discount-single req (map :travel.discount/discount-id travel-discounts))]
+                 (tr [:travel-discounts/none]))
+               [:div {:class "flex border-t border-gray-100 pt-6"}
+                [:div {:class "discount-add-form hidden"}
+                 [:div {:class "pb-12 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:pb-0"}
+                  [:div {:class "sm:grid sm:grid-cols-4 sm:items-start sm:gap-4"}
+                   [:form {:class "sm:col-span-2 sm:flex sm:flex-col sm:space-y-4"
+                           :hx-target (hash ".")
+                           :hx-post (util/endpoint-path travel-discount-panel)}
+                    (ui/travel-discount-type-select :discount-types discount-types
+                                                    :size :normal
+                                                    :label (tr [:travel-discounts/discount-type-name])
+                                                    :id "new-discount-type")
+                    (ui/date :name "expiry-date" :required? true)
+                    (ui/button :class "mt-4"
+                               :priority :primary
+                               :label (tr [:action/add]))]]]]
+                (ui/button :attr {:_ "on click remove .hidden from .discount-add-form then add .hidden to me"}
+                           :icon icon/plus
+                           :label (tr [:travel-discounts/add-discount]))]])))
+
 (ctmx/defcomponent ^:endpoint members-detail-page [{:keys [db] :as req}  ^:boolean edit?]
   (let [comp-name (util/comp-namer #'members-detail-page)
         post? (util/post? req)
@@ -119,11 +200,11 @@
         section-name (:section/name section)
         current-user-admin? (auth/current-user-admin? req)
         account-enabled? (keycloak/user-account-enabled? (keycloak/kc-from-req req) keycloak-id)]
-    [(if edit? :form :div)
-     (if edit?
-       {:id id :hx-post (comp-name)}
-       {:id id})
-     [:div {:class "mt-8"}
+    [:div
+     [(if edit? :form :div)
+      (if edit?
+        {:id id :hx-post (comp-name)}
+        {:id id})
       [:div {:class "mx-auto max-w-3xl px-4 sm:px-6 md:flex md:items-center md:justify-between md:space-x-5 lg:max-w-7xl lg:px-8"}
        [:div {:class "flex items-center space-x-5"}
         [:div {:class "flex-shrink-0"}
@@ -182,7 +263,10 @@
                                (ui/toggle-checkbox  :checked? account-enabled? :name (path "sno-id-enabled?"))
                                (ui/bool-bubble account-enabled?
                                                {true (tr [:member/sno-id-enabled])
-                                                false (tr [:member/sno-id-disabled])})))))
+                                                false (tr [:member/sno-id-disabled])})))))]
+     [:div {:class "mt-8"}
+
+      (travel-discount-panel (util/make-get-request req))
 
       (ui/panel {:title
                  (tr [:member/insurance-title])

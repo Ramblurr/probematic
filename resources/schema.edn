@@ -70,6 +70,14 @@
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :member/travel-discounts
+    :db/doc "The travel discounts that this member has"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+;;;; Sections
+
    {:db/ident :section/name
     :db/doc "The name of the section"
     :db/valueType :db.type/string
@@ -764,7 +772,44 @@
    {:db/ident :reminder/reminder-status
     :db/doc "The status of the reminder, whether its pending, sent, errored, or cancelled"
     :db/valueType :db.type/keyword
-    :db/cardinality :db.cardinality/one}]
+    :db/cardinality :db.cardinality/one}
+
+;;;; Travel (OEBB) Discounts
+   {:db/ident :travel.discount.type/discount-type-id
+    :db/doc "The id of this discount type"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :travel.discount.type/discount-type-name
+    :db/doc "The name of this discount type"
+    :db/unique :db.unique/value
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :travel.discount.type/enabled?
+    :db/doc "Whether or not the discount is enabled"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :travel.discount/discount-id
+    :db/doc "The id of this discount"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :travel.discount/discount-type
+    :db/doc "The type of the discount"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :travel.discount/expiry-date
+    :db/doc "The date the discount expires"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   ;;
+   ]
 
 ;; premium basis for an instrument = instrument value x category factor x premium-factor
 ;; premium for additional coverage = premium basis x coverage premium factor

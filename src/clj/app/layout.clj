@@ -15,7 +15,8 @@
    {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
    {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
    {:label (tr [:nav/members]) :icon icon/users-outline :href "/members" :route-name :app/members}
-   {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}])
+   {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}
+   {:label (tr [:nav/band-settings]) :icon icon/cog :href "/band-settings" :route-name :app/band-settings}])
 
 (defn user-menu-sections [req tr]
   [{:items [;; {:label (tr [:nav/profile]) :href "#"}

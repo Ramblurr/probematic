@@ -3,21 +3,22 @@
    [app.auth :as auth]
    [app.datomic :as d]
    [app.email :as email]
+   [app.errors :as errors]
    [app.i18n :as i18n]
    [app.keycloak :as keycloak]
    [app.queries :as q]
-   [app.errors :as errors]
    [app.secret-box :as secret-box]
+   [app.settings.domain :as settings.domain]
    [app.twilio :as twilio]
    [app.util :as util]
    [app.util.http :as http.util]
    [clojure.string :as str]
+   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
    [taoensso.carmine :as redis]
-   [tick.core :as t]
-   [clojure.tools.logging :as log]))
+   [tick.core :as t]))
 
 (defn sections [db]
   (->> (d/find-all db :section/name [:section/name])
@@ -241,6 +242,30 @@
                 member (:member (transact-member! req member-id [tx]))]
             (-delete-invitation (-> req :system :redis) invite-code)
             member))))))
+
+(defn add-discount! [{:keys [datomic-conn db] :as req}]
+  (let [member (:member req)
+        {:keys [expiry-date new-discount-type]} (:params req)
+        discount-type-id (util/ensure-uuid! new-discount-type)
+        encoded (settings.domain/discount->db {:travel.discount/discount-id (sq/generate-squuid)
+                                               :travel.discount/discount-type [:travel.discount.type/discount-type-id discount-type-id]
+                                               :travel.discount/expiry-date (t/date expiry-date)})
+        tx-data [(assoc  encoded :db/id "new-discount")
+                 [:db/add (d/ref member) :member/travel-discounts "new-discount"]]
+        {:keys [db-after]} (datomic/transact datomic-conn {:tx-data tx-data})]
+    db-after))
+
+(defn update-travel-discount! [{:keys [datomic-conn] :as req}]
+  (let [{:keys [travel-discount-id expiry-date]} (:params req)
+        travel-discount-id (util/ensure-uuid! travel-discount-id)
+        tx-data [[:db/add [:travel.discount/discount-id travel-discount-id]
+                  :travel.discount/expiry-date (t/inst (t/at  (t/date expiry-date) t/midnight))]]
+        {:keys [db-after]} (datomic/transact datomic-conn {:tx-data tx-data})]
+    (q/retrieve-travel-discount db-after (util/ensure-uuid! travel-discount-id))))
+
+(defn delete-travel-discount! [{:keys [datomic-conn] :as req}]
+  (let [{:keys [travel-discount-id]} (:params req)]
+    (datomic/transact datomic-conn {:tx-data [[:db/retractEntity [:travel.discount/discount-id (util/ensure-uuid! travel-discount-id)]]]})))
 
 (comment
   (do

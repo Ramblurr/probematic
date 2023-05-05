@@ -37,6 +37,14 @@
           :filter-inactive "Inactive Members"
           :filter-sno-id-disabled "SNO ID Disabled"}
 
+ :travel-discounts {:discount-type-name "Discount Type"
+                    :expiry-date "Expires On"
+                    :title "Travel Discounts"
+                    :subtitle "Add your ÖBB travel discounts"
+                    :none "No travel discounts"
+                    :add-discount-type "Add a ÖBB discount type"
+                    :add-discount "Add a ÖBB discount"}
+
  :sno-id "SNO ID"
  :gig.status {:confirmed "Confirmed!"
               :unconfirmed "Unconfirmed"
@@ -153,6 +161,7 @@
        :insurance "Insurance"
        :profile "Profile"
        :settings "Settings"
+       :band-settings "Band Settings"
        :notifications "Notifications"
        :logout "Logout"}
  :band-private "Band/Private"
@@ -167,9 +176,12 @@
  :instruments "Instruments"
  :none "None"
  :section "Section"
+ :sections "Sections"
+ :section-add "Add Section"
  :section-none "No Section"
  :selected "selected"
  :action {:edit "Edit"
+          :update "Update"
           :mark-as "Mark As"
           :search "Search"
           :quick-edit "Quick Edit"
@@ -300,5 +312,5 @@
              :three-days "3 Days"
              :one-week "1 Week"}
 
-;;
+ ;;
  }

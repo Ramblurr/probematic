@@ -8,6 +8,7 @@
    [app.insurance.routes :as insurance]
    [app.interceptors :as interceptors]
    [app.members.routes :as members]
+   [app.settings.routes :as settings]
    [app.nextcloud :as nextcloud]
    [app.probeplan.routes :as probeplan]
    [app.routes.pedestal-reitit :as pedestal-reitit]
@@ -34,6 +35,7 @@
                        (interceptors/webdav-interceptor system)]}
 
     (dashboard/routes)
+    (settings/routes)
     (file-browser/routes)
     (gigs/routes)
     (insurance/routes)

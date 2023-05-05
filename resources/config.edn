@@ -51,7 +51,11 @@
                                                       :demo :demo
                                                       :test :test}
                    :app.ig/env              {:profile #ig/ref :app.ig/profile}
-                   :app.ig/nrepl-server     {:port #long #or [#env NREPL_PORT 7000]
+                   :app.ig/nrepl-server     {:port #long #or [#env NREPL_PORT
+                                                              #profile {:prod 7000
+                                                                        :dev -1
+                                                                        :test -1
+                                                                        :demo -1}]
                                              :bind #or [#env NREPL_HOST "127.0.0.1"]}
                    :app.ig/pedestal         {:service-map {:io.pedestal.http/type   :jetty
                                                            :io.pedestal.http/routes []
