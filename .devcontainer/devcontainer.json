@@ -1,6 +1,26 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "build": { "dockerfile": "Dockerfile" },
   "features": {
-    "ghcr.io/devcontainers-contrib/features/clojure-asdf:2": {}
-  }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "betterthantomorrow.calva"
+      ],
+    }
+  },
+  "forwardPorts": [6161],
+  "portsAttributes": {
+    "6161": {
+      "label": "app",
+      "onAutoForward": "silent"
+    },
+    "5900": {
+      "onAutoForward": "ignore"
+    },
+    "6080": {
+      "onAutoForward": "ignore"
+    }
+  },
+  "postCreateCommand": "bash ./.devcontainer/init.sh"
 }
