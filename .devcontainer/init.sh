@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo export JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -Dsun.java2d.xrender=false" >> /home/codespace/.bashrc
+echo export JAVA_TOOL_OPTIONS=\"\$JAVA_TOOL_OPTIONS -Dsun.java2d.xrender=false\" >> /home/codespace/.bashrc
 
 # prepare deps
 
