@@ -29,6 +29,10 @@
   (browser/open-browser "http://localhost:4180/")
   :done)
 
+(defn go []
+  (dev-extra/go)
+  :done)
+
 (defn reset []
   (dev-extra/reset)
   (browser/refresh))
