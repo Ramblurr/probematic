@@ -585,12 +585,6 @@
       [:input {:type :hidden :name (str idx "_songs_position")  :value (or position "9999")}]
       [:input {:type :hidden :name (str idx "_songs_emphasis")  :value emphasis}]
       [:input {:type :checkbox :id this-song-id  :name (str idx "_songs_song-id") :value this-song-id
-               :data-maximum probeplan.domain/MAX-SONGS :data-checkbox-limit true
-               :_ "on click
-                     if checkboxLimitReached()
-                       halt the event
-                       then add .shake-horizontal to <p.probeplan-instruction/>
-                       then settle then remove .shake-horizontal from <p.probeplan-instruction/>"
                :checked (some? position)}]]]))
 
 (declare gig-probeplan-sort)
