@@ -5,7 +5,7 @@
 (def version (format "%s" (b/git-process {:git-args "rev-parse --short HEAD"})))
 (def main 'app.main)
 (def class-dir "target/classes")
-(def basis (b/create-basis {:project "deps.edn"}))
+(def basis (b/create-basis {:project "deps.edn" :user :standard}))
 
 
 (defn- uber-opts [opts]
