@@ -86,11 +86,12 @@
         sys (sys-from-req req)]
     (queue-email! sys  (build-gig-created-email sys gig members))))
 
-(defn send-gig-reminder-to! [{:keys [datomic-conn tr env redis]} gig-id members]
+(defn send-gig-reminder-to! [{:keys [datomic-conn i18n-langs env redis]} gig-id members]
   (assert datomic-conn)
   (assert env)
   (assert redis)
   (let [db (datomic/db datomic-conn)
+        tr (i18n/tr-with i18n-langs [:en])
         sys {:tr tr :env env :redis redis}
         gig (q/retrieve-gig db gig-id)]
     (queue-email! sys (build-gig-reminder-email sys gig members))))

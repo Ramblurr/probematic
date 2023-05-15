@@ -58,7 +58,7 @@
      (map (fn [reminder-id]
             [:db/add [:reminder/reminder-id (first reminder-id)] :reminder/reminder-status :reminder-status/sent]) sent-reminder-ids))))
 
-(defn- send-reminders! [{:keys [datomic] :as system} _]
+(defn send-reminders! [{:keys [datomic] :as system} _]
   (log/info "sending reminders")
   (try
     (let [datomic-conn (:conn datomic)
