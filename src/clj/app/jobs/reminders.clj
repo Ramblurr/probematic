@@ -2,6 +2,7 @@
   (:require
    [app.email :as email]
    [app.gigs.domain :as domain]
+   [app.errors :as errors]
    [app.queries :as q]
    [clojure.tools.logging :as log]
    [datomic.client.api :as datomic]
@@ -59,14 +60,22 @@
 
 (defn- send-reminders! [{:keys [datomic] :as system} _]
   (log/info "sending reminders")
-  (let [datomic-conn (:conn datomic)
-        db (datomic/db datomic-conn)
-        reminders (q/overdue-reminders-by-type db)
-        tx-data (send-gig-reminders! (assoc system :db db :datomic-conn datomic-conn) (:reminder-type/gig-attendance reminders) (t/instant))]
-    ;; (tap> {:send-reminder-result tx-data})
-    (when (seq tx-data)
-      (datomic/transact datomic-conn {:tx-data tx-data}))
-    :done))
+  (try
+    (let [datomic-conn (:conn datomic)
+          db (datomic/db datomic-conn)
+          reminders (q/overdue-reminders-by-type db)
+          tx-data (send-gig-reminders!
+                   (assoc system :db db :datomic-conn datomic-conn)
+                   (:reminder-type/gig-attendance reminders)
+                   (t/instant))]
+      (tap> {:send-reminder-result tx-data})
+      (when (seq tx-data)
+        (datomic/transact datomic-conn {:tx-data tx-data}))
+      :done)
+    (catch Throwable e
+      (tap> e)
+      (errors/report-error! e))
+    ))
 
 (defn make-reminder-job [system]
   (fn [{:job/keys [frequency initial-delay]}]
