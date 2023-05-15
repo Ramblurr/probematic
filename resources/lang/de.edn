@@ -250,6 +250,8 @@
  :nav
  {:insurance "Versicherung",
   :home "Home",
+  :forum "Forum"
+  :nextcloud "Daten"
   :songs "Repertoire",
   :logout "Abmelden",
   :settings "Einstellungen",

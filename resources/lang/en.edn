@@ -155,6 +155,7 @@
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."}
  :nav {:home "Home"
        :forum "Forum"
+       :nextcloud "Data"
        :gigs "Gigs & Proben"
        :probeplan "Probenplan"
        :songs "Repertoire"
