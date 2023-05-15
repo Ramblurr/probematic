@@ -10,11 +10,12 @@
 
 (defn navigation [tr]
   [{:label (tr [:nav/home]) :icon icon/home :href "/" :route-name :app/dashboard}
+   {:label (tr [:nav/gigs]) :icon icon/trumpet :href (url/link-gigs-home) :route-name :app/gigs}
+   {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
+   {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
    {:label (tr [:nav/forum]) :icon icon/snomegaphone :href "https://forum.streetnoise.at" :route-name :app/forum}
    {:label (tr [:nav/nextcloud]) :icon icon/folder-open :href "https://data.streetnoise.at/apps/files/" :route-name :app/nextcloud}
-   {:label (tr [:nav/gigs]) :icon icon/trumpet :href (url/link-gigs-home) :route-name :app/gigs}
-   {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
-   {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
+   {:label (tr [:nav/chat]) :icon icon/comments :href "https://chat.streetnoise.at" :route-name :app/chat}
    {:label (tr [:nav/members]) :icon icon/users-outline :href "/members" :route-name :app/members}
    {:label (tr [:nav/insurance]) :icon icon/shield-check-outline :href "/insurance" :route-name :app/insurance}
    {:label (tr [:nav/band-settings]) :icon icon/cog :href "/band-settings" :route-name :app/band-settings}])
