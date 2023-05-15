@@ -11,7 +11,7 @@
 (defn navigation [tr]
   [{:label (tr [:nav/home]) :icon icon/home :href "/" :route-name :app/dashboard}
    {:label (tr [:nav/forum]) :icon icon/snomegaphone :href "https://forum.streetnoise.at" :route-name :app/forum}
-   {:label (tr [:nav/nextcloud]) :icon icon/file-solid :href "https://data.streetnoise.at/apps/files/" :route-name :app/nextcloud}
+   {:label (tr [:nav/nextcloud]) :icon icon/folder-open :href "https://data.streetnoise.at/apps/files/" :route-name :app/nextcloud}
    {:label (tr [:nav/gigs]) :icon icon/trumpet :href (url/link-gigs-home) :route-name :app/gigs}
    {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
    {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
