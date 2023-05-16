@@ -944,12 +944,15 @@
   (when date
     (t/format (t/formatter "dd.MM.yy E" Locale/GERMAN) (t/date date))))
 
-(defn gig-time [{:gig/keys [date call-time set-time end-time]}]
-  (when-let [time (or call-time set-time)]
-    (let [fmt-start (t/format (t/formatter "HH:mm" Locale/GERMAN) (t/at date time))]
-      (if end-time
-        (str fmt-start " - " (t/format (t/formatter "HH:mm" Locale/GERMAN) (t/at date end-time)))
-        fmt-start))))
+(defn gig-time
+  ([gig]
+   (gig-time gig true))
+  ([{:gig/keys [date call-time set-time end-time]} show-end-time?]
+   (when-let [time (or call-time set-time)]
+     (let [fmt-start (t/format (t/formatter "HH:mm" Locale/GERMAN) (t/at date time))]
+       (if (and show-end-time? end-time)
+         (str fmt-start " - " (t/format (t/formatter "HH:mm" Locale/GERMAN) (t/at date end-time)))
+         fmt-start)))))
 
 (defn datetime [dt]
   (if dt

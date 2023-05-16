@@ -5,15 +5,26 @@
    [app.layout :as layout]
    [ctmx.core :as ctmx]))
 
-(defn dashboard-route []
+(defn calendar-route
+  []
+  (ctmx/make-routes
+   "/calendar"
+   (fn [req]
+     (layout/app-shell req
+                       (view/calendar-page req)))))
+
+(defn dashboard-route
+  []
   (ctmx/make-routes
    "/"
    (fn [req]
      (layout/app-shell req
                        (view/dashboard-page req)))))
 
-(defn routes []
+(defn routes
+  []
   ["" {:app.route/name :app/dashboard
        :app.auth/roles #{:Mitglieder}
        :interceptors [auth/roles-authorization-interceptor]}
-   (dashboard-route)])
+   (dashboard-route)
+   (calendar-route)])

@@ -251,6 +251,7 @@
  :nav
  {:insurance "Versicherung",
   :home "Home",
+  :calendar "Kalendar"
   :forum "Forum"
   :nextcloud "Daten"
   :songs "Repertoire",

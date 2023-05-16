@@ -12,35 +12,36 @@
    [app.gigs.domain :as domain]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [req gig-id member-id motivation]
-  (gig.view/motivation-endpoint req
-                                {:path path :id id :hash hash :value value}
-                                (util/comp-namer #'gig-attendance-person-motivation)
-                                (util/ensure-uuid! gig-id)
-                                (util/ensure-uuid! member-id)
-                                motivation))
+                   (gig.view/motivation-endpoint req
+                                                 {:path path :id id :hash hash :value value}
+                                                 (util/comp-namer #'gig-attendance-person-motivation)
+                                                 (util/ensure-uuid! gig-id)
+                                                 (util/ensure-uuid! member-id)
+                                                 motivation))
 (ctmx/defcomponent ^:endpoint gig-attendance-person-plan [req gig-id member-id plan]
-  (gig.view/plan-endpoint req
-                          {:path path :id id :hash hash :value value}
-                          (util/comp-namer #'gig-attendance-person-plan)
-                          (util/ensure-uuid! gig-id)
-                          (util/ensure-uuid! member-id)
-                          plan))
+                   (gig.view/plan-endpoint req
+                                           {:path path :id id :hash hash :value value}
+                                           (util/comp-namer #'gig-attendance-person-plan)
+                                           (util/ensure-uuid! gig-id)
+                                           (util/ensure-uuid! member-id)
+                                           plan))
 (ctmx/defcomponent ^:endpoint gig-attendance-person-comment [req gig-id member-id comment ^:boolean edit?]
-  (gig.view/comment-endpoint req
-                             {:path path :id id :hash hash :value value}
-                             (util/comp-namer #'gig-attendance-person-comment)
-                             (util/ensure-uuid! gig-id)
-                             (util/ensure-uuid! member-id)
-                             comment edit?))
+                   (gig.view/comment-endpoint req
+                                              {:path path :id id :hash hash :value value}
+                                              (util/comp-namer #'gig-attendance-person-comment)
+                                              (util/ensure-uuid! gig-id)
+                                              (util/ensure-uuid! member-id)
+                                              comment edit?))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-snooze [req gig-id member-id]
-  (gig.view/snooze-endpoint req
-                            {:path path :id id :hash hash :value value}
-                            (util/comp-namer #'gig-attendance-snooze)
-                            (util/ensure-uuid! gig-id)
-                            (util/ensure-uuid! member-id)))
+                   (gig.view/snooze-endpoint req
+                                             {:path path :id id :hash hash :value value}
+                                             (util/comp-namer #'gig-attendance-snooze)
+                                             (util/ensure-uuid! gig-id)
+                                             (util/ensure-uuid! member-id)))
 
-(defn gig-attendance-endpoint [req id idx gig]
+(defn gig-attendance-endpoint
+  [req id idx gig]
   (let [attendance (:attendance gig)
         plan (:attendance/plan attendance)
         gig-id (:gig/gig-id gig)
@@ -59,9 +60,13 @@
         (if end-date
           (ui/daterange date end-date)
           (ui/datetime date))]
-       [:div {:class "md:order-none "}
+       [:div {:class "md:order-none hidden md:block"}
         (when-not end-date
-          (ui/gig-time gig))]]]
+          (ui/gig-time gig false))]
+       [:div {:class "md:order-none block md:hidden"}
+        (when-not end-date
+          (ui/gig-time gig))]
+       ]]
      [:div {:class "md:order-none md:font-normal"}
       [:a {:href (url/link-gig gig) :class "link-blue"} title]]
      [:div {:class "order-last md:order-none md:col-span-2 flex gap-x-2 flex-wrap"}
@@ -75,40 +80,57 @@
       [:div (gig-attendance-person-comment req gig-id member-id (:attendance/comment attendance) false)]]]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-upcoming [req idx gig]
-  gig-attendance-person-comment
-  gig-attendance-person-motivation
-  gig-attendance-person-plan
-  gig-attendance-snooze
-  (gig-attendance-endpoint req id idx gig))
+                   gig-attendance-person-comment
+                   gig-attendance-person-motivation
+                   gig-attendance-person-plan
+                   gig-attendance-snooze
+                   (gig-attendance-endpoint req id idx gig))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-unanswered [req idx gig]
-  gig-attendance-person-comment
-  gig-attendance-person-motivation
-  gig-attendance-person-plan
-  gig-attendance-snooze
-  (gig-attendance-endpoint req id idx gig))
+                   gig-attendance-person-comment
+                   gig-attendance-person-motivation
+                   gig-attendance-person-plan
+                   gig-attendance-snooze
+                   (gig-attendance-endpoint req id idx gig))
 
-(ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db tr] :as req}]
-  (let [member (auth/get-current-member req)
-        gigs-planned (gig.service/gigs-planned-for db member)
-        need-answer-gigs (gig.service/gigs-needing-plan db member)]
-    [:div
-     (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
-                     :buttons  (list
-                                (ui/button :tag :a :label (tr [:action/create-gig])
-                                           :priority :primary
-                                           :centered? true
-                                           :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
+(ctmx/defcomponent
+ ^:endpoint
+ calendar-page
+ [{:keys [db tr] :as req}]
+ [:div
+  (ui/page-header :title "Calendar"
+                  :buttons  (list
+                             (ui/button :tag :a :label (tr [:action/create-gig])
+                                        :priority :primary
+                                        :centered? true
+                                        :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
+  [:div {:class "flex flex-col w-full h-full"}
+   [:iframe {:class "grow" :src "https://data.streetnoise.at/apps/calendar/embed/yRFYYPnQkasfa8nk/listMonth/now"
+             :width "100%" :height "1000"
+             }]]])
 
-     (when (seq need-answer-gigs)
-       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
-        (ui/divider-left (tr [:dashboard/unanswered]))
-        (rt/map-indexed gig-attendance-unanswered req need-answer-gigs)])
+(ctmx/defcomponent
+ ^:endpoint dashboard-page
+ [{:keys [db tr] :as req}]
+ (let [member (auth/get-current-member req)
+       gigs-planned (gig.service/gigs-planned-for db member)
+       need-answer-gigs (gig.service/gigs-needing-plan db member)]
+   [:div
+    (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
+                    :buttons  (list
+                               (ui/button :tag :a :label (tr [:action/create-gig])
+                                          :priority :primary
+                                          :centered? true
+                                          :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
+    (when (seq need-answer-gigs)
+      [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+       (ui/divider-left (tr [:dashboard/unanswered]))
+       (rt/map-indexed gig-attendance-unanswered req need-answer-gigs)])
 
-     (when (seq gigs-planned)
-       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
-        (ui/divider-left (tr [:dashboard/upcoming]))
-        (rt/map-indexed gig-attendance-upcoming req gigs-planned)])
-     (when-not (or (seq gigs-planned) (seq need-answer-gigs))
-       [:div {:class "mt-6 sm:px-6 lg:px-8"}
-        "You have no upcoming gigs or probes. Why don't you create one?"])]))
+    (when (seq gigs-planned)
+      [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+       (ui/divider-left (tr [:dashboard/upcoming]))
+       (rt/map-indexed gig-attendance-upcoming req gigs-planned)])
+    (when-not (or (seq gigs-planned) (seq need-answer-gigs))
+      [:div {:class "mt-6 sm:px-6 lg:px-8"}
+       "You have no upcoming gigs or probes. Why don't you create one?"])]))

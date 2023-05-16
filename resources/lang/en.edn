@@ -157,6 +157,7 @@
  :nav {:home "Home"
        :forum "Forum"
        :nextcloud "Data"
+       :calendar "Calendar"
        :gigs "Gigs & Proben"
        :probeplan "Probenplan"
        :songs "Repertoire"

@@ -1,54 +1,74 @@
 (ns app.config)
 
-(defn profile [env]
+(defn profile
+  [env]
   (-> env :ig/system :app.ig/profile))
 
-(defn dev-mode? [env]
+(defn dev-mode?
+  [env]
   (= :dev (profile env)))
 
-(defn demo-mode? [env]
+(defn demo-mode?
+  [env]
   (= :demo (profile env)))
 
-(defn prod-mode? [env]
+(defn prod-mode?
+  [env]
   (= :prod (profile env)))
 
-(defn test-mode? [env]
+(defn test-mode?
+  [env]
   (= :test (profile env)))
 
-(defn non-prod? [env]
+(defn non-prod?
+  [env]
   (some?  (#{"qa" "dev" "test"} (-> env :environment))))
 
-(defn app-secret-key [env]
+(defn app-secret-key
+  [env]
   (assert env)
   (:app-secret-key env))
 
-(defn app-base-url [env]
+(defn app-base-url
+  [env]
   (assert env)
   (:app-base-url env))
 
-(defn session-config [env]
+(defn session-config
+  [env]
   (let [{:keys [session-ttl-s] :as sc}  (:session-config env)]
     (-> sc
         (assoc-in [:cookie-attrs :max-age] (* 1000 session-ttl-s))
         (assoc-in [:cookie-attrs :secure] (not (dev-mode? env))))))
 
-(defn oauth2-certificate-filename [env]
+(defn oauth2-certificate-filename
+  [env]
   (-> env :authorization :cert-filename))
 
-(defn oauth2-known-roles [env]
+(defn oauth2-known-roles
+  [env]
   (-> env :authorization :known-roles))
 
-(defn keycloak-auth-server-url [env]
+(defn keycloak-auth-server-url
+  [env]
   (-> env :keycloak :auth-server-url))
 
-(defn discourse-forum-url [env]
+(defn discourse-forum-url
+  [env]
   (-> env :discourse :forum-url))
 
-(defn nextcloud-path-current-songs [env]
+(defn nextcloud-url
+  [env]
+  (format "https://%s" (-> env :nextcloud :host)))
+
+(defn nextcloud-path-current-songs
+  [env]
   (-> env :nextcloud :current-songs-path))
 
-(defn nextcloud-path-sheet-music [env]
+(defn nextcloud-path-sheet-music
+  [env]
   (-> env :nextcloud :sheet-music-path))
 
-(defn nextcloud-path-insurance-upload [env]
+(defn nextcloud-path-insurance-upload
+  [env]
   (-> env :nextcloud :insurance-upload-path))

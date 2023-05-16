@@ -26,6 +26,7 @@
 
 (defn link-gigs-home [] "/gigs/")
 (defn link-songs-home [] "/songs/")
+(defn link-calendar [] "/calendar/")
 (defn link-probeplan-home [] "/probeplan")
 (defn link-gig-create [] "/gigs/new/")
 (defn link-gig-archive [] "/gigs/archive/")

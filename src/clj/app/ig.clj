@@ -55,7 +55,8 @@
   [env]
   (let [base-uri (config/app-base-url env)
         id-uri (config/keycloak-auth-server-url env)
-        forum-uri (config/discourse-forum-url env)]
+        forum-uri (config/discourse-forum-url env)
+        nextcloud-uri (config/nextcloud-url env)]
     (assert base-uri)
     (assert id-uri)
     (assert forum-uri)
@@ -66,7 +67,7 @@
                                         :script-src  (format  "%s %s 'self' 'unsafe-inline' 'unsafe-eval'" base-uri forum-uri)
                                         :style-src   (format "%s 'self' 'unsafe-inline'" base-uri)
                                         :connect-src "'self'"
-                                        :frame-src (format  "%s 'self'" forum-uri)}}))
+                                        :frame-src (format  "%s %s 'self'" nextcloud-uri forum-uri)}}))
 
 (defn with-csp
   [service-map env]
