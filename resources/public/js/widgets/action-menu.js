@@ -21,8 +21,10 @@ export function ActionMenu2(dropdownTrigger) {
         onShown: (instance) => {
             if(htmx) {
                 const root = htmx.find("[data-tippy-root]");
-                if (root)
+                if (root) {
                     htmx.process(root);
+                    _hyperscript.processNode(root);
+                }
             }
         },
         popperOptions: {

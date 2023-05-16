@@ -1,5 +1,7 @@
 (ns app.dashboard.views
   (:require
+   [clojure.string :as str]
+   [app.config :as config]
    [app.auth :as auth]
    [app.gigs.service :as gig.service]
    [app.gigs.views :as gig.view]
@@ -109,28 +111,75 @@
              :width "100%" :height "1000"
              }]]])
 
-(ctmx/defcomponent
- ^:endpoint dashboard-page
- [{:keys [db tr] :as req}]
- (let [member (auth/get-current-member req)
-       gigs-planned (gig.service/gigs-planned-for db member)
-       need-answer-gigs (gig.service/gigs-needing-plan db member)]
-   [:div
-    (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
-                    :buttons  (list
-                               (ui/button :tag :a :label (tr [:action/create-gig])
-                                          :priority :primary
-                                          :centered? true
-                                          :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
-    (when (seq need-answer-gigs)
-      [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
-       (ui/divider-left (tr [:dashboard/unanswered]))
-       (rt/map-indexed gig-attendance-unanswered req need-answer-gigs)])
+(defn calendar-subscribe-button [env tr]
+  (let [https (config/public-calendar-url env)
+        webcal  (str/replace (config/public-calendar-url env) "https" "webcal" )
+        encoded-webcal (url/url-encode webcal)
+        google (format "https://calendar.google.com/calendar/render?cid=%s" encoded-webcal
+                       )
+        outlook-365 (str "https://outlook.office.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription"
+                         "&url="encoded-webcal "&name=" "SNO-Kalender")
+        outlook-live (str
+                      "https://outlook.live.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription"
+                         "&url="encoded-webcal "&name=" "SNO-Kalender")
+        ]
+    (ui/action-menu
+     :label (tr [:action/add-to-calendar])
+     :button-icon icon/calendar-days
+     :id "subscribe-calendar"
+     :sections [{:label (tr [:choose-calendar-app])
+                 :items [{:label [:span {:class "copy-link"} (tr [:action/copy-link])] :tag :button
+                          :icon (icon/copy {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0 text-pink-600")})
+                          :attr { :data-href https
+                                 :_ (format "
+on click writeText(@data-href) on navigator.clipboard
+put '%s!' into .copy-link in me
+add .animate-pulse to me
+wait 2s
+remove .animate-pulse from me
+put '%s' into .copy-link in me"
+                                            (tr [:action/copy-link-confirm])
+                                            (tr [:action/copy-link])
+                                            )
+                                 }}
+                         {:label "Microsoft 365" :tag :a
+                          :icon (icon/microsoft-365 {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0")})
+                          :attr { :href outlook-365 }}
+                         {:label "Outlook Live" :tag :a
+                          :icon (icon/outlook {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0")})
+                          :attr { :href outlook-live }}
+                         {:label "Google Calendar" :tag :a
+                          :icon (icon/google-calendar {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0")})
+                          :attr{ :href google
+                                } }
+                         {:label "Apple Calendar" :tag :a
+                          :icon (icon/apple-calendar {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0 border border-gray-500 rounded")})
+                          :attr { :href webcal}}]}]))
+  )
 
-    (when (seq gigs-planned)
-      [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
-       (ui/divider-left (tr [:dashboard/upcoming]))
-       (rt/map-indexed gig-attendance-upcoming req gigs-planned)])
-    (when-not (or (seq gigs-planned) (seq need-answer-gigs))
-      [:div {:class "mt-6 sm:px-6 lg:px-8"}
-       "You have no upcoming gigs or probes. Why don't you create one?"])]))
+(ctmx/defcomponent
+  ^:endpoint dashboard-page
+  [{:keys [db tr system] :as req}]
+  (let [member (auth/get-current-member req)
+        gigs-planned (gig.service/gigs-planned-for db member)
+        need-answer-gigs (gig.service/gigs-needing-plan db member)]
+    [:div
+     (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
+                     :buttons  (list
+                                (calendar-subscribe-button (:env system) tr)
+                                (ui/button :tag :a :label (tr [:action/create-gig])
+                                           :priority :primary
+                                           :centered? true
+                                           :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
+     (when (seq need-answer-gigs)
+       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+        (ui/divider-left (tr [:dashboard/unanswered]))
+        (rt/map-indexed gig-attendance-unanswered req need-answer-gigs)])
+
+     (when (seq gigs-planned)
+       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+        (ui/divider-left (tr [:dashboard/upcoming]))
+        (rt/map-indexed gig-attendance-upcoming req gigs-planned)])
+     (when-not (or (seq gigs-planned) (seq need-answer-gigs))
+       [:div {:class "mt-6 sm:px-6 lg:px-8"}
+        "You have no upcoming gigs or probes. Why don't you create one?"])]))

@@ -146,9 +146,14 @@
  "Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-Auftritt gespielt wurde.",
  :sno-id "SNO ID",
  :updating "Aktualisierung...",
+ :choose-calendar-app "Wähle deine Kalender-App"
  :action
  {:duplicate "Duplikat",
   :remove "Entfernen",
+  :copy-link "Link kopieren"
+  :copy-link-confirm "Kopiert"
+  :subscribe "Abonnieren"
+  :add-to-calendar "Zum Kalender hinzufügen"
   :done "Fertig",
   :continue "Fortsetzen",
   :create "Erstellen",
@@ -251,7 +256,7 @@
  :nav
  {:insurance "Versicherung",
   :home "Home",
-  :calendar "Kalendar"
+  :calendar "Kalender"
   :forum "Forum"
   :nextcloud "Daten"
   :songs "Repertoire",
