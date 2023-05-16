@@ -256,6 +256,7 @@
  :nav
  {:insurance "Versicherung",
   :home "Home",
+  :chat "Chat"
   :calendar "Kalender"
   :forum "Forum"
   :nextcloud "Daten"
