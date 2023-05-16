@@ -10,7 +10,8 @@
 
 (defn- uber-opts [opts]
   (assoc opts
-         :lib lib :main main
+         :lib lib
+         :main main
          :version version
          :uber-file (format "target/%s-%s.jar" lib version)
          :basis basis
@@ -33,16 +34,33 @@
 (defn clean [_]
   (b/delete {:path "target"}))
 
+
+(defn compile-dev [_]
+  (b/javac {:src-dirs ["src/java"]
+            :class-dir "src/java-classes"
+            :basis basis
+            :javac-opts ["-source" "17" "-target" "17"]}))
+(defn compile [_]
+  (b/javac {:src-dirs ["src/java"]
+            :class-dir class-dir
+            :basis basis
+            :javac-opts ["-source" "17" "-target" "17"]}))
+
 (defn uberjar "build the uberjar" [_]
-  (clean nil)
   (let [opts (uber-opts {})]
-    (b/copy-dir {:src-dirs   ["src" "resources"]
+    (clean nil)
+    (compile nil)
+      (b/write-pom {:class-dir class-dir
+                    :lib lib
+                    :version version
+                    :basis basis
+                    :src-dirs ["src"]})
+    (b/copy-dir {:src-dirs ["src" "resources"]
                  :target-dir class-dir})
-    (b/compile-clj {:basis     basis
-                    :src-dirs  ["src"]
+    (b/compile-clj {:basis basis
+                    :src-dirs ["src"]
                     :class-dir class-dir})
-      (b/uber opts)
-    ))
+    (b/uber opts)))
 
 ;; (defn ci "Run tests and build the jar" [opts]
 ;;   (-> opts

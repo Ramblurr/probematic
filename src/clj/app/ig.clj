@@ -1,6 +1,7 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
+   [app.caldav :as caldav]
    [app.auth :as auth]
    [app.config :as config]
    [nrepl.server :as nrepl]
@@ -50,7 +51,8 @@
     {}
     (jobs/job-defs system)))
 
-(defn csp-settings [env]
+(defn csp-settings
+  [env]
   (let [base-uri (config/app-base-url env)
         id-uri (config/keycloak-auth-server-url env)
         forum-uri (config/discourse-forum-url env)]
@@ -66,20 +68,24 @@
                                         :connect-src "'self'"
                                         :frame-src (format  "%s 'self'" forum-uri)}}))
 
-(defn with-csp [service-map env]
+(defn with-csp
+  [service-map env]
   (assoc service-map :io.pedestal.http/secure-headers (csp-settings env)))
-(defn with-cors [service-map env]
+(defn with-cors
+  [service-map env]
   (assoc service-map :io.pedestal.http/allowed-origins
          {:creds true
           :allowed-origins
           ["" (config/app-base-url env) (config/keycloak-auth-server-url env)]
-            ;; (constantly true)
+          ;; (constantly true)
           }))
-(defn with-container-opts [service-map env]
-    ;; interceptors/prone-exception-interceptor
+(defn with-container-opts
+  [service-map env]
+  ;; interceptors/prone-exception-interceptor
   (assoc service-map :io.pedestal.http/container-options {:io.pedestal.http.jetty/http-configuration (interceptors/http-configuration
                                                                                                       (-> env :max-header-size))}))
-(defn maybe-with-dev-interceptors [service-map env]
+(defn maybe-with-dev-interceptors
+  [service-map env]
   (if (config/dev-mode? env)
     (server/dev-interceptors service-map)
     service-map))
@@ -194,3 +200,7 @@
   (when server
     (nrepl/stop-server server))
   (log/info "nREPL server stopped"))
+
+(defmethod ig/init-key ::calendar
+  [_ {:keys [env] :as system}]
+  (caldav/init-calendar env))

@@ -22,18 +22,31 @@
 
 (set! *print-namespace-maps* false)
 
-;(mr/set-default-registry! schemas/registry)
+;; (mr/set-default-registry! schemas/registry)
 
-(defn go-with-browser []
+(defn go-with-browser
+  []
   (dev-extra/go)
   (browser/open-browser "http://localhost:4180/")
   :done)
 
-(defn go []
+(defn go
+  []
   (dev-extra/go)
   :done)
 
-(defn reset []
+(defn halt
+  []
+  (dev-extra/halt)
+  :done)
+
+(defn restart
+  []
+  (dev-extra/halt)
+  (dev-extra/go))
+
+(defn reset
+  []
   (dev-extra/reset)
   (browser/refresh))
 

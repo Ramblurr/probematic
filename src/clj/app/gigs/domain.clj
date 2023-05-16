@@ -4,37 +4,44 @@
    [medley.core :as m]
    [tick.core :as t]))
 
-(def statuses [:gig.status/unconfirmed
-               :gig.status/confirmed
-               :gig.status/cancelled])
-(def create-statuses [:gig.status/unconfirmed
-                      :gig.status/confirmed])
+(def statuses
+  [:gig.status/unconfirmed
+   :gig.status/confirmed
+   :gig.status/cancelled])
 
-(def plans [:plan/no-response
-            :plan/definitely
-            :plan/probably
-            :plan/unknown
-            :plan/probably-not
-            :plan/definitely-not
-            :plan/not-interested])
+(def create-statuses
+  [:gig.status/unconfirmed
+   :gig.status/confirmed])
 
-(def plan-priority-sorting [:plan/definitely
-                            :plan/probably
-                            :plan/unknown
-                            :plan/probably-not
-                            :plan/definitely-not
-                            :plan/not-interested
-                            :plan/no-response])
+(def plans
+  [:plan/no-response
+   :plan/definitely
+   :plan/probably
+   :plan/unknown
+   :plan/probably-not
+   :plan/definitely-not
+   :plan/not-interested])
 
-(def motivations [:motivation/none
-                  :motivation/very-high
-                  :motivation/high
-                  :motivation/medium
-                  :motivation/low
-                  :motivation/very-low])
+(def plan-priority-sorting
+  [:plan/definitely
+   :plan/probably
+   :plan/unknown
+   :plan/probably-not
+   :plan/definitely-not
+   :plan/not-interested
+   :plan/no-response])
+
+(def motivations
+  [:motivation/none
+   :motivation/very-high
+   :motivation/high
+   :motivation/medium
+   :motivation/low
+   :motivation/very-low])
 (def gig-types [:gig.type/probe :gig.type/extra-probe :gig.type/meeting :gig.type/gig])
 
-(defn setlist-gig? [{:gig/keys [gig-type]}]
+(defn setlist-gig?
+  [{:gig/keys [gig-type]}]
   (contains? #{:gig.type/gig} gig-type))
 
 (def setlist-versions [:setlist.version/v1])
@@ -109,42 +116,53 @@
                                 :human (s/explain-human schema gig)})))
    (s/encode-datomic schema gig)))
 
-(defn ->comment [comment]
+(defn ->comment
+  [comment]
   (-> comment
       (m/update-existing :comment/created-at t/date-time)))
 
-(defn db->gig [gig]
+(defn db->gig
+  [gig]
   (-> (s/decode-datomic GigEntity gig)
       (m/update-existing :gig/comments #(->> %
                                              (map ->comment)
                                              (sort-by :comment/created-at)))))
 
-(defn in-future? [{:gig/keys [date]}]
+(defn in-future?
+  [{:gig/keys [date]}]
   (t/>= date (t/date)))
 
-(defn in-past? [{:gig/keys [date] :as gig}]
+(defn in-past?
+  [{:gig/keys [date] :as gig}]
   (t/< date (t/date)))
 
-(defn cancelled? [{:gig/keys [status]}]
+(defn cancelled?
+  [{:gig/keys [status]}]
   (= status :gig.status/cancelled))
 
-(defn gig-archived? [{:gig/keys [date]}]
+(defn gig-archived?
+  [{:gig/keys [date]}]
   (when date
     (t/< date (t/<< (t/date) (t/new-period 14 :days)))))
 
-(defn probe? [gig]
+(defn probe?
+  [gig]
   (#{:gig.type/probe :gig.type/extra-probe} (:gig/gig-type gig)))
 
-(defn normal-probe? [gig]
+(defn normal-probe?
+  [gig]
   (#{:gig.type/probe} (:gig/gig-type gig)))
 
-(defn meeting? [gig]
+(defn meeting?
+  [gig]
   (#{:gig.type/meeting} (:gig/gig-type gig)))
 
-(defn gig? [gig]
+(defn gig?
+  [gig]
   (#{:gig.type/gig} (:gig/gig-type gig)))
 
-(defn confirmed? [gig]
+(defn confirmed?
+  [gig]
   (= :gig.status/confirmed (:gig/status gig)))
 
 (defn no-response?
@@ -155,20 +173,23 @@
         (= plan :plan/unknown)
         (= plan :plan/no-response))))
 
-(defn committed? [plan-or-attendance]
+(defn committed?
+  [plan-or-attendance]
   (let [plan (or (:attendance/plan plan-or-attendance) plan-or-attendance)]
     (= plan :plan/definitely)))
 
-(defn uncommitted? [plan-or-attendance]
+(defn uncommitted?
+  [plan-or-attendance]
   (let [plan (or (:attendance/plan plan-or-attendance) plan-or-attendance)]
     (or (nil? plan)
         (#{nil :plan/definitely-not :plan/unknown :plan/no-response :plan/not-interested :plan/probably-not
            :plan/probably} plan))))
 
-(def reminder-states #{:reminder-status/pending
-                       :reminder-status/sent
-                       :reminder-status/error
-                       :reminder-status/cancelled})
+(def reminder-states
+  #{:reminder-status/pending
+    :reminder-status/sent
+    :reminder-status/error
+    :reminder-status/cancelled})
 
 (def reminder-types #{:reminder-type/gig-attendance})
 
@@ -182,7 +203,8 @@
     [:reminder/member ::s/datomic-ref]
     [:reminder/gig ::s/datomic-ref]]))
 
-(defn reminder->db [reminder]
+(defn reminder->db
+  [reminder]
   (when-not (s/valid? ReminderEntity reminder)
     (throw
      (ex-info "Reminder not valid" {:reminder reminder
@@ -191,7 +213,8 @@
                                     :human (s/explain-human ReminderEntity reminder)})))
   (s/encode-datomic ReminderEntity reminder))
 
-(defn db->reminder [reminder]
+(defn db->reminder
+  [reminder]
   (update
    (s/decode-datomic ReminderEntity reminder)
    :reminder/gig db->gig))

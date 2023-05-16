@@ -6,7 +6,7 @@
  :session-config  {:cookie-attrs  {:same-site :strict
                                    :http-only true
                                    :path      "/"}
-                   :session-ttl-s 1210000 ;; 14 days
+                   :session-ttl-s 1210000 ; 14 days
                    }
  :oauth2          {:well-known-uri #ref [:secrets :oauth2 :well-known-uri]
                    :client-id      #ref [:secrets :oauth2 :client-id]
@@ -61,7 +61,7 @@
                                                            :io.pedestal.http/routes []
                                                            :io.pedestal.http/port   #long #or [#env HTTP_PORT #profile {:dev 6161 :test 6162} 6160]
                                                            :io.pedestal.http/host   #or [#env HTTP_BIND_HOST "localhost"]
-                                        ;:io.pedestal.http/resource-path "/static"
+                                                           ;; :io.pedestal.http/resource-path "/static"
                                                            :io.pedestal.http/join?  false}
                                              :datomic     #ig/ref :app.ig/datomic-db
                                              :env         #ig/ref :app.ig/env
@@ -80,7 +80,8 @@
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :webdav     #ig/ref :app.ig/webdav-sardine
                                              :keycloak   #ig/ref :app.ig/keycloak
-                                             :redis      #ig/ref :app.ig/redis}
+                                             :redis      #ig/ref :app.ig/redis
+                                             :calendar   #ig/ref :app.ig/calendar}
                    :app.ig/oauth2           {:env #ig/ref :app.ig/env}
                    :ol.ig/jobs              {:job-defs #ig/ref :app.ig.jobs/definitions
                                              :env      #ig/ref :app.ig/env}
@@ -102,11 +103,13 @@
                                              :mailgun #ig/ref :app.ig/mailgun}
                    :app.ig/webdav-sardine   {:env #ig/ref :app.ig/env}
                    :app.ig/keycloak         {:env #ig/ref :app.ig/env}
+                   :app.ig/calendar         {:env #ig/ref :app.ig/env}
                    :app.ig.jobs/definitions {:env        #ig/ref :app.ig/env
                                              :gigo       #ig/ref :app.ig/gigo-client
                                              :datomic    #ig/ref :app.ig/datomic-db
                                              :i18n-langs #ig/ref :app.ig/i18n-langs
-                                             :redis      #ig/ref :app.ig/redis}}
+                                             :redis      #ig/ref :app.ig/redis
+                                             :calendar   #ig/ref :app.ig/calendar}}
  :jobs            {:job/sync-gigs          {:job/frequency     [60 :minutes]
                                             :job/initial-delay [2 :seconds]}
                    :job/sync-members       {:job/frequency     [8 :hours]

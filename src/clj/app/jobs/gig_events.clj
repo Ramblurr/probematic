@@ -1,39 +1,51 @@
 (ns app.jobs.gig-events
   (:require
+   [app.caldav :as caldav]
    [app.discourse :as discourse]
    [app.email :as email]
+   [app.errors :as errors]
    [chime.core :as chime]
    [clojure.data]
-   [app.errors :as errors]
    [datomic.client.api :as datomic])
-  (:import [java.time Instant]))
+  (:import
+   (java.time Instant)))
 
-(defn update-system [{:keys [system]}]
+(defn update-system
+  [{:keys [system]}]
   (assoc system :db (datomic/db (-> system :datomic :conn))))
 
-(defn handle-gig-details-edited [req notify? takeover-topic? gig-id {:keys [gig-before gig db-after]}]
+(defn handle-gig-details-edited
+  [req notify? takeover-topic? gig-id {:keys [gig-before gig db-after]}]
   (let [new-system (update-system req)]
     (when notify?
       (email/send-gig-updated! req gig-id
                                (keys (second (clojure.data/diff gig-before gig)))))
-    (discourse/update-topic-for-gig! new-system gig-id takeover-topic?)))
+    (discourse/update-topic-for-gig! new-system gig-id takeover-topic?)
+    (caldav/update-gig-event! new-system gig-id)))
 
-(defn handle-gig-edited [req gig-id edit-type]
+(defn handle-gig-edited
+  [req gig-id edit-type]
   (let [new-system (update-system req)]
-    (discourse/update-topic-for-gig! new-system gig-id false)))
+    (discourse/update-topic-for-gig! new-system gig-id false)
+    (caldav/update-gig-event! new-system gig-id)))
 
-(defn handle-gig-created [req notify? thread? gig-id]
+(defn handle-gig-created
+  [req notify? thread? gig-id]
   (let [new-system (update-system req)]
     (when notify?
       (email/send-gig-created! req gig-id))
     (when thread?
-      (discourse/create-topic-for-gig! new-system gig-id))))
+      (discourse/create-topic-for-gig! new-system gig-id))
+    (caldav/create-gig-event! new-system gig-id)))
 
-(defn handle-gig-deleted [req gig-id]
+(defn handle-gig-deleted
+  [req gig-id]
   (let [new-system (update-system req)]
-    (discourse/maybe-delete-topic-for-gig! new-system gig-id)))
+    (discourse/maybe-delete-topic-for-gig! new-system gig-id)
+    (caldav/delete-gig-event! new-system gig-id)))
 
-(defn exec-later [fn-name & args]
+(defn exec-later
+  [fn-name & args]
   (chime/chime-at [(.plusSeconds (Instant/now) 1)]
                   (fn [_]
                     (try
@@ -42,14 +54,18 @@
                         (tap> e)
                         (errors/report-error! e))))))
 
-(defn trigger-gig-details-edited [req notify? takeover-topic? transact-result]
+(defn trigger-gig-details-edited
+  [req notify? takeover-topic? transact-result]
   (exec-later handle-gig-details-edited req notify? takeover-topic? (-> transact-result :gig :gig/gig-id) transact-result))
 
-(defn trigger-gig-edited [req gig-id edit-type]
+(defn trigger-gig-edited
+  [req gig-id edit-type]
   (exec-later handle-gig-edited req gig-id edit-type))
 
-(defn trigger-gig-deleted [req gig-id]
+(defn trigger-gig-deleted
+  [req gig-id]
   (exec-later handle-gig-deleted req gig-id))
 
-(defn trigger-gig-created [req notify? thread? gig-id]
+(defn trigger-gig-created
+  [req notify? thread? gig-id]
   (exec-later handle-gig-created req notify? thread? gig-id))

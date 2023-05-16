@@ -246,7 +246,8 @@
   :email-about-new?
   "Sende Mitgliedern eine Email über diesen neuen Termin?",
   :more-details-placeholder "wer? was? wo? wann? wieso den?",
-  :create-setlist "Setliste erstellen"},
+  :create-setlist "Setliste erstellen"
+  :end-time-warning "ACHTUNG: Die Endzeit wird nur geschätzt. Jemand hat es in SNOrga nicht ausgefüllt."},
  :nav
  {:insurance "Versicherung",
   :home "Home",

@@ -31,3 +31,4 @@ redis-dev
 secrets/
 env/dev/clj/gigo_match.clj
 env/dev/clj/insurance.clj
+src/java-classes

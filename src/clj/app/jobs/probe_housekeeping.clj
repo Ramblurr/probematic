@@ -18,7 +18,8 @@
 (def minimum-gigs 4)
 (def maximum-create 4)
 
-(defn on-date? [date probe]
+(defn on-date?
+  [date probe]
   (= (:gig/date probe)  date))
 
 (defn- find-probe-dates
@@ -31,7 +32,8 @@
          (remove #(some (partial on-date? %) next-probes))
          (take n))))
 
-(defn newprobe-tx [date]
+(defn newprobe-tx
+  [date]
   (domain/gig->db
    {:gig/gig-id (sq/generate-squuid)
     :gig/title  "Probe"
@@ -41,14 +43,17 @@
     :gig/location "Proberaum in den Bögen"
     :gig/call-time (t/time "18:45")
     :gig/set-time (t/time "19:00")
+    :gig/end-time (t/time "22:00")
     :gig/contact [:member/gigo-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA6K70hwoM"]}))
 
-(defn create-probes! [conn probes]
+(defn create-probes!
+  [conn probes]
   (let [probe-dates (find-probe-dates (- minimum-gigs (count probes)) probes)
         txs (take maximum-create (map newprobe-tx probe-dates))]
     (datomic/transact conn {:tx-data txs})))
 
-(defn assign-rehearsal-leaders! [conn]
+(defn assign-rehearsal-leaders!
+  [conn]
   (let [db (datomic/db conn)
         prev-probe (q/previous-probe db)
         next-probe (q/next-probe db)
@@ -57,7 +62,8 @@
     (when (and (some? last-leader2)  (nil? next-leader1))
       (datomic/transact conn {:tx-data [[:db/add (d/ref next-probe) :gig/rehearsal-leader1 (d/ref last-leader2)]]}))))
 
-(defn- probe-housekeeping-job [{:keys [datomic] :as system} _]
+(defn- probe-housekeeping-job
+  [{:keys [datomic] :as system} _]
   (try
     (let [conn (:conn datomic)
           probes (q/next-probes (datomic/db conn) q/gig-detail-pattern)
@@ -70,7 +76,8 @@
       (tap> e)
       (errors/report-error! e))))
 
-(defn notify-rehearsal-leader! [{:keys [datomic] :as system}]
+(defn notify-rehearsal-leader!
+  [{:keys [datomic] :as system}]
   (try
     (let [conn (:conn datomic)
           db (datomic/db conn)
@@ -90,7 +97,8 @@
     (catch Throwable e
       (errors/report-error! e))))
 
-(defn- start-rehearsal-leader-notify [system]
+(defn- start-rehearsal-leader-notify
+  [system]
   (let [next-wednesdays-at-10-pm (->> (chime/periodic-seq (-> (LocalTime/of 22 0 0)
                                                               (.adjustInto (ZonedDateTime/now (ZoneId/of "Europe/Berlin")))
                                                               .toInstant)
@@ -102,7 +110,8 @@
     (chime/chime-at next-wednesdays-at-10-pm
                     (fn [_] (notify-rehearsal-leader! system)))))
 
-(defn make-probe-housekeeping-job [system]
+(defn make-probe-housekeeping-job
+  [system]
   (fn [{:job/keys [frequency initial-delay]}]
     (start-rehearsal-leader-notify system)
     (jobs/make-repeating-job (partial probe-housekeeping-job system) frequency initial-delay)))
