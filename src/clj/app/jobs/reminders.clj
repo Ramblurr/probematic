@@ -62,6 +62,7 @@
   (log/info "sending reminders")
   (try
     (let [datomic-conn (:conn datomic)
+          _ (assert datomic-conn)
           db (datomic/db datomic-conn)
           reminders (q/overdue-reminders-by-type db)
           tx-data (send-gig-reminders!
