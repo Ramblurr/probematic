@@ -54,6 +54,7 @@
    (tmpl/gig-updated-recipient-variables sys gig members)))
 
 (defn build-gig-reminder-email [{:keys [tr] :as sys} gig members]
+  (assert tr)
   (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-reminder] [(:gig/title gig)])
@@ -91,7 +92,7 @@
   (assert env)
   (assert redis)
   (let [db (datomic/db datomic-conn)
-        tr (i18n/tr-with i18n-langs [:en])
+        tr (i18n/tr-with i18n-langs [:de])
         sys {:tr tr :env env :redis redis}
         gig (q/retrieve-gig db gig-id)]
     (queue-email! sys (build-gig-reminder-email sys gig members))))
@@ -133,7 +134,7 @@
 (defn send-rehearsal-leader-email! [{:keys [i18n-langs env redis]} gig leader-member]
   (assert gig)
   (assert leader-member)
-  (let [tr (i18n/tr-with i18n-langs [:en])
+  (let [tr (i18n/tr-with i18n-langs [:de])
         sys {:tr tr :env  env :redis redis}]
     (build-generic-email sys
                          (:member/email leader-member)
