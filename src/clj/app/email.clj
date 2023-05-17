@@ -57,6 +57,10 @@
 
 (defn build-gig-reminder-email [{:keys [tr] :as sys} gig members]
   (assert tr)
+  (tap> {:s (tr [:email-subject/gig-reminder] [(:gig/title gig)])
+         :t (:gig/title gig)
+         :tr tr
+         })
   (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-reminder] [(:gig/title gig)])
@@ -79,6 +83,7 @@
 (defn- sys-from-req [req]
   {:tr (:tr req)
    :env (-> req :system :env)
+   :i18n-langs (-> req :system :i18n-langs )
    :redis (-> req :system :redis)
    :datomic-conn (-> req :datomic-conn)})
 
@@ -89,10 +94,13 @@
         sys (sys-from-req req)]
     (queue-email! sys  (build-gig-created-email sys gig members))))
 
-(defn send-gig-reminder-to! [{:keys [datomic-conn i18n-langs env redis]} gig-id members]
+(defn send-gig-reminder-to! [{:keys [datomic-conn i18n-langs env redis] :as sys} gig-id members]
   (assert datomic-conn)
   (assert env)
   (assert redis)
+  (tap> {:i18n i18n-langs
+         :k (keys sys)})
+  (assert i18n-langs)
   (let [db (datomic/db datomic-conn)
         tr (i18n/tr-with i18n-langs [:de])
         sys {:tr tr :env env :redis redis}

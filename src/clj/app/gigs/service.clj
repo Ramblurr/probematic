@@ -161,13 +161,15 @@
   (let [existing-reminder (q/gig-reminder-for db gig-id member-id)]
     (when remind-in-days
       (if existing-reminder
-        (datomic/transact datomic-conn {:tx-data [(reset-reminder existing-reminder remind-in-days)]})
+        (do
+          (tap> {:replace existing-reminder})
+          (datomic/transact datomic-conn {:tx-data [(reset-reminder existing-reminder remind-in-days)]}))
         (let [reminder (make-reminder gig-id member-id remind-in-days)]
           (tap> {:new-reminder reminder})
           (datomic/transact datomic-conn {:tx-data [reminder]}))))))
 
 (defn send-reminder-to-all! [req gig-id]
-  (email/send-gig-reminder-to-all! req gig-id))
+    (email/send-gig-reminder-to-all! req gig-id))
 
 (defn get-attendance
   ([db gig-id member-id]

@@ -2,7 +2,8 @@
  :tasks
  {lint (shell "clj-kondo --lint src")
   repl  (shell "clojure -A:dev")
-  repl-portal  (shell "clojure -T:build compile-dev && clojure -A:dev -M:inspect/portal-cli-cider")
+  compile (shell "clojure -T:build compile-dev")
+  repl-portal  (shell "clojure -A:dev -M:inspect/portal-cli-cider")
   repl-term  (shell "clojure -A:test -A:dev -M:repl/cider-refactor")
 
   npm-install (shell {:dir "./"} "npm" "install")

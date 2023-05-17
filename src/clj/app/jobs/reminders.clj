@@ -58,25 +58,29 @@
      (map (fn [reminder-id]
             [:db/add [:reminder/reminder-id (first reminder-id)] :reminder/reminder-status :reminder-status/sent]) sent-reminder-ids))))
 
-(defn send-reminders! [{:keys [datomic] :as system} _]
-  (log/info "sending reminders")
-  (try
-    (let [datomic-conn (:conn datomic)
-          _ (assert datomic-conn)
-          db (datomic/db datomic-conn)
-          reminders (q/overdue-reminders-by-type db)
-          tx-data (send-gig-reminders!
-                   (assoc system :db db :datomic-conn datomic-conn)
-                   (:reminder-type/gig-attendance reminders)
-                   (t/instant))]
-      (tap> {:send-reminder-result tx-data})
-      (when (seq tx-data)
-        (datomic/transact datomic-conn {:tx-data tx-data}))
-      :done)
-    (catch Throwable e
-      (tap> e)
-      (errors/report-error! e))
-    ))
+(defn send-reminders!
+  ([system _]
+   (send-reminders! system (t/instant) _)
+   )
+  ([{:keys [datomic] :as system} as-of _]
+   (log/info "sending reminders")
+   (try
+     (let [datomic-conn (:conn datomic)
+           _ (assert datomic-conn)
+           db (datomic/db datomic-conn)
+           reminders (q/overdue-reminders-by-type db as-of)
+           tx-data (send-gig-reminders!
+                    (assoc system :db db :datomic-conn datomic-conn)
+                    (:reminder-type/gig-attendance reminders)
+                    as-of)]
+       (tap> {:send-reminder-result tx-data})
+       (when (seq tx-data)
+         (datomic/transact datomic-conn {:tx-data tx-data}))
+       :done)
+     (catch Throwable e
+       (tap> e)
+       (errors/report-error! e))
+     )))
 
 (defn make-reminder-job [system]
   (fn [{:job/keys [frequency initial-delay]}]
@@ -105,8 +109,8 @@
   (let [as-of (t/>> (t/instant) (t/new-period 2 :days))]
     (process-reminders db (:reminder-type/gig-attendance (q/overdue-reminders-by-type db as-of)) as-of))
   (q/active-reminders-by-type db)
-  (send-reminders! system nil)
+  (send-reminders! system (t/>> (t/instant) (t/new-period 2 :days)) nil)
   (datomic/transact conn {:tx-data
-                          [[:db/retractEntity [:reminder/reminder-id #uuid "0187e791-2bf8-8ca0-ac0d-6eeb435aa78e"]]]})
+                          [[:db/retractEntity [:reminder/reminder-id #uuid "01882a6e-6517-8600-805b-b996bf0de9ba"]]]})
   ;;
   )
