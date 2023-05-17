@@ -46,7 +46,7 @@
           (util/remove-deep dangerous-keys)
           (util/replace-deep redact-keys "<REDACTED>"))
      :user-email user-email
-     :member-id member-id
+     :member-id (str member-id)
      )))
 
 (defn unwrap-ex [ex]
