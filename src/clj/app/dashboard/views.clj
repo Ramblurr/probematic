@@ -161,6 +161,7 @@ put '%s' into .copy-link in me"
   ^:endpoint dashboard-page
   [{:keys [db tr system] :as req}]
   (let [member (auth/get-current-member req)
+        _ (assert member)
         gigs-planned (gig.service/gigs-planned-for db member)
         need-answer-gigs (gig.service/gigs-needing-plan db member)]
     [:div

@@ -37,9 +37,17 @@
 (def redact-keys #{:password :pass "x-forwarded-access-token" "cookie"})
 
 (defn sanitize [v]
-  (->> v
-       (util/remove-deep dangerous-keys)
-       (util/replace-deep redact-keys "<REDACTED>")))
+
+  (let [user-email (get-in v [:session :session/email])
+        member-id (get-in v [:session :session/member :member/member-id])
+        ]
+    (->
+     (->> v
+          (util/remove-deep dangerous-keys)
+          (util/replace-deep redact-keys "<REDACTED>"))
+     :user-email user-email
+     :member-id member-id
+     )))
 
 (defn unwrap-ex [ex]
   (sanitize
@@ -61,7 +69,7 @@
                             (assoc :form-params (:form-params req))
                             (assoc :path-params (:path-params req)))))
       (update :request-method name)
-      (select-keys   [:uri :query-string :request-method :headers :params])
+      (select-keys   [:uri :query-string :request-method :headers :params :member-id :user-email])
       (set/rename-keys  {:request-method :method :params :data :uri :url})))
 
 (defn send-sentry!
