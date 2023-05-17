@@ -199,7 +199,9 @@
  :email-subject
  {:gig-created "Neuer Gig: %1"
   :gig-updated "Gig-Bearbeitung: %1"
-  :gig-reminder "Gig-Erinnerung: %1"},
+  :gig-reminder "Gig-Erinnerung: %1"
+  :new-invite "Deine SNO-ID wartet auf dich"
+  },
  :plan
  {:definitely "Sicher",
   :probably "Wahrscheinlich",

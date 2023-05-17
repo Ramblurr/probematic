@@ -17,6 +17,7 @@
   (email-worker/queue-mail! (:redis sys) email))
 
 (defn build-email [to subject body-html body-plain]
+  (assert subject)
   (util/remove-nils
    {:email/batch? false
     :email/email-id (sq/generate-squuid)
@@ -27,6 +28,7 @@
     :email/created-at (t/inst)}))
 
 (defn build-batch-emails [tos subject body-html body-plain recipient-variables]
+  (assert subject)
   (util/remove-nils
    {:email/batch? true
     :email/recipient-variables recipient-variables

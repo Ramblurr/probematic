@@ -61,6 +61,7 @@
   (car-mq/stop worker))
 
 (defn queue-mail! [redis-opts email]
+  (assert (:email/subject email))
   (car/wcar redis-opts
             (car-mq/enqueue email-queue-name email)))
 

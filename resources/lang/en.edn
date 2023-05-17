@@ -273,7 +273,9 @@
  :updating "Updating..."
  :email-subject {:gig-created "New Gig: %1"
                  :gig-updated "Gig Edit: %1"
-                 :gig-reminder "Gig Reminder: %1"}
+                 :gig-reminder "Gig Reminder: %1"
+                 :new-invite "Your SNO ID is waiting for you.."
+                 }
  :email {:greeting "Hello!"
          :new-gig-added "A new gig is coming up!"
          :new-probe-added "A new probe is coming up!"
