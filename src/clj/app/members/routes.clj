@@ -7,6 +7,13 @@
    [ctmx.core :as ctmx]
    [datomic.client.api :as d]))
 
+(defn member-vcard-download []
+  ["/member-vcard/{member-id}" {:app.route/name :app/member-vcard
+                                :get (fn [req]
+                                       (view/member-vcard req)
+                                       )}]
+  )
+
 (defn members-detail []
   (ctmx/make-routes
    "/member/{member-id}"
@@ -35,6 +42,7 @@
 (defn routes []
   ["" {:app.route/name :app/members}
    ["" {:interceptors  members-interceptors}
+    (member-vcard-download)
     (members-detail)]
    (members-index)])
 

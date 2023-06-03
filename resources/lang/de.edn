@@ -80,6 +80,7 @@
  "Ein privates Instrument ist ein Instrument, das der Besitzer auf eigene Kosten versichern wird.",
  :band-private "Band/Privat",
  :Contact-Information "Kontakt Informationen",
+ :Contact-Download "Kontakt Herunterladen"
  :password
  {:commonly-used
   "Das Passwort ist ein bekanntes gehacktes Passwort. Bitte wähle ein sicheres Passwort.",

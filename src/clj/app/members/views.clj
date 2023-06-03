@@ -1,5 +1,7 @@
 (ns app.members.views
   (:require
+   [app.util.http :as http.util]
+   [app.sardine :as sardine]
    [app.auth :as auth]
    [app.i18n :as i18n]
    [app.icons :as icon]
@@ -8,6 +10,7 @@
    [app.members.controller :as controller]
    [app.queries :as q]
    [app.settings.domain :as settings.domain]
+   [app.members.domain :as members.domain]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
@@ -196,7 +199,7 @@
                      (:member (controller/update-member! req))
                      :else
                      (:member req))
-        {:member/keys [name nick email username phone active? section keycloak-id]} member
+        {:member/keys [member-id name nick email username phone active? section keycloak-id]} member
         coverages (controller/member-current-insurance-info req member)
         private-instruments (filter :instrument.coverage/private? coverages)
         band-instruments (filter #(not (:instrument.coverage/private? %)) coverages)
@@ -240,7 +243,10 @@
           (ui/button :label (tr [:action/edit]) :priority :white :centered? true
                      :attr {:hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true}}))]]
       (ui/panel {:title
-                 (tr [:Contact-Information])}
+                 (tr [:Contact-Information])
+                 :buttons (ui/link-button :label (tr [:Contact-Download]) :icon icon/download
+                                          :href (str "/member-vcard/" (str member-id)))
+                 }
                 (ui/dl
                  (ui/dl-item (tr [:member/active?]) (if edit?
                                                       (ui/toggle-checkbox  :checked? active? :name (path "active?"))
@@ -604,6 +610,19 @@
           nil (throw e)
           :code-expired (invite-invalid req)
           (invite-accept-form req (->  e ex-data :invite-data) ((i18n/tr-from-req req) [reason])))))))
+
+(defn member-vcard [{:keys [db] :as req}]
+  (let [member-id (http.util/path-param-uuid! req :member-id)
+        member (q/retrieve-member db member-id)
+        nick (:member/nick member)
+        vcard (members.domain/generate-vcard member)]
+
+    {:status 200
+     :headers {"Content-Disposition" (sardine/content-disposition-filename "attachment" (str nick ".vcf"))
+               "Content-Type" "text/x-vcard"
+               "Content-Length" (str vcard)}
+     :body vcard})
+  )
 
 (comment
 

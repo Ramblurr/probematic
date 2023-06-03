@@ -1,6 +1,7 @@
 {:missing ":en missing text"
  :now "now"
  :Contact-Information "Contact Information"
+ :Contact-Download "Download Contact"
  :Email "E-Mail"
  :Phone "Phone"
  :Active "Active?"
