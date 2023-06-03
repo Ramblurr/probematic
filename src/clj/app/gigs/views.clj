@@ -194,6 +194,7 @@
     {:plan/definitely {:value (name :plan/definitely)  :icon icon/circle :icon-class (ui/cs icon-class size-class green-class)}
      :plan/probably {:value (name :plan/probably) :icon icon/circle-outline  :icon-class (ui/cs icon-class size-class green-class)}
      :plan/unknown {:value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
+     nil {:value (name :plan/unknown) :icon icon/question :icon-class (ui/cs icon-class  size-class "text-gray-500")}
      :plan/probably-not {:value (name :plan/probably-not) :icon icon/square-outline :icon-class (ui/cs icon-class size-class red-class)}
      :plan/definitely-not {:value (name :plan/definitely-not)    :icon icon/square :icon-class (ui/cs icon-class size-class red-class)}
      :plan/not-interested {:value (name :plan/not-interested)    :icon icon/xmark :icon-class (ui/cs icon-class  size-class "text-black")}
