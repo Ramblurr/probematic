@@ -514,7 +514,7 @@
                        (sort-by :song-order)
                        (map :song-id)
                        (map util/ensure-uuid))
-        songs (util/index-sort-by song-ids :song/song-id (q/retrieve-songs db song-ids))]
+        songs (q/setlist-songs-for-gig db (gig-id-from-path req))]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                :buttons (ui/button :class "pulse-delay" :label (tr [:action/save]) :priority :primary :form id)}
               [:form {:class "w-full" :hx-post (util/endpoint-path gigs-detail-page-setlist) :hx-target "#setlist-container" :id id}
@@ -548,14 +548,18 @@
                   [:input {:type :hidden :name (str idx "_songs_song-id") :value song-id}]))
                selected-songs))
 
-(ctmx/defcomponent ^:endpoint  gigs-detail-page-setlist [{:keys [tr db] :as req} ^:array song-ids]
+(ctmx/defcomponent ^:endpoint  gigs-detail-page-setlist [{:keys [tr db] :as req}]
   gig-setlist-choose-songs
   gig-setlist-sort
   (let [comp-name (util/comp-namer #'gigs-detail-page-setlist)
-        song-ids (map util/ensure-uuid song-ids)
-        songs (util/index-sort-by song-ids :song/song-id (if (util/post? req)
-                                                           (service/update-setlist! req song-ids)
-                                                           (q/retrieve-songs db song-ids)))
+        ;; song-ids (map util/ensure-uuid song-ids)
+        ;; songs (util/index-sort-by song-ids :song/song-id (if (util/post? req)
+        ;;                                                    (service/update-setlist! req song-ids)
+        ;;                                                    (q/retrieve-songs db song-ids)))
+
+        songs (if (util/post? req)
+                (service/update-setlist! req (util/unwrap-params req))
+                (q/setlist-songs-for-gig db (gig-id-from-path req)))
         selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                :buttons (when (seq songs)
@@ -680,7 +684,6 @@ on change if I match <:checked/>
         songs (if (util/post? req)
                 (service/update-probeplan! req (util/unwrap-params req))
                 (q/probeplan-songs-for-gig db (gig-id-from-path req)))
-        ;; selected-songs (map-indexed (fn [idx song] {:song-order idx :song-id (-> song :song/song-id str)}) songs)
         target (util/hash :comp/gig-probeplan-container)]
     (ui/panel {:title (tr [:gig/probeplan]) :id (util/id :comp/gig-probeplan-container)
                :buttons (when (seq songs)
@@ -1040,7 +1043,6 @@ on change if I match <:checked/>
   (let [{:gig/keys [gig-id gig-type] :as gig} (:gig req)
         endpoint-self (util/endpoint-path gig-detail-page)
         archived? (domain/gig-archived? gig)
-        scheduled-songs (when (domain/gig? gig) (q/setlist-song-ids-for-gig db gig-id))
         attendances-for-gig (if archived?
                               (q/attendances-for-gig db gig-id)
                               (q/attendance-for-gig-with-all-active-members db gig-id))
@@ -1060,7 +1062,7 @@ on change if I match <:checked/>
        (domain/probe? gig)
        (gigs-detail-page-probeplan req)
        (domain/gig? gig)
-       (gigs-detail-page-setlist req scheduled-songs)
+       (gigs-detail-page-setlist req)
        :else nil)
      [:div {:class "mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-6 sm:px-6 lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-3"}
       [:div {:class "space-y-6 lg:col-span-3 lg:col-start-1"}

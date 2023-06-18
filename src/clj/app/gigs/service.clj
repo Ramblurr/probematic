@@ -442,7 +442,7 @@
   "Updates the setlist for the current gig. song-ids are ordered. Returns the songs in the setlist."
   [{:keys [datomic-conn db] :as req} song-ids]
   (let [gig-id      (common/path-param-uuid! req :gig/gig-id)
-        song-tuples (map-indexed (fn [idx sid] [[:song/song-id sid] idx]) song-ids)
+        song-tuples (map-indexed (fn [idx sid] [[:song/song-id (parse-uuid sid)] idx]) song-ids)
         current     (q/setlist-song-tuples-for-gig db  gig-id)
         txs         (reconcile-setlist "setlist" song-tuples current)
         tx          {:setlist/gig     [:gig/gig-id gig-id]
@@ -451,7 +451,8 @@
         txs         (concat [tx] txs)
         result      (datomic/transact datomic-conn {:tx-data txs})]
     (gig.events/trigger-gig-edited req gig-id :setlist)
-    (q/retrieve-songs (:db-after result) song-ids)))
+
+    (q/setlist-songs-for-gig (:db-after result) gig-id)))
 
 (defn reconcile-probeplan [eid new-song-tuples current-song-tuples]
   (let [[added removed] (clojure.data/diff (set new-song-tuples)  (set current-song-tuples))
@@ -485,7 +486,10 @@
   (update-setlist! {:datomic-conn conn :db db :path-params {:gig/gig-id "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDCiYe6CAw"}}
                    [#uuid "01844740-3eed-856d-84c1-c26f07068207"]) ;
 
-  (q/setlist-song-tuples-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMDCiYe6CAw") ;
+  (q/setlist-song-tuples-for-gig db #uuid "01885050-f9e2-822f-8e0e-b78f390ac08e") ;
+  (q/probeplan-song-tuples-for-gig db #uuid "01885050-f9e2-822f-8e0e-b78f390ac08e")
+
+  (q/probeplan-songs-for-gig db #uuid "01885050-f9e2-822f-8e0e-b78f390ac08e")
 
   (reconcile-setlist "A" (set [[:song/song-id #uuid "01844740-3eed-856d-84c1-c26f07068207" 0]
                                [:song/song-id #uuid "01844740-3eed-856d-84c1-c26f0706820a" 1]])
