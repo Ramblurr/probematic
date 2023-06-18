@@ -478,18 +478,15 @@
               [?e :probeplan/gig ?gig-id]
               [?e :probeplan.classic/ordered-songs ?tup]
               [(untuple  ?tup) [?song-eid ?position ?emphasis]]
-              [?song-eid :song/title ?song-title]
-              [?song-eid :song/last-played-on ?song-last-played-on]
               [?song-eid :song/song-id ?song-id]
-              [(tuple ?song-id ?song-title ?song-last-played-on  ?position ?emphasis) ?result]]
+              [(tuple ?song-id ?position ?emphasis) ?result]]
             db [:gig/gig-id gig-id])
        (mapv first)
-       (mapv (fn [[song-id title last-played-on position emphasis]]
-               {:song/song-id song-id
-                :song/title title
-                :song/last-played-on  last-played-on
-                :position position
-                :emphasis emphasis}))
+       (mapv (fn [[song-id position emphasis]]
+               (merge
+                (retrieve-song db song-id)
+                {:position position
+                 :emphasis emphasis})))
        (sort-by :position)))
 
 (defn setlist-songs-for-gig
