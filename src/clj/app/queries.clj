@@ -319,6 +319,15 @@
   (util/isort-by :song/title
                  (mapv first
                        (d/find-all db :song/song-id song-pattern))))
+
+(defn retrieve-active-songs [db]
+  (->>
+   (d/find-all db :song/song-id song-pattern)
+   (mapv first)
+   (filter #(:song/active? %))
+   (util/isort-by :song/title )
+   ))
+
 (defn retrieve-songs [db song-ids]
   (if (empty? song-ids)
     []

@@ -493,7 +493,7 @@
 (declare gigs-detail-page-setlist)
 
 (ctmx/defcomponent ^:endpoint gig-setlist-choose-songs [{:keys [tr db] :as req}]
-  (let [all-songs (q/retrieve-all-songs db)
+  (let [all-songs (q/retrieve-active-songs db)
         comp-name (util/comp-namer #'gig-setlist-choose-songs)]
     (if (util/put? req)
       (gig-setlist-sort req (util/unwrap-params req))
@@ -596,7 +596,7 @@
 (declare gigs-detail-page-probeplan)
 
 (ctmx/defcomponent ^:endpoint gig-probeplan-choose-songs [{:keys [tr db] :as req}]
-  (let [all-songs (q/retrieve-all-songs db)
+  (let [all-songs (q/retrieve-active-songs db)
         comp-name (util/comp-namer #'gig-probeplan-choose-songs)]
     (if (util/put? req)
       (gig-probeplan-sort req (util/unwrap-params req))
