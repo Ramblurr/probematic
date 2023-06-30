@@ -157,6 +157,7 @@
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."}
  :nav {:home "Home"
        :forum "Forum"
+       :chat "Chat"
        :nextcloud "Data"
        :calendar "Calendar"
        :gigs "Gigs & Proben"
