@@ -1,6 +1,7 @@
 (ns browser
   (:require [etaoin.api :as eta]
             [clojure.core.async :as async]))
+
 (defn debounce [in timeout-atom]
   (let [out (async/chan)]
     (async/go-loop [last-val nil]
@@ -47,9 +48,10 @@
 (+ 1 1)
 
 (comment
+  ;; Open the browser window
   (open-browser "http://localhost:4180")
 
-  @browser
+  ;; Refresh the page
   (refresh)
-  ;; '
+  ;;
   )

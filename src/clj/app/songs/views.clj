@@ -351,8 +351,14 @@
 
 (defn song-list [tr songs]
   (if (empty? songs)
-    (tr [:song/search-empty])
-    [:ul {:role "list", :class "divide-y divide-gray-200"}
+    [:div {:class "divide-y divide-gray-200 bg-white p-4 text-center text-lg"}
+     (tr [:song/search-empty])
+     [:p {:class "text-base"}
+      [:span "Not finding what you're looking for? Try changing the "]
+      (icon/music-note-solid {:class "inline-block w-5 h-5 text-gray-500"})
+      [:span "Active/Inactive filter "]]]
+
+    [:ul {:role "list" :class "divide-y divide-gray-200 bg-white"}
      (map (fn [song]
             [:li
              (song-row tr song)]) songs)]))
@@ -362,34 +368,71 @@
       (clojure.string/upper-case)
       (clojure.string/trim)))
 
-(defn search-songs [keyword all-songs]
-  (filter (fn [s]
-            (clojure.string/includes?
-             (norm (:song/title s))
-             (norm keyword))) all-songs))
+(defn search-songs [{:keys [preset search] :as wut} all-songs]
+  (->> all-songs
+       (filter (fn [s]
+                 (case preset
+                   "all" true
+                   "active" (:song/active? s)
+                   "inactive" (not (:song/active? s))
+                   true)))
+       (filter (fn [s]
+                 (clojure.string/includes?
+                  (norm (:song/title s))
+                  (norm (or search "")))))))
 
 (ctmx/defcomponent ^:endpoint songs-filter [req]
   (let [tr (i18n/tr-from-req req)]
-    [:div {:class "flex-grow relative rounded-md border border-gray-300 px-3 py-2 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600"}
-     [:label {:for "song", :class "absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900"}
-      (tr [:song/search])]
-     [:input {:type "text"
-              :name "song"
-              :id id
-              :class "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
-              :placeholder "Watermelon Man"
-              :hx-get "songs-list"
+    [:div ;; search container
+     [:label {:for id, :class "sr-only"} (tr [:action/search])]
+     [:div {:class "relative"}
+      [:div {:class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"}
+       (icon/search {:class  "w-5 h-5 text-gray-500 "
+                         ;; dark:text-gray-400
+                     })]
+
+      [:input {:type "text"
+                   ;; dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
+               :class "block p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-md w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+               :name "q"
+               :id id
+               :value (get-in req [:query-params "q"])
+               :hx-vals (util/remove-nils {:filter-preset (get-in req [:query-params "filter-preset"])})
+
+               :placeholder "Watermelon Man"
+               :hx-get "songs-list"
               ;; :hx-push-url "true"
-              :hx-trigger "keyup changed delay:500ms"
-              :hx-target (hash "../songs-list")}]]))
+               :hx-trigger "keyup changed delay:500ms"
+               :hx-target (hash "../songs-list")}]]]))
+
+
+(defn filter-param [{:keys [query-params] :as req}]
+  {:preset (get query-params "filter-preset" "active")
+   :search (get query-params "q" nil)
+   :fields []})
+
+(defn song-table-action-button [{:keys [tr] :as req}]
+  (let [filter-spec (filter-param req)
+        active-preset (:preset filter-spec)
+        active-preset-label (get {"all" :song/filter-all
+                                  "active" :song/filter-active
+                                  "inactive" :song/filter-inactive} active-preset :song/filter-active)]
+    (ui/action-menu :button-icon icon/music-note-solid
+                    :label (tr [active-preset-label])
+                    :hx-boost "true"
+                    :sections [{:items [{:label (tr [:song/filter-all]) :href "?filter-preset=all" :active? (= active-preset "all")}
+                                        {:label (tr [:song/filter-active]) :href "?filter-preset=active"  :active? (= active-preset "active")}
+                                        {:label (tr [:song/filter-inactive]) :href "?filter-preset=inactive" :active? (= active-preset "inactive")}]}]
+                    :id "song-table-actions")))
 
 (ctmx/defcomponent ^:endpoint songs-list [{:keys [db] :as req} song]
   (let [all-songs (q/retrieve-all-songs db)
         tr (i18n/tr-from-req req)
-        filtered-songs (search-songs song all-songs)]
-    [:div {:class "overflow-hidden bg-white shadow sm:rounded-md"
+        filtered-songs (search-songs (filter-param req) all-songs)]
+    [:div {:class "mt-4"
            :hx-boost "true"
            :id id}
+
      (song-list tr filtered-songs)]))
 
 (ctmx/defcomponent songs-page [req]
@@ -402,12 +445,13 @@
                                           :priority :white
                                           :centered? true
                                           :attr {:href "/songs/new"})))
-     [:div {:class "flex space-x-4 mt-8 sm:mt-0 bg-white"}
-      (songs-filter req)]
 
-     (songs-list req "")
-                                        ; (song-toggle-list songs)
-     ]))
+     [:div {:class "px-4 sm:px-6 lg:px-8 mt-4"}
+      [:div {:class "flex flex-col space-y-4 sm:flex-row sm:items-center justify-between pb-4 mt-4"}
+       (songs-filter req)
+       (song-table-action-button req)]]
+     (songs-list req "")]))
+
 (defn song-toggler [{:song/keys [title selected]}]
   [:li (comment {:class
                  (ui/cs
