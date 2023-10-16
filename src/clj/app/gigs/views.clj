@@ -514,7 +514,7 @@
                        (sort-by :song-order)
                        (map :song-id)
                        (map util/ensure-uuid))
-        songs (q/setlist-songs-for-gig db (gig-id-from-path req))]
+        songs (util/index-sort-by song-ids :song/song-id (q/retrieve-songs db song-ids))]
     (ui/panel {:title (tr [:gig/setlist]) :id "setlist-container"
                :buttons (ui/button :class "pulse-delay" :label (tr [:action/save]) :priority :primary :form id)}
               [:form {:class "w-full" :hx-post (util/endpoint-path gigs-detail-page-setlist) :hx-target "#setlist-container" :id id}
