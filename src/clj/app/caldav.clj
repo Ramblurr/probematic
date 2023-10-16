@@ -9,9 +9,8 @@
 (defn gig-date-to-inst
   [date time]
   (if time
-    (t/instant (-> date (t/at time)))
-    (t/instant (-> date t/midnight))))
-
+    (t/instant (-> date (t/at time) (t/in (t/zone "Europe/Vienna"))))
+    (t/instant (-> date t/midnight (t/in (t/zone "Europe/Vienna"))))))
 
 (defn event-from-gig
   [env tr {:gig/keys [title status location more-details gig-id call-time date end-date end-time]}]
@@ -57,8 +56,6 @@
         gig (q/retrieve-gig db gig-id)
         event (event-from-gig env tr gig)
         existing-event (-> calendar (.getEventByUID (str gig-id)))]
-    (tap> {:g gig
-           :e event})
     (if existing-event
       (-> calendar (.updateEvent (Event/fromClojure event)))
       (-> calendar (.createEvent (Event/fromClojure event))))))
@@ -80,22 +77,16 @@
 
 (comment
 
-  (let [nc
-        (NextcloudConnector. "data.streetnoise.at" "casey" "glucose cure rover antihero either headcount"
-                             "/remote.php/dav/calendars/casey/sno-kalender/")
-        event (-> nc (.getEventByUID  "20230515T163637-e666025e-f7cb-45bc-88f3-fe4f706f8cd3-snorga")
-                  (.toClojure)
-                  )
-        ]
-    (tap> event )
-    )
   (->
    (Event/fromClojure
     {:ical.event/created-at (t/instant)
      :ical.event/start-time (t/instant)
      :ical.event/end-time (t/instant)
+     :ical.event/timezone (t/zone "Europe/Vienna")
      }) (.toVEvent))
   (t/instant)
+
+  (gig-date-to-inst (t/date "2023-10-17") (t/time "18:45"))
 
 
 

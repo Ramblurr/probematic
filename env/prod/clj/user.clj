@@ -1,5 +1,6 @@
 (ns user
   (:require
+   [playback.preload]
    [app.main :as main]
    [portal.api :as inspect]))
 

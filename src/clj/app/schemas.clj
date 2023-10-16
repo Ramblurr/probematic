@@ -120,6 +120,7 @@
              [:mark-as [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]]
             {:mark-as "needs-review"}
             (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer vectorize-transformer namespace-enum-transformer)) ;; rcf
+  (decode schemas/TimeSchema "13:00")
 
 ;;
   )

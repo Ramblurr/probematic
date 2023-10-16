@@ -5,10 +5,7 @@ import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.PersistentHashMap;
 import com.github.caldav4j.CalDAVConstants;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
+import net.fortuna.ical4j.model.*;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.property.*;
@@ -153,12 +150,21 @@ public class Event {
         createdAt = new DateTime(Date.from(getCreatedAt() != null ? getCreatedAt() : Instant.now()));
         VEvent ve = new VEvent(false);
         ve.getProperties().add(new DtStamp(createdAt));
+        if (getTimezone() == null) {
+            throw new RuntimeException("Timezone not defined! It is required");
+        }
         if (getSummary() != null)
             ve.getProperties().add(new Summary(getSummary()));
-        if (getStartTime() != null)
-            ve.getProperties().add(new DtStart(start));
-        if (getEndTime() != null)
-            ve.getProperties().add(new DtEnd(end));
+        if (getStartTime() != null) {
+            DtStart dtstart = new DtStart(start);
+            dtstart.setTimeZone(getTimezoneFortuna());
+            ve.getProperties().add(dtstart);
+        }
+        if (getEndTime() != null) {
+            DtEnd dtend = new DtEnd(end);
+            dtend.setTimeZone(getTimezoneFortuna());
+            ve.getProperties().add(dtend);
+        }
         if (getDescription() != null)
             ve.getProperties().add(new Description(getDescription()));
         if (getLocation() != null)
@@ -185,6 +191,13 @@ public class Event {
         net.fortuna.ical4j.model.TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
         if (getTimezone() != null)
             return registry.getTimeZone(getTimezone().getId()).getVTimeZone();
+        return null;
+    }
+
+    public TimeZone getTimezoneFortuna() {
+        net.fortuna.ical4j.model.TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
+        if (getTimezone() != null)
+            return registry.getTimeZone(getTimezone().getId());
         return null;
     }
 

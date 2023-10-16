@@ -186,7 +186,7 @@
 
   (meta (with-meta {:beginning (t/now)} {:type :interval}))
 
-;; Invalid email returns nil
+  ;; Invalid email returns nil
   (me/humanize (m/explain EmailAddress "hello@world@"))
 
   (t/date-time)
