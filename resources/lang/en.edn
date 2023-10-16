@@ -231,6 +231,7 @@
         :not-interested "Not Interested"
         :no-response "No Response"}
  :song {:create-title "Add Song"
+        :lyrics "Lyrics"
         :create-subtitle ""
         :search "Search Songs"
         :search-empty "No songs found"

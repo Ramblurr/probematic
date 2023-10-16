@@ -276,6 +276,7 @@
  :none "Keiner",
  :song
  {:last-played "Zuletzt gespielt am",
+  :lyrics "Liedtext"
   :other-sheet-music "Musescore, etc",
   :last-played-gig "Zuletzt gespielter Gig",
   :composition-credits "Komposition von",

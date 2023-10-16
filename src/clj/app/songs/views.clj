@@ -199,7 +199,7 @@
                      arrangement-credits arrangement-notes
                      last-rehearsal last-performance
                      total-plays total-performances total-rehearsals
-                     origin solo-info]
+                     origin solo-info lyrics]
          :forum.topic/keys [topic-id]} song
         comp-name                        (util/comp-namer #'song-detail-page)
         buttons (list
@@ -252,6 +252,9 @@
                                   "sm:col-span-3")
                       (ui/dl-item (tr [:song/arrangement-notes])
                                   (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true)
+                                  "sm:col-span-3")
+                      (ui/dl-item (tr [:song/lyrics])
+                                  (ui/textarea :label "" :name (path "lyrics") :value lyrics :required? false :fit-height? true)
                                   "sm:col-span-3"))
                      [:div {:class "px-4 sm:px-6"}
                       [:div {:class "justify-stretch mt-6 flex flex-col space-y-4 space-y-4 sm:hidden"}
@@ -273,7 +276,11 @@
                                 "whitespace-pre-wrap sm:col-span-3")
                     (ui/dl-item (tr [:song/arrangement-notes])
                                 (markdown/render arrangement-notes)
-                                "whitespace-pre-wrap sm:col-span-3"))))
+                                "whitespace-pre-wrap sm:col-span-3")
+                    (when lyrics
+                      (ui/dl-item (tr [:song/lyrics])
+                                  (markdown/render lyrics)
+                                  "whitespace-pre-wrap sm:col-span-3")))))
        (ui/panel {:title (tr [:song/play-stats-title])}
                  (ui/dl
                   (ui/dl-item (tr [:song/total-plays]) total-plays)

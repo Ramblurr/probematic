@@ -43,6 +43,7 @@
                    :song/last-played-on :song/total-plays :song/total-performances :song/total-rehearsals])
 (def song-pattern-detail [:song/title :song/song-id
                           :song/total-plays :song/total-performances :song/total-rehearsals :song/last-played-on
+                          :song/lyrics
                           :forum.topic/topic-id
                           {:song/last-rehearsal [:gig/gig-id :gig/title :gig/date]}
                           {:song/last-performance [:gig/gig-id :gig/title]}

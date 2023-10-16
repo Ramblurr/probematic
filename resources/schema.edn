@@ -428,6 +428,11 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :song/lyrics
+    :db/doc "Lyrics for the song"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
 ;;;; Sheet Music
 
    {:db/ident :sheet-music/sheet-id

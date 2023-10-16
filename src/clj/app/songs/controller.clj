@@ -34,12 +34,13 @@
     true))
 
 (defn update-song! [{:keys [datomic-conn] :as req} song-id]
-  (let [{:keys [topic-id title active? composition-credits arrangement-credits arrangement-notes origin solo-info] :as p} (util/unwrap-params req)
+  (let [{:keys [topic-id title active? composition-credits arrangement-credits lyrics arrangement-notes origin solo-info] :as p} (util/unwrap-params req)
         tx (util/remove-nils {:song/song-id song-id
                               :song/composition-credits composition-credits
                               :song/arrangement-credits arrangement-credits
                               :song/arrangement-notes arrangement-notes
                               :song/title title
+                              :song/lyrics lyrics
                               :song/active? (rt/parse-boolean active?)
                               :song/origin origin
                               :forum.topic/topic-id (discourse/parse-topic-id topic-id)
