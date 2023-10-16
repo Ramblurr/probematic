@@ -31,6 +31,8 @@
    :plan/not-interested
    :plan/no-response])
 
+(def plan-priority-optional-display #{:plan/probably-not :plan/probably})
+
 (def motivations
   [:motivation/none
    :motivation/very-high

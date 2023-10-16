@@ -1086,10 +1086,14 @@ on change if I match <:checked/>
          [:div {:class "border-t border-gray-200 mb-4"}
           [:div {:class "flex gap-4 md:gap-10 justify-center pt-4 lg:pt-6"}
            (map (fn [plan]
-                  (let [{:keys [icon icon-class]} (get (plan-icons) plan)]
-                    [:div {:class "flex gap-1"}
-                     (icon {:class (str  icon-class " mr-0")})
-                     [:span {:class ""} (get attendance-summary plan 0)]])) domain/plan-priority-sorting)]
+                  (let [{:keys [icon icon-class]} (get (plan-icons) plan)
+                        count (get attendance-summary plan 0)]
+                    ;;  if the plan has count of 0 (0 people attending), and its in the optional list
+                    ;;  don't show the summary for that item
+                    (when-not (and (= 0 count) (contains? domain/plan-priority-optional-display plan))
+                      [:div {:class "flex gap-1"}
+                       (icon {:class (str  icon-class " mr-0")})
+                       [:span {:class ""} count]]))) domain/plan-priority-sorting)]
 
           (if archived?
             (rt/map-indexed gig-attendance-archived req attendances-by-section)
