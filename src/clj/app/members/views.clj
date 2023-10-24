@@ -616,11 +616,10 @@
         member (q/retrieve-member db member-id)
         nick (:member/nick member)
         vcard (members.domain/generate-vcard member)]
-
     {:status 200
-     :headers {"Content-Disposition" (sardine/content-disposition-filename "attachment" (str nick ".vcf"))
-               "Content-Type" "text/x-vcard"
-               "Content-Length" (str vcard)}
+     :headers {
+               "Content-Disposition" (sardine/content-disposition-filename "attachment" (str nick ".vcf"))
+               "Content-Type" "text/x-vcard"}
      :body vcard})
   )
 
