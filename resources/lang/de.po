@@ -54,6 +54,22 @@ msgctxt ":private-instruments"
 msgid "Private Instruments"
 msgstr "Private Instrumente"
 
+#: :insurance/item-count-hint
+#, ycp-format
+msgctxt ":insurance/item-count-hint"
+msgid ""
+"Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
+"Drumsticks...)?"
+msgstr ""
+"Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
+"Drumsticks...)?"
+
+#: :insurance/coverage-for
+#, ycp-format
+msgctxt ":insurance/coverage-for"
+msgid "The following information is for: %1"
+msgstr "Die folgenden Informationen gelten für: %1"
+
 #: :insurance/policies
 #, ycp-format
 msgctxt ":insurance/policies"
@@ -72,6 +88,12 @@ msgctxt ":insurance/name"
 msgid "Policy Name"
 msgstr "Name der Versicherungspolice"
 
+#: :insurance/value
+#, ycp-format
+msgctxt ":insurance/value"
+msgid "Versicherungswert"
+msgstr "Versicherungswert"
+
 #: :insurance/effective-at
 #, ycp-format
 msgctxt ":insurance/effective-at"
@@ -83,6 +105,18 @@ msgstr "Gültig bei"
 msgctxt ":insurance/title"
 msgid "Insurance & Instruments"
 msgstr "Versicherung & Instrumente"
+
+#: :insurance/value-abbrev
+#, ycp-format
+msgctxt ":insurance/value-abbrev"
+msgid "V.S."
+msgstr "V.S."
+
+#: :insurance/total
+#, ycp-format
+msgctxt ":insurance/total"
+msgid "Total"
+msgstr "Gesamt"
 
 #: :insurance/create-title
 #, ycp-format
@@ -96,11 +130,30 @@ msgctxt ":insurance/coverage-types"
 msgid "Coverage Types"
 msgstr "Art der Versicherungsdeckung"
 
+#: :insurance/coverage-type-description
+#, ycp-format
+msgctxt ":insurance/coverage-type-description"
+msgid "Description"
+msgstr "Beschreibung"
+
+#: :insurance/item-count
+#, ycp-format
+msgctxt ":insurance/item-count"
+msgid "Count"
+msgstr "Stückzahl"
+
 #: :insurance/category-factors
 #, ycp-format
 msgctxt ":insurance/category-factors"
 msgid "Category Factors"
 msgstr "Kategoriefaktoren"
+
+#: :insurance/value-hint
+#, ycp-format
+msgctxt ":insurance/value-hint"
+msgid "Bei mehreren versicherten Gegenständen bitte nur den Stückpreis angeben"
+msgstr ""
+"Bei mehreren versicherten Gegenständen bitte nur den Stückpreis angeben"
 
 #: :insurance/premium-base-factor
 #, ycp-format
@@ -182,11 +235,33 @@ msgctxt ":email/gig-edited"
 msgid "Something has changed about a gig!"
 msgstr "An einem Gig hat sich etwas geändert!"
 
+#: :email/remind-extra-probe
+#, ycp-format
+msgctxt ":email/remind-extra-probe"
+msgid "This is a reminder about an upcoming extra-probe! Please respond :)"
+msgstr ""
+"Dies ist eine Erinnerung an eine bevorstehende Extrasonde! Bitte antworten :)"
+
 #: :email/cannot-make-it
 #, ycp-format
 msgctxt ":email/cannot-make-it"
 msgid "I cannot make it"
 msgstr "Ich schaffe es nicht"
+
+#: :email/body-log-plays
+#, ycp-format
+msgctxt ":email/body-log-plays"
+msgid ""
+"Please tell SNOrga what we played at the Probe on %1. It only takes 1 minute."
+msgstr ""
+"Bitte erzählen Sie SNOrga, was wir bei der Probe am %1 gespielt haben. Es "
+"dauert nur 1 Minute."
+
+#: :email/subject-log-plays
+#, ycp-format
+msgctxt ":email/subject-log-plays"
+msgid "What did we play at the Probe?"
+msgstr "Was haben wir im Probe gespielt?"
 
 #: :email/new-probe-added
 #, ycp-format
@@ -206,6 +281,20 @@ msgctxt ":email/can-you-make-it?"
 msgid "Can you make it?"
 msgstr "Kannst du es schaffen?"
 
+#: :email/cta-log-plays
+#, ycp-format
+msgctxt ":email/cta-log-plays"
+msgid "Click here!"
+msgstr "Klicken Sie hier!"
+
+#: :email/remind-probe
+#, ycp-format
+msgctxt ":email/remind-probe"
+msgid "This is a reminder about an upcoming probe! Please respond :)"
+msgstr ""
+"Dies ist eine Erinnerung an eine bevorstehende Untersuchung! Bitte "
+"antworten :)"
+
 #: :email/invite-new-user-intro2
 #, ycp-format
 msgctxt ":email/invite-new-user-intro2"
@@ -219,6 +308,13 @@ msgid "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
 msgstr ""
 "Du hast eine Einladung erhalten, eine StreetNoise Orchestra (SNO)-ID zu "
 "erstellen!"
+
+#: :email/remind-gig
+#, ycp-format
+msgctxt ":email/remind-gig"
+msgid "This is a reminder about an upcoming gig! Please respond :)"
+msgstr ""
+"Dies ist eine Erinnerung an einen bevorstehenden Auftritt! Bitte antworten :)"
 
 #: :email/can-make-it
 #, ycp-format
@@ -250,6 +346,49 @@ msgctxt ":email/new-gig-added"
 msgid "A new gig is coming up!"
 msgstr "Ein neuer Gig steht an!"
 
+#: :email/remind-meeting
+#, ycp-format
+msgctxt ":email/remind-meeting"
+msgid "This is a reminder about an upcoming meeting! Please respond :)"
+msgstr ""
+"Dies ist eine Erinnerung an ein bevorstehendes Treffen! Bitte antworten :)"
+
+#: :polls/index-title
+#, ycp-format
+msgctxt ":polls/index-title"
+msgid "Polls Admin"
+msgstr "Polls"
+
+#: :polls/create-title
+#, ycp-format
+msgctxt ":polls/create-title"
+msgid "New Poll"
+msgstr "Neue Umfrage"
+
+#: :polls/running
+#, ycp-format
+msgctxt ":polls/running"
+msgid "Open Polls"
+msgstr "Offene Umfragen"
+
+#: :polls/past
+#, ycp-format
+msgctxt ":polls/past"
+msgid "Past Polls"
+msgstr "Vergangene Umfragen"
+
+#: :polls/no-past
+#, ycp-format
+msgctxt ":polls/no-past"
+msgid "There are no past polls"
+msgstr "Es gibt keine früheren Umfragen"
+
+#: :polls/no-running
+#, ycp-format
+msgctxt ":polls/no-running"
+msgid "There are no open polls"
+msgstr "Es gibt keine offenen Umfragen"
+
 #: :gig.type/probe
 #, ycp-format
 msgctxt ":gig.type/probe"
@@ -274,6 +413,20 @@ msgctxt ":gig.type/gig"
 msgid "Gig"
 msgstr "Gig"
 
+#: :instrument/photo-upload-subtitle
+#, ycp-format
+msgctxt ":instrument/photo-upload-subtitle"
+msgid "Upload a couple photos showing the instrument/item from several angles."
+msgstr ""
+"Laden Sie ein paar Fotos hoch, die das Instrument/den Gegenstand aus "
+"verschiedenen Blickwinkeln zeigen."
+
+#: :instrument/description
+#, ycp-format
+msgctxt ":instrument/description"
+msgid "Description"
+msgstr "Beschreibung"
+
 #: :instrument/category
 #, ycp-format
 msgctxt ":instrument/category"
@@ -291,6 +444,12 @@ msgstr "Baujahr"
 msgctxt ":instrument/serial-number"
 msgid "Serial Number"
 msgstr "Seriennummer"
+
+#: :instrument/if-available
+#, ycp-format
+msgctxt ":instrument/if-available"
+msgid "if available"
+msgstr "wenn verfügbar"
 
 #: :instrument/make
 #, ycp-format
@@ -316,6 +475,18 @@ msgctxt ":instrument/create-title"
 msgid "New Instrument"
 msgstr "Neues Instrument"
 
+#: :instrument/description-hint
+#, ycp-format
+msgctxt ":instrument/description-hint"
+msgid "Z.B. farbe, material"
+msgstr "Z.B. farbe, material"
+
+#: :instrument/photo-upload-title
+#, ycp-format
+msgctxt ":instrument/photo-upload-title"
+msgid "Photo Upload"
+msgstr "Foto-Upload"
+
 #: :instrument/create-subtitle
 #, ycp-format
 msgctxt ":instrument/create-subtitle"
@@ -333,6 +504,12 @@ msgstr "Inhaber:in"
 msgctxt ":instrument/model"
 msgid "Model"
 msgstr "Modell"
+
+#: :selected
+#, ycp-format
+msgctxt ":selected"
+msgid "selected"
+msgstr "ausgewählt"
 
 #: :play-log/not-played
 #, ycp-format
@@ -404,6 +581,18 @@ msgstr ""
 "Ein privates Instrument ist ein Instrument, das der Besitzer auf eigene "
 "Kosten versichern wird."
 
+#: :sections
+#, ycp-format
+msgctxt ":sections"
+msgid "Sections"
+msgstr "Registers"
+
+#: :Contact-Download
+#, ycp-format
+msgctxt ":Contact-Download"
+msgid "Download Contact"
+msgstr "Kontakt herunterladen"
+
 #: :band-private
 #, ycp-format
 msgctxt ":band-private"
@@ -437,6 +626,48 @@ msgstr "Das Passwort ist zu kurz. Es muss mindestens 8 Zeichen lang sein."
 msgctxt ":password/does-not-match"
 msgid "The passwords do not match."
 msgstr "Die Passwörter stimmen nicht überein."
+
+#: :travel-discounts/discount-type-name
+#, ycp-format
+msgctxt ":travel-discounts/discount-type-name"
+msgid "Discount Type"
+msgstr "Rabatttyp"
+
+#: :travel-discounts/expiry-date
+#, ycp-format
+msgctxt ":travel-discounts/expiry-date"
+msgid "Expires On"
+msgstr "Läuft aus am"
+
+#: :travel-discounts/title
+#, ycp-format
+msgctxt ":travel-discounts/title"
+msgid "Travel Discounts"
+msgstr "Reiserabatte"
+
+#: :travel-discounts/subtitle
+#, ycp-format
+msgctxt ":travel-discounts/subtitle"
+msgid "Add your ÖBB travel discounts"
+msgstr "Fügen Sie Ihre ÖBB-Reiserabatte hinzu"
+
+#: :travel-discounts/none
+#, ycp-format
+msgctxt ":travel-discounts/none"
+msgid "No travel discounts"
+msgstr "Keine Reiseermäßigungen"
+
+#: :travel-discounts/add-discount-type
+#, ycp-format
+msgctxt ":travel-discounts/add-discount-type"
+msgid "Add a ÖBB discount type"
+msgstr "ÖBB-Rabatttyp hinzufügen"
+
+#: :travel-discounts/add-discount
+#, ycp-format
+msgctxt ":travel-discounts/add-discount"
+msgid "Add a ÖBB discount"
+msgstr "ÖBB-Rabatt hinzufügen"
 
 #: :outstanding-payments
 #, ycp-format
@@ -480,6 +711,12 @@ msgctxt ":file/size"
 msgid "Size"
 msgstr "Größe"
 
+#: :choose-calendar-app
+#, ycp-format
+msgctxt ":choose-calendar-app"
+msgid "Choose Your Calendar App"
+msgstr "Wählen Sie Ihre Kalender-App"
+
 #: :dashboard/welcome
 #, ycp-format
 msgctxt ":dashboard/welcome"
@@ -522,6 +759,18 @@ msgctxt ":dashboard/upcoming"
 msgid "All Upcoming Gigs"
 msgstr "Alle kommenden Termine"
 
+#: :dashboard/polls-open
+#, ycp-format
+msgctxt ":dashboard/polls-open"
+msgid "We have open polls!"
+msgstr "Wir haben offene Umfragen!"
+
+#: :oebb-discount
+#, ycp-format
+msgctxt ":oebb-discount"
+msgid "ÖBB Discount"
+msgstr "ÖBB-Rabatt"
+
 #: :Active
 #, ycp-format
 msgctxt ":Active"
@@ -533,6 +782,191 @@ msgstr "Aktiv?"
 msgctxt ":login"
 msgid "Login"
 msgstr "Anmelden"
+
+#: :poll/description
+#, ycp-format
+msgctxt ":poll/description"
+msgid "Poll Description"
+msgstr "Beschreibung der Umfrage"
+
+#: :poll/max-choice
+#, ycp-format
+msgctxt ":poll/max-choice"
+msgid "Max Choices"
+msgstr "Maximale Auswahl"
+
+#: :poll/open-hint
+#, ycp-format
+msgctxt ":poll/open-hint"
+msgid ""
+"You need to open the poll before people can vote. WARNING! After you open "
+"it, you cannot change it."
+msgstr ""
+"Sie müssen die Umfrage öffnen, bevor die Leute abstimmen können. ACHTUNG! "
+"Nachdem Sie es geöffnet haben, können Sie es nicht mehr ändern."
+
+#: :poll/select-num-choices
+#, ycp-format
+msgctxt ":poll/select-num-choices"
+msgid "Select between %1 and %2 options."
+msgstr "Wählen Sie zwischen den Optionen %1 und %2."
+
+#: :poll/min-choice-hint
+#, ycp-format
+msgctxt ":poll/min-choice-hint"
+msgid "The minimum number of choices a person can make."
+msgstr "Die Mindestanzahl an Entscheidungen, die eine Person treffen kann."
+
+#: :poll/closes-at-hint
+#, ycp-format
+msgctxt ":poll/closes-at-hint"
+msgid "A date and time when the poll will stop accepting responses."
+msgstr ""
+"Ein Datum und eine Uhrzeit, wann die Umfrage keine Antworten mehr annimmt."
+
+#: :poll/autoremind-hint
+#, ycp-format
+msgctxt ":poll/autoremind-hint"
+msgid "Remind people who haven't responded yet every couple of days."
+msgstr ""
+"Erinnern die Personen, die noch nicht geantwortet haben, alle paar Tage "
+"daran."
+
+#: :poll/vote-now
+#, ycp-format
+msgctxt ":poll/vote-now"
+msgid "Vote Now!"
+msgstr "Jetzt abstimmen!"
+
+#: :poll/min-choice
+#, ycp-format
+msgctxt ":poll/min-choice"
+msgid "Min Choices"
+msgstr "Min. Auswahl"
+
+#: :poll/total-voters
+#, ycp-format
+msgctxt ":poll/total-voters"
+msgid "Voters"
+msgstr "Wähler"
+
+#: :poll/add-option
+#, ycp-format
+msgctxt ":poll/add-option"
+msgid "Add Option"
+msgstr "Option hinzufügen"
+
+#: :poll/error-only-one
+#, ycp-format
+msgctxt ":poll/error-only-one"
+msgid "You can only vote for one option"
+msgstr "Sie können nur für eine Option stimmen"
+
+#: :poll/closes-at
+#, ycp-format
+msgctxt ":poll/closes-at"
+msgid "Automatically Closes At"
+msgstr "Schließt automatisch um"
+
+#: :poll/choices
+#, ycp-format
+msgctxt ":poll/choices"
+msgid "Choices"
+msgstr "Auswahlmöglichkeiten"
+
+#: :poll/days-left
+#, ycp-format
+msgctxt ":poll/days-left"
+msgid "Days Left"
+msgstr "Tage übrig"
+
+#: :poll/title
+#, ycp-format
+msgctxt ":poll/title"
+msgid "Poll Title"
+msgstr "Titel der Umfrage"
+
+#: :poll/poll
+#, ycp-format
+msgctxt ":poll/poll"
+msgid "Poll"
+msgstr "Umfrage"
+
+#: :poll/error-between
+#, ycp-format
+msgctxt ":poll/error-between"
+msgid "You can only vote for between %1 and %2 options"
+msgstr "Sie können nur für Optionen zwischen %1 und %2 stimmen"
+
+#: :poll/error-not-open
+#, ycp-format
+msgctxt ":poll/error-not-open"
+msgid "You cannot vote for a poll that is not open"
+msgstr "Sie können nicht für eine Umfrage stimmen, die nicht geöffnet ist"
+
+#: :poll/poll-type
+#, ycp-format
+msgctxt ":poll/poll-type"
+msgid "Poll Type"
+msgstr "Umfragetyp"
+
+#: :poll/close-early
+#, ycp-format
+msgctxt ":poll/close-early"
+msgid "Close Early"
+msgstr "Früh schließen"
+
+#: :poll/autoremind?
+#, ycp-format
+msgctxt ":poll/autoremind?"
+msgid "Auto remind?"
+msgstr "Automatische Erinnerung?"
+
+#: :poll/description-hint
+#, ycp-format
+msgctxt ":poll/description-hint"
+msgid "Tell people what this poll is about. Markdown is allowed."
+msgstr ""
+"Erzählen Sie den Leuten, worum es in dieser Umfrage geht. Abschriften sind "
+"zulässig."
+
+#: :poll/total-votes
+#, ycp-format
+msgctxt ":poll/total-votes"
+msgid "Total Votes"
+msgstr "Gesamte stimmen"
+
+#: :poll/options-read-only-hint
+#, ycp-format
+msgctxt ":poll/options-read-only-hint"
+msgid "Once a poll has been opened the choices cannot be changed."
+msgstr ""
+"Sobald eine Umfrage geöffnet wurde, können die Auswahlmöglichkeiten nicht "
+"mehr geändert werden."
+
+#: :poll/closed-on
+#, ycp-format
+msgctxt ":poll/closed-on"
+msgid "Closed On"
+msgstr "Geschlossen am"
+
+#: :poll/options
+#, ycp-format
+msgctxt ":poll/options"
+msgid "Options"
+msgstr "Optionen"
+
+#: :poll/max-choice-hint
+#, ycp-format
+msgctxt ":poll/max-choice-hint"
+msgid "The maximum number of choices a person can make."
+msgstr "Die maximale Anzahl an Entscheidungen, die eine Person treffen kann."
+
+#: :poll/results
+#, ycp-format
+msgctxt ":poll/results"
+msgid "Poll Results"
+msgstr "Umfrageergebnisse"
 
 #: :account/account-created-title
 #, ycp-format
@@ -587,7 +1021,7 @@ msgstr "Kennwort bestätigen"
 msgctxt ":account/account-created-subtitle"
 msgid "Welcome :) Please login using your new SNO ID."
 msgstr ""
-"Herzlich willkommen! :) Bitte meldest du dich mit deiner neuen SNO-ID an"
+"Herzlich willkommen! :) Bitte meldest du dich mit deiner neuen SNO-ID an."
 
 #: :band-instruments
 #, ycp-format
@@ -613,6 +1047,12 @@ msgctxt ":member/nick"
 msgid "Nickname"
 msgstr "Spitzname"
 
+#: :member/filter-sno-id-disabled
+#, ycp-format
+msgctxt ":member/filter-sno-id-disabled"
+msgid "SNO ID Disabled"
+msgstr "SNO-ID deaktiviert"
+
 #: :member/open-invitations
 #, ycp-format
 msgctxt ":member/open-invitations"
@@ -637,11 +1077,35 @@ msgctxt ":member/name"
 msgid "Name"
 msgstr "Name"
 
+#: :member/sno-id-enabled
+#, ycp-format
+msgctxt ":member/sno-id-enabled"
+msgid "Enabled"
+msgstr "Aktiviert"
+
 #: :member/username
 #, ycp-format
 msgctxt ":member/username"
 msgid "Username"
 msgstr "Nutzername"
+
+#: :member/filter-inactive
+#, ycp-format
+msgctxt ":member/filter-inactive"
+msgid "Inactive Members"
+msgstr "Inaktive Mitglieder"
+
+#: :member/filter-all
+#, ycp-format
+msgctxt ":member/filter-all"
+msgid "All Members"
+msgstr "Alle Mitglieder"
+
+#: :member/filter-active
+#, ycp-format
+msgctxt ":member/filter-active"
+msgid "Active Members"
+msgstr "Aktive Mitglieder"
 
 #: :member/keycloak-id
 #, ycp-format
@@ -655,11 +1119,25 @@ msgctxt ":member/insurance-title"
 msgid "Insurance & Instruments"
 msgstr "Versicherung & Instrumente"
 
+#: :member/sno-id-disabled
+#, ycp-format
+msgctxt ":member/sno-id-disabled"
+msgid "Disabled"
+msgstr "Deaktiviert"
+
 #: :member/create-sno-id
 #, ycp-format
 msgctxt ":member/create-sno-id"
 msgid "Create SNO ID"
 msgstr "SNO ID erstellen"
+
+#: :member/sno-id-enable-disabled-tooltip
+#, ycp-format
+msgctxt ":member/sno-id-enable-disabled-tooltip"
+msgid "When disabled the user cannot login to any SNO systems."
+msgstr ""
+"Wenn die Option deaktiviert ist, kann sich der Benutzer nicht bei SNO-"
+"Systemen anmelden."
 
 #: :member/phone-validation
 #, ycp-format
@@ -701,14 +1179,20 @@ msgstr ""
 #: :member/probes-attended
 #, ycp-format
 msgctxt ":member/probes-attended"
-msgid "Probes Attended"
-msgstr "Proben besucht"
+msgid "Proben Attended"
+msgstr "Proben besuchtaProben Attended"
 
 #: :member/new-member
 #, ycp-format
 msgctxt ":member/new-member"
 msgid "New Member"
 msgstr "Neues Mitglied"
+
+#: :member/sno-id-enabled-disabled
+#, ycp-format
+msgctxt ":member/sno-id-enabled-disabled"
+msgid "SNO ID Enabled/Disabled"
+msgstr "SNO-ID aktiviert/deaktiviert"
 
 #: :instruments
 #, ycp-format
@@ -722,6 +1206,34 @@ msgctxt ":Phone"
 msgid "Phone"
 msgstr "Telefon"
 
+#: :private-instrument-payment
+#, ycp-format
+msgctxt ":private-instrument-payment"
+msgid ""
+"Die Kosten der Versicherung privater Instrumente werden nicht von Street "
+"Noise übernommen."
+msgstr ""
+"Die Kosten der Versicherung privater Instrumente werden nicht von Street "
+"Noise übernommen."
+
+#: :instrument.coverage.status/needs-review
+#, ycp-format
+msgctxt ":instrument.coverage.status/needs-review"
+msgid "Todo"
+msgstr "Todo"
+
+#: :instrument.coverage.status/reviewed
+#, ycp-format
+msgctxt ":instrument.coverage.status/reviewed"
+msgid "Reviewed"
+msgstr "Kontrolliert"
+
+#: :instrument.coverage.status/coverage-active
+#, ycp-format
+msgctxt ":instrument.coverage.status/coverage-active"
+msgid "Active"
+msgstr "Aktiv? "
+
 #: :band-instrument-description
 #, ycp-format
 msgctxt ":band-instrument-description"
@@ -731,6 +1243,30 @@ msgid ""
 msgstr ""
 "Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-"
 "Auftritt gespielt wurde."
+
+#: :poll.type/multiple
+#, ycp-format
+msgctxt ":poll.type/multiple"
+msgid "Multiple Choice"
+msgstr "Mehrfachauswahl"
+
+#: :poll.type/single
+#, ycp-format
+msgctxt ":poll.type/single"
+msgid "Single Choice"
+msgstr "Einzelauswahl"
+
+#: :poll.type/multiple-hint
+#, ycp-format
+msgctxt ":poll.type/multiple-hint"
+msgid "People can choose multiple options."
+msgstr "Menschen können mehrere Optionen wählen."
+
+#: :poll.type/single-hint
+#, ycp-format
+msgctxt ":poll.type/single-hint"
+msgid "People can only choose one option."
+msgstr "Menschen können nur eine Option wählen."
 
 #: :sno-id
 #, ycp-format
@@ -744,17 +1280,41 @@ msgctxt ":updating"
 msgid "Updating..."
 msgstr "Aktualisierung..."
 
+#: :section-add
+#, ycp-format
+msgctxt ":section-add"
+msgid "Add Section"
+msgstr "Register hinzufügen"
+
+#: :action/confirm-open-poll
+#, ycp-format
+msgctxt ":action/confirm-open-poll"
+msgid "Yes, open the poll."
+msgstr "Ja, öffnen die Umfrage."
+
 #: :action/duplicate
 #, ycp-format
 msgctxt ":action/duplicate"
 msgid "Duplicate"
 msgstr "Duplikat"
 
+#: :action/confirm-close
+#, ycp-format
+msgctxt ":action/confirm-close"
+msgid "Yes, close it."
+msgstr "Ja, schließen es."
+
 #: :action/remove
 #, ycp-format
 msgctxt ":action/remove"
 msgid "Remove"
 msgstr "Entfernen"
+
+#: :action/vote
+#, ycp-format
+msgctxt ":action/vote"
+msgid "Vote!"
+msgstr "Abstimmung!"
 
 #: :action/done
 #, ycp-format
@@ -768,11 +1328,29 @@ msgctxt ":action/continue"
 msgid "Continue"
 msgstr "Fortsetzen"
 
+#: :action/change-vote
+#, ycp-format
+msgctxt ":action/change-vote"
+msgid "Change Vote"
+msgstr "Abstimmung ändern"
+
+#: :action/confirm-delete-policy
+#, ycp-format
+msgctxt ":action/confirm-delete-policy"
+msgid "Are you sure you want to delete the insurance policy %1?"
+msgstr "Sind Sie sicher, dass Sie die Versicherungspolice %1 löschen möchten?"
+
 #: :action/create
 #, ycp-format
 msgctxt ":action/create"
 msgid "Create"
 msgstr "Erstellen"
+
+#: :action/create-gig
+#, ycp-format
+msgctxt ":action/create-gig"
+msgid "Create Gig"
+msgstr "Gig erstellen"
 
 #: :action/edit
 #, ycp-format
@@ -780,11 +1358,29 @@ msgctxt ":action/edit"
 msgid "Edit"
 msgstr "Bearbeiten"
 
+#: :action/copy-link-confirm
+#, ycp-format
+msgctxt ":action/copy-link-confirm"
+msgid "Copied"
+msgstr "Kopiert"
+
+#: :action/update
+#, ycp-format
+msgctxt ":action/update"
+msgid "Update"
+msgstr "Aktualisieren"
+
 #: :action/delete
 #, ycp-format
 msgctxt ":action/delete"
 msgid "Delete"
 msgstr "Löschen"
+
+#: :action/confirm-delete
+#, ycp-format
+msgctxt ":action/confirm-delete"
+msgid "Yes, delete it."
+msgstr "Ja, löschen es."
 
 #: :action/save
 #, ycp-format
@@ -792,11 +1388,41 @@ msgctxt ":action/save"
 msgid "Save"
 msgstr "Speichern"
 
+#: :action/copy-link
+#, ycp-format
+msgctxt ":action/copy-link"
+msgid "Copy Link"
+msgstr "Link kopieren"
+
+#: :action/search
+#, ycp-format
+msgctxt ":action/search"
+msgid "Search"
+msgstr "Suchen"
+
+#: :action/confirm-close-poll
+#, ycp-format
+msgctxt ":action/confirm-close-poll"
+msgid "Are you sure you want to close the poll '%1'?"
+msgstr "Sind Sie sicher, dass Sie die Umfrage „%1“ schließen möchten?"
+
 #: :action/reorder
 #, ycp-format
 msgctxt ":action/reorder"
 msgid "Reorder"
 msgstr "Neu anordnen"
+
+#: :action/confirm-delete-poll
+#, ycp-format
+msgctxt ":action/confirm-delete-poll"
+msgid "Are you sure you want to delete the poll '%1?'"
+msgstr "Sind Sie sicher, dass Sie die Umfrage „%1“ löschen möchten?"
+
+#: :action/select-all
+#, ycp-format
+msgctxt ":action/select-all"
+msgid "Select All"
+msgstr "Wählen Alle"
 
 #: :action/quick-edit
 #, ycp-format
@@ -804,11 +1430,35 @@ msgctxt ":action/quick-edit"
 msgid "Quick Edit"
 msgstr "Schnellbearbeitung"
 
+#: :action/mark-as
+#, ycp-format
+msgctxt ":action/mark-as"
+msgid "Mark As"
+msgstr "Markieren als"
+
+#: :action/next
+#, ycp-format
+msgctxt ":action/next"
+msgid "Next"
+msgstr "Nächste"
+
+#: :action/back
+#, ycp-format
+msgctxt ":action/back"
+msgid "Back"
+msgstr "Zurück"
+
 #: :action/comment
 #, ycp-format
 msgctxt ":action/comment"
 msgid "Comment"
 msgstr "Kommentar"
+
+#: :action/add-to-calendar
+#, ycp-format
+msgctxt ":action/add-to-calendar"
+msgid "Add To Calendar"
+msgstr "Zum Kalender hinzufügen"
 
 #: :action/confirm-generic
 #, ycp-format
@@ -820,7 +1470,7 @@ msgstr "Bist du sicher?"
 #, ycp-format
 msgctxt ":action/confirm-delete-gig"
 msgid "Are you sure you want to delete the gig %1? "
-msgstr "Möchten Sie den Gig %1 wirklich löschen?"
+msgstr "Möchten Sie den Gig %1 wirklich löschen? "
 
 #: :action/cancel
 #, ycp-format
@@ -840,17 +1490,29 @@ msgctxt ":action/download"
 msgid "Download"
 msgstr "Herunterladen"
 
+#: :action/subscribe
+#, ycp-format
+msgctxt ":action/subscribe"
+msgid "Subscribe"
+msgstr "Abonnieren"
+
 #: :action/confirm-delete-song
 #, ycp-format
 msgctxt ":action/confirm-delete-song"
 msgid "Are you sure you want to delete the song %1?"
-msgstr "Möchten Sie das Lied %1 wirklich löschen?"
+msgstr "Sind Sie sicher, dass Sie das Lied %1 löschen möchten?"
 
 #: :action/view
 #, ycp-format
 msgctxt ":action/view"
 msgid "View"
 msgstr "Sehen"
+
+#: :action/open-poll
+#, ycp-format
+msgctxt ":action/open-poll"
+msgid "Open Poll"
+msgstr "Umfrage öffnen"
 
 #: :error/go-home
 #, ycp-format
@@ -932,6 +1594,56 @@ msgctxt ":error/member-unique-username"
 msgid "A member already has that username"
 msgstr "Ein Mitglied hat bereits diesen Benutzernamen"
 
+#: :reminders/remind-me-in
+#, ycp-format
+msgctxt ":reminders/remind-me-in"
+msgid "Remind me in"
+msgstr "Erinnere mich in"
+
+#: :reminders/remind-all
+#, ycp-format
+msgctxt ":reminders/remind-all"
+msgid "Remind all"
+msgstr "Erinnern alle"
+
+#: :reminders/confirm-remind-all-title
+#, ycp-format
+msgctxt ":reminders/confirm-remind-all-title"
+msgid "Remind everyone?"
+msgstr "Alle daran erinnern?"
+
+#: :reminders/confirm-remind-all
+#, ycp-format
+msgctxt ":reminders/confirm-remind-all"
+msgid "This will email everyone who hasn't responded yet. Are you sure?"
+msgstr ""
+"Dadurch wird eine E-Mail an alle gesendet, die noch nicht geantwortet haben. "
+"Bist du sicher?"
+
+#: :reminders/confirm
+#, ycp-format
+msgctxt ":reminders/confirm"
+msgid "Yes, email everyone"
+msgstr "Ja, senden allen eine E-Mail"
+
+#: :reminders/one-day
+#, ycp-format
+msgctxt ":reminders/one-day"
+msgid "1 Day"
+msgstr "1 Tag"
+
+#: :reminders/three-days
+#, ycp-format
+msgctxt ":reminders/three-days"
+msgid "3 Days"
+msgstr "3 Tage"
+
+#: :reminders/one-week
+#, ycp-format
+msgctxt ":reminders/one-week"
+msgid "1 Week"
+msgstr "1 Woche"
+
 #: :missing
 #, ycp-format
 msgctxt ":missing"
@@ -941,7 +1653,7 @@ msgstr ":de missing text"
 #: :gigs/title
 #, ycp-format
 msgctxt ":gigs/title"
-msgid "Gigs & Probes"
+msgid "Gigs & Proben"
 msgstr "Gigs & Proben"
 
 #: :gigs/upcoming
@@ -997,6 +1709,24 @@ msgstr "Neuer Gig: %1"
 msgctxt ":email-subject/gig-updated"
 msgid "Gig Edit: %1"
 msgstr "Gig-Bearbeitung: %1"
+
+#: :email-subject/gig-reminder
+#, ycp-format
+msgctxt ":email-subject/gig-reminder"
+msgid "Gig Reminder: %1"
+msgstr "Gigerinnerung: %1"
+
+#: :email-subject/new-invite
+#, ycp-format
+msgctxt ":email-subject/new-invite"
+msgid "Your SNO ID is waiting for you.."
+msgstr "Ihre SNO-ID wartet auf Sie."
+
+#: :email-subject/poll-created
+#, ycp-format
+msgctxt ":email-subject/poll-created"
+msgid "New Poll: %1"
+msgstr "Neue Umfrage: %1"
 
 #: :plan/definitely
 #, ycp-format
@@ -1210,6 +1940,12 @@ msgctxt ":gig/end-day"
 msgid "End Day"
 msgstr "Enddatum"
 
+#: :gig/create-a-forum-thread?
+#, ycp-format
+msgctxt ":gig/create-a-forum-thread?"
+msgid "Create a thread in the forum?"
+msgstr "Einen Thread im Forum erstellen?"
+
 #: :gig/post-gig-plans
 #, ycp-format
 msgctxt ":gig/post-gig-plans"
@@ -1221,6 +1957,12 @@ msgstr "Nach dem Auftritt"
 msgctxt ":gig/set-time"
 msgid "Set Time"
 msgstr "Termin"
+
+#: :gig/rehearsal-leader1
+#, ycp-format
+msgctxt ":gig/rehearsal-leader1"
+msgid "Probeleitung 1"
+msgstr "Probeleitung 1"
 
 #: :gig/outfit
 #, ycp-format
@@ -1264,6 +2006,22 @@ msgctxt ":gig/email-about-new?"
 msgid "Email members about this new gig?"
 msgstr "Sende Mitgliedern eine Email über diesen neuen Termin?"
 
+#: :gig/end-time-warning
+#, ycp-format
+msgctxt ":gig/end-time-warning"
+msgid ""
+"WARNING: The end time is only estimated.. someone didn't fill out that field "
+"in SNOrga."
+msgstr ""
+"ACHTUNG: Die Endzeit wird nur geschätzt. Jemand hat dieses Feld in SNOrga "
+"nicht ausgefüllt."
+
+#: :gig/rehearsal-leader2
+#, ycp-format
+msgctxt ":gig/rehearsal-leader2"
+msgid "Probeleitung 2"
+msgstr "Probeleitung 2"
+
 #: :gig/more-details-placeholder
 #, ycp-format
 msgctxt ":gig/more-details-placeholder"
@@ -1282,6 +2040,12 @@ msgctxt ":nav/insurance"
 msgid "Insurance"
 msgstr "Versicherung"
 
+#: :nav/polls
+#, ycp-format
+msgctxt ":nav/polls"
+msgid "Polls"
+msgstr "Umfragen"
+
 #: :nav/home
 #, ycp-format
 msgctxt ":nav/home"
@@ -1293,6 +2057,12 @@ msgstr "Home"
 msgctxt ":nav/songs"
 msgid "Repertoire"
 msgstr "Repertoire"
+
+#: :nav/forum
+#, ycp-format
+msgctxt ":nav/forum"
+msgid "Forum"
+msgstr "Forum"
 
 #: :nav/logout
 #, ycp-format
@@ -1306,17 +2076,35 @@ msgctxt ":nav/settings"
 msgid "Settings"
 msgstr "Einstellungen"
 
+#: :nav/chat
+#, ycp-format
+msgctxt ":nav/chat"
+msgid "Chat"
+msgstr "Chat"
+
 #: :nav/notifications
 #, ycp-format
 msgctxt ":nav/notifications"
 msgid "Notifications"
 msgstr "Benachrichtigungen"
 
+#: :nav/calendar
+#, ycp-format
+msgctxt ":nav/calendar"
+msgid "Calendar"
+msgstr "Kalender"
+
 #: :nav/probeplan
 #, ycp-format
 msgctxt ":nav/probeplan"
 msgid "Probenplan"
 msgstr "Probenplan"
+
+#: :nav/nextcloud
+#, ycp-format
+msgctxt ":nav/nextcloud"
+msgid "Data"
+msgstr "Data"
 
 #: :nav/members
 #, ycp-format
@@ -1327,14 +2115,20 @@ msgstr "Mitglieder"
 #: :nav/gigs
 #, ycp-format
 msgctxt ":nav/gigs"
-msgid "Gigs & Probes"
-msgstr "Gigs & Probes"
+msgid "Gigs & Proben"
+msgstr "Gigs & Proben"
 
 #: :nav/profile
 #, ycp-format
 msgctxt ":nav/profile"
 msgid "Profile"
 msgstr "Profil"
+
+#: :nav/band-settings
+#, ycp-format
+msgctxt ":nav/band-settings"
+msgid "Band Settings"
+msgstr "Bandeinstellungen"
 
 #: :band-instrument
 #, ycp-format
@@ -1417,14 +2211,38 @@ msgstr "Zuletzt gespielte Probe"
 #: :song/total-rehearsals
 #, ycp-format
 msgctxt ":song/total-rehearsals"
-msgid "Total Probes"
+msgid "Total Proben"
 msgstr "Insgesamt Proben"
+
+#: :song/lyrics
+#, ycp-format
+msgctxt ":song/lyrics"
+msgid "Lyrics"
+msgstr "Liedtext"
+
+#: :song/filter-inactive
+#, ycp-format
+msgctxt ":song/filter-inactive"
+msgid "Inactive Songs"
+msgstr "Inaktive Songs"
 
 #: :song/search
 #, ycp-format
 msgctxt ":song/search"
 msgid "Search Songs"
 msgstr "Lieder suchen"
+
+#: :song/filter-all
+#, ycp-format
+msgctxt ":song/filter-all"
+msgid "All Songs"
+msgstr "Alle Lieder"
+
+#: :song/filter-active
+#, ycp-format
+msgctxt ":song/filter-active"
+msgid "Active Songs"
+msgstr "Aktive Lieder"
 
 #: :song/gig-count
 #, ycp-format

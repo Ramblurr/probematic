@@ -7,14 +7,24 @@
   :very-low "Gar nicht Motiviert!"},
  :private-instruments "Private Instrumente",
  :insurance
- {:policies "Versicherungspolicen",
+ {:item-count-hint
+  "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks...)?",
+  :coverage-for "Die folgenden Informationen gelten für: %1",
+  :policies "Versicherungspolicen",
   :insurance-policy "Versicherungspolice",
   :name "Name der Versicherungspolice",
+  :value "Versicherungswert",
   :effective-at "Gültig bei",
   :title "Versicherung & Instrumente",
+  :value-abbrev "V.S.",
+  :total "Gesamt",
   :create-title "Neue Versicherungspolice",
   :coverage-types "Art der Versicherungsdeckung",
+  :coverage-type-description "Beschreibung",
+  :item-count "Stückzahl",
   :category-factors "Kategoriefaktoren",
+  :value-hint
+  "Bei mehreren versicherten Gegenständen bitte nur den Stückpreis angeben",
   :premium-base-factor "Premium-Basisfaktor",
   :premium-factor "Premium-Faktor",
   :instrument-coverage "Versicherungsdeckung für Instrumente",
@@ -30,40 +40,61 @@
   :want-reminder "Erinnere mich in ein paar Tagen daran",
   :sign-off "Mit groovigen Grüßen — SNObot",
   :gig-edited "An einem Gig hat sich etwas geändert!",
+  :remind-extra-probe
+  "Dies ist eine Erinnerung an eine bevorstehende Extrasonde! Bitte antworten :)",
   :cannot-make-it "Ich schaffe es nicht",
+  :body-log-plays
+  "Bitte erzählen Sie SNOrga, was wir bei der Probe am %1 gespielt haben. Es dauert nur 1 Minute.",
+  :subject-log-plays "Was haben wir im Probe gespielt?",
   :new-probe-added "Eine neue Probe steht an!",
   :need-to-change-availability? "Ich muss meine Verfügbarkeit ändern",
   :can-you-make-it? "Kannst du es schaffen?",
+  :cta-log-plays "Klicken Sie hier!",
+  :remind-probe
+  "Dies ist eine Erinnerung an eine bevorstehende Untersuchung! Bitte antworten :)",
   :invite-new-user-intro2
   "Klickst du auf den Link unten, um dein Konto einzurichten.",
   :invite-new-user-intro
   "Du hast eine Einladung erhalten, eine StreetNoise Orchestra (SNO)-ID zu erstellen!",
+  :remind-gig
+  "Dies ist eine Erinnerung an einen bevorstehenden Auftritt! Bitte antworten :)",
   :can-make-it "Ich kann es schaffen!",
   :new-extra-probe-added "Eine neue Extraprobe steht an!",
   :greeting "Hallo!",
   :new-meeting-added "Ein neues Treffen steht an!",
-  :new-gig-added "Ein neuer Gig steht an!"
-  :remind-gig "Dies ist eine Erinnerung an einen bevorstehenden Auftritt! Bitte antworten :)"
-  :remind-probe "Dies ist eine Erinnerung an eine bevorstehende Probe! Bitte antworten :)"
-  :remind-extra-probe "Dies ist eine Erinnerung an eine bevorstehende Extraprobe! Bitte antworten :)"
-  :remind-meeting "Dies ist eine Erinnerung an ein bevorstehendes Treffen! Bitte antworten :)"},
+  :new-gig-added "Ein neuer Gig steht an!",
+  :remind-meeting
+  "Dies ist eine Erinnerung an ein bevorstehendes Treffen! Bitte antworten :)"},
+ :polls
+ {:index-title "Polls",
+  :create-title "Neue Umfrage",
+  :running "Offene Umfragen",
+  :past "Vergangene Umfragen",
+  :no-past "Es gibt keine früheren Umfragen",
+  :no-running "Es gibt keine offenen Umfragen"},
  :gig.type
  {:probe "Probe",
   :extra-probe "Extraprobe",
   :meeting "Treffen",
   :gig "Gig"},
  :instrument
- {:category "Kategorie",
+ {:photo-upload-subtitle
+  "Laden Sie ein paar Fotos hoch, die das Instrument/den Gegenstand aus verschiedenen Blickwinkeln zeigen.",
+  :description "Beschreibung",
+  :category "Kategorie",
   :build-year "Baujahr",
-  :if-available "falls bekannt"
   :serial-number "Seriennummer",
+  :if-available "wenn verfügbar",
   :make "Marke",
   :instrument "Instrument",
   :name "Instrumentenname",
   :create-title "Neues Instrument",
+  :description-hint "Z.B. farbe, material",
+  :photo-upload-title "Foto-Upload",
   :create-subtitle "Details zum Instrument",
   :owner "Inhaber:in",
   :model "Modell"},
+ :selected "ausgewählt",
  :play-log
  {:not-played "Nicht gespielt",
   :nice "Nice!",
@@ -78,15 +109,24 @@
  :now "jetzt",
  :private-instrument-description
  "Ein privates Instrument ist ein Instrument, das der Besitzer auf eigene Kosten versichern wird.",
+ :sections "Registers",
+ :Contact-Download "Kontakt herunterladen",
  :band-private "Band/Privat",
  :Contact-Information "Kontakt Informationen",
- :Contact-Download "Kontakt Herunterladen"
  :password
  {:commonly-used
   "Das Passwort ist ein bekanntes gehacktes Passwort. Bitte wähle ein sicheres Passwort.",
   :too-short
   "Das Passwort ist zu kurz. Es muss mindestens 8 Zeichen lang sein.",
   :does-not-match "Die Passwörter stimmen nicht überein."},
+ :travel-discounts
+ {:discount-type-name "Rabatttyp",
+  :expiry-date "Läuft aus am",
+  :title "Reiserabatte",
+  :subtitle "Fügen Sie Ihre ÖBB-Reiserabatte hinzu",
+  :none "Keine Reiseermäßigungen",
+  :add-discount-type "ÖBB-Rabatttyp hinzufügen",
+  :add-discount "ÖBB-Rabatt hinzufügen"},
  :outstanding-payments "Ausstehende Zahlungen",
  :section-none "Kein Register",
  :Email "E-Mail",
@@ -95,6 +135,7 @@
  {:choose-file "Wähle eine Datei aus",
   :name "Dateiname",
   :size "Größe"},
+ :choose-calendar-app "Wählen Sie Ihre Kalender-App",
  :dashboard
  {:welcome "Willkommen %1!",
   :morning "Guten Morgen, %1",
@@ -102,9 +143,50 @@
   :evening "Guten Abend, %1",
   :nightowl "Hallo Nachteule, %1",
   :unanswered "Zukünftige Termine: Sag Bescheid!",
-  :upcoming "Alle kommenden Termine"},
+  :upcoming "Alle kommenden Termine",
+  :polls-open "Wir haben offene Umfragen!"},
+ :oebb-discount "ÖBB-Rabatt",
  :Active "Aktiv?",
  :login "Anmelden",
+ :poll
+ {:description "Beschreibung der Umfrage",
+  :max-choice "Maximale Auswahl",
+  :open-hint
+  "Sie müssen die Umfrage öffnen, bevor die Leute abstimmen können. ACHTUNG! Nachdem Sie es geöffnet haben, können Sie es nicht mehr ändern.",
+  :select-num-choices "Wählen Sie zwischen den Optionen %1 und %2.",
+  :min-choice-hint
+  "Die Mindestanzahl an Entscheidungen, die eine Person treffen kann.",
+  :closes-at-hint
+  "Ein Datum und eine Uhrzeit, wann die Umfrage keine Antworten mehr annimmt.",
+  :autoremind-hint
+  "Erinnern die Personen, die noch nicht geantwortet haben, alle paar Tage daran.",
+  :vote-now "Jetzt abstimmen!",
+  :min-choice "Min. Auswahl",
+  :total-voters "Wähler",
+  :add-option "Option hinzufügen",
+  :error-only-one "Sie können nur für eine Option stimmen",
+  :closes-at "Schließt automatisch um",
+  :choices "Auswahlmöglichkeiten",
+  :days-left "Tage übrig",
+  :title "Titel der Umfrage",
+  :poll "Umfrage",
+  :error-between
+  "Sie können nur für Optionen zwischen %1 und %2 stimmen",
+  :error-not-open
+  "Sie können nicht für eine Umfrage stimmen, die nicht geöffnet ist",
+  :poll-type "Umfragetyp",
+  :close-early "Früh schließen",
+  :autoremind? "Automatische Erinnerung?",
+  :description-hint
+  "Erzählen Sie den Leuten, worum es in dieser Umfrage geht. Abschriften sind zulässig.",
+  :total-votes "Gesamte stimmen",
+  :options-read-only-hint
+  "Sobald eine Umfrage geöffnet wurde, können die Auswahlmöglichkeiten nicht mehr geändert werden.",
+  :closed-on "Geschlossen am",
+  :options "Optionen",
+  :max-choice-hint
+  "Die maximale Anzahl an Entscheidungen, die eine Person treffen kann.",
+  :results "Umfrageergebnisse"},
  :account
  {:account-created-title "Deine SNO-ID wurde erstellt!",
   :create-account "Konto erstellen",
@@ -117,20 +199,28 @@
   "Beide Passwörter müssen übereinstimmen",
   :password-confirm "Kennwort bestätigen",
   :account-created-subtitle
-  "Herzlich willkommen! :) Bitte meldest du dich mit deiner neuen SNO-ID an"},
+  "Herzlich willkommen! :) Bitte meldest du dich mit deiner neuen SNO-ID an."},
  :band-instruments "Band-Instrumente",
  :member
- {:active?                "Aktiv?",
-  :email                  "E-Mail",
-  :nick                   "Spitzname",
-  :open-invitations       "Einladungen öffnen",
-  :gigs-attended          "Gigs besucht",
-  :phone                  "Telefon",
-  :name                   "Name",
-  :username               "Nutzername",
-  :keycloak-id            "SNO UUID",
-  :insurance-title        "Versicherung & Instrumente",
-  :create-sno-id          "SNO ID erstellen",
+ {:active? "Aktiv?",
+  :email "E-Mail",
+  :nick "Spitzname",
+  :filter-sno-id-disabled "SNO-ID deaktiviert",
+  :open-invitations "Einladungen öffnen",
+  :gigs-attended "Gigs besucht",
+  :phone "Telefon",
+  :name "Name",
+  :sno-id-enabled "Aktiviert",
+  :username "Nutzername",
+  :filter-inactive "Inaktive Mitglieder",
+  :filter-all "Alle Mitglieder",
+  :filter-active "Aktive Mitglieder",
+  :keycloak-id "SNO UUID",
+  :insurance-title "Versicherung & Instrumente",
+  :sno-id-disabled "Deaktiviert",
+  :create-sno-id "SNO ID erstellen",
+  :sno-id-enable-disabled-tooltip
+  "Wenn die Option deaktiviert ist, kann sich der Benutzer nicht bei SNO-Systemen anmelden.",
   :phone-validation
   "Telefonnummer, die mit +Landesvorwahl beginnt. Nur Leerzeichen, Bindestriche und Zahlen",
   :insurance-subtitle
@@ -139,42 +229,70 @@
   "Der Benutzername darf nur A–Z, 0–9 _, ., - oder @ enthalten. Kein Leerzeichen.",
   :create-sno-id-description
   "Eine Einladung zum Erstellen einer SNO-ID wird an die Person per E-Mail gesendet, damit sie ein Konto erstellen und auf alle SNO-Online-Systeme zugreifen kann.",
-  :probes-attended        "Proben besucht",
-  :new-member             "Neues Mitglied"
-  :filter-all             "Alle Mitglieder"
-  :filter-active          "Aktive Mitglieder"
-  :filter-inactive        "Inaktive Mitglieder"
-  :filter-sno-id-disabled "SNO-ID deaktiviert"},
+  :probes-attended "Proben besuchtaProben Attended",
+  :new-member "Neues Mitglied",
+  :sno-id-enabled-disabled "SNO-ID aktiviert/deaktiviert"},
  :instruments "Instrumente",
  :Phone "Telefon",
+ :private-instrument-payment
+ "Die Kosten der Versicherung privater Instrumente werden nicht von Street Noise übernommen.",
+ :instrument.coverage.status
+ {:needs-review "Todo",
+  :reviewed "Kontrolliert",
+  :coverage-active "Aktiv? "},
  :band-instrument-description
  "Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-Auftritt gespielt wurde.",
+ :poll.type
+ {:multiple "Mehrfachauswahl",
+  :single "Einzelauswahl",
+  :multiple-hint "Menschen können mehrere Optionen wählen.",
+  :single-hint "Menschen können nur eine Option wählen."},
  :sno-id "SNO ID",
  :updating "Aktualisierung...",
- :choose-calendar-app "Wähle deine Kalender-App"
+ :section-add "Register hinzufügen",
  :action
- {:duplicate "Duplikat",
+ {:confirm-open-poll "Ja, öffnen die Umfrage.",
+  :duplicate "Duplikat",
+  :confirm-close "Ja, schließen es.",
   :remove "Entfernen",
-  :copy-link "Link kopieren"
-  :copy-link-confirm "Kopiert"
-  :subscribe "Abonnieren"
-  :add-to-calendar "Zum Kalender hinzufügen"
+  :vote "Abstimmung!",
   :done "Fertig",
   :continue "Fortsetzen",
+  :change-vote "Abstimmung ändern",
+  :confirm-delete-policy
+  "Sind Sie sicher, dass Sie die Versicherungspolice %1 löschen möchten?",
   :create "Erstellen",
+  :create-gig "Gig erstellen",
   :edit "Bearbeiten",
+  :copy-link-confirm "Kopiert",
+  :update "Aktualisieren",
   :delete "Löschen",
+  :confirm-delete "Ja, löschen es.",
   :save "Speichern",
+  :copy-link "Link kopieren",
+  :search "Suchen",
+  :confirm-close-poll
+  "Sind Sie sicher, dass Sie die Umfrage „%1“ schließen möchten?",
   :reorder "Neu anordnen",
+  :confirm-delete-poll
+  "Sind Sie sicher, dass Sie die Umfrage „%1“ löschen möchten?",
+  :select-all "Wählen Alle",
   :quick-edit "Schnellbearbeitung",
+  :mark-as "Markieren als",
+  :next "Nächste",
+  :back "Zurück",
   :comment "Kommentar",
+  :add-to-calendar "Zum Kalender hinzufügen",
   :confirm-generic "Bist du sicher?",
-  :confirm-delete-gig "Möchten Sie den Gig %1 wirklich löschen?",
+  :confirm-delete-gig "Möchten Sie den Gig %1 wirklich löschen? ",
   :cancel "Abbrechen",
   :add "Hinzufügen",
   :download "Herunterladen",
-  :confirm-delete-song "Möchten Sie das Lied %1 wirklich löschen?",
-  :view "Sehen"},
+  :subscribe "Abonnieren",
+  :confirm-delete-song
+  "Sind Sie sicher, dass Sie das Lied %1 löschen möchten?",
+  :view "Sehen",
+  :open-poll "Umfrage öffnen"},
  :error
  {:go-home "Go Home",
   :unauthorized-message
@@ -191,6 +309,16 @@
   :notify "Click to notify Casey",
   :member-unique-username
   "Ein Mitglied hat bereits diesen Benutzernamen"},
+ :reminders
+ {:remind-me-in "Erinnere mich in",
+  :remind-all "Erinnern alle",
+  :confirm-remind-all-title "Alle daran erinnern?",
+  :confirm-remind-all
+  "Dadurch wird eine E-Mail an alle gesendet, die noch nicht geantwortet haben. Bist du sicher?",
+  :confirm "Ja, senden allen eine E-Mail",
+  :one-day "1 Tag",
+  :three-days "3 Tage",
+  :one-week "1 Woche"},
  :missing ":de missing text",
  :gigs
  {:title "Gigs & Proben",
@@ -202,11 +330,11 @@
   :archive "Gig-Archiv"},
  :orange-and-green "orange und grün",
  :email-subject
- {:gig-created "Neuer Gig: %1"
-  :gig-updated "Gig-Bearbeitung: %1"
-  :gig-reminder "Gig-Erinnerung: %1"
-  :new-invite "Deine SNO-ID wartet auf dich"
-  },
+ {:gig-created "Neuer Gig: %1",
+  :gig-updated "Gig-Bearbeitung: %1",
+  :gig-reminder "Gigerinnerung: %1",
+  :new-invite "Ihre SNO-ID wartet auf Sie.",
+  :poll-created "Neue Umfrage: %1"},
  :plan
  {:definitely "Sicher",
   :probably "Wahrscheinlich",
@@ -223,7 +351,7 @@
   :date "Datum",
   :attendance "Teilnahme",
   :end-date "Enddatum",
-  :show-committed "Zeige fixe",
+  :show-committed "Zeige fixe Zusagen",
   :description-help
   "Dieser Text wird auf der Website unter kommende Gigs verwendet.",
   :answer-link-submitted "Deine Antwort wurde gesendet - danke!",
@@ -247,8 +375,10 @@
   :status "Status",
   :setlist "Setliste",
   :end-day "Enddatum",
+  :create-a-forum-thread? "Einen Thread im Forum erstellen?",
   :post-gig-plans "Nach dem Auftritt",
   :set-time "Termin",
+  :rehearsal-leader1 "Probeleitung 1",
   :outfit "Adjustierung",
   :gig-info "Gig-Info",
   :create-probeplan "Probeplan erstellen",
@@ -257,64 +387,59 @@
   :contact "Kontakt",
   :email-about-new?
   "Sende Mitgliedern eine Email über diesen neuen Termin?",
+  :end-time-warning
+  "ACHTUNG: Die Endzeit wird nur geschätzt. Jemand hat dieses Feld in SNOrga nicht ausgefüllt.",
+  :rehearsal-leader2 "Probeleitung 2",
   :more-details-placeholder "wer? was? wo? wann? wieso den?",
-  :create-setlist "Setliste erstellen"
-  :end-time-warning "ACHTUNG: Die Endzeit wird nur geschätzt. Jemand hat es in SNOrga nicht ausgefüllt."},
+  :create-setlist "Setliste erstellen"},
  :nav
  {:insurance "Versicherung",
+  :polls "Umfragen",
   :home "Home",
-  :chat "Chat"
-  :calendar "Kalender"
-  :forum "Forum"
-  :nextcloud "Daten"
   :songs "Repertoire",
+  :forum "Forum",
   :logout "Abmelden",
   :settings "Einstellungen",
-  :band-settings "Band Einstellungen"
+  :chat "Chat",
   :notifications "Benachrichtigungen",
+  :calendar "Kalender",
   :probeplan "Probenplan",
+  :nextcloud "Data",
   :members "Mitglieder",
   :gigs "Gigs & Proben",
-  :profile "Profil"},
+  :profile "Profil",
+  :band-settings "Bandeinstellungen"},
  :band-instrument "Band-Instrument",
  :none "Keiner",
  :song
- {:last-played                 "Zuletzt gespielt am",
-  :lyrics                      "Liedtext"
-  :other-sheet-music           "Musescore, etc",
-  :last-played-gig             "Zuletzt gespielter Gig",
-  :composition-credits         "Komposition von",
-  :probe-count                 "Probe zählen",
+ {:last-played "Zuletzt gespielt am",
+  :other-sheet-music "Musescore, etc",
+  :last-played-gig "Zuletzt gespielter Gig",
+  :composition-credits "Komposition von",
+  :probe-count "Probe zählen",
   :choose-sheet-music-subtitle "Für Register: %1",
-  :choose-sheet-music-title    "Wählen Sie Notendatei",
-  :total-plays                 "Gesamtzahl der Spiele",
-  :solo-count                  "# Solos",
-  :log-play                    "Log-Play",
-  :last-played-probe           "Zuletzt gespielte Probe",
-  :total-rehearsals            "Insgesamt Proben",
-  :search                      "Lieder suchen",
-  :gig-count                   "Anzahl der Gigs",
-  :title                       "Song Titel",
-  :create-title                "Lied hinzufügen",
-  :active                      "Aktiv?",
-  :score                       "Punktzahl",
-  :total-performances          "Gesamtleistungen",
-  :arrangement-notes           "Arrangement-Info",
-  :origin                      "Herkunft",
-  :arrangement-credits         "Arrangiert von",
-  :search-empty                "Keine Lieder gefunden",
-  :play-stats-title            "Statistiken spielen",
-  :sheet-music-title           "Noten",
-  :background-title            "Hintergrund",
-  :list-title                  "Repertoire"
-  :filter-all                  "Alle Lieder"
-  :filter-active               "Aktive Lieder"
-  :filter-inactive             "Inaktive Lieder"
-  }
-
-
- :reminders {:remind-me-in "Erinnere mich an"
-             :remind-all   "Sende Erinnerung"
-             :one-day      "1 Tag"
-             :three-days   "3 Tage"
-             :one-week     "1 Woche"}}
+  :choose-sheet-music-title "Wählen Sie Notendatei",
+  :total-plays "Gesamtzahl der Spiele",
+  :solo-count "# Solos",
+  :log-play "Log-Play",
+  :last-played-probe "Zuletzt gespielte Probe",
+  :total-rehearsals "Insgesamt Proben",
+  :lyrics "Liedtext",
+  :filter-inactive "Inaktive Songs",
+  :search "Lieder suchen",
+  :filter-all "Alle Lieder",
+  :filter-active "Aktive Lieder",
+  :gig-count "Anzahl der Gigs",
+  :title "Song Titel",
+  :create-title "Lied hinzufügen",
+  :active "Aktiv?",
+  :score "Punktzahl",
+  :total-performances "Gesamtleistungen",
+  :arrangement-notes "Arrangement-Info",
+  :origin "Herkunft",
+  :arrangement-credits "Arrangiert von",
+  :search-empty "Keine Lieder gefunden",
+  :play-stats-title "Statistiken spielen",
+  :sheet-music-title "Noten",
+  :background-title "Hintergrund",
+  :list-title "Repertoire"}}
