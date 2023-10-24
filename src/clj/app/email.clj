@@ -162,12 +162,13 @@
   (assert leader-member)
   (let [tr (i18n/tr-with i18n-langs [:de])
         sys {:tr tr :env  env :redis redis}]
-    (build-generic-email sys
-                         (:member/email leader-member)
-                         (tr [:email/subject-log-plays])
-                         (tr [:email/body-log-plays] [(ui/gig-date-plain gig)])
-                         (tr [:email/cta-log-plays])
-                         (url/absolute-link-gig env (:gig/gig-id gig)))))
+    (queue-email! sys
+                  (build-generic-email sys
+                                       (:member/email leader-member)
+                                       (tr [:email/subject-log-plays])
+                                       (tr [:email/body-log-plays] [(ui/gig-date-plain gig)])
+                                       (tr [:email/cta-log-plays])
+                                       (url/absolute-link-gig env (:gig/gig-id gig))))))
 
 (comment
 

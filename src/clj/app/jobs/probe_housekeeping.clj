@@ -97,7 +97,7 @@
     (catch Throwable e
       (errors/report-error! e))))
 
-(defn- start-rehearsal-leader-notify
+(defn- start-rehearsal-leader-notify!
   [system]
   (let [next-wednesdays-at-10-pm (->> (chime/periodic-seq (-> (LocalTime/of 22 0 0)
                                                               (.adjustInto (ZonedDateTime/now (ZoneId/of "Europe/Berlin")))
@@ -106,14 +106,14 @@
                                       (map #(.atZone % (ZoneId/of "Europe/Berlin")))
                                       (filter (comp #{DayOfWeek/WEDNESDAY}
                                                     #(.getDayOfWeek %))))]
-    (log/info "starting rehearsal-leader-notify-job next trigger at" (first next-wednesdays-at-10-pm))
+    (log/info "starting rehearsal-leader-notify-job next trigger at " (str (first next-wednesdays-at-10-pm)))
     (chime/chime-at next-wednesdays-at-10-pm
                     (fn [_] (notify-rehearsal-leader! system)))))
 
 (defn make-probe-housekeeping-job
   [system]
   (fn [{:job/keys [frequency initial-delay]}]
-    (start-rehearsal-leader-notify system)
+    (start-rehearsal-leader-notify! system)
     (jobs/make-repeating-job (partial probe-housekeeping-job system) frequency initial-delay)))
 
 (comment
@@ -127,6 +127,10 @@
                  :env (-> state/system :app.ig/env)})) ;; rcf
 
   (probe-housekeeping-job {:conn conn} nil)
+
+  (email/send-rehearsal-leader-email! system (q/next-probe db) (q/member-by-email db "me@caseylink.com"))
+
+
   (assign-rehearsal-leaders! conn)
   (notify-rehearsal-leader! system)
   ;;

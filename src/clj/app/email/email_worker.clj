@@ -1,5 +1,6 @@
 (ns app.email.email-worker
   (:require
+   [clojure.tools.logging :as log]
    [app.email.domain :refer [QueuedEmailMessage]]
    [app.email.mailgun :as mailgun]
    [app.schemas :as s]
@@ -21,7 +22,7 @@
 (defn handler
   "Has strict return contract with carmine. See http://ptaoussanis.github.io/carmine/taoensso.carmine.message-queue.html#var-worker"
   [sys message attempt]
-  ;; (tap> {:email-worker/received message :email-worker/attempt attempt})
+  (tap> {:email-worker/received message :email-worker/attempt attempt})
   (try
     (if (s/valid? QueuedEmailMessage message)
       (let [result (if (:email/batch? message)
@@ -37,6 +38,7 @@
                                           (:email/subject message)
                                           (:email/body-plain message)
                                           (:email/body-html message)))]
+        (tap> {:email-send result})
         (if (:error result)
           (do
             (track-email-error! message attempt result nil)
@@ -53,6 +55,7 @@
       {:status :error})))
 
 (defn start! [{:keys [redis] :as sys}]
+  (log/info "Starting email worker")
   (car-mq/worker redis email-queue-name
                  {:handler (fn [{:keys [message attempt]}] (handler sys message attempt))
                   :eoq-backoff-ms 50
