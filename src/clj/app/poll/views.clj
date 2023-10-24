@@ -164,6 +164,8 @@ set its @name to optName
                      (tr [:action/create]))]]]]])))
 
 (ctmx/defcomponent ^:endpoint poll-edit-page [{:keys [db] :as req}]
+  poll-delete
+  poll-close
   (let [existing-poll (controller/retrieve-poll db (util.http/path-param-uuid! req :poll-id))
         closed? (= :poll.status/closed (:poll/poll-status existing-poll))
         post? (util/post? req)
@@ -314,6 +316,7 @@ on change from .poll-checkbox
 (ctmx/defcomponent ^:endpoint poll-detail-page [{:keys [db tr query-params] :as req}]
   poll-vote
   poll-publish
+  poll-close
   (let [poll-id (util.http/path-param-uuid! req :poll-id)
         {:poll/keys [title poll-type description poll-status closes-at min-choice max-choice] :as poll} (controller/retrieve-poll db poll-id)
         member (auth/get-current-member req)
