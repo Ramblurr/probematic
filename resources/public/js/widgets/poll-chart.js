@@ -1,4 +1,4 @@
-export function PollChart(ctx) {
+function PollChart(ctx) {
   const pollLabelSelector = ctx.getAttribute("data-labels");
   const pollDataSetsSelector = ctx.getAttribute("data-datasets");
   const labels = JSON.parse(document.querySelector(pollLabelSelector).innerHTML)
@@ -123,6 +123,11 @@ export function PollChart(ctx) {
 
 }
 
-export function discoverPolls() {
+function discoverPolls() {
   document.querySelectorAll('canvas.poll-chart').forEach(container => PollChart(container))
 }
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  discoverPolls();
+});

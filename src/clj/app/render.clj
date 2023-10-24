@@ -74,23 +74,31 @@
    (script relative-prefix "nprogress.js")
    (script relative-prefix "popperjs@2-dev.js")
    (script relative-prefix "tippy@6-dev.js")
-   (script relative-prefix "sortable@1.14.0.js")
    (script relative-prefix "sweetalert2.all@11.7.5.js")
    (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
-   (script relative-prefix "chart@4.4.0.js")
-   (script relative-prefix "chartjs-plugin-datalabels.min.js")
    (script relative-prefix "app.js" :type :module)))
+
+(defn chart-scripts []
+  (list
+   (script nil "chart@4.4.0.js")
+   (script nil "chartjs-plugin-datalabels.min.js")
+   (script nil "widgets/poll-chart.js")))
+
+(defn sortable-scripts []
+  (list
+   (script nil "widgets/sortable.js")
+   (script nil "sortable@1.14.0.js")))
 
 (defn html5-response
   ([body] (html5-response nil body))
   ([{:keys [js title]} body]
    (html-response
-     (html5-safe
-       (head title nil)
-       [:body (ctmx.render/walk-attrs body)
-        (conj
-          (body-end nil)
-          (when js (map (partial script nil) js)))]))))
+    (html5-safe
+     (head title nil)
+     [:body (ctmx.render/walk-attrs body)
+      (conj
+       (body-end nil)
+       (when js (map (partial script nil) js)))]))))
 
 (defn html5-response-absolute
   ([{:keys [js title

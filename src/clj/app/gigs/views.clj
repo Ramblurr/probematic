@@ -1,6 +1,7 @@
 (ns app.gigs.views
   (:refer-clojure :exclude [comment hash])
   (:require
+   [app.render :as render]
    [app.auth :as auth]
    [app.gigs.domain :as domain]
    [app.gigs.service :as service]
@@ -1042,6 +1043,7 @@ on change if I match <:checked/>
         req]
 
     [:div {:id (util/id :comp/gig-detail-page)}
+     (render/sortable-scripts)
      (gig-detail-info-section req (:gig req))
      (cond
        archived? nil

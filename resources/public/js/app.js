@@ -1,7 +1,6 @@
 import {$, listen} from "./utils.js"
 import {Dropdown, DropdownAll} from "./widgets/attendance-dropdown.js"
 import {ActionMenu2All, ActionMenu,Flyout} from "./widgets/action-menu.js?v2"
-import {discoverPolls} from "./widgets/poll-chart.js"
 
 //// SETUP
 htmx.onLoad(function(content) {
@@ -14,20 +13,15 @@ function initWidgets(evt) {
     if(evt.target.querySelector(".dropdown")) {
       DropdownAll(evt.target)
     }
-    if(evt.target.querySelector(".sortable")) {
-      initSortable(evt.target);
-    }
   } else {
     DropdownAll();
     listen('click', '[data-flyout-trigger]', Flyout);
-    document.querySelectorAll('.sortable-container').forEach(initSortable)
   }
 
   ActionMenu2All()
   listen('click', '[data-action-menu-trigger]', ActionMenu);
   AutoSizeTextAreas();
   Dropzone.discover();
-  discoverPolls();
 }
 
 document.body.addEventListener('htmx:beforeSwap', function(evt) {
@@ -61,25 +55,6 @@ document.body.addEventListener("htmx:afterSettle", function(evt) {
   initWidgets(evt);
 })
 
-const initSortable = (target) => {
-    var sortables = target.querySelectorAll(".sortable");
-    for (var i = 0; i < sortables.length; i++) {
-      var sortable = sortables[i];
-      console.log(sortable)
-      new Sortable(sortable, {
-        animation: 150,
-        ghostClass: 'bg-blue-300',
-        // no handle makes it easier to drag
-        handle: '.drag-handle',
-        onUpdate: (evt) => {
-          sortable.querySelectorAll("input[data-sort-order]").forEach((el, i) => {
-            //console.log("setting", el, i);
-            el.setAttribute("value", i);
-          });
-        }
-      });
-    }
-}
 
 document.body.addEventListener("htmx:responseError", function(evt) {
   NProgress.done();

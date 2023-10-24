@@ -1,5 +1,6 @@
 (ns app.poll.views
   (:require
+   [app.render :as render]
    [app.auth :as auth]
    [app.icons :as icon]
    [app.layout :as layout]
@@ -179,6 +180,7 @@ then set its @name to optName
         total-votes (count votes)]
     (tap> {:poll poll :graph-data graph-data})
     [:div {:class "mt-4"}
+     (render/chart-scripts)
      [:h2 {:class "text-lg"} (tr [:poll/results])]
      [:script {:type "application/json" :id "poll-labels"}
       (hiccup.util/raw-string (j/write-value-as-string y-labels))]
