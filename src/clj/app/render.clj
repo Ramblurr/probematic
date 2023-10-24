@@ -3,6 +3,7 @@
    [app.secret-box :as secret-box]
    [clojure.java.io :as io]
    [ctmx.render :as ctmx.render]
+   [ctmx.response :as response]
    [hiccup.page :as hiccup.page]
    [hiccup.util :as hiccup.util]
    [hiccup2.core :refer [html]]))
@@ -67,7 +68,7 @@
 
 (defn body-end [relative-prefix]
   (list
-   (script relative-prefix "hyperscript.org@0.9.7.js")
+   (script relative-prefix "hyperscript.org@0.9.12.js")
    (script relative-prefix "htmx@1.9.2.js")
    ;; (script relative-prefix "htmx.js")
    (script relative-prefix "nprogress.js")
@@ -76,17 +77,20 @@
    (script relative-prefix "sortable@1.14.0.js")
    (script relative-prefix "sweetalert2.all@11.7.5.js")
    (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
+   (script relative-prefix "chart@4.4.0.js")
+   (script relative-prefix "chartjs-plugin-datalabels.min.js")
    (script relative-prefix "app.js" :type :module)))
 
 (defn html5-response
   ([body] (html5-response nil body))
   ([{:keys [js title]} body]
    (html-response
-    (html5-safe
-     (head title nil)
-     [:body (ctmx.render/walk-attrs body)
-      (body-end nil)]
-     (when js [:script {:src (str "/js" js)}])))))
+     (html5-safe
+       (head title nil)
+       [:body (ctmx.render/walk-attrs body)
+        (conj
+          (body-end nil)
+          (when js (map (partial script nil) js)))]))))
 
 (defn html5-response-absolute
   ([{:keys [js title

@@ -1007,7 +1007,6 @@ on change if I match <:checked/>
         escape #(clojure.string/escape % {\' "\\'"})]
     (when should-send?
       (service/send-reminder-to-all! req (-> req :gig :gig/gig-id)))
-    (tap> should-send?)
     (ui/button :label (tr [:reminders/remind-all])
                :priority :secondary :centered? true :size :xsmall
                :class (when should-send? "hx-success")
@@ -1018,24 +1017,11 @@ on change if I match <:checked/>
                       :hx-post (util/endpoint-path gig-detail-page-remind-all-button)
                       :hx-target hash
                       :hx-vals {:send-reminder? true}
-                      :_ (format "on htmx:confirm(issueRequest)
-                          halt the event
-                          call Swal.fire({
-                            title: '%s',
-                            text: '%s',
-                            confirmButtonText: '%s',
-                            cancelButtonText: '%s',
-                            icon: 'warning',
-                            iconColor: '#e00087',
-                            showCancelButton: true,
-                            confirmButtonColor: '#ea580c',
-                            cancelButtonColor: '#dc2626'
-                          })
-                          if result.isConfirmed issueRequest()"
-                                 (escape (tr [:reminders/confirm-remind-all-title]))
-                                 (escape (tr [:reminders/confirm-remind-all]))
-                                 (escape (tr [:reminders/confirm]))
-                                 (escape (tr [:action/cancel])))})))
+                      :_ (ui/confirm-modal-script
+                          (tr [:reminders/confirm-remind-all-title])
+                          (tr [:reminders/confirm-remind-all])
+                          (tr [:reminders/confirm])
+                          (tr [:action/cancel]))})))
 
 (ctmx/defcomponent ^:endpoint gig-detail-page [{:keys [tr db] :as req} ^:boolean show-committed?]
   gig-details-edit-form gig-delete gig-details-edit-post gig-detail-info-section-hxget

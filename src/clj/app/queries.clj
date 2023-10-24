@@ -2,12 +2,14 @@
   (:require
    [app.datomic :as d]
    [app.gigs.domain :as gig.domain]
+   [app.poll.domain :as poll.domain]
    [app.settings.domain :as settings.domain]
    [app.util :as util]
    [datomic.client.api :as datomic]
    [medley.core :as m]
    [tick.core :as t]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [app.debug :as debug]))
 
 (def section-pattern [:section/name :section/default? :section/position :section/active?])
 
@@ -165,6 +167,107 @@
 (def setlist-v1-pattern [{:setlist/gig [:gig/gig-id]}
                          :setlist/version
                          :setlist.v1/songs])
+
+(def poll-pattern [:poll/poll-id :poll/title :poll/description
+                   :poll/min-choice :poll/max-choice
+                   :poll/poll-type :poll/poll-status
+                   :poll/autoremind?
+                   :poll/closes-at :poll/created-at])
+
+(def vote-detail-pattern [:poll.vote/poll-vote-id {:poll.vote/author [:member/member-id :member/nick]} :poll.vote/created-at
+                          {:poll.vote/poll-option [:poll.option/poll-option-id :poll.option/value]}])
+
+(def poll-detail-pattern
+  [:poll/poll-id :poll/title :poll/description
+   :poll/min-choice :poll/max-choice
+   :poll/poll-type :poll/poll-status :poll/chart-type
+   :poll/author :poll/autoremind?
+   :poll/closes-at :poll/created-at
+   {:poll/votes vote-detail-pattern}
+   {:poll/options [:poll.option/poll-option-id :poll.option/value :poll.option/position]}])
+
+(defn retrieve-poll [db poll-id]
+  (poll.domain/db->poll
+    (d/find-by db :poll/poll-id poll-id poll-detail-pattern)))
+
+(defn votes-for-poll [db poll-id]
+  (->>
+   (d/q '[:find (pull ?vote pat)
+          :in $ ?poll-id pat
+          :where
+          [?poll :poll/poll-id ?poll-id]
+          [?poll :poll/votes ?vote]]
+        db poll-id vote-detail-pattern)
+   (mapv first)))
+
+(defn poll-counts [db poll]
+  (letfn [(count-attr [kw]
+            (or
+             (ffirst
+              (d/q '[:find (count ?child)
+                     :in $ ?poll-id ?kw
+                     :where
+                     [?e :poll/poll-id ?poll-id]
+                     [?e ?kw ?child]]
+                   db (:poll/poll-id poll)  kw))
+             0))]
+    {:poll/options-count (or (count-attr :poll/options) 0)
+     :poll/votes-count (or (count-attr :poll/votes) 0)
+     :poll/voter-count (or (count (distinct (map #(get-in % [:poll.vote/author :member/member-id]) (votes-for-poll db (:poll/poll-id poll))))) 0)}))
+
+(defn member-has-voted?
+  "Return true if the member has voted in the given poll"
+  [db poll-id member]
+  (some some?
+        (d/q '[:find (pull ?vote [:poll.vote/poll-vote-id :poll.vote/poll-option])
+               :in $ ?poll-id ?member-id
+               :where
+               [?poll :poll/poll-id ?poll-id]
+               [?poll :poll/votes ?vote]
+               [?vote :poll.vote/author ?member-id]]
+             db poll-id
+             (d/ref member :member/member-id))))
+
+(defn votes-for-poll-by [db poll-id member]
+  (->>
+   (d/q '[:find (pull ?vote [:poll.vote/poll-vote-id {:poll.vote/poll-option [:poll.option/poll-option-id]} :poll.vote/created-at])
+          :in $ ?poll-id ?member
+          :where
+          [?poll :poll/poll-id ?poll-id]
+          [?poll :poll/votes ?vote]
+          [?vote :poll.vote/author ?member]]
+        db poll-id (d/ref member :member/member-id))
+   (mapv first)))
+
+(defn- load-polls [q-result]
+  (->> q-result
+       (mapv first)
+       (mapv poll.domain/db->poll)
+       (sort-by :poll/created-at)))
+
+(defn find-open-polls
+  ([db]
+   (find-open-polls db poll-pattern))
+  ([db pat]
+   (->>
+    (d/find-all-by db :poll/poll-status :poll.status/open pat)
+    (load-polls))))
+
+(defn find-draft-polls
+  ([db]
+   (find-draft-polls db poll-pattern))
+  ([db pat]
+   (->>
+    (d/find-all-by db :poll/poll-status :poll.status/draft pat)
+    (load-polls))))
+
+(defn find-closed-polls
+  ([db]
+   (find-closed-polls db poll-pattern))
+  ([db pat]
+   (->>
+    (d/find-all-by db :poll/poll-status :poll.status/closed pat)
+    (load-polls))))
 
 (defn retrieve-song [db song-id]
   (d/find-by db :song/song-id song-id song-pattern-detail))
@@ -326,8 +429,7 @@
    (d/find-all db :song/song-id song-pattern)
    (mapv first)
    (filter #(:song/active? %))
-   (util/isort-by :song/title )
-   ))
+   (util/isort-by :song/title)))
 
 (defn retrieve-songs [db song-ids]
   (if (empty? song-ids)

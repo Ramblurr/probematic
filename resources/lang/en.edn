@@ -11,7 +11,8 @@
              :evening "Good evening, %1"
              :nightowl "Hi there nightowl, %1"
              :unanswered "Need Attention!"
-             :upcoming "All Upcoming Gigs"}
+             :upcoming "All Upcoming Gigs"
+             :polls-open "We have open polls!"}
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
@@ -156,6 +157,7 @@
               :photo-upload-title "Photo Upload"
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."}
  :nav {:home "Home"
+       :polls "Polls"
        :forum "Forum"
        :chat "Chat"
        :nextcloud "Data"
@@ -188,6 +190,9 @@
  :selected "selected"
  :choose-calendar-app "Choose Your Calendar App"
  :action {:edit "Edit"
+          :vote "Vote!"
+          :open-poll "Open Poll"
+          :change-vote "Change Vote"
           :update "Update"
           :mark-as "Mark As"
           :search "Search"
@@ -214,6 +219,11 @@
           :duplicate "Duplicate"
           :view "View"
           :confirm-generic "Are you sure?"
+          :confirm-delete "Yes, delete it."
+          :confirm-close "Yes, close it."
+          :confirm-open-poll "Yes, open the poll."
+          :confirm-close-poll "Are you sure you want to close the poll '%1'?"
+          :confirm-delete-poll "Are you sure you want to delete the poll '%1?'"
           :confirm-delete-song "Are you sure you want to delete the song %1?"
           :confirm-delete-policy "Are you sure you want to delete the insurance policy %1?"
           :confirm-delete-gig "Are you sure you want to delete the gig %1? "}
@@ -280,8 +290,7 @@
  :email-subject {:gig-created "New Gig: %1"
                  :gig-updated "Gig Edit: %1"
                  :gig-reminder "Gig Reminder: %1"
-                 :new-invite "Your SNO ID is waiting for you.."
-                 }
+                 :new-invite "Your SNO ID is waiting for you.."}
  :email {:greeting "Hello!"
          :new-gig-added "A new gig is coming up!"
          :new-probe-added "A new probe is coming up!"
@@ -328,6 +337,46 @@
              :one-day "1 Day"
              :three-days "3 Days"
              :one-week "1 Week"}
+ :polls {:index-title "Polls Admin"
+         :create-title "New Poll"
+         :running "Open Polls"
+         :past "Past Polls"
+        :no-past "There are no past polls"
+        :no-running "There are no open polls"
+         }
+ :poll {:title "Poll Title"
+        :results "Poll Results"
+        :poll "Poll"
+        :poll-type "Poll Type"
+        :choices "Choices"
+        :closes-at "Automatically Closes At"
+        :closes-at-hint "A date and time when the poll will stop accepting responses."
+        :max-choice "Max Choices"
+        :max-choice-hint "The maximum number of choices a person can make."
+        :min-choice "Min Choices"
+        :min-choice-hint "The minimum number of choices a person can make."
+        :description "Poll Description"
+        :description-hint "Tell people what this poll is about. Markdown is allowed."
+        :autoremind-hint "Remind people who haven't responded yet every couple of days."
+        :autoremind? "Auto remind?"
+        :select-num-choices "Select between %1 and %2 options."
+        :error-only-one "You can only vote for one option"
+        :error-between "You can only vote for between %1 and %2 options"
+        :error-not-open "You cannot vote for a poll that is not open"
+        :open-hint "You need to open the poll before people can vote. WARNING! After you open it, you cannot change it."
+        :options-read-only-hint "Once a poll has been opened the choices cannot be changed."
+        :closed-on "Closed On"
+        :days-left "Days Left"
+        :total-votes "Total Votes"
+        :total-voters "Voters"
+        :close-early "Close Early"
+        :add-option "Add Option"
 
- ;;
+        }
+ :poll.type {:multiple "Multiple Choice"
+             :single "Single Choice"
+             :multiple-hint "People can choose multiple options."
+             :single-hint "People can only choose one option."}
+
+;;
  }

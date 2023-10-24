@@ -89,6 +89,15 @@
       0
       result)))
 
+(defn count-by
+  "Count the number of entities possessing attribute attr"
+  [db attr]
+  (->> (d/q '[:find (count ?e)
+              :in $ ?attr
+              :where [?e ?attr]]
+            db attr)
+       ffirst))
+
 (defn find-all-by
   "Returns the entities having attr and val"
   [db attr attr-val pattern]
@@ -128,6 +137,9 @@
                  :instrument.coverage/coverage-id
                  :insurance.category.factor/category-factor-id
                  :comment/comment-id
+                 :poll/poll-id
+                 :poll.option/poll-option-id
+                 :poll.vote/poll-vote-id
                  :attendance/gig+member])
 
 (defn ref

@@ -1,6 +1,7 @@
 import {$, listen} from "./utils.js"
 import {Dropdown, DropdownAll} from "./widgets/attendance-dropdown.js"
 import {ActionMenu2All, ActionMenu,Flyout} from "./widgets/action-menu.js?v2"
+import {discoverPolls} from "./widgets/poll-chart.js"
 
 //// SETUP
 htmx.onLoad(function(content) {
@@ -26,6 +27,7 @@ function initWidgets(evt) {
   listen('click', '[data-action-menu-trigger]', ActionMenu);
   AutoSizeTextAreas();
   Dropzone.discover();
+  discoverPolls();
 }
 
 document.body.addEventListener('htmx:beforeSwap', function(evt) {

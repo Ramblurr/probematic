@@ -15,6 +15,7 @@
    ;; {:label (tr [:nav/calendar]) :icon icon/calendar :href (url/link-calendar) :route-name :app/calendar}
    {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
    {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
+   {:label (tr [:nav/polls]) :icon icon/chart-bar-square :href "/polls" :route-name :app/polls}
    {:label (tr [:nav/forum]) :icon icon/snomegaphone :href "https://forum.streetnoise.at" :route-name :app/forum}
    {:label (tr [:nav/nextcloud]) :icon icon/folder-open :href "https://data.streetnoise.at/apps/files/" :route-name :app/nextcloud}
    {:label (tr [:nav/chat]) :icon icon/comments :href "https://chat.streetnoise.at" :route-name :app/chat}
@@ -245,13 +246,22 @@
        ]]]]])
 
 (defn app-shell
+  ([req body]
+   (app-shell req body nil))
+  ([req body opts]
+   (let [member (auth/get-current-member req)]
+     (render/html5-response (merge {:title "SNOrga"} opts)
+                            [:div {:class "min-h-full"}
+                             (mobile-menu req)
+                             (desktop-menu req member)
+                             (app-container req member body)]))))
+
+(defn maybe-app-shell
+  "Will wrap the response in the app shell if it is not an HTMX request"
   [req body]
-  (let [member (auth/get-current-member req)]
-    (render/html5-response {:title "SNOrga"}
-                           [:div {:class "min-h-full"}
-                            (mobile-menu req)
-                            (desktop-menu req member)
-                            (app-container req member body)])))
+  (if (:htmx? req)
+    body
+    (app-shell req body)))
 
 (defn centered-content
   [req body]

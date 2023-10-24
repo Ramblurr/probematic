@@ -73,6 +73,16 @@
                                                      :json-schema/type   "string"
                                                      :json-schema/format "date"}}))
 
+(def DateTimeSchema (m/-simple-schema {:type            :app.schemas/datetime
+                                       :pred            t/date-time?
+                                       :type-properties {:error/message      "should be a valid datetime"
+                                                         :decode/string      #(some-> % t/date-time)
+                                                         :encode/string      str
+                                                         :decode/json        #(some-> % t/date-time)
+                                                         :encode/json        str
+                                                         :json-schema/type   "string"
+                                                         :json-schema/format "date-time"}}))
+
 (defn blank->nil [v]
   (if (string/blank? v)
     nil
@@ -117,6 +127,20 @@
                                        :encode/json str
                                        :json-schema/type "string"
                                        :json-schema/format "string"}}))
+
+(def parse-boolean-checkbox
+  #(case %
+     true true
+     false false
+     (contains? #{"true" "on"} %)))
+
+(def CheckboxBoolean
+  (m/-simple-schema {:type :app.schemas/checkbox-boolean
+                     :pred boolean?
+                     :type-properties {:error/message "Should be true or false"
+                                       :decode/string parse-boolean-checkbox
+                                       :encode/string str}}))
+
 (def DatomicRef
   (m/-simple-schema {:type :app.schemas/datomic-ref
                      :pred (fn [v]
@@ -141,10 +165,12 @@
    :app.schemas/inst             InstSchema
    :app.schemas/instdate         InstDateSchema
    :app.schemas/date             DateSchema
+   :app.schemas/date-time        DateTimeSchema
    :app.schemas/time             TimeSchema
    :app.schemas/minute-time      MinuteTimeSchema
    :app.schemas/non-blank-string NonBlankString
-   :app.schemas/datomic-ref      DatomicRef})
+   :app.schemas/datomic-ref      DatomicRef
+   :app.schemas/checkbox-boolean CheckboxBoolean})
 
 (def interval?
   "Represents an interval as a map with two properties,

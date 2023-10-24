@@ -4,6 +4,7 @@
    [app.jobs.sync-members :refer [make-sync-members-job]]
    [app.jobs.sync-gigs :refer [make-gigs-sync-job]]
    [app.jobs.probe-housekeeping :refer [make-probe-housekeeping-job]]
+   [app.jobs.poll-housekeeping :refer [make-poll-housekeeping-job]]
    [app.jobs.reminders :refer [make-reminder-job]]
    [app.jobs.ping :refer [make-job-ping]]))
 
@@ -14,4 +15,5 @@
    :job/sync-gigs          (make-gigs-sync-job opts)
    :job/update-airtable    (make-airtable-job opts)
    :job/sync-members       (make-sync-members-job opts)
+   :job/poll-housekeeping  (make-poll-housekeeping-job opts)
    :job/reminders          (make-reminder-job opts)})

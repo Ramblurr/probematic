@@ -20,16 +20,19 @@
 (def link-song (partial link-helper "/song/" :song/song-id))
 
 (def link-policy (partial link-helper "/insurance-policy/" :insurance.policy/policy-id))
+(def link-poll (partial link-helper "/poll/" :poll/poll-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
 (def link-coverage (partial link-helper "/insurance-coverage/" :instrument.coverage/coverage-id))
 (def link-coverage-edit (partial link-helper "/insurance-coverage-edit/" :instrument.coverage/coverage-id))
 
 (defn link-gigs-home [] "/gigs/")
+(defn link-polls-home [] "/polls/")
 (defn link-songs-home [] "/songs/")
 (defn link-calendar [] "/calendar/")
 (defn link-probeplan-home [] "/probeplan")
 (defn link-gig-create [] "/gigs/new/")
 (defn link-gig-archive [] "/gigs/archive/")
+(defn link-polls-create [] "/polls/new/")
 (defn link-insurance [] "/insurance/")
 (defn link-coverage-create
   ([policy-id] (link-coverage-create policy-id nil))

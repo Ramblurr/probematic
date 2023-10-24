@@ -59,8 +59,8 @@
         ;; REPL
         nrepl/nrepl                       {:mvn/version "1.0.0"}
         integrant/repl                    {:mvn/version "0.3.2"}
-        cider/cider-nrepl                 {:mvn/version "0.30.0"}
-        djblue/portal                     {:mvn/version "0.40.0"}
+        cider/cider-nrepl                 {:mvn/version "0.40.0"}
+        djblue/portal                     {:mvn/version "0.48.0"}
         ;; Shared Outskirts Labs libs
         ol/app.dev                        {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "e9330c1a2dd987072fd51346bec41ccea2bc673e" :deps/root "lib/ol.app.dev"}
         ol/system                         {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "e9330c1a2dd987072fd51346bec41ccea2bc673e" :deps/root "lib/ol.system"}

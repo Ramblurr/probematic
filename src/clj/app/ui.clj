@@ -248,16 +248,18 @@
          (map #(merge {:name id :model value :required? required?} %))
          (map-indexed radio-button))]])
 
-(defn textarea-left [& {:keys [label value hint hint-under id name rows placeholder fit-height? error]
+(defn textarea-left [& {:keys [label value hint hint-under id name rows placeholder fit-height? error required?]
                         :or {rows 3}}]
   (let [has-error? (get error (keyword name))]
     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
      [:label {:for name :class "block text-sm font-medium leading-6 text-gray-700 sm:pt-1.5"} label
+      (required-label required?)
       (when hint
         [:p {:class "mt-2 text-sm text-gray-500 font-normal"} hint])]
      [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
       [:textarea {:id id :name name :rows rows
                   :placeholder placeholder
+                  :required required?
                   :data-auto-size (when  fit-height? "true")
                   :class (cs
                           "block w-full max-w-lg rounded-md border-0 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:py-1.5 sm:text-sm sm:leading-6"
@@ -292,7 +294,7 @@
 (def input-size {:normal "sm:text-sm"
                  :small "text-xs"})
 
-(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required? id]
+(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required? id minlength]
                 :or {size :normal
                      required? true}}]
   [:div {:class (cs class (get input-label-size size)
@@ -307,6 +309,7 @@
                                      :id id
                                      :pattern pattern
                                      :title title
+                                     :minlength minlength
                                      :name name
                                      :value (if (= "null" value) nil value)
                                      :required required?
@@ -317,7 +320,8 @@
 
 (defn input-datetime [& {:keys [value name required?]}]
   [:input {:type "datetime-local" :name name
-           :value (when value (t/date-time value))
+           :value (when value
+                    (t/truncate (t/date-time value) :minutes))
            :required required?
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
@@ -374,7 +378,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost form tabindex href spinner?]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost hx-push-url form tabindex href spinner? id title]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -382,8 +386,10 @@
                         tag :button}}]
 
   [tag (merge
-        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :hx-confirm hx-confirm :form form :tabindex tabindex
+        (util/remove-nils {:hx-target hx-target :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :hx-confirm hx-confirm :hx-push-url (when hx-push-url "true") :form form :tabindex tabindex
                            :hx-boost (when hx-boost "true")
+                           :id id
+                           :title title
                            :href href})
         {:class
          (cs
@@ -395,6 +401,7 @@
           (priority button-priority-classes)
           (when spinner? "button-spinner")
           (when centered? "items-center justify-center")
+          (when disabled? "opacity-50 cursor-not-allowed")
           class)
          :disabled disabled?}
         attr)
@@ -576,6 +583,35 @@
     [:div {:class "flex justify-start gap-x-3"} buttons-left]
     [:div {:class "flex justify-end gap-x-3"} buttons-right]]])
 
+(defn datetime-left [& {:keys [id value label required? hint error]
+                        :or {required? true}}]
+  (let [has-error? (get error (keyword id))]
+    [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
+     [:label {:for id :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
+      label (required-label required?)
+      (when hint
+        [:p {:class "mt-2 text-sm text-gray-500 font-normal"}
+         hint])]
+     [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+      [:div {:class "relative max-w-lg sm:max-w-xs"}
+       (input-datetime :value value :name id :id id :required required?)
+       #_[:input (merge  {:type type
+                          :name id
+                          :id id
+                          :value value
+                          :placeholder placeholder
+                          :required required?
+                          :class (cs
+                                  "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
+                                  (if has-error?
+                                    "ring-red-300 focus:ring-red-500 placeholder:text-red-300"
+                                    "ring-gray-300 focus:border-sno-orange-500  focus:ring-sno-orange-500"))}
+                         attr)]
+       (when has-error?
+         [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
+          (icon/circle-exclamation {:class  "h-5 w-5 text-red-500"})])]
+      (field-error error id)]]))
+
 (defn text-left [& {:keys [id value label placeholder required? hint attr type error]
                     :or {required? true
                          attr {}
@@ -734,6 +770,33 @@
            (icon/circle-exclamation {:class "h-5 w-5 text-red-500"})])]]
       (field-error error id)]]))
 
+(defn number-input-left [& {:keys [id value label required? hint error min max step]
+                            :or {required? true
+                                 step 1}}]
+  (let [has-error? (get error (keyword id))]
+
+    [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
+     [:label {:for id :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
+      label (required-label required?)
+      (when hint
+        [:p {:class "mt-2 text-sm text-gray-500 font-normal"}
+         hint])]
+     [:div {:class "mt-1 rounded-md shadow-sm"}
+      [:div {:class "relative max-w-lg sm:max-w-xs"}
+
+       [:input {:type "number" :min min :max max :step step :value value :required required? :name id :id id
+                :class (cs
+                        "text-right pl-7"
+                        "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
+                        (if has-error?
+                          "ring-red-300 focus:ring-red-500 placeholder:text-red-300"
+                          "ring-gray-300 focus:border-sno-orange-500  focus:ring-sno-orange-500"))}]
+       [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
+        (when has-error?
+          [:div {:class "pointer-events-none "}
+           (icon/circle-exclamation {:class "h-5 w-5 text-red-500"})])]]
+      (field-error error id)]]))
+
 (defn money-input [& {:keys [label required? id value extra-attrs]
                       :or {required? true extra-attrs {}}}]
   [:div
@@ -770,18 +833,21 @@
     (when hint
       [:p {:class "text-sm text-gray-500"} hint])]])
 
-(defn radio-left [& {:keys [label id name checked? hint value]}]
+(defn radio-left [& {:keys [label id name checked? hint value required? attr disabled?]}]
   [:div {:class "relative flex items-start"}
    [:div {:class "flex h-6 items-center"}
-    [:input {:id id :name name :type "radio"
-             :checked checked? :value value
-             :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-600"}]]
+    [:input (merge {:id id :name name :type "radio"
+                    :checked checked? :value value
+                    :required required?
+                    :disabled disabled?
+                    :class "h-4 w-4 border-gray-300 text-sno-orange-600 focus:ring-sno-orange-600 disabled:text-sno-orange-400 disabled:opacity-50"}
+                   attr)]]
    [:div {:class "ml-3"}
     [:label {:for id :class "text-sm font-medium leading-6 text-gray-700"} label]
     (when hint
       [:p {:class "text-sm text-gray-500"} hint])]])
 
-(defn checkbox-group-left [& {:keys [head-title head-hint label label-hint id checkboxes]}]
+(defn checkbox-group-left [& {:keys [head-title head-hint label label-hint id checkboxes required?]}]
   [:div {:class (cs "space-y-6 divide-y divide-gray-200 sm:space-y-5 " (when head-title "pt-8 sm:pt-10"))}
    [:div
     (when head-title
@@ -795,6 +861,7 @@
        [:div
         [:div {:class "text-sm font-medium leading-6 text-gray-700" :id (str "label-" id)}
          label
+         (required-label required?)
          (when label-hint
            [:p {:class "text-sm text-gray-500 font-normal"} label-hint])]]
        [:div {:class "mt-4 sm:col-span-2 sm:mt-0"}
@@ -824,12 +891,14 @@
                    " peer-checked:bg-sno-orange-600")}]
    [:span {:class "ml-3 text-sm font-medium text-gray-900 "
            ;; dark:text-gray-300
-           } label]])
+           }label]])
 
-(defn toggle-checkbox-left [& {:keys [label checked? name id]}]
+(defn toggle-checkbox-left [& {:keys [label checked? name id hint]}]
   [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
    [:label {:for id :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
-    label]
+    label
+    (when hint
+      [:p {:class "mt-2 text-sm text-gray-500 font-normal"} hint])]
    [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
     [:label {:for name :class "inline-flex relative items-center cursor-pointer"}
      [:input {:type "checkbox" :checked checked? :class "sr-only peer" :name name :id id}]
@@ -1238,3 +1307,26 @@
              [:div {:class "w-full p-1 md:p-2"}
               [:a {:href src :target :_blank}
                [:img {:alt "gallery" :class "block h-full w-full rounded-lg object-cover object-center" :src src}]]]]) photos)]]])
+
+(defn confirm-modal-script
+  "Returns the hyperscript for a modal confirmation dialog"
+  [title text confirm-text cancel-text]
+  (let [escape #(clojure.string/escape % {\' "\\'"})]
+    (format "on htmx:confirm(issueRequest)
+                          halt the event
+                          call Swal.fire({
+                            title: '%s',
+                            text: '%s',
+                            confirmButtonText: '%s',
+                            cancelButtonText: '%s',
+                            icon: 'warning',
+                            iconColor: '#e00087',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ea580c',
+                            cancelButtonColor: '#dc2626'
+                          })
+                          if result.isConfirmed issueRequest()"
+            (escape title)
+            (escape text)
+            (escape confirm-text)
+            (escape cancel-text))))

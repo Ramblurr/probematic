@@ -813,6 +813,121 @@
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
 
+
+;;; Polls
+   {:db/ident :poll/poll-id
+    :db/doc "The id of this poll"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/title
+    :db/doc "The title of this poll"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/description
+    :db/doc "The description of this poll"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+
+   {:db/ident :poll/poll-type
+    :db/doc "The type of poll: single or multiple choice"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/poll-status
+    :db/doc "The status of the poll: draft, open, closed"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/chart-type
+    :db/doc "The chart type for the poll: pie or bar"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/min-choice
+    :db/doc "The minimum number of choices a user can choose"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/max-choice
+    :db/doc "The maximum number of choices a user can choose"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/votes
+    :db/doc "The votes for the poll"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :poll/options
+    :db/doc "The options for the poll"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+
+   {:db/ident :poll/author
+    :db/doc "The author of the poll"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/created-at
+    :db/doc "The time the poll was created."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/closes-at
+    :db/doc "The time the poll will be automatically closed."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll/autoremind?
+    :db/doc "Whether or not members should be reminded to vote"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.option/poll-option-id
+    :db/doc "The id of this poll option"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.option/value
+    :db/doc "The value of this poll option"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.option/position
+    :db/doc "The sort order of the option"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.vote/poll-vote-id
+    :db/doc "The id of this poll vote"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.vote/poll-option
+    :db/doc "The option of this vote"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.vote/author
+    :db/doc "The author of the poll.vote"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.vote/created-at
+    :db/doc "The time the poll.vote was created."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+
+
    ;;
    ]
 

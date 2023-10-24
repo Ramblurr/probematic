@@ -8,6 +8,7 @@
    [app.insurance.routes :as insurance]
    [app.interceptors :as interceptors]
    [app.members.routes :as members]
+   [app.poll.routes :as polls]
    [app.settings.routes :as settings]
    [app.nextcloud :as nextcloud]
    [app.probeplan.routes :as probeplan]
@@ -40,6 +41,7 @@
     (gigs/routes)
     (insurance/routes)
     (members/routes)
+    (polls/routes)
     (nextcloud/routes)
     (probeplan/routes)
     (songs/routes)
