@@ -49,6 +49,9 @@
 (defn absolute-link-gig [env gig-id]
   (str (config/app-base-url env) "/gig/" gig-id "/"))
 
+(defn absolute-link-poll [env poll-id]
+  (str (config/app-base-url env) "/poll/" poll-id "/"))
+
 (defn absolute-link-song [env song-id]
   (str (config/app-base-url env) "/song/" song-id "/"))
 

@@ -6,6 +6,7 @@
    [app.layout :as layout]
    [app.markdown :as markdown]
    [app.poll.controller :as controller]
+   [app.poll.domain :as domain]
    [app.response :as response]
    [app.ui :as ui]
    [app.urls :as url]
@@ -15,6 +16,21 @@
    [hiccup.util :as hiccup.util]
    [jsonista.core :as j]
    [tick.core :as t]))
+
+(ctmx/defcomponent ^:endpoint poll-publish [req]
+  (when (util/post? req)
+    (response/redirect req (url/link-poll (:poll
+                                           (controller/publish-poll! req (util.http/path-param-uuid! req :poll-id)))))))
+
+(ctmx/defcomponent ^:endpoint poll-close [req]
+  (when (util/post? req)
+    (response/redirect req (url/link-poll (:poll
+                                           (controller/close-poll! req (util.http/path-param-uuid! req :poll-id)))))))
+
+(ctmx/defcomponent ^:endpoint poll-delete [req]
+  (when (util/post? req)
+    (controller/delete-poll! req (util.http/path-param-uuid! req :poll-id))
+    (response/redirect req (url/link-polls-home))))
 
 (defn poll-option
   ([idx]
@@ -37,14 +53,13 @@
                :label (tr [:poll/add-option])
                :attr {:_ "
 on click
-log 'plus clicked'
 set count to the length of <#poll-options input/>
 set optName to 'options_' + `${count}_value`
-then get #poll-opt-template's innerHTML
-then put it at the end of #poll-options
-then get the last <input/> in #poll-options
-then set its @id to optName
-then set its @name to optName
+get #poll-opt-template's innerHTML
+put it at the end of #poll-options
+get the last <input/> in #poll-options
+set its @id to optName
+set its @name to optName
 "
                       :type :button})]])
 
@@ -55,7 +70,8 @@ then set its @name to optName
 (defn poll-form [{:keys [tr] :as req} comp-name  {:poll/keys [title description autoremind? closes-at min-choice max-choice poll-type poll-status options author] :as existing-poll}]
   (let [min-choice (or min-choice 1)
         max-choice (or max-choice 2)
-        single? (or poll-type true)
+        single? (if existing-poll (= :poll.type/single poll-type)
+                    true)
         semi-read-only? (and existing-poll (= poll-status :poll.status/open))
         autoremind? (if (nil? autoremind?) true
                         autoremind?)
@@ -66,7 +82,26 @@ then set its @name to optName
                               (map (fn [{:poll.option/keys [value position]}]
                                      (poll-option position value)) options))
                             (empty-opts))]
-    (ui/panel {:title (tr [:poll/poll])}
+    (tap> {:single? single?
+           :pt poll-type
+           })
+    (ui/panel {:title (tr [:poll/poll])
+               :buttons (list
+                          (when existing-poll
+                            (ui/button :priority :white-destructive :label "Delete" :hx-post (util/endpoint-path poll-delete)
+                                       :attr {:_ (ui/confirm-modal-script
+                                                   (tr [:action/confirm-generic])
+                                                   (tr [:action/confirm-delete-poll] [title])
+                                                   (tr [:action/confirm-delete])
+                                                   (tr [:action/cancel]))}))
+                          (when (and existing-poll (= poll-status :poll.status/open))
+                            (ui/button :label (tr [:poll/close-early]) :hx-post (util/endpoint-path poll-close)
+                                       :attr {:_ (ui/confirm-modal-script
+                                                   (tr [:action/confirm-generic])
+                                                   (tr [:action/confirm-close-poll] [title])
+                                                   (tr [:action/confirm-close])
+                                                   (tr [:action/cancel]))})))
+               }
               [:div
 
                [:div {:class "hidden" :id "poll-opt-template"} (poll-option 999  nil)]
@@ -155,10 +190,10 @@ then set its @name to optName
        (poll-form req comp-name  nil)])))
 
 (defn stat-block [title value]
-  [:div {:class "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-white px-4 py-10 sm:px-6 xl:px-8"}
+  [:div {:class "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-white px-4 py-4 sm:px-6 lg:py-10 xl:px-8"}
    [:dt {:class "text-sm font-medium leading-6 text-gray-500"} title]
    [:dd {:class "text-xs font-medium text-gray-700"} ""]
-   [:dd {:class "w-full flex-none text-3xl font-medium leading-10 tracking-tight text-gray-900"} value]])
+   [:dd {:class "w-full flex-none text-lg lg:text-3xl font-medium leading-4 lg:leading-10 tracking-tight text-gray-900"} value]])
 
 (defn poll-results [{:keys [tr]} {:poll/keys [closes-at poll-status votes] :as poll}]
   (let [total-voters (count (distinct (map #(get-in % [:poll.vote/author :member/member-id]) votes)))
@@ -167,13 +202,15 @@ then set its @name to optName
                         (map #(select-keys % [:poll.option/poll-option-id :poll.option/value]))
                         (frequencies)
                         (map (fn [[{:poll.option/keys [value]} freq]]
-                               [value (/ (* 100 freq) total-voters)]))
+                               #_[value (/ (* 100 freq) total-voters)]
+                               [value freq]
+                               ))
                         (sort-by second))
         y-labels (map first graph-data)
         graph-values (map second graph-data)
         height-per-option 35
         height (+ height-per-option (* height-per-option (count y-labels)))
-        end (t/instant (t/in closes-at (t/zone "Europe/Vienna")))
+        end (domain/closes-at-instant closes-at)
         days-left (t/days
                    (t/duration
                     {:tick/beginning (t/now)
@@ -186,35 +223,22 @@ then set its @name to optName
      [:script {:type "application/json" :id "poll-labels"}
       (hiccup.util/raw-string (j/write-value-as-string y-labels))]
      [:script {:type "application/json" :id "poll-values"}
-      (hiccup.util/raw-string (j/write-value-as-string graph-values))]
+      (hiccup.util/raw-string (j/write-value-as-string {:totalVoters total-voters
+                                                        :values graph-values}))]
      [:div  {:class ""}
-      [:dl {:class "mx-auto grid grid-cols-1 gap-px bg-gray-900/5 sm:grid-cols-2 lg:grid-cols-4"}
+      [:dl {:class "mx-auto grid grid-cols-3 gap-px bg-gray-900/5 lg:grid-cols-5"}
        (stat-block (tr [:poll/total-voters]) total-voters)
        (stat-block (tr [:poll/total-votes]) total-votes)
        (if (= poll-status :poll.status/closed)
          (stat-block (tr [:poll/closed-on]) (ui/format-dt closes-at))
          (stat-block (tr [:poll/days-left]) days-left))
-       [:div {:class "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-white px-4 py-10 sm:px-6 xl:px-8"}]]]
+       [:div {:class "flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-white px-4 py-10 sm:px-6 xl:px-8 hidden lg:flex lg:col-span-2"}]]]
      [:div  {:class "poll-chart-container w-full max-w-5xl" :style (str "height: " height "px;")}
       [:canvas {:class "poll-chart" :data-labels "#poll-labels" :data-datasets "#poll-values"}]]
      (when (= poll-status :poll.status/open)
        [:div {:class "mt-2"}
         (ui/link-button :label (tr [:action/change-vote]) :icon icon/arrow-small-left :href (url/link-poll poll "/?change-vote=true"))])]))
 
-(ctmx/defcomponent ^:endpoint poll-publish [req]
-  (when (util/post? req)
-    (response/redirect req (url/link-poll (:poll
-                                           (controller/publish-poll! req (util.http/path-param-uuid! req :poll-id)))))))
-
-(ctmx/defcomponent ^:endpoint poll-close [req]
-  (when (util/post? req)
-    (response/redirect req (url/link-poll (:poll
-                                           (controller/close-poll! req (util.http/path-param-uuid! req :poll-id)))))))
-
-(ctmx/defcomponent ^:endpoint poll-delete [req]
-  (when (util/post? req)
-    (controller/delete-poll! req (util.http/path-param-uuid! req :poll-id))
-    (response/redirect req (url/link-polls-home))))
 
 (ctmx/defcomponent ^:endpoint poll-vote [{:keys [tr db] :as req} poll]
   (let [poll (or poll (controller/retrieve-poll db (util.http/path-param-uuid! req :poll-id)))
@@ -307,21 +331,8 @@ on change from .poll-checkbox
                                                  (tr [:poll/options-read-only-hint])
                                                  (tr [:action/confirm-open-poll])
                                                  (tr [:action/cancel]))}))
-                         (ui/button :priority :white-destructive :label "Delete" :hx-post (util/endpoint-path poll-delete)
-                                    :attr {:_ (ui/confirm-modal-script
-                                               (tr [:action/confirm-generic])
-                                               (tr [:action/confirm-delete-poll] [title])
-                                               (tr [:action/confirm-delete])
-                                               (tr [:action/cancel]))})
                          (when (poll-status #{:poll.status/open :poll.status/draft})
                            (ui/button :label (tr [:action/edit]) :hx-get (util/comp-name #'poll-edit-page) :hx-target (hash ".") :hx-push-url true))
-                         (when (= poll-status :poll.status/open)
-                           (ui/button :label (tr [:poll/close-early]) :hx-post (util/endpoint-path poll-close)
-                                      :attr {:_ (ui/confirm-modal-script
-                                                 (tr [:action/confirm-generic])
-                                                 (tr [:action/confirm-close-poll] [title])
-                                                 (tr [:action/confirm-close])
-                                                 (tr [:action/cancel]))}))
                          (when (= poll-status :poll.status/open)
                            (ui/button :label (tr [:reminders/remind-all]) :hx-post (util/endpoint-path poll-close)
                                       :priority :secondary

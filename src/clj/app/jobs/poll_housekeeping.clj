@@ -5,6 +5,7 @@
    [app.errors :as errors]
    [app.queries :as q]
    [datomic.client.api :as datomic]
+   [app.poll.domain :as domain]
    [ol.jobs-util :as jobs]
    [tick.core :as t]))
 
@@ -15,7 +16,7 @@
           open-polls (q/find-open-polls (datomic/db conn))
           now (t/instant)
           polls-to-close (filter (fn [{:poll/keys [closes-at]}]
-                                   (let [closes-at (t/instant (t/in closes-at (t/zone "Europe/Vienna")))]
+                                   (let [closes-at (domain/closes-at-instant closes-at)]
                                      (t/< closes-at now))) open-polls)
           polls-to-close-txns (mapcat #(into [] %)
                                       (map (fn [poll]
@@ -23,13 +24,10 @@
                                                        :poll-id (:poll/poll-id poll)
                                                        :poll-title (:poll/title poll)
                                                        :poll-closes-at (:poll/closes-at poll)
-                                                       :poll-closes-at-inst (t/instant (t/in (:poll/closes-at poll) (t/zone "Europe/Vienna")))
+                                                       :poll-closes-at-inst (domain/closes-at-instant (:poll/closes-at poll))
                                                        :now now)
                                              [[:db/add (d/ref poll) :poll/poll-status :poll.status/closed]
-                                              [:db/add (d/ref poll) :poll/closes-at (t/inst (t/in (t/date-time) (t/zone "Europe/Vienna")))]]) polls-to-close))]
-
-
-
+                                              [:db/add (d/ref poll) :poll/closes-at (domain/closes-at-inst (t/date-time))]]) polls-to-close))]
 
       (datomic/transact conn  {:tx-data polls-to-close-txns})
       :done)

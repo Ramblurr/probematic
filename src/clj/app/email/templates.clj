@@ -1,5 +1,7 @@
 (ns app.email.templates
   (:require
+   [tick.core :as t]
+   [app.markdown :as markdown]
    [app.config :as config]
    [app.secret-box :as secret-box]
    [app.ui :as ui]
@@ -7,6 +9,7 @@
    [app.util :as util]
    [clojure.string :as str]
    [hiccup2.core :refer [html]]
+   [hiccup.util :as hiccup.util]
    [selmer.parser :as selmer]
    [selmer.util :as selmer.util]))
 
@@ -267,12 +270,13 @@
        :intro2 (tr [:email/invite-new-user-intro2])
        :invite-link invite-link
        :sign-off (tr [:email/sign-off])}))))
+
 (defn generic-email-plain [{:keys [tr env] :as sys} body-text cta-text cta-url]
   (selmer.util/without-escaping
    (selmer/render
     "{{greeting}}
 
-{{intro}}
+{{body-text}}
 
 {{cta-text}}
 
@@ -281,19 +285,47 @@
 {{sign-off}}
 "
     {:greeting (tr [:email/greeting])
-     :intro body-text
+     :body-text body-text
      :cta-text cta-text
      :cta-url cta-url
      :sign-off (tr [:email/sign-off])})))
 
-(defn generic-email-html [{:keys [tr env]} body-text cta-text cta-url]
+(defn generic-email-html [{:keys [tr]} body-hiccup cta-text cta-url]
   (str (html
         [:div
          [:p
           (tr [:email/greeting])]
-         [:p body-text]
+         (if (vector? body-hiccup)
+           body-hiccup
+           [:p body-hiccup])
          (when cta-text
            [:p [:a {:href cta-url} cta-text]])
 
          [:p]
          [:p (tr [:email/sign-off])]])))
+
+(defn poll-created-email-plain-body [tr poll]
+  (let [title (:poll/title poll)
+        description (:poll/description poll)
+        closes-at (:poll/closes-at poll)]
+    (selmer/render
+      "
+### {{title}}
+
+* {{ closes-at-label }}: {{ closes-at}}
+
+{% if description|not-empty %}{{ description }}{% endif %}
+#### {{ options-label }}:
+
+{% for option in options %}* {{ option }}
+{% endfor %}"
+
+      {:title title
+       :options-label (tr [:poll/options])
+       :description description
+       :options (map :poll.option/value (:poll/options poll))
+       :closes-at-label (tr [:poll/closes-at])
+       :closes-at (str (ui/format-time closes-at) " " (ui/format-dt closes-at))})))
+
+(defn poll-created-email-html-body [tr poll]
+  (markdown/render (poll-created-email-plain-body tr poll)))

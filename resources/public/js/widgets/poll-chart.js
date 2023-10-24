@@ -1,20 +1,27 @@
+var activePollChart = null;
 function PollChart(ctx) {
   const pollLabelSelector = ctx.getAttribute("data-labels");
   const pollDataSetsSelector = ctx.getAttribute("data-datasets");
   const labels = JSON.parse(document.querySelector(pollLabelSelector).innerHTML)
   const data = JSON.parse(document.querySelector(pollDataSetsSelector).innerHTML)
   const transformedData = [];
-  data.forEach((votes, index) => {
+  const totalVoters = data.totalVoters
+  data.values.forEach((votes, index) => {
     if (votes > 0) {
       transformedData.push(votes);
       //this._optionToSlice[index] = counter++;
     }
   });
   const totalVotes = transformedData.reduce((sum, votes) => sum + votes, 0);
+  console.log("total votes", totalVotes)
   const displayMode = "percentage";
   const fontFamily = getComputedStyle(document.body).fontFamily;
 
-  return new Chart(ctx, {
+  if(activePollChart) {
+    activePollChart.destroy();
+  }
+
+  activePollChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
@@ -81,17 +88,18 @@ function PollChart(ctx) {
               left: 6,
             },
           formatter(votes) {
-              if (displayMode !== "percentage") {
-                return votes;
-              }
+            if (displayMode !== "percentage") {
+              return votes;
+            }
 
-            const percent = Number(votes.toFixed(1)).toLocaleString('de-AT', { maximumFractionDigits: 1 });
-              return `${percent}%`;
-            },
+            let percent =  (votes * 100.0) / totalVoters
+            percent = Number(percent.toFixed(1)).toLocaleString('de-AT', { maximumFractionDigits: 1 });
+            return `${votes} votes (${percent}%)`;
           },
+        },
       }
     },
-          plugins: [window.ChartDataLabels],
+    plugins: [window.ChartDataLabels],
 
     /*
      plugins: [{
@@ -128,6 +136,16 @@ function discoverPolls() {
 }
 
 
-document.addEventListener('DOMContentLoaded', function() {
+if(document.readyState !== 'loading') {
+    discoverPolls();
+} else {
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("loaded")
+    discoverPolls();
+  });
+}
+
+document.body.addEventListener("htmx:afterSettle", function(evt) {
+  console.log("aftersettle")
   discoverPolls();
-});
+})

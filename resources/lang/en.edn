@@ -290,7 +290,9 @@
  :email-subject {:gig-created "New Gig: %1"
                  :gig-updated "Gig Edit: %1"
                  :gig-reminder "Gig Reminder: %1"
-                 :new-invite "Your SNO ID is waiting for you.."}
+                 :new-invite "Your SNO ID is waiting for you.."
+                 :poll-created "New Poll: %1"
+                 }
  :email {:greeting "Hello!"
          :new-gig-added "A new gig is coming up!"
          :new-probe-added "A new probe is coming up!"
@@ -371,7 +373,8 @@
         :total-voters "Voters"
         :close-early "Close Early"
         :add-option "Add Option"
-
+        :options "Options"
+        :vote-now "Vote Now!"
         }
  :poll.type {:multiple "Multiple Choice"
              :single "Single Choice"

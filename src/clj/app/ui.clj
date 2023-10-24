@@ -594,7 +594,7 @@
          hint])]
      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
       [:div {:class "relative max-w-lg sm:max-w-xs"}
-       (input-datetime :value value :name id :id id :required required?)
+       (input-datetime :value value :name id :id id :required? required?)
        #_[:input (merge  {:type type
                           :name id
                           :id id

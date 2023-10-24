@@ -1,5 +1,6 @@
 (ns app.email
   (:require
+   [app.markdown :as markdown]
    [app.debug :as debug]
    [app.email.email-worker :as email-worker]
    [app.email.templates :as tmpl]
@@ -59,8 +60,7 @@
   (assert tr)
   (tap> {:s (tr [:email-subject/gig-reminder] [(:gig/title gig)])
          :t (:gig/title gig)
-         :tr tr
-         })
+         :tr tr})
   (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-reminder] [(:gig/title gig)])
@@ -68,13 +68,22 @@
    (tmpl/gig-created-email-plain sys gig true)
    (tmpl/gig-created-recipient-variables sys gig members)))
 
+(defn build-new-poll-opened [{:keys [tr env] :as sys} poll members]
+  (let [url (url/absolute-link-poll env (:poll/poll-id poll))]
+    (build-batch-emails
+     (mapv :member/email members)
+     (tr [:email-subject/poll-created] [(:poll/title poll)])
+     (tmpl/generic-email-html sys (tmpl/poll-created-email-html-body tr poll) (tr [:poll/vote-now]) url)
+     (tmpl/generic-email-plain sys (tmpl/poll-created-email-plain-body tr poll) (tr [:poll/vote-now])  url)
+     nil)))
+
 (defn build-new-user-invite [{:keys [tr] :as sys} {:member/keys [email] :as member} invite-code]
   (build-email email
                (tr [:email-subject/new-invite])
                (tmpl/new-user-invite-html sys invite-code)
                (tmpl/new-user-invite-plain sys invite-code)))
 
-(defn build-generic-email [{:keys [tr] :as sys} to-email subject body-text cta-text cta-url]
+(defn build-generic-email [sys to-email subject body-text cta-text cta-url]
   (build-email to-email
                subject
                (tmpl/generic-email-html sys body-text cta-text cta-url)
@@ -83,7 +92,7 @@
 (defn- sys-from-req [req]
   {:tr (:tr req)
    :env (-> req :system :env)
-   :i18n-langs (-> req :system :i18n-langs )
+   :i18n-langs (-> req :system :i18n-langs)
    :redis (-> req :system :redis)
    :datomic-conn (-> req :datomic-conn)})
 
@@ -124,6 +133,13 @@
           members (q/active-members db)
           sys (sys-from-req req)]
       (queue-email! sys  (build-gig-updated-email sys gig members edited-attrs)))))
+
+(defn send-poll-opened! [req poll-id]
+  (let [db (datomic/db (:datomic-conn req))
+        poll (q/retrieve-poll db poll-id)
+        members (q/active-members db)
+        sys (sys-from-req req)]
+    (queue-email! sys  (build-new-poll-opened (sys-from-req req) poll members))))
 
 (defn send-new-user-email! [req new-member invite-code]
   (log/info (format "new user email to %s code=%s" (:member/email new-member) invite-code))
@@ -183,22 +199,37 @@
     (def redis-opts (-> state/system :app.ig/redis))
     (def env (-> state/system :app.ig/env))
 
+    (def poll (q/retrieve-poll db #uuid "018b60ab-32f5-8c78-9c67-28da6b48ec4c"))
+
     (def tr (i18n/tr-with (i18n/read-langs) ["en"]))
     (def sys {:tr tr :env env})) ;; rcf
 
+
   (spit "plain-email.txt"
-        (str
-         "\n++++\n"
-         (tmpl/gig-created-email-plain sys gig)
-         "\n++++\n"
-         (tmpl/gig-created-email-plain sys gig2)))
+        (->
+          (build-new-poll-opened sys (assoc poll :poll/description "") [member])
+          :email/body-plain
+          ))
+
+  (spit "plain-email.html"
+        (->
+          (build-new-poll-opened sys (assoc poll :poll/description "") [member])
+          :email/body-html
+          ))
 
   (spit "plain-email.txt"
         (str
-         "\n++++\n"
-         (tmpl/gig-updated-email-plain sys gig [:gig/status])
-         "\n++++\n"
-         (tmpl/gig-updated-email-plain sys gig2 [:gig/status])))
+          "\n++++\n"
+          (tmpl/gig-created-email-plain sys gig)
+          "\n++++\n"
+          (tmpl/gig-created-email-plain sys gig2)))
+
+  (spit "plain-email.txt"
+        (str
+          "\n++++\n"
+          (tmpl/gig-updated-email-plain sys gig [:gig/status])
+          "\n++++\n"
+          (tmpl/gig-updated-email-plain sys gig2 [:gig/status])))
 
   (build-gig-created-email sys gig [member])
   :email/recipient-variables
@@ -210,5 +241,5 @@
   (tmpl/payload-for-attendance env (:gig/gig-id gig) (:member/member-id
                                                       (q/member-by-email db "CHANGEME")) :plan/definitely)
 
-;;
+  ;;
   )

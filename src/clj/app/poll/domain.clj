@@ -67,17 +67,23 @@
  (->
   (t/date-time "2023-10-22T13:57")))
 
+(defn closes-at-instant [closes-at]
+  (t/instant (t/in closes-at (t/zone "Europe/Vienna"))))
+
+(defn closes-at-inst [closes-at]
+  (t/inst (t/in closes-at (t/zone "Europe/Vienna"))))
+
 (defn poll->db
   ([poll]
    (poll->db PollEntity poll))
   ([schema poll]
-   (let [poll (update poll :poll/closes-at #(t/inst (t/in % (t/zone "Europe/Vienna"))))]
+   (let [poll (update poll :poll/closes-at closes-at-inst )]
      (when-not (s/valid? schema poll)
        (throw
-        (ex-info "Poll not valid" {:poll poll
-                                   :schema schema
-                                   :error (s/explain schema poll)
-                                   :human (s/explain-human schema poll)})))
+         (ex-info "Poll not valid" {:poll poll
+                                    :schema schema
+                                    :error (s/explain schema poll)
+                                    :human (s/explain-human schema poll)})))
      (s/encode-datomic schema poll))))
 
 (defn ->date-time [kw comment]

@@ -1,5 +1,6 @@
 (ns app.poll.controller
   (:require
+   [app.email :as email]
    [app.auth :as auth]
    [app.datomic :as d]
    [app.poll.domain :as domain]
@@ -147,9 +148,11 @@
 (defn publish-poll! [{:keys [db] :as req} poll-id]
   (let [{:poll/keys [poll-status] :as poll} (q/retrieve-poll db poll-id)]
     (if (= poll-status :poll.status/draft)
-      {:poll (-> (d/transact-wrapper req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/open]]})
-                 :db-after
-                 (q/retrieve-poll poll-id))}
+      (let [result {:poll (-> (d/transact-wrapper req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/open]]})
+                              :db-after
+                              (q/retrieve-poll poll-id))}]
+        (email/send-poll-opened! req poll-id)
+        result)
       {:error "Poll is not a draft"})))
 
 (defn delete-poll! [{:keys [db] :as req} poll-id]
@@ -159,7 +162,7 @@
 (defn close-poll! [{:keys [db] :as req} poll-id]
   (let [poll (q/retrieve-poll db poll-id)]
     {:poll (-> (d/transact-wrapper req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/closed]
-                                                  [:db/add (d/ref poll) :poll/closes-at (t/inst (t/in (t/date-time) (t/zone "Europe/Vienna")))]]})
+                                                  [:db/add (d/ref poll) :poll/closes-at (domain/closes-at-inst (t/date-time))]]})
                :db-after
                (q/retrieve-poll poll-id))}))
 

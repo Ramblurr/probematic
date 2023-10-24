@@ -69,7 +69,9 @@
 (defn body-end [relative-prefix]
   (list
    (script relative-prefix "hyperscript.org@0.9.12.js")
-   (script relative-prefix "htmx@1.9.2.js")
+   ;; (script relative-prefix "hyperscript.org@0.9.7.js")
+   ;; (script relative-prefix "htmx@1.9.2.js")
+   (script relative-prefix "htmx@1.9.6.js")
    ;; (script relative-prefix "htmx.js")
    (script relative-prefix "nprogress.js")
    (script relative-prefix "popperjs@2-dev.js")
