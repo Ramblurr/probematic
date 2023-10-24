@@ -2,7 +2,7 @@
 
 (defn revision [] (.format java.time.format.DateTimeFormatter/ISO_INSTANT (java.time.ZonedDateTime/now (java.time.ZoneId/of "UTC"))))
 
-(defn generate-vcard [{:member/keys [name email nick phone member-id]}]
+(defn generate-vcard [{:member/keys [name email nick phone member-id section] :as member}]
   (format "BEGIN:VCARD
 VERSION:3.0
 PRODID;VALUE=TEXT://%s/NONSGML snorga//EN
@@ -11,6 +11,7 @@ FN:%s
 NICKNAME:%s
 N:;%s;;;
 ORG:%s
+TITLE:%s
 TEL;TYPE=PREF,mobile;VALUE=UNKNOWN:%s
 REV;VALUE=DATE-AND-OR-TIME:%s
 EMAIL;TYPE=HOME:%s
@@ -21,6 +22,7 @@ END:VCARD"
           nick
           name
           "SNO"
+          (:section/name section)
           phone
           (revision)
           email))
