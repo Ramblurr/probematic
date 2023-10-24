@@ -101,7 +101,8 @@ then set its @name to optName
                     [:div {:class (ui/cs "max-choice" (when single? "hidden"))}
                      (ui/number-input-left :id "max-choice" :label (tr [:poll/max-choice]) :hint (tr [:poll/max-choice-hint]) :min 1 :value max-choice :required? false)]
                     (ui/datetime-left :label (tr [:poll/closes-at]) :hint (tr [:poll/closes-at-hint]) :id "closes-at" :value closes-at :required? true)
-                    (ui/toggle-checkbox-left :id "autoremind?" :name "autoremind?" :label (tr [:poll/autoremind?]) :checked? autoremind?
+                    [:input {:type :hidden :name "autoremind?" :value nil}]
+                    #_(ui/toggle-checkbox-left :id "autoremind?" :name "autoremind?" :label (tr [:poll/autoremind?]) :checked? autoremind?
                                              :hint (tr [:poll/autoremind-hint])))
 
                    (ui/form-left-section :label (tr [:poll/choices]))
