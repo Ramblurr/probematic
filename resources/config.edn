@@ -110,15 +110,16 @@
                                              :i18n-langs #ig/ref :app.ig/i18n-langs
                                              :redis      #ig/ref :app.ig/redis
                                              :calendar   #ig/ref :app.ig/calendar}}
- :jobs            {:job/sync-gigs          {:job/frequency     [60 :minutes]
+ :jobs            {
+                   #_#_:job/sync-gigs          {:job/frequency     [60 :minutes]
                                             :job/initial-delay [2 :seconds]}
-                   :job/sync-members       {:job/frequency     [8 :hours]
+                   #_#_:job/sync-members       {:job/frequency     [8 :hours]
                                             :job/initial-delay [3 :seconds]}
                    :job/update-airtable    {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}
                    :job/probe-housekeeping {:job/frequency     [10 :minutes]
                                             :job/initial-delay [2 :seconds]}
                    :job/poll-housekeeping {:job/frequency     [3 :minutes]
-                                            :job/initial-delay [2 :seconds]}
+                                           :job/initial-delay [2 :seconds]}
                    :job/reminders          {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}}}

@@ -12,8 +12,8 @@
 (defn job-defs [opts]
   {:job/ping               make-job-ping
    :job/probe-housekeeping (make-probe-housekeeping-job opts)
-   :job/sync-gigs          (make-gigs-sync-job opts)
+   #_#_:job/sync-gigs          (make-gigs-sync-job opts)
    :job/update-airtable    (make-airtable-job opts)
-   :job/sync-members       (make-sync-members-job opts)
+   #_#_:job/sync-members       (make-sync-members-job opts)
    :job/poll-housekeeping  (make-poll-housekeeping-job opts)
    :job/reminders          (make-reminder-job opts)})
