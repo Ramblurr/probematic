@@ -91,20 +91,22 @@
         instant-start  instant-end)
    (mapv first)))
 
-(defn member-stat []
-  {:member nil
-   :gigs-attended nil
-   :probes-attended nil
-   :last-seen nil})
-
-(defn update-count [acc attendance {:gig/keys [date gig-type]}]
-  (-> acc
-      (update-in [(:attendance/member attendance) gig-type] (fnil inc 0))
-      (update-in [(:attendance/member attendance) :last-seen]
-                 (fn [last-seen]
-                   (if (or (nil? last-seen) (t/< last-seen date))
-                     date
-                     last-seen)))))
+(defn update-count [acc attendance {:gig/keys [date gig-type title]}]
+  (let [prev-last-seen (get-in acc [(:attendance/member attendance) :last-seen])
+        seen? (or (nil? prev-last-seen) (t/< prev-last-seen date))
+        ]
+    (-> acc
+        (update-in [(:attendance/member attendance) gig-type] (fnil inc 0))
+        (update-in [(:attendance/member attendance) :last-seen]
+                   (fn [last-seen]
+                     (if seen?
+                       date
+                       last-seen)))
+        (update-in [(:attendance/member attendance) :gig-title]
+                   (fn [last-title]
+                     (if seen?
+                       title
+                       last-title))))))
 
 (defn process-gig [acc gig]
   (reduce (fn [inner-acc att]
@@ -148,7 +150,9 @@
      :mean-attendance (when (> (count per-gig-stats) 0) (/ (reduce #(+ %1 (:attended-count %2)) 0 per-gig-stats) (count per-gig-stats)))
      :mean-attendance-gig (when (> gig-count 0) (/ (reduce #(+ %1 (:attended-count %2)) 0 gigs) (count gigs)))
      :mean-attendance-probe (when (> probe-count 0) (/ (reduce #(+ %1 (:attended-count %2)) 0 probes) (count probes)))
-     :mean-active-members (when (> (count per-gig-stats) 0) (/ (reduce #(+ %1 (:active-count %2)) 0 per-gig-stats) (count per-gig-stats)))}))
+     :active-members-count (when (> (count per-gig-stats) 0)
+                             (apply max (map :active-count per-gig-stats))
+                             )}))
 
 (defn gigs-attendance-stats [db from to]
   (cache/lookup-or-miss gigs-attendance-stats-cache [from to] (fn [[from to]]

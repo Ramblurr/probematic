@@ -385,27 +385,39 @@
 
  :stats {
          :gigs-attended "Gigs Attended"
+         :gigs-attended-tooltip "The number of gigs the member attended in the timeframe"
          :gigs-percent "Gigs %"
+         :gigs-percent-tootlip "The percentage of gigs the member attended in the timeframe"
          :probes-attended "Probes Attended"
+         :probes-attended-tooltip "The number of rehearsals the member attended in the timeframe"
          :probes-percent "Probes %"
+         :probes-percent-tooltip "The percentage of rehearsals the member attended in the timeframe"
          :attendance-rate "Attendance Rate (%)"
          :last-seen "Last Seen"
+         :last-seen-tooltip "The date on which the member was last recorded at a gig or rehearsal"
          :total-gigs "Total Gigs"
+         :total-gigs-tooltip "The total number of gigs that happened in the timeframe"
          :total-probes "Total Probes"
+         :total-probes-tooltip "The total number of rehearsals that happened in the timeframe"
          :total-plays "Total Plays"
+         :total-plays-tooltip "The total number of plays that were logged for songs in the timeframe. Note: this is a lower bound, since if we play a song twice at at gig it only counts as one play."
          :gig-attendance-rate "Attendance Rate Gigs"
+         :gig-attendance-rate-tooltip  "Percentage of the active band attending gigs in the timeframe."
          :probe-attendance-rate "Attendance Rate Probes"
+         :probe-attendance-rate-tooltip  "Percentage of the active band attending rehearsals in the timeframe."
          :mean-attendance-gig "Average Attendance Gigs"
+         :mean-attendance-gig-tooltip "Average number of members attending gigs."
          :mean-attendance-probe "Average Attendance Probes"
-         :mean-active-members "Average Active Members"
+         :mean-attendance-probe-tooltip "Average number of members attending rehearsals."
+         :active-members-count "Active Members"
+         :active-members-count-tooltip "Members that attended at least one gig or rehearsal in the timeframe"
+         :mean-active-members-tooltip ""
          :last-three-months "Last 3 Months"
          :last-six-months "Last 6 Months"
          :last-year "Last Year"
          :gig-attendance "Gig Attendance"
          :probe-attendance "Probe Attendance"
-         :num-members "# of Members"
-
-         }
+         :num-members "# of Members"}
 
  ;;
  }
