@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2023-10-25 16:19+0200\n"
-"PO-Revision-Date: 2023-10-25 15:45+0000\n"
-"Last-Translator: finn <finn.achatz@gmail.com>\n"
+"PO-Revision-Date: 2023-10-25 15:57+0000\n"
+"Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
 "Language: de\n"
@@ -2251,12 +2251,10 @@ msgid "Gigs & Proben"
 msgstr "Gigs & Proben"
 
 #: :nav/stats
-#, fuzzy, ycp-format
-#| msgctxt ":gig/status"
-#| msgid "Status"
+#, ycp-format
 msgctxt ":nav/stats"
 msgid "Stats"
-msgstr "Status"
+msgstr "Stats"
 
 #: :nav/profile
 #, ycp-format
