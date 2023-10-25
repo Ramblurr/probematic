@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2023-10-25 16:19+0200\n"
-"PO-Revision-Date: 2023-10-25 14:25+0000\n"
+"PO-Revision-Date: 2023-10-25 15:45+0000\n"
 "Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
@@ -20,17 +20,13 @@ msgid "-"
 msgstr "-"
 
 #: :motivation/very-high
-#, fuzzy, ycp-format
-#| msgctxt ":motivation/very-high"
-#| msgid "Sehr motiviert!"
+#, ycp-format
 msgctxt ":motivation/very-high"
 msgid "Very Motivated!"
 msgstr "Sehr motiviert!"
 
 #: :motivation/high
-#, fuzzy, ycp-format
-#| msgctxt ":motivation/high"
-#| msgid "Motiviert"
+#, ycp-format
 msgctxt ":motivation/high"
 msgid "Motivated"
 msgstr "Motiviert"
@@ -39,12 +35,10 @@ msgstr "Motiviert"
 #, ycp-format
 msgctxt ":motivation/medium"
 msgid "Somewhat Motivated"
-msgstr ""
+msgstr "Ambivalent"
 
 #: :motivation/low
-#, fuzzy, ycp-format
-#| msgctxt ":motivation/low"
-#| msgid "Nicht Motiviert"
+#, ycp-format
 msgctxt ":motivation/low"
 msgid "Not Motivated"
 msgstr "Nicht Motiviert"
@@ -53,7 +47,7 @@ msgstr "Nicht Motiviert"
 #, ycp-format
 msgctxt ":motivation/very-low"
 msgid "Not at all!"
-msgstr ""
+msgstr "Gar nicht Motiviert!"
 
 #: :private-instruments
 #, ycp-format
@@ -62,18 +56,14 @@ msgid "Private Instruments"
 msgstr "Private Instrumente"
 
 #: :insurance/item-count-hint
-#, fuzzy, ycp-format
-#| msgctxt ":insurance/item-count-hint"
-#| msgid ""
-#| "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
-#| "Drumsticks...)?"
+#, ycp-format
 msgctxt ":insurance/item-count-hint"
 msgid ""
 "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
 "Drumsticks…)?"
 msgstr ""
 "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
-"Drumsticks...)?"
+"Drumsticks…)?"
 
 #: :insurance/coverage-for
 #, ycp-format
@@ -260,18 +250,14 @@ msgid "I cannot make it"
 msgstr "Ich schaffe es nicht"
 
 #: :email/body-log-plays
-#, fuzzy, ycp-format
-#| msgctxt ":email/body-log-plays"
-#| msgid ""
-#| "Please tell SNOrga what we played at the Probe on %1. It only takes 1 "
-#| "minute."
+#, ycp-format
 msgctxt ":email/body-log-plays"
 msgid ""
 "Please tell SNOrga what we played at the Probe on %1 *and* who the "
 "Probeleitungen for next week are! It only takes 1 minute."
 msgstr ""
-"Bitte erzählen Sie SNOrga, was wir bei der Probe am %1 gespielt haben. Es "
-"dauert nur 1 Minute."
+"Bitte erzählt SNOrga, was wir bei der Probe am %1 gespielt haben *und* wer "
+"die Probeleitung für nächste Woche ist! Es dauert nur 1 Minute."
 
 #: :email/subject-log-plays
 #, ycp-format
@@ -1217,9 +1203,7 @@ msgid "Instruments"
 msgstr "Instrumente"
 
 #: :total
-#, fuzzy, ycp-format
-#| msgctxt ":insurance/total"
-#| msgid "Total"
+#, ycp-format
 msgctxt ":total"
 msgid "Total"
 msgstr "Gesamt"
@@ -1299,12 +1283,10 @@ msgid "SNO ID"
 msgstr "SNO ID"
 
 #: :updating
-#, fuzzy, ycp-format
-#| msgctxt ":updating"
-#| msgid "Updating..."
+#, ycp-format
 msgctxt ":updating"
 msgid "Updating…"
-msgstr "Aktualisierung..."
+msgstr "Aktualisierung…"
 
 #: :section-add
 #, ycp-format
