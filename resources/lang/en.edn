@@ -1,5 +1,6 @@
 {:missing ":en missing text"
  :now "now"
+ :total "Total"
  :Contact-Information "Contact Information"
  :Contact-Download "Download Contact"
  :Email "E-Mail"
@@ -158,6 +159,7 @@
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."}
  :nav {:home "Home"
        :polls "Polls"
+       :stats "Stats"
        :forum "Forum"
        :chat "Chat"
        :nextcloud "Data"
@@ -343,8 +345,8 @@
          :create-title "New Poll"
          :running "Open Polls"
          :past "Past Polls"
-        :no-past "There are no past polls"
-        :no-running "There are no open polls"
+         :no-past "There are no past polls"
+         :no-running "There are no open polls"
          }
  :poll {:title "Poll Title"
         :results "Poll Results"
@@ -381,5 +383,29 @@
              :multiple-hint "People can choose multiple options."
              :single-hint "People can only choose one option."}
 
-;;
+ :stats {
+         :gigs-attended "Gigs Attended"
+         :gigs-percent "Gigs %"
+         :probes-attended "Probes Attended"
+         :probes-percent "Probes %"
+         :attendance-rate "Attendance Rate (%)"
+         :last-seen "Last Seen"
+         :total-gigs "Total Gigs"
+         :total-probes "Total Probes"
+         :total-plays "Total Plays"
+         :gig-attendance-rate "Attendance Rate Gigs"
+         :probe-attendance-rate "Attendance Rate Probes"
+         :mean-attendance-gig "Average Attendance Gigs"
+         :mean-attendance-probe "Average Attendance Probes"
+         :mean-active-members "Average Active Members"
+         :last-three-months "Last 3 Months"
+         :last-six-months "Last 6 Months"
+         :last-year "Last Year"
+         :gig-attendance "Gig Attendance"
+         :probe-attendance "Probe Attendance"
+         :num-members "# of Members"
+
+         }
+
+ ;;
  }

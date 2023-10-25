@@ -80,11 +80,17 @@
    (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
    (script relative-prefix "app.js" :type :module)))
 
-(defn chart-scripts []
+(defn chart-poll-scripts []
   (list
    (script nil "chart@4.4.0.js")
    (script nil "chartjs-plugin-datalabels.min.js")
    (script nil "widgets/poll-chart.js")))
+
+(defn chart-stat-scripts []
+  (list
+   (script nil "chart@4.4.0.js")
+   (script nil "chartjs-plugin-datalabels.min.js")
+   (script nil "widgets/stats-chart.js")))
 
 (defn sortable-scripts []
   (list

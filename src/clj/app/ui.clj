@@ -667,7 +667,9 @@
   {:important ""
    :normal "sm:pl-6"
    :medium "hidden sm:table-cell"
-   :low "hidden xl:table-cell"})
+   :low "hidden xl:table-cell"
+   :sm-only "table-cell sm:hidden"
+   })
 
 (def table-row-variant
   {:action "relative py-3.5 pl-3 pr-4 sm:pr-6"

@@ -245,8 +245,7 @@
       (ui/panel {:title
                  (tr [:Contact-Information])
                  :buttons (ui/link-button :label (tr [:Contact-Download]) :icon icon/download
-                                          :href (str "/member-vcard/" (str member-id)))
-                 }
+                                          :href (str "/member-vcard/" (str member-id)))}
                 (ui/dl
                  (ui/dl-item (tr [:member/active?]) (if edit?
                                                       (ui/toggle-checkbox  :checked? active? :name (path "active?"))
@@ -373,18 +372,25 @@
   (let [members (controller/members db nil nil)
         tr (i18n/tr-from-req req)
         table-headers (member-table-headers-rw tr)]
-    (list
-     (ui/table-row-head table-headers)
-     (ui/table-body
-      (rt/map-indexed member-row-rw req (map :member/member-id members))))))
+    [:div
+     [:div {:class "flex flex-col space-y-4 sm:flex-row sm:items-center justify-end pb-4 mt-4"}
+      (tr [:total]) ": " (count members)]
+     [:table {:class "min-w-full divide-y divide-gray-300"}
+      (list
+        (ui/table-row-head table-headers)
+        (ui/table-body
+          (rt/map-indexed member-row-rw req (map :member/member-id members))))]]))
 
 (ctmx/defcomponent ^:endpoint member-table-ro [{:keys [tr db] :as req}]
   (let [members (controller/members db (sort-param req) (filter-param req))
         table-headers (member-table-headers-ro req tr)]
-    (list
-     (ui/table-row-head table-headers)
-     (ui/table-body
-      (rt/map-indexed member-row-ro req (map :member/member-id members))))))
+    [:div
+     [:div {:class "flex flex-col space-y-4 sm:flex-row sm:items-center justify-end pb-4 mt-4"}
+      (tr [:total]) ": " (count members)]
+     [:table {:class "min-w-full divide-y divide-gray-300"}
+      (ui/table-row-head table-headers)
+      (ui/table-body
+        (rt/map-indexed member-row-ro req (map :member/member-id members)))]]))
 
 (defn member-add-form [{:keys [tr path sections]}]
   (let [required-label [:span  {:class "text-red-300 float-right"} " required"]]
@@ -539,10 +545,9 @@
         (member-table-action-button req)]
 
        [:div {:class "mt-4"}
-        [:table {:class "min-w-full divide-y divide-gray-300"}
-         (if edit?
-           (member-table-rw req)
-           (member-table-ro req))]]]]]))
+        (if edit?
+          (member-table-rw req)
+          (member-table-ro req))]]]]))
 
 (defn invite-accept-form [req {:keys [member invite-code]} error-msg]
   (let [tr (i18n/tr-from-req req)]
@@ -617,11 +622,9 @@
         nick (:member/nick member)
         vcard (members.domain/generate-vcard member)]
     {:status 200
-     :headers {
-               "Content-Disposition" (sardine/content-disposition-filename "attachment" (str nick ".vcf"))
+     :headers {"Content-Disposition" (sardine/content-disposition-filename "attachment" (str nick ".vcf"))
                "Content-Type" "text/x-vcard"}
-     :body vcard})
-  )
+     :body vcard}))
 
 (comment
 

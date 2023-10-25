@@ -1,6 +1,7 @@
 (ns app.util.http
   (:refer-clojure :exclude [parse-long])
   (:require
+   [clojure.set :as set]
    [app.util :as util]
    [clojure.string :as str]
    [ctmx.form :as form]
@@ -67,3 +68,46 @@
     (rt/parse-long v)
     (catch NumberFormatException e
       nil)))
+
+
+(defn order-invert [o]
+  (get {:asc :desc
+        :desc :asc} o))
+
+(defn serialize-sort-param [query-param-field-mapping {:keys [field order]}]
+  (when field
+    (str "?sort=" (get (set/map-invert query-param-field-mapping) field)
+         (order-invert (or order :desc)))))
+
+(defn sort-param-by-field [sort-spec field]
+  (or
+   (m/find-first #(= field (:field %)) sort-spec)
+   {:field field :order :asc}))
+
+(defn parse-sort-param [query-param-field-mapping v]
+  (let [[param order] (str/split v #":")
+        order (if (= "desc" order) :desc :asc)
+        field (get query-param-field-mapping param nil)]
+    (when field
+      {:field  field
+       :order order})))
+
+(defn sort-param [{:keys [query-params] :as req} query-param-field-mapping]
+  (let [sort-spec (->> (util/ensure-coll (get query-params "sort" []))
+                       (remove str/blank?)
+                       (mapv (partial parse-sort-param query-param-field-mapping)))]
+    (when (seq sort-spec)
+      sort-spec)))
+
+(defn sort-by-spec [sorting coll]
+  #_(tap> {:sorting sorting
+           :fields (mapv :field sorting)
+           :dir (if (= :asc (-> sorting first :order)) :asc :desc)})
+  (let [asc? (= :asc (-> sorting first :order))
+        r (sort-by (fn [v]
+                     (mapv (fn [s]
+                             (if (string? s)
+                               (str/lower-case s)
+                               s))
+                           ((apply juxt (map :field sorting)) v))) coll)]
+    (if asc? r (reverse r))))

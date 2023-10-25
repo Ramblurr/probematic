@@ -220,7 +220,7 @@ set its @name to optName
         total-votes (count votes)]
     (tap> {:poll poll :graph-data graph-data})
     [:div {:class "mt-4"}
-     (render/chart-scripts)
+     (render/chart-poll-scripts)
      [:h2 {:class "text-lg"} (tr [:poll/results])]
      [:script {:type "application/json" :id "poll-labels"}
       (hiccup.util/raw-string (j/write-value-as-string y-labels))]

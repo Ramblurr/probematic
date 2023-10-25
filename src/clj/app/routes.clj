@@ -5,6 +5,7 @@
    [app.dashboard.routes :as dashboard]
    [app.file-browser.routes :as file-browser]
    [app.gigs.routes :as gigs]
+   [app.stats.routes :as stats]
    [app.insurance.routes :as insurance]
    [app.interceptors :as interceptors]
    [app.members.routes :as members]
@@ -42,6 +43,7 @@
     (insurance/routes)
     (members/routes)
     (polls/routes)
+    (stats/routes)
     (nextcloud/routes)
     (probeplan/routes)
     (songs/routes)

@@ -232,7 +232,7 @@ msgstr ""
 #: :email/body-log-plays
 #, ycp-format
 msgctxt ":email/body-log-plays"
-msgid "Please tell SNOrga what we played at the Probe on %1. It only takes 1 minute."
+msgid "Please tell SNOrga what we played at the Probe on %1 *and* who the Probeleitungen for next week are! It only takes 1 minute."
 msgstr ""
 
 #: :email/subject-log-plays
@@ -1135,6 +1135,12 @@ msgctxt ":instruments"
 msgid "Instruments"
 msgstr ""
 
+#: :total
+#, ycp-format
+msgctxt ":total"
+msgid "Total"
+msgstr ""
+
 #: :Phone
 #, ycp-format
 msgctxt ":Phone"
@@ -1939,6 +1945,126 @@ msgctxt ":gig/create-setlist"
 msgid "Make Setlist"
 msgstr ""
 
+#: :stats/last-six-months
+#, ycp-format
+msgctxt ":stats/last-six-months"
+msgid "Last 6 Months"
+msgstr ""
+
+#: :stats/total-gigs
+#, ycp-format
+msgctxt ":stats/total-gigs"
+msgid "Total Gigs"
+msgstr ""
+
+#: :stats/gigs-attended
+#, ycp-format
+msgctxt ":stats/gigs-attended"
+msgid "Gigs Attended"
+msgstr ""
+
+#: :stats/mean-attendance-probe
+#, ycp-format
+msgctxt ":stats/mean-attendance-probe"
+msgid "Average Attendance Probes"
+msgstr ""
+
+#: :stats/total-plays
+#, ycp-format
+msgctxt ":stats/total-plays"
+msgid "Total Plays"
+msgstr ""
+
+#: :stats/probe-attendance
+#, ycp-format
+msgctxt ":stats/probe-attendance"
+msgid "Probe Attendance"
+msgstr ""
+
+#: :stats/mean-active-members
+#, ycp-format
+msgctxt ":stats/mean-active-members"
+msgid "Average Active Members"
+msgstr ""
+
+#: :stats/last-three-months
+#, ycp-format
+msgctxt ":stats/last-three-months"
+msgid "Last 3 Months"
+msgstr ""
+
+#: :stats/gig-attendance
+#, ycp-format
+msgctxt ":stats/gig-attendance"
+msgid "Gig Attendance"
+msgstr ""
+
+#: :stats/mean-attendance-gig
+#, ycp-format
+msgctxt ":stats/mean-attendance-gig"
+msgid "Average Attendance Gigs"
+msgstr ""
+
+#: :stats/gigs-percent
+#, ycp-format
+msgctxt ":stats/gigs-percent"
+msgid "Gigs %"
+msgstr ""
+
+#: :stats/attendance-rate
+#, ycp-format
+msgctxt ":stats/attendance-rate"
+msgid "Attendance Rate (%)"
+msgstr ""
+
+#: :stats/last-seen
+#, ycp-format
+msgctxt ":stats/last-seen"
+msgid "Last Seen"
+msgstr ""
+
+#: :stats/num-members
+#, ycp-format
+msgctxt ":stats/num-members"
+msgid "# of Members"
+msgstr ""
+
+#: :stats/total-probes
+#, ycp-format
+msgctxt ":stats/total-probes"
+msgid "Total Probes"
+msgstr ""
+
+#: :stats/gig-attendance-rate
+#, ycp-format
+msgctxt ":stats/gig-attendance-rate"
+msgid "Attendance Rate Gigs"
+msgstr ""
+
+#: :stats/probe-attendance-rate
+#, ycp-format
+msgctxt ":stats/probe-attendance-rate"
+msgid "Attendance Rate Probes"
+msgstr ""
+
+#: :stats/probes-attended
+#, ycp-format
+msgctxt ":stats/probes-attended"
+msgid "Probes Attended"
+msgstr ""
+
+#: :stats/last-year
+#, ycp-format
+msgctxt ":stats/last-year"
+msgid "Last Year"
+msgstr ""
+
+#: :stats/probes-percent
+#, ycp-format
+msgctxt ":stats/probes-percent"
+msgid "Probes %"
+msgstr ""
+
 #: :nav/insurance
 #, ycp-format
 msgctxt ":nav/insurance"
@@ -2021,6 +2147,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":nav/gigs"
 msgid "Gigs & Proben"
+msgstr ""
+
+#: :nav/stats
+#, ycp-format
+msgctxt ":nav/stats"
+msgid "Stats"
 msgstr ""
 
 #: :nav/profile

@@ -15,7 +15,8 @@
    ;; {:label (tr [:nav/calendar]) :icon icon/calendar :href (url/link-calendar) :route-name :app/calendar}
    {:label (tr [:nav/songs]) :icon icon/music-note-outline :href "/songs" :route-name :app/songs}
    {:label (tr [:nav/probeplan]) :icon icon/calendar :href "/probeplan" :route-name :app/probeplan}
-   {:label (tr [:nav/polls]) :icon icon/chart-bar-square :href "/polls" :route-name :app/polls}
+   {:label (tr [:nav/polls]) :icon icon/question :href "/polls" :route-name :app/polls}
+   {:label (tr [:nav/stats]) :icon icon/chart-bar-square :href "/stats" :route-name :app/stats}
    {:label (tr [:nav/forum]) :icon icon/snomegaphone :href "https://forum.streetnoise.at" :route-name :app/forum}
    {:label (tr [:nav/nextcloud]) :icon icon/folder-open :href "https://data.streetnoise.at/apps/files/" :route-name :app/nextcloud}
    {:label (tr [:nav/chat]) :icon icon/comments :href "https://chat.streetnoise.at" :route-name :app/chat}
@@ -109,7 +110,7 @@
   (let [active? (= route-name (-> req :reitit.core/match :data  :app.route/name))]
     [:a {:href href
          :class
-         (ui/cs "flex items-center px-2 py-2 text-sm font-medium rounded-md group"
+         (ui/cs "flex items-center px-2 py-2 text-sm font-medium rounded-md group cursor-pointer"
                 (if active?
                   "bg-gray-200 text-gray-900"
                   "text-gray-700 hover:text-gray-900 hover:bg-gray-50"))}
