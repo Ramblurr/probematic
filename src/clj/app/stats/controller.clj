@@ -137,8 +137,6 @@
         probe-count (count probes)
         gig-count (count gigs)
         member-stats (member-stats-from-gig-stats probe-count gig-count per-gig-stats)]
-    #_(tap> {:pgs per-gig-stats
-             :ms member-stats})
     {:per-gig per-gig-stats
      :probe-count  probe-count
      :gig-count  gig-count

@@ -123,6 +123,7 @@
      (render/chart-stat-scripts)
      [:div {:class "relative isolate overflow-hidden"}
       [:header {:class "pb-4 pt-6 sm:pb-6"}
+
        [:div {:class "mx-auto flex max-w-7xl flex-wrap items-center gap-6 px-4 sm:flex-nowrap sm:px-6 lg:px-8"}
         [:h1 {:class "text-base font-semibold leading-7 text-gray-900"} "SNO Stats"]
         [:div {:class "order-last flex w-full gap-x-8 text-sm font-semibold leading-6 sm:order-none sm:w-auto sm:border-l sm:border-gray-200 sm:pl-6 sm:leading-7"}
@@ -130,10 +131,13 @@
          [:a {:href "?timespan=last-six-months" :class (ui/cs "cursor-pointer" (if (= timespan "last-six-months") "text-sno-orange-600" "text-gray-700"))} (tr [:stats/last-six-months])]
          [:a {:href "?timespan=last-one-year" :class (ui/cs "cursor-pointer" (if (= timespan "last-one-year") "text-sno-orange-600" "text-gray-700"))} (tr [:stats/last-year])]
          #_[:a {:href "?timespan=last-three-years" :class (ui/cs (if (= timespan "last-three-years") "text-sno-orange-600" "text-gray-700"))} "Last 3 years"]]
+        [:div {:class "order-last"} "Current: " (ui/format-dt then) " —  " (ui/format-dt now)]
+
         #_[:a {:href "#", :class "ml-auto flex items-center gap-x-1 rounded-md bg-sno-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sno-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sno-orange-600"}
            [:svg {:class "-ml-1.5 h-5 w-5", :viewbox "0 0 20 20", :fill "currentColor", :aria-hidden "true"}
             [:path {:d "M10.75 6.75a.75.75 0 00-1.5 0v2.5h-2.5a.75.75 0 000 1.5h2.5v2.5a.75.75 0 001.5 0v-2.5h2.5a.75.75 0 000-1.5h-2.5v-2.5z"}]] "New invoice"]]]
       [:div {:class "border-b border-b-gray-900/10 lg:border-t lg:border-t-gray-900/5"}
+
        [:dl {:class "mx-auto grid max-w-7xl grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 lg:px-2 xl:px-0"}
         (stat-block (tr [:stats/gig-attendance-rate])
                     [:span (fmt-percent attendance-rate-gigs)]
@@ -199,7 +203,7 @@
          [:p "The dashboard displays two crucial metrics: Gig Attendance Rate and Probe Attendance Rate. These rates are expressed as percentages and calculated based on the number of attended events relative to the total events that a member could have attended."]
          [:h4 {:class "text-lg mt-2"} "Gig Attendance Rate and Active Members"]
          [:p "It's important to note that the Attendance Rate is calculated using the number of \"Active Members\" present at the time each gig occurred. "
-          "Active Members refer to the individuals who were marked as \"Active\" at that time. A"]
+          "Active Members refer to the individuals who were marked as \"Active\" at that time."]
          [:h4 {:class "text-lg mt-2"} "Attendance Histograms"]
          [:p "The histograms on the dashboard offer a visual representation of attendance rates. The X-Axis shows the attendance rate in percentage bins, and the Y-Axis shows the number of members falling into each bin. This gives you an insight into the distribution of attendance rates across the band members. Is it a bell curve or something else? The histogram will show you."]
          [:h4 {:class "text-lg mt-2"} "Data Accuracy Disclaimer"]
