@@ -120,7 +120,7 @@
              :name "Policy Name"
              :policies "Policies"
              :item-count "Count"
-             :item-count-hint "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks...)?"
+             :item-count-hint "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?"
              :value "Versicherungswert"
              :value-abbrev "V.S."
              :value-hint "Bei mehreren versicherten Gegenständen bitte nur den Stückpreis angeben"
@@ -230,11 +230,11 @@
           :confirm-delete-policy "Are you sure you want to delete the insurance policy %1?"
           :confirm-delete-gig "Are you sure you want to delete the gig %1? "}
  :motivation {:none "-"
-              :very-high "Sehr motiviert!"
-              :high "Motiviert"
-              :medium "Ambivalent"
-              :low "Nicht Motiviert"
-              :very-low "Gar nicht Motiviert!"}
+              :very-high "Very Motivated!"
+              :high "Motivated"
+              :medium "Somewhat Motivated"
+              :low "Not Motivated"
+              :very-low "Not at all!"}
  :plan {:definitely "Definitely"
         :probably "Probably"
         :unknown "Don't Know"
@@ -288,7 +288,7 @@
          :member-unique-username "A member already has that username"
          :member-unique-email "A member already has that email address"
          :member-unique-phone "A member already has that phone number"}
- :updating "Updating..."
+ :updating "Updating…"
  :email-subject {:gig-created "New Gig: %1"
                  :gig-updated "Gig Edit: %1"
                  :gig-reminder "Gig Reminder: %1"

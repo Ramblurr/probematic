@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Probematic\n"
-"POT-Creation-Date: 2023-10-25 16:02+0200\n"
+"POT-Creation-Date: 2023-10-25 16:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,31 +14,31 @@ msgstr ""
 #: :motivation/very-high
 #, ycp-format
 msgctxt ":motivation/very-high"
-msgid "Sehr motiviert!"
+msgid "Very Motivated!"
 msgstr ""
 
 #: :motivation/high
 #, ycp-format
 msgctxt ":motivation/high"
-msgid "Motiviert"
+msgid "Motivated"
 msgstr ""
 
 #: :motivation/medium
 #, ycp-format
 msgctxt ":motivation/medium"
-msgid "Ambivalent"
+msgid "Somewhat Motivated"
 msgstr ""
 
 #: :motivation/low
 #, ycp-format
 msgctxt ":motivation/low"
-msgid "Nicht Motiviert"
+msgid "Not Motivated"
 msgstr ""
 
 #: :motivation/very-low
 #, ycp-format
 msgctxt ":motivation/very-low"
-msgid "Gar nicht Motiviert!"
+msgid "Not at all!"
 msgstr ""
 
 #: :private-instruments
@@ -50,7 +50,7 @@ msgstr ""
 #: :insurance/item-count-hint
 #, ycp-format
 msgctxt ":insurance/item-count-hint"
-msgid "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks...)?"
+msgid "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?"
 msgstr ""
 
 #: :insurance/coverage-for
@@ -1214,7 +1214,7 @@ msgstr ""
 #: :updating
 #, ycp-format
 msgctxt ":updating"
-msgid "Updating..."
+msgid "Updating…"
 msgstr ""
 
 #: :section-add
