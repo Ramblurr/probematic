@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: \n"
+"POT-Creation-Date: 2023-10-25 16:19+0200\n"
 "PO-Revision-Date: 2023-10-25 14:25+0000\n"
 "Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
@@ -20,34 +20,40 @@ msgid "-"
 msgstr "-"
 
 #: :motivation/very-high
-#, ycp-format
+#, fuzzy, ycp-format
+#| msgctxt ":motivation/very-high"
+#| msgid "Sehr motiviert!"
 msgctxt ":motivation/very-high"
-msgid "Sehr motiviert!"
+msgid "Very Motivated!"
 msgstr "Sehr motiviert!"
 
 #: :motivation/high
-#, ycp-format
+#, fuzzy, ycp-format
+#| msgctxt ":motivation/high"
+#| msgid "Motiviert"
 msgctxt ":motivation/high"
-msgid "Motiviert"
+msgid "Motivated"
 msgstr "Motiviert"
 
 #: :motivation/medium
 #, ycp-format
 msgctxt ":motivation/medium"
-msgid "Ambivalent"
-msgstr "Ambivalent"
+msgid "Somewhat Motivated"
+msgstr ""
 
 #: :motivation/low
-#, ycp-format
+#, fuzzy, ycp-format
+#| msgctxt ":motivation/low"
+#| msgid "Nicht Motiviert"
 msgctxt ":motivation/low"
-msgid "Nicht Motiviert"
+msgid "Not Motivated"
 msgstr "Nicht Motiviert"
 
 #: :motivation/very-low
 #, ycp-format
 msgctxt ":motivation/very-low"
-msgid "Gar nicht Motiviert!"
-msgstr "Gar nicht Motiviert!"
+msgid "Not at all!"
+msgstr ""
 
 #: :private-instruments
 #, ycp-format
@@ -56,11 +62,15 @@ msgid "Private Instruments"
 msgstr "Private Instrumente"
 
 #: :insurance/item-count-hint
-#, ycp-format
+#, fuzzy, ycp-format
+#| msgctxt ":insurance/item-count-hint"
+#| msgid ""
+#| "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
+#| "Drumsticks...)?"
 msgctxt ":insurance/item-count-hint"
 msgid ""
 "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
-"Drumsticks...)?"
+"Drumsticks…)?"
 msgstr ""
 "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x "
 "Drumsticks...)?"
@@ -250,10 +260,15 @@ msgid "I cannot make it"
 msgstr "Ich schaffe es nicht"
 
 #: :email/body-log-plays
-#, ycp-format
+#, fuzzy, ycp-format
+#| msgctxt ":email/body-log-plays"
+#| msgid ""
+#| "Please tell SNOrga what we played at the Probe on %1. It only takes 1 "
+#| "minute."
 msgctxt ":email/body-log-plays"
 msgid ""
-"Please tell SNOrga what we played at the Probe on %1. It only takes 1 minute."
+"Please tell SNOrga what we played at the Probe on %1 *and* who the "
+"Probeleitungen for next week are! It only takes 1 minute."
 msgstr ""
 "Bitte erzählen Sie SNOrga, was wir bei der Probe am %1 gespielt haben. Es "
 "dauert nur 1 Minute."
@@ -1201,6 +1216,14 @@ msgctxt ":instruments"
 msgid "Instruments"
 msgstr "Instrumente"
 
+#: :total
+#, fuzzy, ycp-format
+#| msgctxt ":insurance/total"
+#| msgid "Total"
+msgctxt ":total"
+msgid "Total"
+msgstr "Gesamt"
+
 #: :Phone
 #, ycp-format
 msgctxt ":Phone"
@@ -1276,9 +1299,11 @@ msgid "SNO ID"
 msgstr "SNO ID"
 
 #: :updating
-#, ycp-format
+#, fuzzy, ycp-format
+#| msgctxt ":updating"
+#| msgid "Updating..."
 msgctxt ":updating"
-msgid "Updating..."
+msgid "Updating…"
 msgstr "Aktualisierung..."
 
 #: :section-add
@@ -2035,6 +2060,154 @@ msgctxt ":gig/create-setlist"
 msgid "Make Setlist"
 msgstr "Setliste erstellen"
 
+#: :stats/last-six-months
+#, ycp-format
+msgctxt ":stats/last-six-months"
+msgid "Last 6 Months"
+msgstr ""
+
+#: :stats/total-gigs
+#, fuzzy, ycp-format
+#| msgctxt ":poll/total-votes"
+#| msgid "Total Votes"
+msgctxt ":stats/total-gigs"
+msgid "Total Gigs"
+msgstr "Gesamte stimmen"
+
+#: :stats/gigs-attended
+#, fuzzy, ycp-format
+#| msgctxt ":member/gigs-attended"
+#| msgid "Gigs Attended"
+msgctxt ":stats/gigs-attended"
+msgid "Gigs Attended"
+msgstr "Gigs besucht"
+
+#: :stats/mean-attendance-probe
+#, ycp-format
+msgctxt ":stats/mean-attendance-probe"
+msgid "Average Attendance Probes"
+msgstr ""
+
+#: :stats/total-plays
+#, fuzzy, ycp-format
+#| msgctxt ":song/total-plays"
+#| msgid "Total Play Count"
+msgctxt ":stats/total-plays"
+msgid "Total Plays"
+msgstr "Gesamtzahl der Spiele"
+
+#: :stats/probe-attendance
+#, fuzzy, ycp-format
+#| msgctxt ":member/probes-attended"
+#| msgid "Proben Attended"
+msgctxt ":stats/probe-attendance"
+msgid "Probe Attendance"
+msgstr "Proben besuchtaProben Attended"
+
+#: :stats/mean-active-members
+#, fuzzy, ycp-format
+#| msgctxt ":member/filter-active"
+#| msgid "Active Members"
+msgctxt ":stats/mean-active-members"
+msgid "Average Active Members"
+msgstr "Aktive Mitglieder"
+
+#: :stats/last-three-months
+#, ycp-format
+msgctxt ":stats/last-three-months"
+msgid "Last 3 Months"
+msgstr ""
+
+#: :stats/gig-attendance
+#, fuzzy, ycp-format
+#| msgctxt ":gig/attendance"
+#| msgid "Attendance"
+msgctxt ":stats/gig-attendance"
+msgid "Gig Attendance"
+msgstr "Teilnahme"
+
+#: :stats/mean-attendance-gig
+#, fuzzy, ycp-format
+#| msgctxt ":gig/attendance"
+#| msgid "Attendance"
+msgctxt ":stats/mean-attendance-gig"
+msgid "Average Attendance Gigs"
+msgstr "Teilnahme"
+
+#: :stats/gigs-percent
+#, ycp-format
+msgctxt ":stats/gigs-percent"
+msgid "Gigs %"
+msgstr ""
+
+#: :stats/attendance-rate
+#, fuzzy, ycp-format
+#| msgctxt ":gig/attendance"
+#| msgid "Attendance"
+msgctxt ":stats/attendance-rate"
+msgid "Attendance Rate (%)"
+msgstr "Teilnahme"
+
+#: :stats/last-seen
+#, ycp-format
+msgctxt ":stats/last-seen"
+msgid "Last Seen"
+msgstr ""
+
+#: :stats/num-members
+#, fuzzy, ycp-format
+#| msgctxt ":nav/members"
+#| msgid "Members"
+msgctxt ":stats/num-members"
+msgid "# of Members"
+msgstr "Mitglieder"
+
+#: :stats/total-probes
+#, fuzzy, ycp-format
+#| msgctxt ":song/total-rehearsals"
+#| msgid "Total Proben"
+msgctxt ":stats/total-probes"
+msgid "Total Probes"
+msgstr "Insgesamt Proben"
+
+#: :stats/gig-attendance-rate
+#, fuzzy, ycp-format
+#| msgctxt ":gig/attendance"
+#| msgid "Attendance"
+msgctxt ":stats/gig-attendance-rate"
+msgid "Attendance Rate Gigs"
+msgstr "Teilnahme"
+
+#: :stats/probe-attendance-rate
+#, fuzzy, ycp-format
+#| msgctxt ":gig/attendance"
+#| msgid "Attendance"
+msgctxt ":stats/probe-attendance-rate"
+msgid "Attendance Rate Probes"
+msgstr "Teilnahme"
+
+#: :stats/probes-attended
+#, fuzzy, ycp-format
+#| msgctxt ":member/probes-attended"
+#| msgid "Proben Attended"
+msgctxt ":stats/probes-attended"
+msgid "Probes Attended"
+msgstr "Proben besuchtaProben Attended"
+
+#: :stats/last-year
+#, ycp-format
+msgctxt ":stats/last-year"
+msgid "Last Year"
+msgstr ""
+
+#: :stats/probes-percent
+#, fuzzy, ycp-format
+#| msgctxt ":gig.type/probe"
+#| msgid "Probe"
+msgctxt ":stats/probes-percent"
+msgid "Probes %"
+msgstr "Probe"
+
 #: :nav/insurance
 #, ycp-format
 msgctxt ":nav/insurance"
@@ -2118,6 +2291,14 @@ msgstr "Mitglieder"
 msgctxt ":nav/gigs"
 msgid "Gigs & Proben"
 msgstr "Gigs & Proben"
+
+#: :nav/stats
+#, fuzzy, ycp-format
+#| msgctxt ":gig/status"
+#| msgid "Status"
+msgctxt ":nav/stats"
+msgid "Stats"
+msgstr "Status"
 
 #: :nav/profile
 #, ycp-format
@@ -2328,3 +2509,13 @@ msgstr "Hintergrund"
 msgctxt ":song/list-title"
 msgid "Repertoire"
 msgstr "Repertoire"
+
+#, ycp-format
+#~ msgctxt ":motivation/medium"
+#~ msgid "Ambivalent"
+#~ msgstr "Ambivalent"
+
+#, ycp-format
+#~ msgctxt ":motivation/very-low"
+#~ msgid "Gar nicht Motiviert!"
+#~ msgstr "Gar nicht Motiviert!"
