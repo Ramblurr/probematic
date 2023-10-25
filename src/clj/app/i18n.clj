@@ -1,5 +1,6 @@
 (ns app.i18n
   (:require
+   [tick.core :as t]
    [clojure.edn :as edn]
    [clojure.java.io :as clojure.java.io]
    [clojure.pprint :as clojure.pprint]
@@ -166,11 +167,16 @@ msgctxt \"%s\"
 msgid \"%s\"
 msgstr \"\"" (str key) (str key) untranslated-str))
 
-(def pot-header
-  "msgid \"\"
+(defn pot-header []
+  (format "msgid \"\"
 msgstr \"\"
-Content-Type: text/plain; charset=UTF-8
-")
+\"Project-Id-Version: Probematic\\n\"
+\"POT-Creation-Date: %s\\n\"
+\"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n\"
+\"Content-Type: text/plain; charset=UTF-8\\n\"
+\"Content-Transfer-Encoding: 8bit\\n\"
+" (t/format (t/formatter "YYYY-MM-dd HH:mmxx") (t/zoned-date-time))))
+
 
 (defn locale->seq
   "Convert a tempura locale map into a list of key/string tuples"
@@ -191,7 +197,7 @@ Content-Type: text/plain; charset=UTF-8
   (let [m (load-resource fname)
         entries (map ->po-entry (locale->seq m))]
     (spit (str "resources/" dname)
-          (str pot-header
+          (str (pot-header)
                (str/join "\n\n" entries)))))
 
 (defn convert-po [locale]
@@ -217,13 +223,12 @@ Content-Type: text/plain; charset=UTF-8
 
 (comment
   ;; create pot
-  (gen-pot "lang/en.edn" "lang/app.pot")
+  (gen-pot "lang/en.edn" "lang/app.pot") ;; rcf
   ;; convert translated po to edn
   (convert-po "de")
   (let [po-contents (slurp "resources/lang/test.po")
         parsed (parse-from-string po-contents)]
     parsed)
-  ;; rcf
 
 ;;
   )
