@@ -14,12 +14,16 @@
   ([caption value]
    (stat-block caption value nil))
   ([caption value tooltip]
-   [:div {:class (ui/cs "flex items-baseline flex-wrap justify-between gap-y-2 gap-x-4 border-t border-gray-900/5 px-4 py-4 sm:px-6 lg:border-t-0 xl:px-8 lg:border-l first:lg:border-l-0" (when tooltip "tooltip"))
+   [:div {:class (ui/cs "flex items-baseline flex-wrap justify-between gap-y-2 gap-x-4 border-t border-gray-900/5 px-4 py-4 sm:px-6 lg:border-t-0 xl:px-8 lg:border-l " (when tooltip "tooltip"))
           :data-tooltip tooltip}
     [:dt {:class "text-sm font-medium leading-6 text-gray-500"} caption]
     #_[:dd {:class "text-xs font-medium text-gray-700"} "+4.75%"]
     [:dd {:class "w-full flex-none text-3xl font-medium leading-10 tracking-tight text-gray-900"}
      value]]))
+
+(defn stat-block-separator
+  []
+  [:div {:class (ui/cs "items-baseline flex-wrap justify-between gap-y-2 gap-x-4 border-t border-gray-900/5 px-4 py-4 sm:px-6 lg:border-t-0 xl:px-8 lg:border-l  hidden sm:hidden md:hidden lg:flex")}])
 
 (def timespans
   {"last-three-months"  (t/inst (t/<< (t/zoned-date-time) (t/new-period 3 :months)))
@@ -111,7 +115,8 @@
         _ (assert then)
         _ (assert now)
         {:keys [attendance-rate-gigs attendance-rate-probes  mean-attendance-gig mean-attendance-probe active-members-count
-                probe-count gig-count total-plays per-member-stats probe-histogram gig-histogram]
+                probe-count gig-count total-plays per-member-stats probe-histogram gig-histogram least-active-probe-count
+                least-active-gig-count most-active-probe-count most-active-gig-count]
          :as stats} (controller/stats-for db then now (util.http/sort-param req query-param-field-mapping))]
 
     [:main {:class "bg-white"}
@@ -140,15 +145,26 @@
                     (tr [:stats/mean-attendance-gig-tooltip]))
         (stat-block (tr [:stats/mean-attendance-probe]) (fmt-double mean-attendance-probe)
                     (tr [:stats/mean-attendance-probe-tooltip]))
-        (stat-block (tr [:stats/active-members-count]) (str active-members-count)
-                    (tr [:stats/active-members-count-tooltip]))
+        (stat-block-separator)
 
         (stat-block (tr [:stats/total-gigs]) [:span gig-count]
                     (tr [:stats/total-gigs-tooltip]))
         (stat-block (tr [:stats/total-probes]) [:span probe-count]
                     (tr [:stats/total-probes-tooltip]))
         (stat-block (tr [:stats/total-plays]) [:span total-plays]
-                    (tr [:stats/total-plays-tooltip]))]]
+                    (tr [:stats/total-plays-tooltip]))
+        (stat-block-separator)
+        (stat-block-separator)
+        (stat-block (tr [:stats/active-members-count]) (str active-members-count)
+                    (tr [:stats/active-members-count-tooltip]))
+        (stat-block (tr [:stats/most-active-gig-count]) [:span most-active-gig-count]
+                    (tr [:stats/most-active-gig-count-tooltip]))
+        (stat-block (tr [:stats/least-active-gig-count]) [:span least-active-gig-count]
+                    (tr [:stats/least-active-gig-count-tooltip]))
+        (stat-block (tr [:stats/most-active-probe-count]) [:span most-active-probe-count]
+                    (tr [:stats/most-active-probe-count-tooltip]))
+        (stat-block (tr [:stats/least-active-probe-count]) [:span least-active-probe-count]
+                    (tr [:stats/least-active-probe-count-tooltip]))]]
 
       [:script {:type "application/json" :id "gig-histogram-data"}
        (hiccup.util/raw-string (j/write-value-as-string

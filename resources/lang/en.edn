@@ -293,8 +293,7 @@
                  :gig-updated "Gig Edit: %1"
                  :gig-reminder "Gig Reminder: %1"
                  :new-invite "Your SNO ID is waiting for you.."
-                 :poll-created "New Poll: %1"
-                 }
+                 :poll-created "New Poll: %1"}
  :email {:greeting "Hello!"
          :new-gig-added "A new gig is coming up!"
          :new-probe-added "A new probe is coming up!"
@@ -346,8 +345,7 @@
          :running "Open Polls"
          :past "Past Polls"
          :no-past "There are no past polls"
-         :no-running "There are no open polls"
-         }
+         :no-running "There are no open polls"}
  :poll {:title "Poll Title"
         :results "Poll Results"
         :poll "Poll"
@@ -376,15 +374,13 @@
         :close-early "Close Early"
         :add-option "Add Option"
         :options "Options"
-        :vote-now "Vote Now!"
-        }
+        :vote-now "Vote Now!"}
  :poll.type {:multiple "Multiple Choice"
              :single "Single Choice"
              :multiple-hint "People can choose multiple options."
              :single-hint "People can only choose one option."}
 
- :stats {
-         :gigs-attended "Gigs Attended"
+ :stats {:gigs-attended "Gigs Attended"
          :gigs-attended-tooltip "The number of gigs the member attended in the timeframe"
          :gigs-percent "Gigs %"
          :gigs-percent-tootlip "The percentage of gigs the member attended in the timeframe"
@@ -410,14 +406,22 @@
          :mean-attendance-probe "Average Attendance Probes"
          :mean-attendance-probe-tooltip "Average number of members attending rehearsals."
          :active-members-count "Active Members"
-         :active-members-count-tooltip "Members that attended at least one gig or rehearsal in the timeframe"
-         :mean-active-members-tooltip ""
+         :active-members-count-tooltip "The number of members that were marked as \"active\" in SNOrga during the timeframe"
+         ;; :active-members-count-tooltip "Members that attended at least one gig or rehearsal in the timeframe"
          :last-three-months "Last 3 Months"
          :last-six-months "Last 6 Months"
          :last-year "Last Year"
          :gig-attendance "Gig Attendance"
          :probe-attendance "Probe Attendance"
-         :num-members "# of Members"}
+         :num-members "# of Members"
+         :least-active-probe-count "Least at Probe"
+         :most-active-probe-count  "Most at Probe"
+         :least-active-probe-count-tooltip "Probe with least attendance had this many people"
+         :most-active-probe-count-tooltip "Probe with most attendance had this many people"
+         :least-active-gig-count "Least at Gig"
+         :most-active-gig-count "Most at Gig"
+         :least-active-gig-count-tooltip "Gig with least attendance had this many people"
+         :most-active-gig-count-tooltip "Gig with most attendance had this many people"}
 
- ;;
+;;
  }

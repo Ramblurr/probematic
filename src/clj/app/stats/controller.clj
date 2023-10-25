@@ -93,8 +93,7 @@
 
 (defn update-count [acc attendance {:gig/keys [date gig-type title]}]
   (let [prev-last-seen (get-in acc [(:attendance/member attendance) :last-seen])
-        seen? (or (nil? prev-last-seen) (t/< prev-last-seen date))
-        ]
+        seen? (or (nil? prev-last-seen) (t/< prev-last-seen date))]
     (-> acc
         (update-in [(:attendance/member attendance) gig-type] (fnil inc 0))
         (update-in [(:attendance/member attendance) :last-seen]
@@ -151,8 +150,16 @@
      :mean-attendance-gig (when (> gig-count 0) (/ (reduce #(+ %1 (:attended-count %2)) 0 gigs) (count gigs)))
      :mean-attendance-probe (when (> probe-count 0) (/ (reduce #(+ %1 (:attended-count %2)) 0 probes) (count probes)))
      :active-members-count (when (> (count per-gig-stats) 0)
-                             (apply max (map :active-count per-gig-stats))
-                             )}))
+                             (apply max (map :active-count per-gig-stats)))
+     :most-active-gig-count  (when (> (count gigs) 0)
+                               (apply max (map :attended-count gigs)))
+     :least-active-gig-count  (when (> (count gigs) 0)
+                                (apply min (map :attended-count gigs)))
+
+     :most-active-probe-count  (when (> (count probes) 0)
+                                 (apply max (map :attended-count probes)))
+     :least-active-probe-count  (when (> (count probes) 0)
+                                  (apply min (map :attended-count probes)))}))
 
 (defn gigs-attendance-stats [db from to]
   (cache/lookup-or-miss gigs-attendance-stats-cache [from to] (fn [[from to]]
