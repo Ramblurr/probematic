@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2023-10-25 16:19+0200\n"
 "PO-Revision-Date: 2023-10-25 15:45+0000\n"
-"Last-Translator: casey <me@caseylink.com>\n"
+"Last-Translator: finn <finn.achatz@gmail.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
 "Language: de\n"
@@ -2046,29 +2046,25 @@ msgstr "Setliste erstellen"
 #, ycp-format
 msgctxt ":stats/last-six-months"
 msgid "Last 6 Months"
-msgstr ""
+msgstr "Letzte 6 Monate"
 
 #: :stats/total-gigs
-#, fuzzy, ycp-format
-#| msgctxt ":poll/total-votes"
-#| msgid "Total Votes"
+#, ycp-format
 msgctxt ":stats/total-gigs"
 msgid "Total Gigs"
-msgstr "Gesamte stimmen"
+msgstr "Alle Gigs"
 
 #: :stats/gigs-attended
-#, fuzzy, ycp-format
-#| msgctxt ":member/gigs-attended"
-#| msgid "Gigs Attended"
+#, ycp-format
 msgctxt ":stats/gigs-attended"
 msgid "Gigs Attended"
 msgstr "Gigs besucht"
 
 #: :stats/mean-attendance-probe
-#, ycp-format
+#, fuzzy, ycp-format
 msgctxt ":stats/mean-attendance-probe"
 msgid "Average Attendance Probes"
-msgstr ""
+msgstr "Durchschnittliche Anwesenheit / Proben"
 
 #: :stats/total-plays
 #, fuzzy, ycp-format
@@ -2079,12 +2075,10 @@ msgid "Total Plays"
 msgstr "Gesamtzahl der Spiele"
 
 #: :stats/probe-attendance
-#, fuzzy, ycp-format
-#| msgctxt ":member/probes-attended"
-#| msgid "Proben Attended"
+#, ycp-format
 msgctxt ":stats/probe-attendance"
 msgid "Probe Attendance"
-msgstr "Proben besuchtaProben Attended"
+msgstr "Proben besucht"
 
 #: :stats/mean-active-members
 #, fuzzy, ycp-format
@@ -2092,103 +2086,85 @@ msgstr "Proben besuchtaProben Attended"
 #| msgid "Active Members"
 msgctxt ":stats/mean-active-members"
 msgid "Average Active Members"
-msgstr "Aktive Mitglieder"
+msgstr "Durchschnitt aktive Mitglieder"
 
 #: :stats/last-three-months
 #, ycp-format
 msgctxt ":stats/last-three-months"
 msgid "Last 3 Months"
-msgstr ""
+msgstr "Letzte 3 Monate"
 
 #: :stats/gig-attendance
-#, fuzzy, ycp-format
-#| msgctxt ":gig/attendance"
-#| msgid "Attendance"
+#, ycp-format
 msgctxt ":stats/gig-attendance"
 msgid "Gig Attendance"
-msgstr "Teilnahme"
+msgstr "Teilnahme Gigs"
 
 #: :stats/mean-attendance-gig
-#, fuzzy, ycp-format
-#| msgctxt ":gig/attendance"
-#| msgid "Attendance"
+#, ycp-format
 msgctxt ":stats/mean-attendance-gig"
 msgid "Average Attendance Gigs"
-msgstr "Teilnahme"
+msgstr "Duchschnittliche Anwesenheit / Gigs"
 
 #: :stats/gigs-percent
 #, ycp-format
 msgctxt ":stats/gigs-percent"
 msgid "Gigs %"
-msgstr ""
+msgstr "Gigs %"
 
 #: :stats/attendance-rate
-#, fuzzy, ycp-format
-#| msgctxt ":gig/attendance"
-#| msgid "Attendance"
+#, ycp-format
 msgctxt ":stats/attendance-rate"
 msgid "Attendance Rate (%)"
-msgstr "Teilnahme"
+msgstr "Anwesenheitsrate (%)"
 
 #: :stats/last-seen
 #, ycp-format
 msgctxt ":stats/last-seen"
 msgid "Last Seen"
-msgstr ""
+msgstr "Zuletzt gesehen"
 
 #: :stats/num-members
-#, fuzzy, ycp-format
-#| msgctxt ":nav/members"
-#| msgid "Members"
+#, ycp-format
 msgctxt ":stats/num-members"
 msgid "# of Members"
-msgstr "Mitglieder"
+msgstr "Anzahl Mitglieder"
 
 #: :stats/total-probes
-#, fuzzy, ycp-format
-#| msgctxt ":song/total-rehearsals"
-#| msgid "Total Proben"
+#, ycp-format
 msgctxt ":stats/total-probes"
 msgid "Total Probes"
-msgstr "Insgesamt Proben"
+msgstr "Anzahl Proben"
 
 #: :stats/gig-attendance-rate
-#, fuzzy, ycp-format
-#| msgctxt ":gig/attendance"
-#| msgid "Attendance"
+#, ycp-format
 msgctxt ":stats/gig-attendance-rate"
 msgid "Attendance Rate Gigs"
-msgstr "Teilnahme"
+msgstr "Teilnahmerate Gigs"
 
 #: :stats/probe-attendance-rate
-#, fuzzy, ycp-format
-#| msgctxt ":gig/attendance"
-#| msgid "Attendance"
+#, ycp-format
 msgctxt ":stats/probe-attendance-rate"
 msgid "Attendance Rate Probes"
-msgstr "Teilnahme"
+msgstr "Teilnahmerate Proben"
 
 #: :stats/probes-attended
-#, fuzzy, ycp-format
-#| msgctxt ":member/probes-attended"
-#| msgid "Proben Attended"
+#, ycp-format
 msgctxt ":stats/probes-attended"
 msgid "Probes Attended"
-msgstr "Proben besuchtaProben Attended"
+msgstr "Proben besucht"
 
 #: :stats/last-year
 #, ycp-format
 msgctxt ":stats/last-year"
 msgid "Last Year"
-msgstr ""
+msgstr "Letztes Jahr"
 
 #: :stats/probes-percent
-#, fuzzy, ycp-format
-#| msgctxt ":gig.type/probe"
-#| msgid "Probe"
+#, ycp-format
 msgctxt ":stats/probes-percent"
 msgid "Probes %"
-msgstr "Probe"
+msgstr "Proben (%)"
 
 #: :nav/insurance
 #, ycp-format
