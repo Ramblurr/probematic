@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-10-25 16:19+0200\n"
-"PO-Revision-Date: 2023-10-25 15:57+0000\n"
+"POT-Creation-Date: 2023-10-25 17:45+0200\n"
+"PO-Revision-Date: 2023-10-25 18:04+0200\n"
 "Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.1\n"
+"X-Generator: Poedit 3.1.1\n"
 
 #: :motivation/none
 #, ycp-format
@@ -2042,6 +2042,18 @@ msgctxt ":gig/create-setlist"
 msgid "Make Setlist"
 msgstr "Setliste erstellen"
 
+#: :stats/least-active-probe-count-tooltip
+#, ycp-format
+msgctxt ":stats/least-active-probe-count-tooltip"
+msgid "Probe with least attendance had this many people"
+msgstr ""
+
+#: :stats/probe-attendance-rate-tooltip
+#, ycp-format
+msgctxt ":stats/probe-attendance-rate-tooltip"
+msgid "Percentage of the active band attending rehearsals in the timeframe."
+msgstr ""
+
 #: :stats/last-six-months
 #, ycp-format
 msgctxt ":stats/last-six-months"
@@ -2060,11 +2072,23 @@ msgctxt ":stats/gigs-attended"
 msgid "Gigs Attended"
 msgstr "Gigs besucht"
 
+#: :stats/gigs-percent-tootlip
+#, ycp-format
+msgctxt ":stats/gigs-percent-tootlip"
+msgid "The percentage of gigs the member attended in the timeframe"
+msgstr ""
+
 #: :stats/mean-attendance-probe
 #, fuzzy, ycp-format
 msgctxt ":stats/mean-attendance-probe"
 msgid "Average Attendance Probes"
 msgstr "Durchschnittliche Anwesenheit / Proben"
+
+#: :stats/total-gigs-tooltip
+#, ycp-format
+msgctxt ":stats/total-gigs-tooltip"
+msgid "The total number of gigs that happened in the timeframe"
+msgstr ""
 
 #: :stats/total-plays
 #, fuzzy, ycp-format
@@ -2074,19 +2098,33 @@ msgctxt ":stats/total-plays"
 msgid "Total Plays"
 msgstr "Gesamtzahl der Spiele"
 
+#: :stats/active-members-count-tooltip
+#, ycp-format
+msgctxt ":stats/active-members-count-tooltip"
+msgid ""
+"The number of members that were marked as \"active\" in SNOrga during the "
+"timeframe"
+msgstr ""
+
 #: :stats/probe-attendance
 #, ycp-format
 msgctxt ":stats/probe-attendance"
 msgid "Probe Attendance"
 msgstr "Proben besucht"
 
-#: :stats/mean-active-members
+#: :stats/least-active-probe-count
 #, fuzzy, ycp-format
-#| msgctxt ":member/filter-active"
-#| msgid "Active Members"
-msgctxt ":stats/mean-active-members"
-msgid "Average Active Members"
-msgstr "Durchschnitt aktive Mitglieder"
+#| msgctxt ":song/last-played-probe"
+#| msgid "Last Played Probe"
+msgctxt ":stats/least-active-probe-count"
+msgid "Least at Probe"
+msgstr "Zuletzt gespielte Probe"
+
+#: :stats/total-probes-tooltip
+#, ycp-format
+msgctxt ":stats/total-probes-tooltip"
+msgid "The total number of rehearsals that happened in the timeframe"
+msgstr ""
 
 #: :stats/last-three-months
 #, ycp-format
@@ -2100,11 +2138,32 @@ msgctxt ":stats/gig-attendance"
 msgid "Gig Attendance"
 msgstr "Teilnahme Gigs"
 
+#: :stats/most-active-gig-count-tooltip
+#, ycp-format
+msgctxt ":stats/most-active-gig-count-tooltip"
+msgid "Gig with most attendance had this many people"
+msgstr ""
+
+#: :stats/total-plays-tooltip
+#, ycp-format
+msgctxt ":stats/total-plays-tooltip"
+msgid ""
+"The total number of plays that were logged for songs in the timeframe. Note: "
+"this is a lower bound, since if we play a song twice at at gig it only "
+"counts as one play."
+msgstr ""
+
 #: :stats/mean-attendance-gig
 #, ycp-format
 msgctxt ":stats/mean-attendance-gig"
 msgid "Average Attendance Gigs"
 msgstr "Duchschnittliche Anwesenheit / Gigs"
+
+#: :stats/gig-attendance-rate-tooltip
+#, ycp-format
+msgctxt ":stats/gig-attendance-rate-tooltip"
+msgid "Percentage of the active band attending gigs in the timeframe."
+msgstr ""
 
 #: :stats/gigs-percent
 #, ycp-format
@@ -2124,11 +2183,35 @@ msgctxt ":stats/last-seen"
 msgid "Last Seen"
 msgstr "Zuletzt gesehen"
 
+#: :stats/most-active-probe-count-tooltip
+#, ycp-format
+msgctxt ":stats/most-active-probe-count-tooltip"
+msgid "Probe with most attendance had this many people"
+msgstr ""
+
 #: :stats/num-members
 #, ycp-format
 msgctxt ":stats/num-members"
 msgid "# of Members"
 msgstr "Anzahl Mitglieder"
+
+#: :stats/mean-attendance-gig-tooltip
+#, ycp-format
+msgctxt ":stats/mean-attendance-gig-tooltip"
+msgid "Average number of members attending gigs."
+msgstr ""
+
+#: :stats/probes-percent-tooltip
+#, ycp-format
+msgctxt ":stats/probes-percent-tooltip"
+msgid "The percentage of rehearsals the member attended in the timeframe"
+msgstr ""
+
+#: :stats/mean-attendance-probe-tooltip
+#, ycp-format
+msgctxt ":stats/mean-attendance-probe-tooltip"
+msgid "Average number of members attending rehearsals."
+msgstr ""
 
 #: :stats/total-probes
 #, ycp-format
@@ -2136,11 +2219,31 @@ msgctxt ":stats/total-probes"
 msgid "Total Probes"
 msgstr "Anzahl Proben"
 
+#: :stats/last-seen-tooltip
+#, ycp-format
+msgctxt ":stats/last-seen-tooltip"
+msgid "The date on which the member was last recorded at a gig or rehearsal"
+msgstr ""
+
+#: :stats/most-active-probe-count
+#, fuzzy, ycp-format
+#| msgctxt ":stats/total-probes"
+#| msgid "Total Probes"
+msgctxt ":stats/most-active-probe-count"
+msgid "Most at Probe"
+msgstr "Anzahl Proben"
+
 #: :stats/gig-attendance-rate
 #, ycp-format
 msgctxt ":stats/gig-attendance-rate"
 msgid "Attendance Rate Gigs"
 msgstr "Teilnahmerate Gigs"
+
+#: :stats/least-active-gig-count-tooltip
+#, ycp-format
+msgctxt ":stats/least-active-gig-count-tooltip"
+msgid "Gig with least attendance had this many people"
+msgstr ""
 
 #: :stats/probe-attendance-rate
 #, ycp-format
@@ -2154,11 +2257,47 @@ msgctxt ":stats/probes-attended"
 msgid "Probes Attended"
 msgstr "Proben besucht"
 
+#: :stats/least-active-gig-count
+#, fuzzy, ycp-format
+#| msgctxt ":song/last-played-gig"
+#| msgid "Last Played Gig"
+msgctxt ":stats/least-active-gig-count"
+msgid "Least at Gig"
+msgstr "Zuletzt gespielter Gig"
+
+#: :stats/probes-attended-tooltip
+#, ycp-format
+msgctxt ":stats/probes-attended-tooltip"
+msgid "The number of rehearsals the member attended in the timeframe"
+msgstr ""
+
+#: :stats/active-members-count
+#, fuzzy, ycp-format
+#| msgctxt ":member/filter-active"
+#| msgid "Active Members"
+msgctxt ":stats/active-members-count"
+msgid "Active Members"
+msgstr "Aktive Mitglieder"
+
 #: :stats/last-year
 #, ycp-format
 msgctxt ":stats/last-year"
 msgid "Last Year"
 msgstr "Letztes Jahr"
+
+#: :stats/most-active-gig-count
+#, fuzzy, ycp-format
+#| msgctxt ":stats/total-gigs"
+#| msgid "Total Gigs"
+msgctxt ":stats/most-active-gig-count"
+msgid "Most at Gig"
+msgstr "Alle Gigs"
+
+#: :stats/gigs-attended-tooltip
+#, ycp-format
+msgctxt ":stats/gigs-attended-tooltip"
+msgid "The number of gigs the member attended in the timeframe"
+msgstr ""
 
 #: :stats/probes-percent
 #, ycp-format
@@ -2465,6 +2604,13 @@ msgstr "Hintergrund"
 msgctxt ":song/list-title"
 msgid "Repertoire"
 msgstr "Repertoire"
+
+#, fuzzy, ycp-format
+#~| msgctxt ":member/filter-active"
+#~| msgid "Active Members"
+#~ msgctxt ":stats/mean-active-members"
+#~ msgid "Average Active Members"
+#~ msgstr "Durchschnitt aktive Mitglieder"
 
 #, ycp-format
 #~ msgctxt ":motivation/medium"
