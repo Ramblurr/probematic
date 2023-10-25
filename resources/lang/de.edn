@@ -8,7 +8,7 @@
  :private-instruments "Private Instrumente",
  :insurance
  {:item-count-hint
-  "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks...)?",
+  "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?",
   :coverage-for "Die folgenden Informationen gelten für: %1",
   :policies "Versicherungspolicen",
   :insurance-policy "Versicherungspolice",
@@ -44,7 +44,7 @@
   "Dies ist eine Erinnerung an eine bevorstehende Extrasonde! Bitte antworten :)",
   :cannot-make-it "Ich schaffe es nicht",
   :body-log-plays
-  "Bitte erzählt SNOrga, was wir bei der Probe am %1 gespielt haben *und* wer die Probeleitungen für nächste Woche sind! Es dauert nur 1 Minute."
+  "Bitte erzählt SNOrga, was wir bei der Probe am %1 gespielt haben *und* wer die Probeleitung für nächste Woche ist! Es dauert nur 1 Minute.",
   :subject-log-plays "Was haben wir im Probe gespielt?",
   :new-probe-added "Eine neue Probe steht an!",
   :need-to-change-availability? "Ich muss meine Verfügbarkeit ändern",
@@ -233,13 +233,14 @@
   :new-member "Neues Mitglied",
   :sno-id-enabled-disabled "SNO-ID aktiviert/deaktiviert"},
  :instruments "Instrumente",
+ :total "Gesamt",
  :Phone "Telefon",
  :private-instrument-payment
  "Die Kosten der Versicherung privater Instrumente werden nicht von Street Noise übernommen.",
  :instrument.coverage.status
  {:needs-review "Todo",
   :reviewed "Kontrolliert",
-  :coverage-active "Aktiv? "},
+  :coverage-active "Aktiv?"},
  :band-instrument-description
  "Ein Bandinstrument ist ein Instrument, das im vergangenen Jahr bei einem SNO-Auftritt gespielt wurde.",
  :poll.type
@@ -248,7 +249,7 @@
   :multiple-hint "Menschen können mehrere Optionen wählen.",
   :single-hint "Menschen können nur eine Option wählen."},
  :sno-id "SNO ID",
- :updating "Aktualisierung...",
+ :updating "Aktualisierung…",
  :section-add "Register hinzufügen",
  :action
  {:confirm-open-poll "Ja, öffnen die Umfrage.",
@@ -392,6 +393,27 @@
   :rehearsal-leader2 "Probeleitung 2",
   :more-details-placeholder "wer? was? wo? wann? wieso den?",
   :create-setlist "Setliste erstellen"},
+ :stats
+ {:last-six-months "Letzte 6 Monate",
+  :total-gigs "Alle Gigs",
+  :gigs-attended "Gigs besucht",
+  :mean-attendance-probe "Durchschnittliche Anwesenheit / Proben",
+  :total-plays "Gesamtzahl der Spiele",
+  :probe-attendance "Proben besucht",
+  :mean-active-members "Durchschnitt aktive Mitglieder",
+  :last-three-months "Letzte 3 Monate",
+  :gig-attendance "Teilnahme Gigs",
+  :mean-attendance-gig "Duchschnittliche Anwesenheit / Gigs",
+  :gigs-percent "Gigs %",
+  :attendance-rate "Anwesenheitsrate (%)",
+  :last-seen "Zuletzt gesehen",
+  :num-members "Anzahl Mitglieder",
+  :total-probes "Anzahl Proben",
+  :gig-attendance-rate "Teilnahmerate Gigs",
+  :probe-attendance-rate "Teilnahmerate Proben",
+  :probes-attended "Proben besucht",
+  :last-year "Letztes Jahr",
+  :probes-percent "Proben (%)"},
  :nav
  {:insurance "Versicherung",
   :polls "Umfragen",
@@ -407,6 +429,7 @@
   :nextcloud "Data",
   :members "Mitglieder",
   :gigs "Gigs & Proben",
+  :stats "Status",
   :profile "Profil",
   :band-settings "Bandeinstellungen"},
  :band-instrument "Band-Instrument",
