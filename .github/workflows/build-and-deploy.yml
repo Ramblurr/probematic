@@ -42,6 +42,12 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
 
+      - name: Build pre-artifacts
+        run: |
+          bb npm-install
+          bb prod-css
+          bb compile
+
       - name: Build uberjar
         run: bb uberjar
 
