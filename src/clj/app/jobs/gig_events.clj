@@ -1,5 +1,6 @@
 (ns app.jobs.gig-events
   (:require
+   [app.cms :as cms]
    [app.caldav :as caldav]
    [app.discourse :as discourse]
    [app.email :as email]
@@ -69,3 +70,10 @@
 (defn trigger-gig-created
   [req notify? thread? gig-id]
   (exec-later handle-gig-created req notify? thread? gig-id))
+
+(defn handle-song-edited [req song-id]
+  (cms/sync-song! (update-system req) song-id))
+
+(defn trigger-song-edited
+  [req song-id]
+  (exec-later handle-song-edited req song-id))

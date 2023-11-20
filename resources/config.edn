@@ -17,6 +17,7 @@
                             :dev  "dev"
                             :demo "demo"
                             :test "test"}
+ :cms             #ref [:secrets :cms]
  :keycloak        #ref [:secrets :keycloak]
  :discourse       {:api-key   #ref [:secrets :discourse :api-key]
                    :username  #ref [:secrets :discourse :username]
@@ -53,7 +54,7 @@
                    :app.ig/env              {:profile #ig/ref :app.ig/profile}
                    :app.ig/nrepl-server     {:port #long #or [#env NREPL_PORT
                                                               #profile {:prod 7000
-                                                                        :dev -1
+                                                                        :dev  -1
                                                                         :test -1
                                                                         :demo -1}]
                                              :bind #or [#env NREPL_HOST "127.0.0.1"]}
@@ -110,16 +111,17 @@
                                              :i18n-langs #ig/ref :app.ig/i18n-langs
                                              :redis      #ig/ref :app.ig/redis
                                              :calendar   #ig/ref :app.ig/calendar}}
- :jobs            {
-                   #_#_:job/sync-gigs          {:job/frequency     [60 :minutes]
+ :jobs            {#_#_:job/sync-gigs      {:job/frequency     [60 :minutes]
                                             :job/initial-delay [2 :seconds]}
-                   #_#_:job/sync-members       {:job/frequency     [8 :hours]
+                   #_#_:job/sync-members   {:job/frequency     [8 :hours]
                                             :job/initial-delay [3 :seconds]}
+                   :job/sync-songs         {:job/frequency     [60 :minutes]
+                                            :job/initial-delay [2 :seconds]}
                    :job/update-airtable    {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}
                    :job/probe-housekeeping {:job/frequency     [10 :minutes]
                                             :job/initial-delay [2 :seconds]}
-                   :job/poll-housekeeping {:job/frequency     [3 :minutes]
-                                           :job/initial-delay [2 :seconds]}
+                   :job/poll-housekeeping  {:job/frequency     [3 :minutes]
+                                            :job/initial-delay [2 :seconds]}
                    :job/reminders          {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}}}

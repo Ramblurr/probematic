@@ -1,5 +1,6 @@
 (ns app.songs.controller
   (:require
+   [app.jobs.gig-events :as gig.events]
    [app.discourse :as discourse]
    [app.datomic :as d]
    [app.file-utils :as fu]
@@ -46,7 +47,7 @@
                               :forum.topic/topic-id (discourse/parse-topic-id topic-id)
                               :song/solo-info solo-info})
         result (datomic/transact datomic-conn {:tx-data [tx]})]
-
+    (gig.events/trigger-song-edited req song-id)
     (q/retrieve-song (:db-after result) song-id)))
 
 (defn log-play! [req]

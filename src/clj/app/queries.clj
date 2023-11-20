@@ -419,10 +419,13 @@
               db pattern [:instrument/instrument-id instrument-id])
    (map first)))
 
-(defn retrieve-all-songs [db]
-  (util/isort-by :song/title
-                 (mapv first
-                       (d/find-all db :song/song-id song-pattern))))
+(defn retrieve-all-songs
+  ([db]
+   (retrieve-all-songs db song-pattern))
+  ([db song-pattern]
+   (util/isort-by :song/title
+                  (mapv first
+                        (d/find-all db :song/song-id song-pattern)))))
 
 (defn retrieve-active-songs [db]
   (->>
