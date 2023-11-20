@@ -1,5 +1,6 @@
 (ns app.jobs.gig-events
   (:require
+   [clojure.tools.logging :as log]
    [app.cms :as cms]
    [app.caldav :as caldav]
    [app.discourse :as discourse]
@@ -72,6 +73,7 @@
   (exec-later handle-gig-created req notify? thread? gig-id))
 
 (defn handle-song-edited [req song-id]
+  (log/info (str "handle-song-edited song-id=" song-id))
   (cms/sync-song! (update-system req) song-id))
 
 (defn trigger-song-edited

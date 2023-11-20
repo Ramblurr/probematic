@@ -1,12 +1,12 @@
 (ns app.cms
   (:require
+   [clojure.tools.logging :as log]
    [app.errors :as errors]
    [jsonista.core :as j]
    [org.httpkit.client :as client]
    [app.queries :as q]
    [datomic.client.api :as datomic]
    [tick.core :as t]))
-
 
 (defn update-cms-req [cms-url token payload]
   {:method :post
@@ -26,15 +26,16 @@
    :arrangement_notes arrangement-notes
    :last_played_date (when last-played-on (-> last-played-on t/date-time str))})
 
-
 (defn sync-song! [{:keys [db] :as system} song-id]
   (try
-    (let [
-          {:keys [token cms-url]} (-> system :env :cms)
-          song (q/retrieve-song db song-id)]
-      @(client/request (->> song
-                            song->wagtail
-                            (update-cms-req cms-url token))))
+    (let [{:keys [token cms-url]} (-> system :env :cms)
+          song (q/retrieve-song db song-id)
+          resp @(client/request (->> song
+                                     song->wagtail
+                                     (update-cms-req cms-url token)))]
+      (log/info (str "synced with cms song-id=" song-id))
+      (log/info resp)
+      resp)
     (catch Exception e
       (errors/report-error! e))))
 
@@ -52,5 +53,4 @@
                    @(client/request req)))]
       resp)
     (catch Exception e
-      (errors/report-error! e))
-    ))
+      (errors/report-error! e))))
