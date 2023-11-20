@@ -31,3 +31,9 @@ ENV GIT_BRANCH ${GIT_BRANCH}
 ENV GIT_HASH ${GIT_HASH}
 ENV NREPL_PORT 7000
 ENV BUILD_DATE ${BUILD_DATE}
+
+LABEL org.opencontainers.image.version=${GIT_HASH}
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.documentation="https://github.com/Ramblurr/probematic"
+LABEL org.opencontainers.image.source = "https://github.com/Ramblurr/probematic"
+LABEL org.opencontainers.image.vendor="StreetNoise Orchestra"
