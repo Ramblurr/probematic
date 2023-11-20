@@ -1,0 +1,65 @@
+---
+fail_fast: false
+
+exclude: |
+  (?x)^(
+      docs/_assets/.*
+    | resources/public/js/.*@.*\.js
+    | resources/public/js/htmx\.js
+    | resources/lang/.*\.po
+    | resources/lang/.*\.edn
+    | resources/lang/.*\.pot
+    | resources/seeds\.edn
+    | .*\.sops\.toml
+  )$
+
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - args:
+          - --config-file
+          - .github/lint/.yamllint.yaml
+        id: yamllint
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: iot/
+      - id: end-of-file-fixer
+        exclude: iot/
+      - id: fix-byte-order-marker
+        exclude: iot/
+      - id: mixed-line-ending
+        exclude: iot/
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+        exclude: iot/
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.4
+    hooks:
+      - id: remove-crlf
+        exclude: iot/
+      - id: remove-tabs
+        exclude: (Makefile|Makefile.j2|iot/)
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: shellcheck
+        language: script
+        args: [--severity=error]
+        additional_dependencies: []
+        exclude: (env.sops.sh)
+
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+        args:
+          - --config
+          - .github/lint/gitleaks.toml

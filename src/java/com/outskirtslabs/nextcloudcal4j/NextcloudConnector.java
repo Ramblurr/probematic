@@ -111,19 +111,19 @@ public class NextcloudConnector {
         // Create a Query XML object with the above properties
         CalendarQuery query = new CalendarQuery(properties, vcalendar, new CalendarData(), false, false);
 
-		/*
-		<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">
-		  <D:prop xmlns:D="DAV:">
-		    <D:getetag/>
-		    <C:calendar-data/>
-		  </D:prop>
-		  <C:filter>
-		    <C:comp-filter name="VCALENDAR">
-		      <C:comp-filter name="VEVENT"/>
-		    </C:comp-filter>
-		  </C:filter>
-		</C:calendar-query>
-		*/
+        /*
+        <C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">
+          <D:prop xmlns:D="DAV:">
+            <D:getetag/>
+            <C:calendar-data/>
+          </D:prop>
+          <C:filter>
+            <C:comp-filter name="VCALENDAR">
+              <C:comp-filter name="VEVENT"/>
+            </C:comp-filter>
+          </C:filter>
+        </C:calendar-query>
+        */
 //        System.out.println(XMLUtils.prettyPrint(query));
 
         HttpCalDAVReportMethod method = null;

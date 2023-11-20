@@ -1,0 +1,92 @@
+---
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      #- name: Set up QEMU
+      #  uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup variables
+        id: vars
+        run: |
+          build_date=$(date +%Y%m%d%H%M)
+          echo "build-date=${build_date}" >> "$GITHUB_OUTPUT"
+          echo "git-hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=pr
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Debug
+        run: |
+          echo "${{ steps.vars.outputs.build-date }}"
+
+      #platforms: linux/amd64,linux/arm64
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: .
+          file: ./docker/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          build-args: |
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            GIT_HASH=${{ steps.vars.outputs.git-hash }}
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-push
+    environment: snorga.streetnoise.at
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 0700 ~/.ssh
+          touch ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          touch ~/.ssh/known_hosts
+          chmod 640 ~/.ssh/known_hosts
+          ssh-keyscan -t ssh-ed25519 ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy the service
+        run: ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'snorga.streetnoise.at'
