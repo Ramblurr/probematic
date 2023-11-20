@@ -16,8 +16,23 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      #- name: Set up QEMU
-      #  uses: docker/setup-qemu-action@v2
+      - name: Prepare java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@12.1
+        with:
+          cli: latest              # Clojure CLI based on tools.deps
+          bb: latest                    # Babashka
+          clj-kondo: latest        # Clj-kondo
+          cljfmt: latest               # cljfmt
+          cljstyle: latest             # cljstyle
+
+      - name: Build uberjar
+        run: bb uberjar
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2

@@ -1,4 +1,4 @@
-FROM docker.io/library/openjdk:17-slim
+FROM docker.io/azul/zulu-openjdk-debian:17-latest
 MAINTAINER Casey Link <casey@outskirtslabs.com>
 
 RUN set -ex; \
