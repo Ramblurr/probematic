@@ -21,6 +21,7 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: 'maven'
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@12.1
@@ -30,6 +31,7 @@ jobs:
           clj-kondo: latest        # Clj-kondo
           cljfmt: latest               # cljfmt
           cljstyle: latest             # cljstyle
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build uberjar
         run: bb uberjar
