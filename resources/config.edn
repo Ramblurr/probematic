@@ -115,7 +115,7 @@
                                             :job/initial-delay [2 :seconds]}
                    #_#_:job/sync-members   {:job/frequency     [8 :hours]
                                             :job/initial-delay [3 :seconds]}
-                   :job/sync-songs         {:job/frequency     [60 :minutes]
+                   #_#_:job/sync-songs         {:job/frequency     [60 :minutes]
                                             :job/initial-delay [2 :seconds]}
                    :job/update-airtable    {:job/frequency     [1 :hours]
                                             :job/initial-delay [2 :seconds]}
