@@ -124,7 +124,7 @@
   (require '[clojure.tools.namespace.repl :refer [refresh]])
   (refresh)
 
-  (require '[datomic.dev-local :as dl])
+  (require '[datomic.local :as dl])
   (dl/release-db {:system "app" :db-name "probematic"})
   (md/start! schemas/malli-opts)
   (md/stop!)

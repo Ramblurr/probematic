@@ -16,7 +16,7 @@
    [clojure.tools.logging :as log]
    [ctmx.render :as ctmx.render]
    [datomic.client.api :as d]
-   [datomic.dev-local :as dl]
+   [datomic.local :as dl]
    [hiccup2.core :as hiccup2]
    [integrant.core :as ig]
    [io.pedestal.http :as server]
