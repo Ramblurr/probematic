@@ -258,7 +258,7 @@
                                   (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true :markdown? true :markdown-upload-endpoint (url/link-song-image-upload song-id))
                                   "sm:col-span-3")
                       (ui/dl-item (tr [:song/lyrics])
-                                  (ui/textarea :label "" :name (path "lyrics") :value lyrics :required? false :fit-height? true)
+                                  (ui/textarea :label "" :name (path "lyrics") :value lyrics :required? false :fit-height? true :markdown? true :markdown-upload-endpoint (url/link-song-image-upload song-id))
                                   "sm:col-span-3"))
                      [:div {:class "px-4 sm:px-6"}
                       [:div {:class "justify-stretch mt-6 flex flex-col space-y-4 space-y-4 sm:hidden"}
