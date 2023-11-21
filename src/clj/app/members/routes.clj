@@ -10,9 +10,7 @@
 (defn member-vcard-download []
   ["/member-vcard/{member-id}" {:app.route/name :app/member-vcard
                                 :get (fn [req]
-                                       (view/member-vcard req)
-                                       )}]
-  )
+                                       (view/member-vcard req))}])
 
 (defn members-detail []
   (ctmx/make-routes

@@ -63,7 +63,6 @@
     (def _routes (-> state/system :app.ig.router/routes :routes))
     (def _router (-> state/system :app.ig.router/routes :router))
     (def env (-> state/system :app.ig/env))
-    (tap> _routes))
-  ;; rcf
+    (tap> _routes)) ;; rcf
   ;;
   )

@@ -1,11 +1,11 @@
 (ns app.cms
   (:require
-   [clojure.tools.logging :as log]
    [app.errors :as errors]
+   [app.queries :as q]
+   [clojure.tools.logging :as log]
+   [datomic.client.api :as datomic]
    [jsonista.core :as j]
    [org.httpkit.client :as client]
-   [app.queries :as q]
-   [datomic.client.api :as datomic]
    [tick.core :as t]))
 
 (defn update-cms-req [cms-url token payload]
@@ -46,11 +46,26 @@
           songs (q/retrieve-all-songs (datomic/db conn) q/song-pattern-detail)
           requests (->> songs
                         (map song->wagtail)
-                        (map (partial update-cms-req cms-url token)))
-          resp (for [req requests]
-                 (do
-                   (Thread/sleep 200)
-                   @(client/request req)))]
-      resp)
+                        (map (partial update-cms-req cms-url token)))]
+      (doseq [req requests]
+        (Thread/sleep 200)
+        @(client/request req)))
     (catch Exception e
+      (tap> e)
       (errors/report-error! e))))
+
+(comment
+  (do
+    (require '[integrant.repl.state :as state])
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db  (datomic/db conn))
+    (def system {:datomic {:conn conn}
+                 :redis (-> state/system :app.ig/redis)
+                 :i18n-langs (-> state/system :app.ig/i18n-langs)
+                 :env (-> state/system :app.ig/env)})) ;; rcf
+
+  (sync-song! system #uuid "01844740-3eed-856d-84c1-c26f0706820d")
+
+  (song->wagtail (q/retrieve-song db #uuid "01844740-3eed-856d-84c1-c26f0706820d"))
+  ;;
+  )

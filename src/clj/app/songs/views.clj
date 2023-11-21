@@ -1,8 +1,10 @@
 (ns app.songs.views
   (:require
+   [app.config :as config]
    [app.file-browser.views :as file.browser.view]
    [app.i18n :as i18n]
    [app.icons :as icon]
+   [app.markdown :as markdown]
    [app.queries :as q]
    [app.songs.controller :as controller]
    [app.ui :as ui]
@@ -13,9 +15,7 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [hiccup.util]
-   [medley.core :as m]
-   [app.markdown :as markdown]
-   [app.config :as config]))
+   [medley.core :as m]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
   (ctmx/with-req req
@@ -405,7 +405,6 @@
                :hx-trigger "keyup changed delay:500ms"
                :hx-target (hash "../songs-list")}]]]))
 
-
 (defn filter-param [{:keys [query-params] :as req}]
   {:preset (get query-params "filter-preset" "active")
    :search (get query-params "q" nil)
@@ -440,9 +439,13 @@
     [:div
      (ui/page-header :title (tr [:song/list-title])
                      :buttons (list
-
-                               (ui/button :tag :a :label (tr [:song/create-title])
+                               (ui/button :label "Sync songs"
                                           :priority :white
+                                          :centered? true
+                                          :hx-swap "none"
+                                          :hx-post "/songs-sync")
+                               (ui/button :tag :a :label (tr [:song/create-title])
+                                          :priority :primary
                                           :centered? true
                                           :attr {:href "/songs/new"})))
 
@@ -467,3 +470,9 @@
 (defn song-toggle-list [all-songs]
   [:ul {:class "p-0 m-0 flex flex-wrap"}
    (map song-toggler all-songs)])
+
+(defn songs-sync [req]
+  (controller/sync-songs! req)
+  {:status 201
+   :headers {"Content-Type" "text/html"}
+   :body "OK"})

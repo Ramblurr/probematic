@@ -79,3 +79,7 @@
 (defn trigger-song-edited
   [req song-id]
   (exec-later handle-song-edited req song-id))
+
+(defn trigger-sync-all-songs [req]
+  (exec-later (fn [req]
+                (cms/sync-all-songs! (update-system req))) req))

@@ -1,9 +1,14 @@
 (ns app.songs.routes
   (:require
    [app.layout :as layout]
-   [app.ui :as ui]
    [app.songs.views :as view]
+   [app.ui :as ui]
    [ctmx.core :as ctmx]))
+
+(defn songs-sync []
+  ["/songs-sync" {:app.route/name :app/songs-sync
+                  :post (fn [req]
+                          (view/songs-sync req))}])
 
 (defn songs-list-routes []
   (ctmx/make-routes
@@ -37,6 +42,7 @@
 
 (defn routes []
   ["" {:app.route/name :app/songs}
+   (songs-sync)
    (song-detail-routes)
    (songs-log-play-routes)
    (songs-list-routes)

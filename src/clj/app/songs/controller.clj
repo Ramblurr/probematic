@@ -1,13 +1,12 @@
 (ns app.songs.controller
   (:require
-   [app.jobs.gig-events :as gig.events]
-   [app.discourse :as discourse]
    [app.datomic :as d]
+   [app.discourse :as discourse]
    [app.file-utils :as fu]
+   [app.jobs.gig-events :as gig.events]
    [app.probeplan.stats :as stats]
    [app.queries :as q]
    [app.util :as util]
-   [clojure.string :as string]
    [com.yetanalytics.squuid :as sq]
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]))
@@ -73,6 +72,7 @@
             :file/webdav-path selected-path}]
     (:db-after
      (datomic/transact datomic-conn {:tx-data [tx]}))))
+
 (defn remove-sheet-music! [{:keys [datomic-conn]} sheet-id]
   (:db-after
    (datomic/transact datomic-conn {:tx-data [[:db/retractEntity [:sheet-music/sheet-id sheet-id]]]})))
@@ -130,3 +130,5 @@
                                :db/cardinality :db.cardinality/one}]})
   ;;
   )
+(defn sync-songs! [req]
+  (gig.events/trigger-sync-all-songs req))

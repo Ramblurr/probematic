@@ -1,6 +1,5 @@
 (ns app.markdown
   (:require
-   [app.debug :as debug]
    [medley.core :as m]
    [nextjournal.markdown :as md]
    [nextjournal.markdown.transform :as md.transform]
