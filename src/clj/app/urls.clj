@@ -46,6 +46,9 @@
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))
 
+(defn link-song-image-upload [song-id]
+  (format "/song-media/%s" (str song-id)))
+
 (defn absolute-link-gig [env gig-id]
   (str (config/app-base-url env) "/gig/" gig-id "/"))
 
@@ -66,6 +69,9 @@
 
 (defn absolute-link-instrument-image [env instrument-id filename]
   (format "%s/instrument-image/%s/%s" (config/app-base-url env) instrument-id filename))
+
+(defn absolute-link-song-image [env song-id filename]
+  (format "%s/song-media/%s/%s" (config/app-base-url env) song-id filename))
 
 (defn link-logout [] "/logout")
 (defn link-login [] "/login")

@@ -73,5 +73,8 @@
   [env]
   (-> env :nextcloud :insurance-upload-path))
 
+(defn nextcloud-path-song-image-upload
+  [env]
+  (-> env :nextcloud :songs-images-upload-path))
 (defn public-calendar-url [env]
   (-> env :nextcloud :public-calendar-url))

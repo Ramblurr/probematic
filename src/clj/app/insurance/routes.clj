@@ -5,7 +5,7 @@
    [app.layout :as layout]
    [ctmx.core :as ctmx]
    [datomic.client.api :as d]
-   [reitit.ring.malli]))
+   [reitit.ring.malli :as reitit.ring.malli]))
 
 (defn insurance-detail []
   (ctmx/make-routes

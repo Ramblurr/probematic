@@ -1,11 +1,14 @@
 (ns app.songs.views
   (:require
    [app.config :as config]
+   [app.errors :as errors]
    [app.file-browser.views :as file.browser.view]
+   [app.file-utils :as fu]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.markdown :as markdown]
    [app.queries :as q]
+   [app.sardine :as sardine]
    [app.songs.controller :as controller]
    [app.ui :as ui]
    [app.urls :as url]
@@ -15,6 +18,7 @@
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [hiccup.util]
+   [jsonista.core :as j]
    [medley.core :as m]))
 
 (ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
@@ -248,10 +252,10 @@
                       (ui/dl-item (tr [:song/arrangement-credits])
                                   (ui/text :label "" :name (path "arrangement-credits") :value arrangement-credits :required? false :fit-height? true))
                       (ui/dl-item (tr [:song/origin])
-                                  (ui/textarea :label "" :name (path "origin") :value origin :required? false :markdown? true)
+                                  (ui/textarea :label "" :name (path "origin") :value origin :required? false :markdown? true :markdown-upload-endpoint (url/link-song-image-upload song-id))
                                   "sm:col-span-3")
                       (ui/dl-item (tr [:song/arrangement-notes])
-                                  (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true :markdown? true)
+                                  (ui/textarea :label "" :name (path "arrangement-notes") :value arrangement-notes :required? false :fit-height? true :markdown? true :markdown-upload-endpoint (url/link-song-image-upload song-id))
                                   "sm:col-span-3")
                       (ui/dl-item (tr [:song/lyrics])
                                   (ui/textarea :label "" :name (path "lyrics") :value lyrics :required? false :fit-height? true)
@@ -476,3 +480,42 @@
   {:status 201
    :headers {"Content-Type" "text/html"}
    :body "OK"})
+
+(defn song-image-remote-path
+  "Return the remote nextcloud path for the image upload dir or a specific file"
+  ([req song-id]
+   (fu/path-join (config/nextcloud-path-song-image-upload (-> req :system :env)) "song" (str song-id)))
+  ([req song-id filename]
+   (let [base-path (song-image-remote-path req song-id)
+         path (fu/path-join base-path filename)]
+     (fu/validate-base-path! base-path path)
+     path)))
+
+(defn list-image-uris [{:keys [system webdav] :as req} song-id]
+  (->> (sardine/list-photos webdav (song-image-remote-path req song-id))
+       (map #(url/absolute-link-song-image (:env system) song-id  %))))
+
+(defn image-fetch-handler [{:keys [parameters] :as req}]
+  (let [{:keys [filename song-id]} (:path parameters)]
+    (tap> {:p parameters})
+    (sardine/fetch-file-response req
+                                 (song-image-remote-path req song-id filename)
+                                 true)))
+
+(defn image-upload-handler [{:keys [webdav parameters] :as req}]
+  (try
+    (let [song-id (-> parameters :path :song-id)
+          file (->  parameters :multipart :file)
+          filename (:filename file)]
+      (assert song-id)
+      (sardine/upload webdav
+                      (song-image-remote-path req song-id)
+                      file)
+      {:status 201
+       :headers {"content-type" "application/json"}
+       :body (j/write-value-as-string {:file-url (url/absolute-link-song-image (-> req :system :env) song-id filename)})})
+    (catch Exception e
+      (errors/report-error! e)
+      {:status 500
+       :headers {"content-type" "application/json"}
+       :body (j/write-value-as-string {:error (str e)})})))

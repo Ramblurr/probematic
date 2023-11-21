@@ -125,11 +125,75 @@ document.addEventListener('setPageDirty', function(evt) {
 
 
 function MarkdownEditor(target) {
+  const imageUploadEndpoint = target.getAttribute("data-image-upload-endpoint");
+  const hasUpload = !!imageUploadEndpoint
+  const maxSizeMB = 10;
+  const maxSizeB = 1024 * 1024 * maxSizeMB;
   const easyMDE = new EasyMDE({
     element: target,
     forceSync: true,
     promptURLs: true,
-    autoDownloadFontAwesome: false
+    uploadImage: hasUpload,
+    autoDownloadFontAwesome: false,
+    previewImagesInEditor: true,
+ toolbar: [
+        "bold",
+        "italic",
+        "strikethrough",
+        "heading",
+        "|",
+        "quote",
+        "code",
+        "unordered-list",
+        "ordered-list",
+        "clean-block",
+        "|",
+        "link",
+        "upload-image",
+        "table",
+        "horizontal-rule",
+        "|",
+        "preview",
+        "side-by-side",
+        "fullscreen"
+    ],
+    imageUploadFunction: (file, onSuccess, onError) => {
+      if (file.size > maxSizeB) {
+        onError(`File is too big! Maximum size is ${maxSizeMB}MB.`);
+        return;
+      }
+
+      const validMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/jpg"];
+      if (!validMimeTypes.includes(file.type)) {
+        onError("Invalid file type. Only JPG, PNG, and GIF files are allowed.");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("file", file);
+
+      let xhr = new XMLHttpRequest();
+
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        console.log(xhr)
+        if (xhr.status === 201) {
+          const response = JSON.parse(xhr.responseText);
+          onSuccess(response["file-url"]);
+        } else {
+          const response = JSON.parse(xhr.responseText);
+          onError(response.error);
+        }
+      };
+
+      xhr.onerror = function() {
+        onError("XMLHttpRequest error.");
+      };
+
+      xhr.open("POST", imageUploadEndpoint, true);
+      xhr.send(formData);
+    }
   });
   return easyMDE;
 }
