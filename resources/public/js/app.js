@@ -14,10 +14,13 @@ function initWidgets(evt) {
     if(evt.target.querySelector(".dropdown")) {
       DropdownAll(evt.target)
     }
+    InitializeMarkdownEditors(evt.target);
   } else {
     DropdownAll();
+    InitializeMarkdownEditors();
     listen('click', '[data-flyout-trigger]', Flyout);
   }
+
 
   ActionMenu2All()
   listen('click', '[data-action-menu-trigger]', ActionMenu);
@@ -119,3 +122,22 @@ function AutoSizeTextAreas() {
 document.addEventListener('setPageDirty', function(evt) {
   setPageDirty();
 });
+
+
+function MarkdownEditor(target) {
+  const easyMDE = new EasyMDE({
+    element: target,
+    forceSync: true,
+    promptURLs: true,
+    autoDownloadFontAwesome: false
+  });
+  return easyMDE;
+}
+
+function InitializeMarkdownEditors(target) {
+  if (target) {
+    target.querySelectorAll(".markdown-editor").forEach(MarkdownEditor)
+  } else {
+    document.querySelectorAll(".markdown-editor").forEach(MarkdownEditor)
+  }
+}

@@ -5,6 +5,7 @@ exclude: |
   (?x)^(
       docs/_assets/.*
     | resources/public/js/.*@.*\.js
+    | resources/public/css/.*.css
     | resources/public/js/htmx\.js
     | resources/lang/.*\.po
     | resources/lang/.*\.edn

@@ -63,7 +63,9 @@
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
    [:title (or title "SNOrga")]
+   (stylesheet relative-prefix "css/easymde.min@2.18.0.css")
    (stylesheet relative-prefix "font/inter/inter.css")
+   (stylesheet relative-prefix "css/fa.css")
    (stylesheet relative-prefix "css/compiled/main.css")])
 
 (defn body-end [relative-prefix]
@@ -78,6 +80,7 @@
    (script relative-prefix "tippy@6-dev.js")
    (script relative-prefix "sweetalert2.all@11.7.5.js")
    (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
+   (script relative-prefix "easymde.min@2.18.0.js")
    (script relative-prefix "app.js" :type :module)))
 
 (defn chart-poll-scripts []

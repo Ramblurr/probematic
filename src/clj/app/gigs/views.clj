@@ -954,7 +954,7 @@ on change if I match <:checked/>
                 (ui/dl-item (tr [:gig/rehearsal-leader1]) (ui/member-select :value (:member/member-id rehearsal-leader1) :label "" :id  "rehearsal-leader1" :members member-select-vals :with-empty-opt? true))
                 (ui/dl-item (tr [:gig/rehearsal-leader2]) (ui/member-select :value (:member/member-id rehearsal-leader2) :label "" :id  "rehearsal-leader2" :members member-select-vals :with-empty-opt? true))))
              (ui/dl-item (tr [:gig/post-gig-plans]) (ui/text :value post-gig-plans :name  "post-gig-plans" :required? false) "sm:col-span-2")
-             (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name  "more-details" :required? false :placeholder (tr [:gig/more-details-placeholder]) :fit-height? true) "sm:col-span-3")
+             (ui/dl-item (tr [:gig/more-details]) (ui/textarea :value more-details :name "more-details" :required? false :placeholder (tr [:gig/more-details-placeholder]) :fit-height? true :markdown? true) "sm:col-span-3")
              (when false
                (ui/dl-item (tr [:gig/setlist]) (ui/textarea :value setlist :name  "setlist" :required? false) "sm:col-span-3"))
              (ui/dl-item (tr [:gig/description]) (ui/textarea :value description :name  "description" :required? false) "sm:col-span-3")

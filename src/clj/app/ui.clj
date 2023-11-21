@@ -272,7 +272,7 @@
       (when hint-under
         [:p {:class "mt-2 text-sm text-gray-500"} hint-under])]]))
 
-(defn textarea [& {:keys [label value hint id name rows placeholder fit-height?]
+(defn textarea [& {:keys [label value hint id name rows placeholder fit-height? markdown?]
                    :or {rows 3}}]
   [:div {:class "sm:col-span-6"}
    [:label {:for name :class "block text-sm font-medium text-gray-700"} label]
@@ -281,7 +281,8 @@
                 :placeholder placeholder
                 :data-auto-size (when  fit-height? "true")
                 :class
-                "block w-full rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}
+                (cs (if markdown? "markdown-editor hidden"
+                        "block w-full rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"))}
      (when value value)]]
    (when hint
      [:p {:class "mt-2 text-sm text-gray-500"}
