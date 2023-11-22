@@ -380,7 +380,7 @@
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
 
-(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost hx-push-url hx-swap form tabindex href spinner? id title]
+(defn button [& {:keys [tag label disabled? class attr icon priority centered? size hx-target hx-get hx-put hx-post hx-delete hx-vals hx-confirm hx-boost hx-push-url hx-swap form tabindex href spinner? id title name value]
                  :or   {class ""
                         priority :white
                         size  :normal
@@ -391,6 +391,8 @@
         (util/remove-nils {:hx-target hx-target :hx-swap hx-swap :hx-get hx-get :hx-post hx-post :hx-put hx-put :hx-delete hx-delete :hx-vals hx-vals :hx-confirm hx-confirm :hx-push-url (when hx-push-url "true") :form form :tabindex tabindex
                            :hx-boost (when hx-boost "true")
                            :id id
+                           :name name
+                           :value value
                            :title title
                            :href href})
         {:class
@@ -670,8 +672,7 @@
    :normal "sm:pl-6"
    :medium "hidden sm:table-cell"
    :low "hidden xl:table-cell"
-   :sm-only "table-cell sm:hidden"
-   })
+   :sm-only "table-cell sm:hidden"})
 
 (def table-row-variant
   {:action "relative py-3.5 pl-3 pr-4 sm:pr-6"
@@ -746,9 +747,11 @@
     [:span
      [:span (money-format value currency)]]))
 
-(defn money-input-left [& {:keys [id value label required? hint error]
+(defn money-input-left [& {:keys [id value label required? hint error integer?]
                            :or {required? true}}]
-  (let [has-error? (get error (keyword id))]
+  (let [has-error? (get error (keyword id))
+        min (if integer? 1 0.01)
+        step (if integer? 1 0.01)]
 
     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
      [:label {:for id :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
@@ -760,7 +763,10 @@
       [:div {:class "relative max-w-lg sm:max-w-xs"}
        [:div {:class "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"}
         [:span {:class "text-gray-500 sm:text-sm"} (:EUR currency-symbols)]]
-       [:input {:type "number" :min 0.01 :step 0.01 :placeholder "0.00" :value value :required required? :name id :id id
+       [:input {:type "number"
+                :min min
+                :step step
+                :placeholder "0.00" :value value :required required? :name id :id id
                 :class (cs
                         "text-right pl-7 pr-12"
                         "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
@@ -1130,7 +1136,7 @@
       (when (or title buttons)
         [:div {:class "px-4 py-5 px-6  flex items-center justify-between "}
          (when (or title subtitle)
-           [:div
+           [:div {:class "w-full"}
             [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} title]
             (when subtitle
               [:p {:class "text-sm font-medium text-gray-500 w-full"}
@@ -1314,9 +1320,11 @@
 
 (defn confirm-modal-script
   "Returns the hyperscript for a modal confirmation dialog"
-  [title text confirm-text cancel-text]
-  (let [escape #(clojure.string/escape % {\' "\\'"})]
-    (format "on htmx:confirm(issueRequest)
+  ([title text confirm-text cancel-text]
+   (confirm-modal-script "htmx:confirm" title text confirm-text cancel-text))
+  ([event title text confirm-text cancel-text]
+   (let [escape #(clojure.string/escape % {\' "\\'"})]
+     (format "on %s(issueRequest)
                           halt the event
                           call Swal.fire({
                             title: '%s',
@@ -1330,7 +1338,8 @@
                             cancelButtonColor: '#dc2626'
                           })
                           if result.isConfirmed issueRequest()"
-            (escape title)
-            (escape text)
-            (escape confirm-text)
-            (escape cancel-text))))
+             event
+             (escape title)
+             (escape text)
+             (escape confirm-text)
+             (escape cancel-text)))))

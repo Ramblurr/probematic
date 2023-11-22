@@ -638,6 +638,11 @@
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :instrument.coverage/change
+    :db/doc "The type of change that has occured to this coverage"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+
    {:db/ident :instrument.coverage/instrument
     :db/doc "The instrument that is covered"
     :db/valueType :db.type/ref
@@ -673,6 +678,11 @@
     :db/doc "The id of the policy"
     :db/unique :db.unique/identity
     :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :insurance.policy/status
+    :db/doc "The workflow status of this policy."
+    :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
 
    {:db/ident :insurance.policy/currency
@@ -733,6 +743,8 @@
     :db/doc "The pricing factory for the category"
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
+
+;;;;  Forum Linkage
 
    {:db/ident :forum.topic/topic-id
     :db/doc "The topic id of the associated forum topic"
@@ -813,7 +825,6 @@
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
 
-
 ;;; Polls
    {:db/ident :poll/poll-id
     :db/doc "The id of this poll"
@@ -830,7 +841,6 @@
     :db/doc "The description of this poll"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
-
 
    {:db/ident :poll/poll-type
     :db/doc "The type of poll: single or multiple choice"
@@ -914,22 +924,19 @@
    {:db/ident :poll.vote/poll-option
     :db/doc "The option of this vote"
     :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one}
+    :db/cardinality :db.cardinality/one}]
 
-   {:db/ident :poll.vote/author
-    :db/doc "The author of the poll.vote"
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one}
+{:db/ident :poll.vote/author
+ :db/doc "The author of the poll.vote"
+ :db/valueType :db.type/ref
+ :db/cardinality :db.cardinality/one}
 
-   {:db/ident :poll.vote/created-at
-    :db/doc "The time the poll.vote was created."
-    :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one}
+{:db/ident :poll.vote/created-at
+ :db/doc "The time the poll.vote was created."
+ :db/valueType :db.type/instant
+ :db/cardinality :db.cardinality/one}
 
-
-
-   ;;
-   ]
+;;
 
 ;; premium basis for an instrument = instrument value x category factor x premium-factor
 ;; premium for additional coverage = premium basis x coverage premium factor

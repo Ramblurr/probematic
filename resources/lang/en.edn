@@ -142,6 +142,11 @@
  :instrument.coverage.status {:needs-review "Todo"
                               :reviewed "Reviewed"
                               :coverage-active "Active"}
+ :instrument.coverage.change {:new "Newly Added"
+                              :removed "Removed"
+                              :none "No changes"
+                              :changed "Modified"
+                              }
  :instrument {:owner "Owner"
               :instrument "Instrument"
               :category "Category"
@@ -210,6 +215,7 @@
           :delete "Delete"
           :remove "Remove"
           :save "Save"
+          :send "Send"
           :cancel "Cancel"
           :next "Next"
           :back "Back"

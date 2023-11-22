@@ -1,5 +1,6 @@
 (ns app.insurance.routes
   (:require
+   [app.queries :as q]
    [app.insurance.controller :as controller]
    [app.insurance.views :as view]
    [app.layout :as layout]
@@ -8,11 +9,19 @@
    [reitit.ring.malli :as reitit.ring.malli]))
 
 (defn insurance-detail []
+  [""
+   (ctmx/make-routes
+    "/insurance-policy/{policy-id}/"
+    (fn [req]
+      (layout/app-shell req
+                        (view/insurance-detail-page req))))])
+
+(defn insurance-generate-changes []
   (ctmx/make-routes
-   "/insurance-policy/{policy-id}/"
+   "/insurance-policy-changes/{policy-id}"
    (fn [req]
      (layout/app-shell req
-                       (view/insurance-detail-page req)))))
+                       (view/insurance-policy-changes-review req)))))
 
 (defn insurance-coverage-detail []
   (ctmx/make-routes
@@ -80,11 +89,11 @@
                                         db (d/db conn)
                                         policy-id (-> ctx :request :path-params :policy-id)]
                                     (cond-> ctx
-                                      policy-id (assoc-in  [:request :policy] (controller/retrieve-policy db (parse-uuid policy-id))))))})
+                                      policy-id (assoc-in  [:request :policy] (q/retrieve-policy db (parse-uuid policy-id))))))})
 (def coverage-interceptor {:name ::insurance-coverage--interceptor
                            :enter (fn [ctx]
                                     (let [coverage-id (-> ctx :request :path-params :coverage-id)]
-                                      (if-let  [coverage (controller/retrieve-coverage (-> ctx :request :datomic-conn d/db) (parse-uuid coverage-id))]
+                                      (if-let  [coverage (q/retrieve-coverage (-> ctx :request :datomic-conn d/db) (parse-uuid coverage-id))]
                                         (assoc-in ctx  [:request :coverage] coverage)
                                         (throw (ex-info "Instrument Coverage not found" {:app/error-type :app.error.type/not-found
                                                                                          :instrument.coverage/coverage-id coverage-id})))))})
@@ -95,7 +104,7 @@
                                             db (d/db conn)
                                             instrument-id (-> ctx :request :path-params :instrument-id)]
                                         (cond-> ctx
-                                          instrument-id (assoc-in  [:request :instrument] (controller/retrieve-instrument db (parse-uuid instrument-id))))))})
+                                          instrument-id (assoc-in  [:request :instrument] (q/retrieve-instrument db (parse-uuid instrument-id))))))})
 
 (defn routes []
   [""
@@ -104,6 +113,13 @@
     (insurance-coverage-create)
     (insurance-coverage-create2)
     (insurance-coverage-create3)
+
+    ["/insurance-changes-excel/{policy-id}/"
+     {:post {:summary "Get the changes excel file"
+             :parameters {}
+             :handler (fn [req]
+                        (view/insurance-policy-changes-file req))}}]
+
     ["/instrument-image/{instrument-id}"
      {:post {:summary "Upload an image for an instrument"
              :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
@@ -129,6 +145,7 @@
      (insurance-coverage-detail)
      (insurance-coverage-detail-edit)]
     (insurance-create)
+    (insurance-generate-changes)
     (insurance-detail)
     (instrument-detail)
     (instrument-create)]])

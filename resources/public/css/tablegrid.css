@@ -3,7 +3,8 @@
 .instrgrid--grid {
     grid-template-columns:
         22px /* checkbox */
-        22px /* icon */
+        22px /* status icon */
+        22px /* change icon */
         minmax(150px, 1fr) /* name */
         15px /* band/private */
         minmax(75px, 1fr) /* total */;
@@ -12,8 +13,9 @@
 @media screen(sm) {
     .instrgrid--grid {
         grid-template-columns:
-        22px /* checkbox */
-            22px /* icon */
+            22px /* checkbox */
+            22px /* status icon */
+            22px /* change icon */
             minmax(150px, 1fr) /* name */
             15px /* band/private */
             minmax(20px, 1fr) /* count */
@@ -25,8 +27,9 @@
 @media screen(md) {
     .instrgrid--grid {
         grid-template-columns:
-        22px /* checkbox */
-            22px /* icon */
+            22px /* checkbox */
+            22px /* status icon */
+            22px /* change icon */
             minmax(150px, 1fr) /*name*/
             15px /* band/private */
             minmax(20px, 1fr) /* count */

@@ -80,6 +80,9 @@
    :instrument.coverage/private?
    :instrument.coverage/value
    :instrument.coverage/item-count
+   :instrument.coverage/change
+   :instrument.coverage/status
+   :instrument.coverage/insurer-id
    {:insurance.policy/_covered-instruments
     [:insurance.policy/policy-id
      :insurance.policy/currency
@@ -115,6 +118,7 @@
 (def policy-pattern [:insurance.policy/policy-id
                      :insurance.policy/currency
                      :insurance.policy/name
+                     :insurance.policy/status
                      :insurance.policy/effective-at
                      :insurance.policy/effective-until
                      :insurance.policy/premium-factor
@@ -124,9 +128,16 @@
                        :instrument.coverage/value
                        :instrument.coverage/item-count
                        :instrument.coverage/status
+                       :instrument.coverage/change
+                       :instrument.coverage/insurer-id
                        {:instrument.coverage/instrument
                         [:instrument/name
                          :instrument/instrument-id
+                         :instrument/make
+                         :instrument/model
+                         :instrument/description
+                         :instrument/serial-number
+                         :instrument/build-year
                          {:instrument/owner [:member/name]}
                          {:instrument/category [:instrument.category/category-id
                                                 :instrument.category/code
@@ -384,6 +395,20 @@
   (filter :member/active?
           (members-for-select db)))
 
+
+(defn ->policy [policy]
+  (-> policy
+      (update :insurance.policy/effective-at t/zoned-date-time)
+      (update :insurance.policy/effective-until t/zoned-date-time)))
+
+(defn policies [db]
+  (->> (d/find-all db :insurance.policy/policy-id policy-pattern)
+       (mapv #(->policy (first %)))
+       (sort-by (juxt :insurance.policy/effective-until :insurance.policy/name))))
+
+(defn retrieve-policy [db policy-id]
+  (->policy (d/find-by db :insurance.policy/policy-id policy-id policy-pattern)))
+
 (defn insurance-policy-effective-as-of [db inst pattern]
   (->>
    (datomic/q '[:find (pull ?e pattern)
@@ -395,6 +420,20 @@
    (sort-by :insurance.policy/effective-until)
    reverse
    first))
+
+(defn ->instrument [query-result]
+  query-result)
+
+(defn instruments [db]
+  (->> (d/find-all db :instrument/instrument-id instrument-pattern)
+       (mapv #(->instrument (first %)))
+       (sort-by (juxt #(get-in % [:instrument/owner :member/name]) :instrument/name))))
+
+(defn retrieve-instrument [db instrument-id]
+  (->instrument (d/find-by db :instrument/instrument-id instrument-id instrument-detail-pattern)))
+
+(defn retrieve-coverage [db coverage-id]
+  (d/find-by db :instrument.coverage/coverage-id coverage-id instrument-coverage-detail-pattern))
 
 (defn instruments-for-member-covered-by [db member policy pattern]
   (when policy

@@ -168,6 +168,9 @@
   (p/clear)
   (tap> {:test 1})
 
+  (reset)
+  (halt)
+  (go)
   (restart) ;; rcf
 
   ;;
