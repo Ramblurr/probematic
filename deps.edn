@@ -55,7 +55,7 @@
         toyokumo/tarayo                   {:mvn/version "0.2.7"}
         ;; Util
         selmer/selmer                     {:mvn/version "1.12.59"}
-        dev.weavejester/medley {:mvn/version "1.7.0"}
+        dev.weavejester/medley            {:mvn/version "1.7.0"}
         tick/tick                         {:mvn/version "0.7.5"}
         com.github.javafaker/javafaker    {:mvn/version "1.0.2"}
         spootnik/signal                   {:mvn/version "0.2.5"}
@@ -67,8 +67,7 @@
         ;; Shared Outskirts Labs libs
         ol/app.dev                        {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "a7094d0431b5502603db5cfa202b4b69f53eb822" :deps/root "lib/ol.app.dev"}
         ol/system                         {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "a7094d0431b5502603db5cfa202b4b69f53eb822" :deps/root "lib/ol.system"}
-        ol/jobs                           {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "a7094d0431b5502603db5cfa202b4b69f53eb822" :deps/root "lib/ol.jobs"}
-        }
+        ol/jobs                           {:git/url "https://github.com/ramblurr/ol-system.git" :git/sha "a7094d0431b5502603db5cfa202b4b69f53eb822" :deps/root "lib/ol.jobs"}}
  :aliases
  {:dev
   {:extra-paths ["env/dev/clj"
