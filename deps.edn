@@ -34,7 +34,7 @@
         ;; Text
         io.github.nextjournal/markdown    {:mvn/version "0.5.144"}
         ;; Nextcloud {Cal,Web}DAV
-        com.github.lookfirst/sardine      {:mvn/version "5.10"}
+        com.github.lookfirst/sardine      {:mvn/version "5.12"}
         com.github.caldav4j/caldav4j      {:mvn/version "1.0.5"}
         org.ehcache/ehcache               {:mvn/version "3.10.8"
                                            :exclusions  [org.glassfish.jaxb/jaxb-runtime]}
