@@ -48,8 +48,8 @@
         com.yetanalytics/colossal-squuid  {:mvn/version "0.1.5"}
         com.taoensso/carmine              {:mvn/version "3.2.0"}
         ;; Authorization and Authentication
-        buddy/buddy-core                  {:mvn/version "1.10.413"}
-        buddy/buddy-sign                  {:mvn/version "3.4.333"}
+        buddy/buddy-core                  {:mvn/version "1.11.423"}
+        buddy/buddy-sign                  {:mvn/version "3.5.351"}
         keycloak-clojure/keycloak-clojure {:mvn/version "1.28.7"}
         ;; SMTP Email
         toyokumo/tarayo                   {:mvn/version "0.2.6"}
