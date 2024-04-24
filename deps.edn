@@ -15,7 +15,7 @@
         io.pedestal/pedestal.service      {:mvn/version "0.5.10"}
         io.pedestal/pedestal.interceptor  {:mvn/version "0.5.10"}
         prone/prone                       {:mvn/version "2021-04-23"}
-        http-kit/http-kit                 {:mvn/version "2.7.0-beta3"}
+        http-kit/http-kit                 {:mvn/version "2.8.0-RC1"}
         co.deps/ring-etag-middleware      {:mvn/version "0.2.1"}
         ;; CTMX
         hiccup/hiccup                     {:mvn/version "2.0.0-RC3"}
