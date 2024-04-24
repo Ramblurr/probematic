@@ -52,7 +52,7 @@
         buddy/buddy-sign                  {:mvn/version "3.5.351"}
         keycloak-clojure/keycloak-clojure {:mvn/version "1.31.1"}
         ;; SMTP Email
-        toyokumo/tarayo                   {:mvn/version "0.2.6"}
+        toyokumo/tarayo                   {:mvn/version "0.2.7"}
         ;; Util
         selmer/selmer                     {:mvn/version "1.12.59"}
         medley/medley                     {:mvn/version "1.6.0"}
