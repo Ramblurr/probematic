@@ -19,21 +19,21 @@ jobs:
       - name: Prepare java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@12.1
+        uses: DeLaGuardo/setup-clojure@12.5
         with:
-          cli: latest              # Clojure CLI based on tools.deps
-          bb: latest                    # Babashka
-          clj-kondo: latest        # Clj-kondo
-          cljfmt: latest               # cljfmt
-          cljstyle: latest             # cljstyle
+          cli: latest # Clojure CLI based on tools.deps
+          bb: latest # Babashka
+          clj-kondo: latest # Clj-kondo
+          cljfmt: latest # cljfmt
+          cljstyle: latest # cljstyle
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache clojure dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.m2/repository
@@ -52,10 +52,10 @@ jobs:
         run: bb uberjar
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -70,7 +70,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -85,7 +85,7 @@ jobs:
 
       #platforms: linux/amd64,linux/arm64
       - name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           push: true
           context: .
@@ -98,7 +98,6 @@ jobs:
           build-args: |
             BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             GIT_HASH=${{ steps.vars.outputs.git-hash }}
-
 
   deploy:
     runs-on: ubuntu-latest
