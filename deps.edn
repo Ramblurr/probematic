@@ -61,7 +61,7 @@
         spootnik/signal                   {:mvn/version "0.2.5"}
         ;; REPL
         nrepl/nrepl                       {:mvn/version "1.1.1"}
-        integrant/repl                    {:mvn/version "0.3.2"}
+        integrant/repl                    {:mvn/version "0.3.3"}
         cider/cider-nrepl                 {:mvn/version "0.47.1"}
         djblue/portal                     {:mvn/version "0.55.1"}
         ;; Shared Outskirts Labs libs
