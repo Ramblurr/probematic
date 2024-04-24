@@ -652,9 +652,11 @@
   [db gig-id]
   (->> (setlist-song-tuples-for-gig db gig-id)
        (mapv (fn [[[_ song-id] position]]
-               {:song/title (:song/title (retrieve-song db song-id))
-                :song/song-id song-id
-                :position position}))
+               (let [{:song/keys [title solo-info]} (retrieve-song db song-id)]
+                 {:song/title title
+                  :song/song-id song-id
+                  :song/solo-info solo-info
+                  :position position})))
        (sort-by :position)))
 
 (defn planned-songs-for-gig
