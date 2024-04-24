@@ -54,7 +54,7 @@
         ;; SMTP Email
         toyokumo/tarayo                   {:mvn/version "0.2.6"}
         ;; Util
-        selmer/selmer                     {:mvn/version "1.12.55"}
+        selmer/selmer                     {:mvn/version "1.12.59"}
         medley/medley                     {:mvn/version "1.6.0"}
         tick/tick                         {:mvn/version "0.5.0-RC5"}
         com.github.javafaker/javafaker    {:mvn/version "1.0.2"}
