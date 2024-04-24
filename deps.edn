@@ -18,7 +18,7 @@
         http-kit/http-kit                 {:mvn/version "2.7.0-beta3"}
         co.deps/ring-etag-middleware      {:mvn/version "0.2.1"}
         ;; CTMX
-        hiccup/hiccup                     {:mvn/version "2.0.0-alpha2"}
+        hiccup/hiccup                     {:mvn/version "2.0.0-RC3"}
         ctmx/ctmx                         {:mvn/version "1.4.7"}
         ;; for Discourse integration
         clj-commons/clj-yaml              {:mvn/version "1.0.27"}
