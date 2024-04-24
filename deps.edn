@@ -32,7 +32,7 @@
         com.taoensso/nippy                {:mvn/version "3.3.0"}
         dk.ative/docjure                  {:mvn/version "1.19.0"}
         ;; Text
-        io.github.nextjournal/markdown    {:mvn/version "0.5.144"}
+        io.github.nextjournal/markdown    {:mvn/version "0.5.148"}
         ;; Nextcloud {Cal,Web}DAV
         com.github.lookfirst/sardine      {:mvn/version "5.12"}
         com.github.caldav4j/caldav4j      {:mvn/version "1.0.5"}
