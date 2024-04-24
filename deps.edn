@@ -28,7 +28,7 @@
         metosin/reitit-malli              {:mvn/version "0.6.0"}
         luminus-transit/luminus-transit   {:mvn/version "0.1.6" :exclusions [com.cognitect/transit-clj]}
         metosin/muuntaja                  {:mvn/version "0.6.8"}
-        org.babashka/sci                  {:mvn/version "0.2.8"}
+        org.babashka/sci                  {:mvn/version "0.8.41"}
         com.taoensso/nippy                {:mvn/version "3.3.0"}
         dk.ative/docjure                  {:mvn/version "1.19.0"}
         ;; Text
