@@ -134,7 +134,7 @@
     s
     (j/read-value s j/keyword-keys-object-mapper)))
 
-(defn- parse-response [^javax.ws.rs.core.Response resp]
+(defn- parse-response [^jakarta.ws.rs.core.Response resp]
   (when resp
     (let [r {:status (.getStatus resp)
              :headers (.getStringHeaders resp)
