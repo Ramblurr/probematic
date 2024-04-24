@@ -50,7 +50,7 @@
         ;; Authorization and Authentication
         buddy/buddy-core                  {:mvn/version "1.11.423"}
         buddy/buddy-sign                  {:mvn/version "3.5.351"}
-        keycloak-clojure/keycloak-clojure {:mvn/version "1.28.7"}
+        keycloak-clojure/keycloak-clojure {:mvn/version "1.31.1"}
         ;; SMTP Email
         toyokumo/tarayo                   {:mvn/version "0.2.6"}
         ;; Util
