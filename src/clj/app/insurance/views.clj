@@ -10,7 +10,6 @@
    [app.queries :as q]
    [app.sardine :as sardine]
    [app.ui :as ui]
-   [app.urls :as url]
    [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
@@ -67,7 +66,7 @@
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
-    [:a {:href  (url/link-instrument instrument-id) , :class "block hover:bg-gray-50"}
+    [:a {:href  (urls/link-instrument instrument-id) , :class "block hover:bg-gray-50"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:p {:class "truncate text-sm font-medium text-sno-orange-600"}
@@ -90,19 +89,19 @@
 (ctmx/defcomponent ^:endpoint insurance-policy-delete [{:keys [db] :as req}]
   (when (util/delete? req)
     (controller/delete-policy! req)
-    (response/hx-redirect (url/link-insurance))))
+    (response/hx-redirect (urls/link-insurance))))
 
 (ctmx/defcomponent ^:endpoint insurance-policy-duplicate [{:keys [db] :as req}]
   (when (util/post? req)
     (let [new-policy-id (->  (controller/duplicate-policy! req) :policy :insurance.policy/policy-id)]
-      (response/hx-redirect (url/link-policy new-policy-id)))))
+      (response/hx-redirect (urls/link-policy new-policy-id)))))
 
 (defn policy-row [tr {:insurance.policy/keys [policy-id name effective-at effective-until status]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
     [:div {:class "block"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
-       [:a {:href  (url/link-policy policy-id) :class "truncate text-sm font-medium text-sno-orange-600 hover:text-sno-orange-900"}
+       [:a {:href  (urls/link-policy policy-id) :class "truncate text-sm font-medium text-sno-orange-600 hover:text-sno-orange-900"}
         (policy-status-icon status)
         name]]
 
@@ -129,7 +128,7 @@
   (let [policy-id (-> req :path-params :policy-id parse-uuid)
         {:insurance.policy/keys [name policy-id]} (q/retrieve-policy db policy-id)]
 
-    [:div {:hx-get (str (url/link-policy policy-id "/policy-name")) :hx-target "this" :class "cursor-pointer"}
+    [:div {:hx-get (str (urls/link-policy policy-id "/policy-name")) :hx-target "this" :class "cursor-pointer"}
      [:h1 {:class "text-2xl font-bold text-gray-900"}]]))
 
 (defn coverage-type-row [{:insurance.coverage.type/keys [name type-id premium-factor]}]
@@ -164,8 +163,8 @@
             from (:user smtp)]
         (excel/send-email! policy smtp from recipient subject body attachment-filename)
         (if (:htmx? req)
-          (response/hx-redirect (url/link-policy policy-id))
-          (response/redirect (url/link-policy policy-id)))))))
+          (response/hx-redirect (urls/link-policy policy-id))
+          (response/redirect (urls/link-policy policy-id)))))))
 
 (ctmx/defcomponent ^:endpoint insurance-policy-changes-review [{:keys [db tr] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
@@ -179,7 +178,7 @@
     ;; (excel/generate-excel-changeset! policy nil)
 
     [:div {:class "bg-white shadow py-4 px-6 space-y-12"}
-     [:form {:action (url/link-policy-changes-file policy) :method :post}
+     [:form {:action (urls/link-policy-changes-file policy) :method :post}
       [:div {:class "border-b border-gray-900/10 pb-12"}
        [:h2 {:class "text-lg font-semibold leading-7 text-gray-900"} "Benachrichtigung über Änderungen"]
        [:p {:class "mt-1 text-sm leading-6 text-gray-600"}
@@ -234,7 +233,7 @@ Mit freundlichen Grüßen,
                    :name "action"
                    :value "send"
                    :type :submit
-                   :hx-post (url/link-policy-changes-file policy)
+                   :hx-post (urls/link-policy-changes-file policy)
                    :attr {:_ (ui/confirm-modal-script
                                "Send email?"
                                "This will send an email and the excel attachment to the recipient"
@@ -248,7 +247,7 @@ Mit freundlichen Grüßen,
           {:insurance.policy/keys [name effective-at effective-until premium-factor status] :as policy} (q/retrieve-policy db policy-id)
           result (and post? (controller/update-policy! req policy-id))]
       (if (:policy result)
-        (response/hx-redirect (url/link-policy policy-id))
+        (response/hx-redirect (urls/link-policy policy-id))
         [(if edit? :form :div)
          (if edit?
            {:id id :hx-post (comp-name) :hx-target (hash ".")}
@@ -276,7 +275,7 @@ Mit freundlichen Grüßen,
                                    (ui/button :tag :a :label "Änderungen erstellen"
                                               :priority :primary
                                               :centered? true
-                                              :href (url/link-policy-changes policy-id)))))}
+                                              :href (urls/link-policy-changes policy-id)))))}
 
                    [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-3"}
                     (ui/dl-item (tr [:insurance/effective-at])
@@ -658,7 +657,7 @@ Mit freundlichen Grüßen,
                                 (coverage-change-icon-span tr change)]
 
                                [:div {:class (ui/cs col-all "truncate")}
-                                [:a {:href (url/link-coverage coverage) :class "text-medium"}
+                                [:a {:href (urls/link-coverage coverage) :class "text-medium"}
                                  (:instrument/name instrument)]]
                                [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
                                [:div {:class (ui/cs col-sm number)} item-count]
@@ -692,7 +691,7 @@ Mit freundlichen Grüßen,
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-delete [{:keys [db tr] :as req}]
   (when (util/delete? req)
-    (response/hx-redirect (url/link-policy (:policy (controller/delete-coverage! req))))))
+    (response/hx-redirect (urls/link-policy (:policy (controller/delete-coverage! req))))))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page-rw [{:keys [db tr] :as req}]
   insurance-coverage-delete
@@ -700,7 +699,7 @@ Mit freundlichen Grüßen,
         result (when post? (controller/update-instrument-and-coverage! req))
         error (:error result)]
     (if (and post? (not error))
-      (response/hx-redirect (url/link-policy (:policy result)))
+      (response/hx-redirect (urls/link-policy (:policy result)))
       (let [coverage-id (util.http/path-param-uuid! req :coverage-id)
             coverage (q/retrieve-coverage db coverage-id)
             instrument (:instrument.coverage/instrument coverage)
@@ -709,7 +708,7 @@ Mit freundlichen Grüßen,
         (assert coverage)
         [:div {:id id}
          (ui/panel {:title "Edit Instrument Coverage"
-                    :buttons (list (ui/link-button :href (url/link-coverage coverage) :label (tr [:action/cancel])))}
+                    :buttons (list (ui/link-button :href (urls/link-coverage coverage) :label (tr [:action/cancel])))}
                    [:form {:hx-post (path ".") :class "space-y-8"  :hx-target (hash ".")}
                     [:div {:class "space-y-8 divide-y divide-gray-200 sm:space-y-5"}
                      [:div {:class "space-y-6 sm:space-y-5"}
@@ -730,13 +729,13 @@ Mit freundlichen Grüßen,
                                                    :hx-confirm (tr [:action/confirm-generic])}))
                         :buttons-right (list
                                         (ui/link-button {:label (tr [:action/cancel]) :priority :white
-                                                         :attr {:href (url/link-policy policy)}})
+                                                         :attr {:href (urls/link-policy policy)}})
                                         (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
 
 (defn coverage-panel [tr coverage policy]
   (ui/panel {:title (tr [:insurance/instrument-coverage])
              :subtitle (tr [:insurance/coverage-for] [(:insurance.policy/name policy)])
-             :buttons (list (ui/link-button :href (url/link-coverage-edit coverage) :label (tr [:action/edit])))}
+             :buttons (list (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit])))}
             (ui/dl
              (ui/dl-item (tr [:insurance/item-count])
                          (:instrument.coverage/item-count coverage))
@@ -771,7 +770,7 @@ Mit freundlichen Grüßen,
 
 (defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
   (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))
-       (map #(url/absolute-link-instrument-image (:env system) instrument-id  %))))
+       (map #(urls/absolute-link-instrument-image (:env system) instrument-id  %))))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
   insurance-coverage-delete
@@ -779,7 +778,7 @@ Mit freundlichen Grüßen,
         result (when post? (controller/update-instrument-and-coverage! req))
         error (:error result)]
     (if (and post? (not error))
-      (response/hx-redirect (url/link-policy (:policy result)))
+      (response/hx-redirect (urls/link-policy (:policy result)))
       (let [coverage-id (util.http/path-param-uuid! req :coverage-id)
             coverage (q/retrieve-coverage db coverage-id)
             policy (:insurance.policy/_covered-instruments coverage)
@@ -790,7 +789,7 @@ Mit freundlichen Grüßen,
         (assert coverage)
         [:div {:id id}
          (ui/panel {:title (:instrument/name instrument)
-                    :buttons (list (ui/link-button :href (url/link-coverage-edit coverage) :label (tr [:action/edit])))}
+                    :buttons (list (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit])))}
                    (ui/dl
                     (ui/dl-item (tr [:instrument/owner])
                                 (:member/name (:instrument/owner instrument)))
@@ -816,7 +815,7 @@ Mit freundlichen Grüßen,
         result (when post? (controller/upsert-coverage! req))
         error (:error result)]
     (if (and post? (not error))
-      (response/hx-redirect (url/link-policy (:policy result)))
+      (response/hx-redirect (urls/link-policy (:policy result)))
       (let [policy-id (util.http/path-param-uuid! req :policy-id)
             instrument-id  (util.http/path-param-uuid! req :instrument-id)
             policy (q/retrieve-policy db policy-id)
@@ -832,7 +831,7 @@ Mit freundlichen Grüßen,
                     (ui/form-buttons
                      :buttons-left
                      (list
-                      (ui/link-button {:attr {:href (url/link-coverage-create2 policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                      (ui/link-button {:attr {:href (urls/link-coverage-create2 policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
                      :buttons-right
                      (list
                       (ui/button {:label (tr [:action/save]) :priority :primary-orange})))])]))))
@@ -872,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 });
 ")]
-               [:form {:action (url/link-instrument-image-upload instrument-id) :class "dropzone space-y-8" :id (util/id :comp/imageUpload) :enctype "multipart/form-data"}
+               [:form {:action (urls/link-instrument-image-upload instrument-id) :class "dropzone space-y-8" :id (util/id :comp/imageUpload) :enctype "multipart/form-data"}
                 [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
                  [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
                   [:div {:class "space-y-1 text-center"}
@@ -884,9 +883,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
                    [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]
                (ui/form-buttons :buttons-left (list
-                                               (ui/link-button {:attr {:href (url/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                                               (ui/link-button {:attr {:href (urls/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
                                 :buttons-right (list
-                                                (ui/link-button {:attr {:href (url/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
+                                                (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
   (let [post? (util/post? req)
@@ -897,7 +896,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         (util.http/query-param-uuid req :instrument-id))
         policy-id (util.http/path-param-uuid! req :policy-id)]
     (if (and post? (not error))
-      (response/hx-redirect (url/link-coverage-create2 policy-id instrument-id))
+      (response/hx-redirect (urls/link-coverage-create2 policy-id instrument-id))
       (let [instrument (when instrument-id (q/retrieve-instrument db instrument-id))]
         [:div {:id id}
          [:div {:class "flex justify-center items-center mt-10"}
@@ -938,7 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
             [:div {:class "space-x-2 flex"}
              (list
               (ui/link-button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
-                              :attr {:href (url/link-coverage-create policy-id)}))]]
+                              :attr {:href (urls/link-coverage-create policy-id)}))]]
            [:div {:class "border-t border-gray-200 py-5"}
             [:div {:class "overflow-hidden md:mx-0 md:rounded-lg"}
              (insurance-instrument-coverage-table req)]]]]]]
@@ -958,7 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
              "You should add a coverage to an instrument"]
             [:div
              (ui/link-button :label (tr [:insurance/instrument-coverage])
-                             :attr {:href (url/link-coverage-create policy-id)}
+                             :attr {:href (urls/link-coverage-create policy-id)}
                              :priority :primary :icon icon/plus)]])]]])))
 
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
@@ -974,7 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tr (i18n/tr-from-req req)
         result (and (util/post? req) (controller/create-policy! req))]
     (if (:policy result)
-      (response/hx-redirect (url/link-policy (:policy result)))
+      (response/hx-redirect (urls/link-policy (:policy result)))
 
       [:div
        (ui/page-header :title  (tr [:insurance/create-title])
@@ -1024,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
 (ctmx/defcomponent ^:endpoint instrument-create-page [{:keys [tr db] :as req}]
   #_(if (util/post? req)
       (do
-        (response/hx-redirect (url/link-instrument
+        (response/hx-redirect (urls/link-instrument
                                (:instrument (controller/create-instrument! req)))))
 
       [:div
@@ -1061,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', function() {
           {:instrument/keys [name make build-year model serial-number] :as instrument} (q/retrieve-instrument db instrument-id)
           result (and post? (controller/update-instrument! req instrument-id))]
       (if (:instrument result)
-        (response/hx-redirect (url/link-instrument instrument-id))
+        (response/hx-redirect (urls/link-instrument instrument-id))
         [(if edit? :form :div)
          (if edit?
            {:hx-post (comp-name) :hx-target (hash ".") :id id}
