@@ -138,7 +138,10 @@
              :instrument-coverage "Instrument Coverage"
              :create-title "New Insurance Policy"
              :create-subtitle "Enter details for the new policy."
-             :coverage-for "The following information is for: %1"}
+             :coverage-for "The following information is for: %1"
+             :send-changes "Send Changes"
+:error-edit-frozen-policy "Cannot update instrument and coverage on a policy that is not in draft status"
+             }
  :instrument.coverage {:private? "Private?"
                        :instrument  "Instrument"
                        :status "Coverage Status"

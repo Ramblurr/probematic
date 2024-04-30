@@ -19,13 +19,21 @@
    [medley.core :as m]
    [tick.core :as t]))
 
+(defn member [m]
+  [:div {:class "flex items-center"}
+   [:div {:class "h-11 w-11 flex-shrink-0"}
+    (ui/avatar-img m :class "h-10 w-10 rounded-full")]
+   [:div {:class "ml-2"}
+    [:div {:class "font-medium text-gray-900"} (:member/name m)]
+    [:div {:class "mt-1 text-gray-500"} (:member/nick m)]]])
+
 (def coverage-status-data
   {:instrument.coverage.status/needs-review {:icon  icon/circle-question-outline :class "text-orange-400"}
    :instrument.coverage.status/reviewed {:icon icon/circle-dot-outline :class "text-gray-400"}
    :instrument.coverage.status/coverage-active {:icon icon/circle-check-outline :class "text-green-400"}})
 
 (def coverage-change-data
-  {:instrument.coverage.change/new {:icon icon/circle-plus-outline :class "text-green-400"}
+  {:instrument.coverage.change/new {:icon icon/circle-plus-solid :class "text-green-400"}
    :instrument.coverage.change/removed {:icon icon/circle-xmark :class "text-red-400"}
    :instrument.coverage.change/changed {:icon icon/circle-exclamation :class "text-orange-400"}
    ;; :instrument.coverage.change/none {:icon icon/circle-check :class "text-gray-400"}
@@ -59,6 +67,17 @@
   (let [{:keys [icon class]} (get policy-status-data status)]
     (when icon
       (icon {:class (ui/cs class "inline mr-1.5 h-5 w-5 flex-shrink-0")}))))
+
+(defn breadcrumb-policy [tr policy]
+  (ui/breadcrumb-contained
+   {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
+   {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}))
+
+(defn breadcrumb-coverage [tr policy coverage]
+  (ui/breadcrumb-contained
+   {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
+   {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}
+   {:label (-> coverage :instrument.coverage/instrument :instrument/name) :href nil}))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -249,14 +268,15 @@ Mit freundlichen Grüßen,
     (let [policy-id (util.http/path-param-uuid! req :policy-id)
           comp-name (util/comp-namer #'insurance-detail-page-header)
           {:insurance.policy/keys [name effective-at effective-until premium-factor status] :as policy} (q/retrieve-policy db policy-id)
-          result (and post? (controller/update-policy! req policy-id))]
+          result (and post? (controller/update-policy! req policy-id))
+          can-send-changes? (= status :insurance.policy.status/draft)]
       (if (:policy result)
         (response/hx-redirect (urls/link-policy policy-id))
         [(if edit? :form :div)
          (if edit?
            {:id id :hx-post (comp-name) :hx-target (hash ".")}
            {:id id})
-
+         (breadcrumb-policy tr policy)
          (ui/panel {:title (if edit?
                              (ui/text :label "Name" :name "name" :value name)
                              [:span {:title (tr [status])}
@@ -275,8 +295,8 @@ Mit freundlichen Grüßen,
                                             :priority :white
                                             :centered? true
                                             :hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true})
-                                 (when (= status :insurance.policy.status/draft)
-                                   (ui/button :tag :a :label "Änderungen erstellen"
+                                 (when can-send-changes?
+                                   (ui/button :tag :a :label (tr [:insurance/send-changes])
                                               :priority :primary
                                               :centered? true
                                               :href (urls/link-policy-changes policy-id)))))}
@@ -564,19 +584,20 @@ Mit freundlichen Grüßen,
     [:form {:id id
             :class "instrgrid border-collapse overflow-hidden m-w-full"}
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
-     [:div {:class (ui/cs "instrgrid--header min-w-full text-sm truncate gap-1 grid grid-cols-[22px_minmax(0,_1fr)_minmax(0,_1fr)]"  spacing)}
-      [:div {:class (ui/cs  col-all "flex gap-4")}
-       [:div {:class (ui/cs  "change-totals" center-vertical "gap-6")}
-        [:span  {:class (ui/cs "py-2 flex")}
-         (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed " Modified"]
-        [:span  {:class "flex"}
-         (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed " Removed"]
-        [:span  {:class "flex"}
-         (coverage-change-icon-span tr :instrument.coverage.change/new) total-new " Newly Added"]]]]
-     [:div {:class (ui/cs "instrgrid--header min-w-full text-sm truncate gap-1 grid grid-cols-[22px_minmax(0,_1fr)_minmax(0,_1fr)]"  spacing)}
-      [:div {:class (ui/cs col-all center-all)}
-       [:input {:type "checkbox" :id "instr-select-all"
-                :_ (format "on checkboxChanged
+     [:table {:class "table-auto ml-4"}
+      [:tr
+       [:td]
+       [:td [:span  {:class (ui/cs "py-2 flex px-2")}
+             (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed " Modified"]]
+       [:td [:span  {:class "flex px-2"}
+             (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed " Removed"]]
+       [:td [:span  {:class "flex px-2"}
+             (coverage-change-icon-span tr :instrument.coverage.change/new) total-new " Newly Added"]]]
+      [:tr
+       [:td
+        [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
+         [:input {:type "checkbox" :id "instr-select-all"
+                  :_ (format "on checkboxChanged
                      if length of <div.instrgrid--body input[type=checkbox]:checked/> > 0
                        set .status-selected.innerHTML to `${length of <div.instrgrid--body input[type=checkbox]:checked/>} %s`
                        then add .hidden to .status-totals
@@ -601,30 +622,30 @@ Mit freundlichen Grüßen,
                             end
                        then trigger checkboxChanged on me" (tr [:selected]))
 
-                :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
-      [:div {:class (ui/cs  col-all "flex gap-4")}
-       [:div {:class (ui/cs  "status-selected hidden py-2 pl-2" center-vertical)}]
-       [:div {:class (ui/cs  "status-totals" center-vertical "gap-6")}
-        [:span  {:class (ui/cs "py-2 flex" (when (> total-needs-review 0) "font-medium"))}
-         (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]
-        [:span  {:class "flex"}
-         (coverage-status-icon-span tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]
-        [:span  {:class "flex"}
-         (coverage-status-icon-span tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]
-      [:div {:class (ui/cs  col-all "flex justify-end gap-4 actions-selected hidden")}
-       (ui/action-menu
-        :label (tr [:action/mark-as])
-        :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
-                             :icon (coverage-status-icon :instrument.coverage.status/needs-review)
-                             :tag :button
-                             :attr {:hx-vals {"mark-as" "needs-review"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                            {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
-                             :tag :button
-                             :attr {:hx-vals {"mark-as" "reviewed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                            #_{:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
+                  :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]]
+
+       [:td {:class "actions-selected hidden" :colspan 2}
+        [:div {:class (ui/cs col-all "flex gap-4  ml-4 pb-4 sm:pb-1")}
+         (ui/action-menu
+          :label (tr [:action/mark-as])
+          :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
+                               :icon (coverage-status-icon :instrument.coverage.status/needs-review)
                                :tag :button
-                               :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
-        :id "coverage-table-actions")]]
+                               :attr {:hx-vals {"mark-as" "needs-review"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                              {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
+                               :tag :button
+                               :attr {:hx-vals {"mark-as" "reviewed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                              #_{:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
+                                 :tag :button
+                                 :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
+          :id "coverage-table-actions")]]
+       [:td {:class "status-totals"}
+        [:span  {:class (ui/cs "py-2 flex px-2" (when (> total-needs-review 0) "font-medium"))}
+         (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]]
+       [:td {:class "status-totals"} [:span  {:class "flex px-2"}
+                                      (coverage-status-icon-span tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]]
+       [:td {:class "status-totals"} [:span  {:class "flex px-2"}
+                                      (coverage-status-icon-span tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]]
 
      [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
       [:div {:class (ui/cs col-all center-all)}]
@@ -652,9 +673,10 @@ Mit freundlichen Grüßen,
                (map-indexed (fn [idx {:instrument.coverage/keys [coverage-id change status private? value item-count instrument cost] :keys [types] :as coverage}]
                               [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
                                [:div {:class (ui/cs col-all center-all)}
-                                [:input {:type "checkbox" :id id :name "coverage-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
-                                         :value (str coverage-id)
-                                         :_ "on click trigger checkboxChanged on #instr-select-all"}]]
+                                [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
+                                 [:input {:type "checkbox" :id id :name "coverage-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+                                          :value (str coverage-id)
+                                          :_ "on click trigger checkboxChanged on #instr-select-all"}]]]
                                [:div {:class (ui/cs col-all)}
                                 (coverage-status-icon-span tr status)]
                                [:div {:class (ui/cs col-all)}
@@ -701,7 +723,8 @@ Mit freundlichen Grüßen,
   insurance-coverage-delete
   (let [post? (util/post? req)
         result (when post? (controller/update-instrument-and-coverage! req))
-        error (:error result)]
+        error (:error result)
+        form-error (:form-error error)]
     (if (and post? (not error))
       (response/hx-redirect (urls/link-policy (:policy result)))
       (let [coverage-id (util.http/path-param-uuid! req :coverage-id)
@@ -724,6 +747,11 @@ Mit freundlichen Grüßen,
                        (instrument-form req error instrument)
                        (ui/form-left-section :label (tr [:insurance/instrument-coverage]) :hint (tr [:insurance/coverage-for] [(:insurance.policy/name policy)]))
                        (coverage-form {:tr tr :path path} error coverage coverage-types)
+                       (when form-error
+                         [:div
+                          [:p {:class "mt-2 text-right text-red-600"}
+                           (icon/circle-exclamation {:class "h-5 w-5 inline-block mr-2"})
+                           (tr [form-error])]])
                        (ui/form-buttons
                         :buttons-left (list
                                        (ui/button {:label (tr [:action/delete]) :priority :white-destructive
@@ -739,7 +767,9 @@ Mit freundlichen Grüßen,
 (defn coverage-panel [tr coverage policy]
   (ui/panel {:title (tr [:insurance/instrument-coverage])
              :subtitle (tr [:insurance/coverage-for] [(:insurance.policy/name policy)])
-             :buttons (list (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit])))}
+             :buttons (list
+                       (when (controller/policy-editable? policy)
+                         (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
             (ui/dl
              (ui/dl-item (tr [:insurance/item-count])
                          (:instrument.coverage/item-count coverage))
@@ -762,17 +792,7 @@ Mit freundlichen Grüßen,
                [:dt {:class "text-gray-500"} (tr [:insurance/total])]
                [:dd {:class "whitespace-nowrap text-gray-900"} (ui/money (:instrument.coverage/cost coverage) :EUR)]]]]))
 
-(defn member [m]
-  [:div {:class "flex items-center"}
-   [:div {:class "h-11 w-11 flex-shrink-0"}
-    (ui/avatar-img m :class "h-10 w-10 rounded-full")]
-   [:div {:class "ml-2"}
-    [:div {:class "font-medium text-gray-900"} (:member/name m)]
-    [:div {:class "mt-1 text-gray-500"} (:member/nick m)]]])
-
-(def history-field-exclusions #{
-    :instrument.coverage/coverage-id :instrument/instrument-id
-                                } )
+(def history-field-exclusions #{:instrument.coverage/coverage-id :instrument/instrument-id})
 (defn change-value [tr k v]
   ;; (tap> [:k k :v v])
   (condp = k
@@ -840,9 +860,8 @@ Mit freundlichen Grüßen,
                                                      :field-label (tr [k])
                                                      :action action
                                                      :before (when-let [before before] (change-value tr k before))
-                                                     :after (change-value tr k after)}
+                                                     :after (change-value tr k after)}))
 
-                                                    ))
                                              (remove #(history-field-exclusions (:field-key %)))
                                              (sort-by :field-label))
                                 audit-user-name (:member/name (:audit/member audit))]
@@ -851,9 +870,8 @@ Mit freundlichen Grüßen,
                               [:th {:class "relative isolate py-2 font-semibold" :scope "colgroup" :colspan 5}
 
                                [:time {:datetime "2023-03-22"} (ui/humanize-dt timestamp)]
-                                 [:div {:class "absolute inset-y-0 right-full -z-10 w-screen border-b border-gray-200 bg-gray-50"}]
-                                 [:div {:class "absolute inset-y-0 left-0 -z-10 w-screen border-b border-gray-200 bg-gray-50"}]
-                               ]]
+                               [:div {:class "absolute inset-y-0 right-full -z-10 w-screen border-b border-gray-200 bg-gray-50"}]
+                               [:div {:class "absolute inset-y-0 left-0 -z-10 w-screen border-b border-gray-200 bg-gray-50"}]]]
 
                              (map
                               (fn [{:keys [action after before field-key field-label]}]
@@ -925,11 +943,15 @@ Mit freundlichen Grüßen,
             photos (list-image-uris req instrument-id)]
         (assert coverage)
         [:div {:id id}
+         (breadcrumb-coverage tr policy coverage)
+
          (ui/panel {:title (:instrument/name instrument)
-                    :buttons (list (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit])))}
+                    :buttons (list
+                              (when (controller/policy-editable? policy)
+                                (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
                    (ui/dl
                     (ui/dl-item (tr [:instrument/owner])
-                                (:member/name (:instrument/owner instrument)))
+                                (member (:instrument/owner instrument)))
                     (ui/dl-item (tr [:instrument/name])
                                 (:instrument/name instrument))
                     (ui/dl-item (tr [:instrument/category])
@@ -1074,8 +1096,9 @@ document.addEventListener('DOMContentLoaded', function() {
              [:h2 {:class "text-lg font-medium leading-6 text-gray-900"} (tr [:insurance/covered-instruments])]]
             [:div {:class "space-x-2 flex"}
              (list
-              (ui/link-button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
-                              :attr {:href (urls/link-coverage-create policy-id)}))]]
+              (when (controller/policy-editable? policy)
+                (ui/link-button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
+                                :attr {:href (urls/link-coverage-create policy-id)})))]]
            [:div {:class "border-t border-gray-200 py-5"}
             [:div {:class "overflow-hidden md:mx-0 md:rounded-lg"}
              (insurance-instrument-coverage-table req)]]]]]]

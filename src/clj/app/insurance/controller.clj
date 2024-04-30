@@ -34,6 +34,9 @@
 (def str->policy-status (zipmap (map name policy-statuses) policy-statuses))
 (def str->instrument-coverage-change (zipmap (map name instrument-coverage-changes) instrument-coverage-changes))
 
+(defn policy-editable? [{:insurance.policy/keys [status]}]
+  (= status :insurance.policy.status/draft))
+
 (defn sum-by [ms k]
   ;; (tap> {:ms ms :k k})
   (when (seq ms)
@@ -388,7 +391,7 @@
         ;; if these things have changed then we need to ensure the changes get marked so we can send them upstream
         has-upstream-change? (or
                               (not (== (:instrument.coverage/value coverage) value))
-                              (not (== (:instrument.coverage/item-count coverage) item-count))
+                              (not (== (:instrument.coverage/item-count coverage 1) item-count))
                               (boolean (seq coverage-changes)))
 
         _ (tap> {:value-new value
@@ -448,8 +451,13 @@
   (let [params (util.http/unwrap-params req)
         decoded (util/remove-nils (s/decode UpdateCoverage params))
         coverage-id (util.http/ensure-uuid (:coverage-id decoded))
-        policy-id (:policy-id decoded)]
-    (if (s/valid? UpdateCoverage decoded)
+        policy-id (:policy-id decoded)
+        policy (q/retrieve-policy db policy-id)
+        valid-change? (s/valid? UpdateCoverage decoded)]
+    (cond
+      (policy-editable? policy)
+      {:error {:form-error :insurance/error-edit-frozen-policy} :policy policy}
+      valid-change?
       (let [txs (if coverage-id
                   ;; upsert
                   (update-coverage-txs decoded (q/retrieve-coverage db coverage-id))
@@ -457,23 +465,31 @@
                   (create-coverage-txs decoded))
             {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after policy-id)})
+      :else
       {:error (s/explain-human UpdateCoverage decoded)
        :policy (q/retrieve-policy db policy-id)})))
 
 (defn update-instrument-and-coverage! [{:keys [db] :as req}]
   (let [params (util.http/unwrap-params req)
-        decoded  (util/remove-nils (s/decode UpdateInstrumentAndCoverage params))]
-    (if (s/valid? UpdateInstrumentAndCoverage decoded)
+        decoded  (util/remove-nils (s/decode UpdateInstrumentAndCoverage params))
+        policy (q/retrieve-policy db (:policy-id decoded))
+        change-valid? (s/valid? UpdateInstrumentAndCoverage decoded)]
+    (cond
+      (policy-editable? policy)
+      {:error {:form-error :insurance/error-edit-frozen-policy} :policy policy}
+
+      change-valid?
       (let [coverage (q/retrieve-coverage db (util.http/ensure-uuid (:coverage-id decoded)))
             _ (assert coverage)
+
             txs (concat (update-coverage-txs decoded coverage)
                         (update-instrument-txs decoded (:instrument-id decoded)))
-            _ (tap> {:tx txs})
+            ;; _ (tap> {:tx txs})
             {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after (:policy-id decoded))})
 
-      {:error (s/explain-human UpdateInstrumentAndCoverage decoded)
-       :policy (q/retrieve-policy db (:policy-id decoded))})))
+      :else {:error (s/explain-human UpdateInstrumentAndCoverage decoded)
+             :policy (q/retrieve-policy db (:policy-id decoded))})))
 
 (defn delete-coverage! [{:keys [db] :as req}]
   (let [coverage-id (-> req (util.http/unwrap-params) :coverage-id util/ensure-uuid!)
@@ -612,35 +628,32 @@
   (let [instr-id (:instrument/instrument-id instrument)
         instr-history (d/entity-history db :instrument/instrument-id instr-id)
         coverage-history (d/entity-history db :instrument.coverage/coverage-id coverage-id)]
-    (tap> {:instr-history instr-history
-           :coverage-history coverage-history})
+    ;; (tap> {:instr-history instr-history :coverage-history coverage-history})
     (->>
-      (concat instr-history
-              coverage-history)
-      (group-by :tx-id)
-      (vals)
-      (map (fn [txs]
-             (reduce (fn [agg {:keys [audit changes timestamp tx-id]}]
-                       (-> agg
-                           (assoc :tx-id tx-id)
-                           (assoc :timestamp timestamp)
-                           (assoc :audit audit)
-                           (update :changes concat changes)
-                           )
-                       ) {} txs)))
-      (sort-by :timestamp)
-      (reverse)
+     (concat instr-history
+             coverage-history)
+     (group-by :tx-id)
+     (vals)
+     (map (fn [txs]
+            (reduce (fn [agg {:keys [audit changes timestamp tx-id]}]
+                      (-> agg
+                          (assoc :tx-id tx-id)
+                          (assoc :timestamp timestamp)
+                          (assoc :audit audit)
+                          (update :changes concat changes))) {} txs)))
+     (sort-by :timestamp)
+     (reverse)
       ;; (vals)
       ;; (flatten)
-
-      )))
-
+     )))
 (comment
   (do
     (require '[integrant.repl.state :as state])
     (require '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+  (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b9")
+  (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b7")
 
   (q/retrieve-policy db
                      (->
@@ -790,7 +803,7 @@
 
   (require '[app.debug :refer [xxx xxx>>]])
 
-  (instrument-coverage-history {:db  (datomic/db conn)} (q/retrieve-coverage (datomic/db conn ) #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b8") ) ;; rcf
+  (instrument-coverage-history {:db  (datomic/db conn)} (q/retrieve-coverage (datomic/db conn) #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b8")) ;; rcf
 
   (let [db (datomic/db conn)]
     (->> (datomic/q '{:find [?tx ?attr ?val ?added]

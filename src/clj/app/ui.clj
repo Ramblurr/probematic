@@ -1349,3 +1349,38 @@
              (escape text)
              (escape confirm-text)
              (escape cancel-text)))))
+
+(defn breadcrumb-contained [& items]
+
+  [:div {:class "mx-auto mt-8 max-w-3xl gap-6 sm:px-6 lg:max-w-7xl "}
+   [:nav
+    {:class "flex", :aria-label "Breadcrumb"}
+    [:ol
+     {:role "list",
+      :class "flex space-x-4 rounded-md bg-white px-6 shadow"}
+     [:li
+      {:class "flex"}
+      [:div
+       {:class "flex items-center"}
+       [:a
+        {:href "/", :class "text-gray-400 hover:text-gray-500"}
+        (icon/home-solid {:class "h-5 w-5 flex-shrink-0 text-gray-400"})
+        [:span {:class "sr-only"} "Home"]]]]
+     (map (fn [{:keys [href label icon]}]
+            [:li
+             {:class "flex"}
+             [:div
+              {:class "flex items-center"}
+              [:svg
+               {:class "h-full w-6 flex-shrink-0 text-gray-200",
+                :viewBox "0 0 24 44",
+                :preserveaspectratio "none",
+                :fill "currentColor",
+                :aria-hidden "true"}
+               [:path {:d "M.293 0l22 22-22 22h1.414l22-22-22-22H.293z"}]]
+              [(if href :a :span)
+               {:href href,
+                :class (cs "flex ml-4 text-sm font-medium text-gray-500" (when href  "hover:text-gray-700"))}
+               (when icon
+                 (icon {:class "h-5 w-5 flex-shrink-0 mr-2 text-gray-400"}))
+               label]]]) items)]]])

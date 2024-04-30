@@ -62,12 +62,12 @@
               [:path {:fill "currentColor" :d "M299.71 263.666a23.334 23.334 0 0 0-31.032 11.086 41.662 41.662 0 0 1-37.336 17.617 41.536 41.536 0 0 1-37.332-17.617 23.437 23.437 0 0 0-19.277-13.324 23.444 23.444 0 0 0-21.176 10.035 23.442 23.442 0 0 0-1.898 23.355 86.108 86.108 0 0 0 79.453 44.215 86.207 86.207 0 0 0 79.449-44.215 23.332 23.332 0 0 0-10.852-31.152zm-103.36-80.73c0 19.328-15.668 35-35 35-19.328 0-35-15.672-35-35 0-19.332 15.672-35 35-35 19.332 0 35 15.668 35 35m140 0c0 19.328-15.668 35-35 35-19.328 0-35-15.672-35-35 0-19.332 15.672-35 35-35 19.332 0 35 15.668 35 35"}]]))
 
 (def circle-plus-outline (deficon
-                   [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"}]]))
+                           [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"}]]))
 
 (def circle-plus-solid (deficon
-                   [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 512 512" :fill "currentColor"}
+                         [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 512 512" :fill "currentColor"}
                     ;; "<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->"
-                    [:path {:d "M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm-24-168v-64h-64c-13.3 0-24-10.7-24-24s10.7-24 24-24h64v-64c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24h-64v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"}]]))
+                          [:path {:d "M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm-24-168v-64h-64c-13.3 0-24-10.7-24-24s10.7-24 24-24h64v-64c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24h-64v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"}]]))
 (def circle-question (deficon
                        [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 512 512"} "<!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc.-->"
                         [:path {:fill "currentColor" :d "M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0 0 114.6 0 256s114.6 256 256 256zm-86.2-346.7c7.9-22.3 29.1-37.3 52.8-37.3h58.3c34.9 0 63.1 28.3 63.1 63.1 0 22.6-12.1 43.5-31.7 54.8L280 264.4c-.2 13-10.9 23.6-24 23.6-13.3 0-24-10.7-24-24v-13.5c0-8.6 4.6-16.5 12.1-20.8l44.3-25.4c4.7-2.7 7.6-7.7 7.6-13.1 0-8.4-6.8-15.1-15.1-15.1h-58.3c-3.4 0-6.4 2.1-7.5 5.3l-.4 1.2c-4.4 12.5-18.2 19-30.6 14.6s-19-18.2-14.6-30.6l.4-1.2zM288 352c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32z"}]]))
@@ -98,7 +98,9 @@
                              [:path {:fill "currentColor" :d "M172.664 172.666c7.05-6.975 18.45-6.975 24.825 0l35.25 35.325 35.925-35.325c7.05-6.975 18.45-6.975 24.825 0 7.65 7.05 7.65 18.45 0 24.825l-34.65 35.25 34.65 35.925c7.65 7.05 7.65 18.45 0 24.825-6.375 7.65-17.775 7.65-24.825 0l-35.925-34.65-35.25 34.65c-6.375 7.65-17.775 7.65-24.825 0-6.975-6.375-6.975-17.775 0-24.825l35.325-35.925-35.325-35.25c-6.975-6.375-6.975-17.775 0-24.825z", :style "stroke-width:.75"}]]))
 
 (def circle-exclamation (deficon
-                          [:svg {:fill "currentColor", :aria-hidden "true", :class "h-5 w-5 text-red-500", :viewBox "0 0 20 20"} [:path {:fill-rule "evenodd", :d "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2z", :clip-rule "evenodd"}]]))
+                          [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "currentColor" :viewBox "0 0 512 512"}
+ ;; "<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->"
+                           [:path {:d "M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24v112c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm-32 224a32 32 0 1 1 64 0 32 32 0 1 1-64 0z"}]]))
 
 (def fist-punch (deficon
                   [:svg {:xmlns "http://www.w3.org/2000/svg", :viewBox "0 0 466.66 466.664"}
@@ -196,8 +198,12 @@
             [:svg {:xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
              [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"}]]))
 
+(def home-solid (deficon
+                  [:svg {:viewBox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+                   [:path {:fill-rule "evenodd" :d "M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z", :clip-rule "evenodd"}]]))
+
 (def bars (deficon
-         ;; "<!-- Heroicon name: outline/bars-4 -->"
+            ;; "<!-- Heroicon name: outline/bars-4 -->"
             [:svg {:xmlns "http://www.w3.org/2000/svg" :fill "none" :viewbox "0 0 24 24" :stroke-width "1.5" :stroke "currentColor" :aria-hidden "true"}
              [:path {:stroke-linecap "round" :stroke-linejoin "round" :d "M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"}]]))
 
@@ -447,14 +453,12 @@
 (def arrow-right
   ;; heroicon
   (deficon
-    [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"}]])
-  )
+    [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"}]]))
 
 (def arrow-long-right
   ;; hericon
   (deficon
-   [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3"}]] )
-  )
+    [:svg {:xmlns "http://www.w3.org/2000/svg", :fill "none", :stroke "currentColor", :stroke-width "1.5", :class "w-6 h-6", :viewBox "0 0 24 24"} [:path {:stroke-linecap "round", :stroke-linejoin "round", :d "M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3"}]]))
 
 (def licenses [["meh by papergarden from "
                 [:a {:href "https://thenounproject.com/browse/icons/term/meh/", :target "_blank", :title "meh Icons"} "Noun Project"]]
