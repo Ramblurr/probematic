@@ -34,7 +34,7 @@
   {:instrument.coverage.change/new {:icon icon/circle-plus-solid :class "text-green-400"}
    :instrument.coverage.change/removed {:icon icon/circle-xmark :class "text-red-400"}
    :instrument.coverage.change/changed {:icon icon/circle-exclamation :class "text-orange-400"}
-   ;; :instrument.coverage.change/none {:icon icon/circle-check :class "text-gray-400"}
+   :instrument.coverage.change/none {:icon icon/circle :class "text-gray-400"}
    })
 
 (def policy-status-data
@@ -583,6 +583,7 @@ Mit freundlichen Grüßen,
                 total-coverage-active
                 total-changed
                 total-removed
+                total-no-changes
                 total-new]} (controller/policy-totals policy)
         grid-class "grid instrgrid--grid"
         col-all ""
@@ -599,11 +600,13 @@ Mit freundlichen Grüßen,
       [:tr
        [:td]
        [:td [:span  {:class (ui/cs "py-2 flex px-2")}
-             (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed " Modified"]]
+             (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed " " (tr [:instrument.coverage.change/changed])]]
        [:td [:span  {:class "flex px-2"}
-             (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed " Removed"]]
+             (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed " " (tr [:instrument.coverage.change/removed])]]
        [:td [:span  {:class "flex px-2"}
-             (coverage-change-icon-span tr :instrument.coverage.change/new) total-new " Newly Added"]]]
+             (coverage-change-icon-span tr :instrument.coverage.change/new) total-new " " (tr [:instrument.coverage.change/new])]]
+       [:td [:span  {:class "flex px-2"}
+             (coverage-change-icon-span tr :instrument.coverage.change/none) total-no-changes " " (tr [:instrument.coverage.change/none])]]]
       [:tr
        [:td
         [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
@@ -642,10 +645,22 @@ Mit freundlichen Grüßen,
           :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
                                :icon (coverage-status-icon :instrument.coverage.status/needs-review)
                                :tag :button
-                               :attr {:hx-vals {"mark-as" "needs-review"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                               :attr {:hx-vals {"workflow-status" "needs-review"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
                               {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
                                :tag :button
-                               :attr {:hx-vals {"mark-as" "reviewed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                               :attr {:hx-vals {"workflow-status" "reviewed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                              {:label (tr [:instrument.coverage.change/removed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/removed)
+                               :tag :button
+                               :attr {:hx-vals {"change-status" "removed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                              {:label (tr [:instrument.coverage.change/new]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/new)
+                               :tag :button
+                               :attr {:hx-vals {"change-status" "new"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                              {:label (tr [:instrument.coverage.change/changed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/changed)
+                               :tag :button
+                               :attr {:hx-vals {"change-status" "changed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
+                              {:label (tr [:instrument.coverage.change/none]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/none)
+                               :tag :button
+                               :attr {:hx-vals {"change-status" "none"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
                               #_{:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
                                  :tag :button
                                  :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]

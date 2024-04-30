@@ -426,14 +426,14 @@
                               (boolean (seq coverage-changes)))
 
         #_#__ (tap> {:value-new value
-                 :value-old (:instrument.coverage/value coverage)
-                 :value-changed (not (== (:instrument.coverage/value coverage) value))
-                 :count-new item-count
-                 :count-old (:instrument.coverage/item-count coverage)
-                 :count-changed (not= (:instrument.coverage/item-count coverage) item-count)
-                 :coverage-changes coverage-changes
-                 :covchanged (not-empty coverage-changes)
-                 :has-upstream-change? has-upstream-change?})]
+                     :value-old (:instrument.coverage/value coverage)
+                     :value-changed (not (== (:instrument.coverage/value coverage) value))
+                     :count-new item-count
+                     :count-old (:instrument.coverage/item-count coverage)
+                     :count-changed (not= (:instrument.coverage/item-count coverage) item-count)
+                     :coverage-changes coverage-changes
+                     :covchanged (not-empty coverage-changes)
+                     :has-upstream-change? has-upstream-change?})]
 
     (concat coverage-changes
             [[:db/add coverage-ref :instrument.coverage/value (bigdec value)]
@@ -624,16 +624,21 @@
   (s/schema
    [:map {:name ::MarkAs}
     [:policy-id :uuid]
-    [:mark-as [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]
+    [:workflow-status {:optional true} (into [:enum {:kw-namespace true}] instrument-coverage-statuses)
+     [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]
+    [:change-status {:optional true} (into [:enum {:kw-namespace true}] instrument-coverage-changes)]
     [:coverage-ids [:vector {:vectorize true} :uuid]]]))
 
 (defn mark-coverages-as! [req]
-  (let [{:keys [policy-id coverage-ids mark-as] :as p} (s/decode MarkAsSchema (:params req))]
+  (let [{:keys [policy-id coverage-ids workflow-status change-status] :as p} (s/decode MarkAsSchema (:params req))]
     (if (s/valid? MarkAsSchema p)
-      (let [txs (map (fn [cid]
-                       [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/status
-                        mark-as]) coverage-ids)
-            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
+      (let [workflow-status-txs (if workflow-status (map (fn [cid]
+                                                           [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/status workflow-status]) coverage-ids)
+                                    [])
+            change-status-txs (if change-status (map (fn [cid]
+                                                       [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/change change-status]) coverage-ids)
+                                  [])
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data (concat change-status-txs workflow-status-txs)})]
         {:policy (q/retrieve-policy db-after policy-id)
          :db-after db-after})
       (s/throw-error "Invalid arguments" nil MarkAsSchema p))))
@@ -708,7 +713,9 @@
      :total-coverage-active (count (filter #(= :instrument.coverage.status/coverage-active (:instrument.coverage/status %)) covered-instruments))
      :total-changed (count (filter #(= :instrument.coverage.change/changed (:instrument.coverage/change %)) covered-instruments))
      :total-removed (count (filter #(= :instrument.coverage.change/removed (:instrument.coverage/change %)) covered-instruments))
-     :total-new (count (filter #(= :instrument.coverage.change/new (:instrument.coverage/change %)) covered-instruments))}))
+     :total-new (count (filter #(= :instrument.coverage.change/new (:instrument.coverage/change %)) covered-instruments))
+     :total-no-changes (count (remove #(#{:instrument.coverage.change/changed :instrument.coverage.change/new :instrument.coverage.change/removed } (:instrument.coverage/change %)) covered-instruments))
+     }))
 
 (defn policies-with-todos [db]
   (->> (q/policies db)
