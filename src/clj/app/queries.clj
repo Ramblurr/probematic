@@ -87,6 +87,7 @@
     [:insurance.policy/policy-id
      :insurance.policy/currency
      :insurance.policy/name
+     :insurance.policy/status
      :insurance.policy/effective-at
      :insurance.policy/effective-until
      :insurance.policy/premium-factor
@@ -101,6 +102,7 @@
    {:instrument.coverage/instrument
     [:instrument/name
      :instrument/instrument-id
+     :instrument/images-share-url
      :instrument/make
      :instrument/model
      :instrument/description
@@ -133,6 +135,7 @@
                        {:instrument.coverage/instrument
                         [:instrument/name
                          :instrument/instrument-id
+                         :instrument/images-share-url
                          :instrument/make
                          :instrument/model
                          :instrument/description
@@ -158,6 +161,7 @@
 
 (def instrument-pattern [:instrument/name
                          :instrument/instrument-id
+                         :instrument/images-share-url
                          {:instrument/owner [:member/name :member/member-id]}
                          {:instrument/category [:instrument.category/category-id
                                                 :instrument.category/code
@@ -165,6 +169,7 @@
 
 (def instrument-detail-pattern [:instrument/name
                                 :instrument/instrument-id
+                                :instrument/images-share-url
                                 :instrument/make
                                 :instrument/model
                                 :instrument/description

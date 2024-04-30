@@ -602,6 +602,11 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :instrument/images-share-url
+    :db/doc "The URL to the publicly shared images"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+
 ;;;; Insurance - Coverage Type
 
    {:db/ident :insurance.coverage.type/type-id

@@ -44,9 +44,9 @@
            [[:db/add "datomic.tx" :audit/user [:member/member-id (:member/member-id (auth/get-current-member req))]]
             (when comment [:db/add "datomic.tx" :audit/comment comment])]))
 
-(defn transact-wrapper
+(defn transact-wrapper!
   ([req opts]
-   (transact-wrapper req opts nil))
+   (transact-wrapper! req opts nil))
   ([{:keys [datomic-conn] :as req} opts comment]
    (d/transact datomic-conn (update opts :tx-data concat (audit-txs req comment)))))
 

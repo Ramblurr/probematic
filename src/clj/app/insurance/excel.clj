@@ -18,7 +18,7 @@
   (let [nachzeit? (some #(= "Over Night" (:insurance.coverage.type/name %)) types)
         proberaum? (some #(= "Proberaum" (:insurance.coverage.type/name %)) types)
         item-count (or item-count 1)
-        {:instrument/keys [category description serial-number build-year name model make owner]} (:instrument.coverage/instrument coverage)]
+        {:instrument/keys [category description serial-number build-year name model make owner images-share-url]} (:instrument.coverage/instrument coverage)]
     [item-count
      name
      make
@@ -34,7 +34,7 @@
      ""                                 ; wert zuwachs
      (:member/name owner)
      insurer-id
-     "https://"]))
+     (or images-share-url "")]))
 
 (defn get-cell-style-at [sheet row col]
   (let [r (nth  (excel/row-seq sheet) row)

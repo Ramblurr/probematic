@@ -1,8 +1,6 @@
 (ns app.insurance.views
   (:require
    [app.auth :as auth]
-   [app.config :as config]
-   [app.file-utils :as fu]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.insurance.controller :as controller]
@@ -926,19 +924,6 @@ Mit freundlichen Grüßen,
 
                         history)]]]]])))
 
-(defn instrument-image-remote-path
-  "Return the remote nextcloud path for the image upload dir or a specific file"
-  ([req instrument-id]
-   (fu/path-join (config/nextcloud-path-insurance-upload (-> req :system :env)) "instrument" (str instrument-id)))
-  ([req instrument-id filename]
-   (let [base-path (instrument-image-remote-path req instrument-id)
-         path (fu/path-join base-path filename)]
-     (fu/validate-base-path! base-path path)
-     path)))
-
-(defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
-  (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))
-       (map #(urls/absolute-link-instrument-image (:env system) instrument-id  %))))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
   insurance-coverage-delete
@@ -953,11 +938,10 @@ Mit freundlichen Grüßen,
             coverage-types (:insurance.policy/coverage-types policy)
             coverage (first (controller/enrich-coverages policy coverage-types [coverage]))
             {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
-            photos (list-image-uris req instrument-id)]
+            photos (controller/list-image-uris req instrument-id)]
         (assert coverage)
         [:div {:id id}
          (breadcrumb-coverage tr policy coverage)
-
          (ui/panel {:title (:instrument/name instrument)
                     :buttons (list
                               (when (controller/policy-editable? policy)
@@ -978,7 +962,10 @@ Mit freundlichen Grüßen,
                     (ui/dl-item (tr [:instrument/build-year])
                                 (:instrument/build-year instrument))
                     (ui/dl-item (tr [:instrument/description])
-                                (:instrument/description instrument) "sm:col-span-3"))
+                                (:instrument/description instrument) "sm:col-span-2")
+                    (ui/dl-item (tr [:instrument/photos-public-link])
+                                (when-let [link (:instrument/images-share-url instrument)]
+                                  [:a {:href link :target "_blank" :class "link-blue"} link])))
                    (ui/photo-grid photos))
          (coverage-panel tr coverage policy)
          (coverage-changes-panel req coverage policy)]))))
@@ -1012,7 +999,7 @@ Mit freundlichen Grüßen,
 (defn image-fetch-handler [{:keys [parameters] :as req}]
   (let [{:keys [filename instrument-id]} (:path parameters)]
     (sardine/fetch-file-response req
-                                 (instrument-image-remote-path req instrument-id filename)
+                                 (controller/instrument-image-remote-path req instrument-id filename)
                                  true)))
 
 (defn image-upload-handler [{:keys [webdav parameters] :as req}]
@@ -1020,7 +1007,7 @@ Mit freundlichen Grüßen,
         file (->  parameters :multipart :file)]
     (assert instrument-id)
     (sardine/upload webdav
-                    (instrument-image-remote-path req instrument-id)
+                    (controller/instrument-image-remote-path req instrument-id)
                     file))
   {:status 201})
 

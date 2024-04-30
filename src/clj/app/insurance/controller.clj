@@ -1,9 +1,15 @@
 (ns app.insurance.controller
   (:require
+   [app.config :as config]
    [app.datomic :as d]
+   [app.errors :as errors]
+   [app.file-utils :as fu]
    [app.insurance.excel :as excel]
+   [app.nextcloud :as nextcloud]
    [app.queries :as q]
+   [app.sardine :as sardine]
    [app.schemas :as s]
+   [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
    [clojure.data :as clojure.data]
@@ -16,6 +22,8 @@
   (:import
    [java.io ByteArrayOutputStream]
    [java.net URLEncoder]))
+
+(def NEXTCLOUD_SHARE_LABEL "snorga-bot-insurance")
 
 (def instrument-coverage-statuses [:instrument.coverage.status/needs-review
                                    :instrument.coverage.status/reviewed
@@ -316,6 +324,29 @@
                      (assoc :instrument-id instrument-id))]
       (upsert-instrument! datomic-conn params)))
 
+(defn upsert-instrument-nextcloud-share!
+  "Creates a public read-only share for the instrument images, returns the public url"
+  [req remote-path]
+  (let [nc-config (config/nextcloud-api-config (-> req :system :env))
+        shares (nextcloud/get-shares-with-label nc-config remote-path NEXTCLOUD_SHARE_LABEL)]
+    (if (= (count shares) 0)
+      (:url  (nextcloud/share-folder-public-ro nc-config remote-path NEXTCLOUD_SHARE_LABEL))
+      (:url (first shares)))))
+
+(defn instrument-image-remote-path
+  "Return the remote nextcloud path for the image upload dir or a specific file"
+  ([req instrument-id]
+   (fu/path-join (config/nextcloud-path-insurance-upload (-> req :system :env)) "instrument" (str instrument-id)))
+  ([req instrument-id filename]
+   (let [base-path (instrument-image-remote-path req instrument-id)
+         path (fu/path-join base-path filename)]
+     (fu/validate-base-path! base-path path)
+     path)))
+
+(defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
+  (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))
+       (map #(urls/absolute-link-instrument-image (:env system) instrument-id  %))))
+
 (defn add-instrument-coverage! [conn {:keys [instrument-id policy-id private? value coverage-type-ids]}]
   (datomic/transact conn {:tx-data [{:db/id "covered_instrument"
                                      :instrument.coverage/coverage-id (sq/generate-squuid)
@@ -394,7 +425,7 @@
                               (not (== (:instrument.coverage/item-count coverage 1) item-count))
                               (boolean (seq coverage-changes)))
 
-        _ (tap> {:value-new value
+        #_#__ (tap> {:value-new value
                  :value-old (:instrument.coverage/value coverage)
                  :value-changed (not (== (:instrument.coverage/value coverage) value))
                  :count-new item-count
@@ -436,6 +467,14 @@
     :instrument/owner [:member/member-id owner-member-id]
     :instrument/category [:instrument.category/category-id category-id]}])
 
+(defn try-create-instrument-nextcloud-share! [req instrument-id]
+  (try
+    (upsert-instrument-nextcloud-share! req (instrument-image-remote-path req instrument-id))
+    (catch Exception e
+      (tap> e)
+      (errors/report-error! e)
+      nil)))
+
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]
     (if (s/valid? UpdateInstrument decoded)
@@ -443,7 +482,10 @@
                             (sq/generate-squuid)
                             (:instrument-id decoded))
             txs (update-instrument-txs decoded instrument-id)
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+            share-url (try-create-instrument-nextcloud-share! req instrument-id)
+            txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
+                    txs)
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:instrument (q/retrieve-instrument db-after instrument-id)})
       {:error (s/explain-human UpdateInstrument decoded)})))
 
@@ -455,15 +497,16 @@
         policy (q/retrieve-policy db policy-id)
         valid-change? (s/valid? UpdateCoverage decoded)]
     (cond
-      (policy-editable? policy)
+      (not (policy-editable? policy))
       {:error {:form-error :insurance/error-edit-frozen-policy} :policy policy}
+
       valid-change?
       (let [txs (if coverage-id
                   ;; upsert
                   (update-coverage-txs decoded (q/retrieve-coverage db coverage-id))
                   ;; create
                   (create-coverage-txs decoded))
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after policy-id)})
       :else
       {:error (s/explain-human UpdateCoverage decoded)
@@ -475,17 +518,21 @@
         policy (q/retrieve-policy db (:policy-id decoded))
         change-valid? (s/valid? UpdateInstrumentAndCoverage decoded)]
     (cond
-      (policy-editable? policy)
+      (not (policy-editable? policy))
       {:error {:form-error :insurance/error-edit-frozen-policy} :policy policy}
 
       change-valid?
       (let [coverage (q/retrieve-coverage db (util.http/ensure-uuid (:coverage-id decoded)))
             _ (assert coverage)
 
+            instrument-id (:instrument-id decoded)
             txs (concat (update-coverage-txs decoded coverage)
-                        (update-instrument-txs decoded (:instrument-id decoded)))
+                        (update-instrument-txs decoded instrument-id))
             ;; _ (tap> {:tx txs})
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+            share-url (try-create-instrument-nextcloud-share! req instrument-id)
+            txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
+                    txs)
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after (:policy-id decoded))})
 
       :else {:error (s/explain-human UpdateInstrumentAndCoverage decoded)
@@ -498,7 +545,7 @@
         #_related-coverages #_(->> (q/coverages-for-instrument db (-> coverage :instrument.coverage/instrument :instrument/instrument-id) q/instrument-coverage-detail-pattern)
                                    (remove #(= coverage-id (:instrument.coverage/coverage-id %))))
         txs [[:db/retractEntity [:instrument.coverage/coverage-id coverage-id]]]
-        result (d/transact-wrapper req {:tx-data txs})]
+        result (d/transact-wrapper! req {:tx-data txs})]
     {:policy (q/retrieve-policy (:db-after result) (-> coverage :insurance.policy/_covered-instruments  :insurance.policy/policy-id))}))
 
 (defn get-coverage-type-from-coverage [instrument-coverage type-id]
@@ -586,7 +633,7 @@
       (let [txs (map (fn [cid]
                        [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/status
                         mark-as]) coverage-ids)
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after policy-id)
          :db-after db-after})
       (s/throw-error "Invalid arguments" nil MarkAsSchema p))))

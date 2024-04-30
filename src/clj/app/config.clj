@@ -57,6 +57,9 @@
   [env]
   (-> env :discourse :forum-url))
 
+(defn nextcloud-api-config [env]
+  (-> env :nextcloud (select-keys [:username :password])))
+
 (defn nextcloud-url
   [env]
   (format "https://%s" (-> env :nextcloud :host)))

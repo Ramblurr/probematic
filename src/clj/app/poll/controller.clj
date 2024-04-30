@@ -116,7 +116,7 @@
                                       :retract-opts-txs retract-opts-txs
                                       :new-opts-txs     new-opts-txs
                                       :txs              txs})
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:poll (q/retrieve-poll db-after poll-id)})
       {:error (s/explain-human schema decoded)})))
 
@@ -140,7 +140,7 @@
                                :poll-id     poll-id
                                :txs         txs
                                :options-txs options-txs})
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data txs})]
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:poll (q/retrieve-poll db-after poll-id)})
 
       {:error (s/explain-human schema decoded)})))
@@ -148,7 +148,7 @@
 (defn publish-poll! [{:keys [db] :as req} poll-id]
   (let [{:poll/keys [poll-status] :as poll} (q/retrieve-poll db poll-id)]
     (if (= poll-status :poll.status/draft)
-      (let [result {:poll (-> (d/transact-wrapper req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/open]]})
+      (let [result {:poll (-> (d/transact-wrapper! req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/open]]})
                               :db-after
                               (q/retrieve-poll poll-id))}]
         (email/send-poll-opened! req poll-id)
@@ -157,11 +157,11 @@
 
 (defn delete-poll! [{:keys [db] :as req} poll-id]
   (let [poll (q/retrieve-poll db poll-id)]
-    (d/transact-wrapper req {:tx-data [[:db/retractEntity (d/ref poll)]]})))
+    (d/transact-wrapper! req {:tx-data [[:db/retractEntity (d/ref poll)]]})))
 
 (defn close-poll! [{:keys [db] :as req} poll-id]
   (let [poll (q/retrieve-poll db poll-id)]
-    {:poll (-> (d/transact-wrapper req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/closed]
+    {:poll (-> (d/transact-wrapper! req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/closed]
                                                   [:db/add (d/ref poll) :poll/closes-at (domain/closes-at-inst (t/date-time))]]})
                :db-after
                (q/retrieve-poll poll-id))}))
@@ -250,7 +250,7 @@
                      :poll-tx poll-txs
                      :existing existing-votes
                      :tx-data tx-data})
-            {:keys [db-after]} (d/transact-wrapper req {:tx-data tx-data})]
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data tx-data})]
 
         {:poll (q/retrieve-poll db-after poll-id)}))))
 

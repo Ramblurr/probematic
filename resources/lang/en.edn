@@ -184,7 +184,9 @@
               :create-title "New Instrument"
               :create-subtitle "Enter details for the Instrument"
               :photo-upload-title "Photo Upload"
-              :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."}
+              :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."
+              :photos-public-link "Photos Public Link"
+              }
  :nav {:home "Home"
        :polls "Polls"
        :stats "Stats"

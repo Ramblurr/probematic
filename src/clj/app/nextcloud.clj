@@ -1,13 +1,15 @@
 (ns app.nextcloud
   (:require
    [app.sardine :as sardine]
-   [reitit.coercion.malli :as rcm]
+   [clojure.data.xml :as xml]
    [jsonista.core :as j]
-   [org.httpkit.client :as client]))
+   [org.httpkit.client :as client]
+   [reitit.coercion.malli :as rcm]))
 
-(def base-url "https://data.streetnoise.at/ocs/v1.php/cloud")
+(def base-url-v1 "https://data.streetnoise.at/ocs/v1.php/cloud")
+(def base-url-v2 "https://data.streetnoise.at/ocs/v2.php")
 
-(defn add-url [req]
+(defn add-url [req base-url]
   (update-in req [:url] (fn [url] (str base-url url))))
 
 (defn add-auth [req config]
@@ -16,10 +18,17 @@
 (defn add-ocs [req]
   (assoc-in req [:headers "OCS-APIRequest"] "true"))
 
-(defn request [req config]
+(defn request-v1 [req config]
   (-> req
       (add-auth config)
-      add-url
+      (add-url base-url-v1)
+      add-ocs
+      client/request))
+
+(defn request-v2 [req config]
+  (-> req
+      (add-auth config)
+      (add-url base-url-v2)
       add-ocs
       client/request))
 
@@ -33,17 +42,75 @@
     (catch Exception e
       response)))
 
+(defn parse-body-xml
+  [response]
+  (try
+    (if-let [xml-body (some-> response :body  (java.io.StringReader.) (xml/parse))]
+      (assoc response :body xml-body)
+      response)
+    (catch Exception e
+      response)))
+
 (defn get-user [config user-id]
-  (let [resp @(request {:method  :get
-                        :url     (str "/users/" user-id)
-                        :headers {"accept" "application/json"}} config)]
+  (let [resp @(request-v1 {:method  :get
+                           :url     (str "/users/" user-id)
+                           :headers {"accept" "application/json"}} config)]
     (->  resp parse-body :body :ocs :data)))
 
 (defn list-users [config]
-  (let [resp @(request {:method  :get
-                        :url     (str "/users")
-                        :headers {"accept" "application/json"}} config)]
+  (let [resp @(request-v1 {:method  :get
+                           :url     (str "/users")
+                           :headers {"accept" "application/json"}} config)]
     (->  resp parse-body :body :ocs :data)))
+
+(defn get-shares [config dir]
+  (let [resp @(request-v2 {:method :get
+                           :query-params {:path dir}
+                           :url "/apps/files_sharing/api/v1/shares"} config)]
+    (->> resp
+         parse-body-xml
+         :body
+         xml-seq
+         (filter (comp #{:ocs} :tag))
+         (map :content)
+         flatten
+         (filter #(= :data (:tag %)))
+         (map :content)
+         flatten
+         (filter #(= :element (:tag %)))
+         (map :content)
+         (map (fn [thing]
+                (->> thing (filter #(some? (:tag %)))
+                     (map (fn [{:keys [tag content]}]
+                            [tag (first content)]))
+                     (into {})))))))
+
+(defn get-shares-with-label [config dir label]
+  (let [shares (get-shares config dir)]
+    (filter #(= (:label %) label) shares)))
+
+(defn share-folder-public-ro [config  dir label]
+  (let [resp @(request-v2 {:method :post
+                           ;; :headers {"content-type" "application/x-www-form-urlencoded"}
+                           :form-params {:path dir
+                                         :shareType "3"
+                                         :permissions "1"
+                                         :label label}
+                           :url "/apps/files_sharing/api/v1/shares"} config)]
+    (->> resp
+         parse-body-xml
+         :body
+         xml-seq
+         (filter (comp #{:ocs} :tag))
+         (map :content)
+         flatten
+         (filter #(= :data (:tag %)))
+         (map :content)
+         flatten
+         (filter #(some? (:tag %)))
+         (map (fn [{:keys [tag content]}]
+                [tag (first content)]))
+         (into {}))))
 
 (defn routes []
   ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
@@ -61,6 +128,24 @@
     (def password (-> state/system :app.ig/env :nextcloud :password))
     (def username (-> state/system :app.ig/env :nextcloud :username))
     (def config {:username username :password password})) ;; rcf
+
+  (def result (share-folder-public-ro config "/Dokumente/snorga-data/insurance-test/instrument/0186c752-c413-81f3-8534-8b8a377ca644" "testintclj"))
+  (def result (get-shares config "/Dokumente/snorga-data/insurance-test/instrument/0186c752-c413-81f3-8534-8b8a377ca644"))
+
+  (prn result)
+
+  (->> result
+       xml-seq
+       (filter (comp #{:ocs} :tag))
+       (map :content)
+       flatten
+       (filter #(= :data (:tag %)))
+       (map :content)
+       flatten
+       (filter #(some? (:tag %)))
+       (map (fn [{:keys [tag content]}]
+              [tag (first content)]))
+       (into {}))
 
   (list-users config)
 
