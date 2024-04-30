@@ -34,8 +34,7 @@
   {:instrument.coverage.change/new {:icon icon/circle-plus-solid :class "text-green-400"}
    :instrument.coverage.change/removed {:icon icon/circle-xmark :class "text-red-400"}
    :instrument.coverage.change/changed {:icon icon/circle-exclamation :class "text-orange-400"}
-   :instrument.coverage.change/none {:icon icon/circle :class "text-gray-400"}
-   })
+   :instrument.coverage.change/none {:icon icon/circle :class "text-gray-400"}})
 
 (def policy-status-data
   {:insurance.policy.status/active {:icon icon/circle-check-outline :class "text-green-400"}
@@ -534,7 +533,7 @@ Mit freundlichen Grüßen,
   (let [{:instrument.coverage/keys [value private? instrument item-count types]} coverage
         {:instrument/keys [name]} instrument]
     (list
-     (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or  item-count 1) :error error)
+     (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or item-count 1) :error error)
      (ui/money-input-left :id "value" :label (tr [:insurance/value]) :label-hint (tr [:insurance/value-hint]) :required? true :value value :error error :integer? true)
      (ui/checkbox-group-left :label (tr [:band-private]) :id "label-private-band"
                              :label-hint (tr [:private-instrument-payment])
@@ -567,6 +566,41 @@ Mit freundlichen Grüßen,
   (when (util/post? req)
     (let [{:keys [policy db-after]} (controller/mark-coverages-as! req)]
       (insurance-instrument-coverage-table (util/make-get-request req {:db db-after :policy policy})))))
+
+(defn mark-coverage-as-menu [{:keys [tr]} endpoint-mark-as hx-target]
+  (let [confirm #(ui/confirm-modal-script
+                  (tr [:insurance/confirm-mark-as-title] [%])
+                  (tr [:insurance/confirm-mark-as] [%])
+                  (tr [:insurance/confirm-mark-as-button])
+                  (tr [:action/cancel]))
+        common-attrs {:hx-post endpoint-mark-as :hx-target hx-target}]
+    (ui/action-menu
+     :label (tr [:action/mark-as])
+     :sections [{:label "Workflow Status"
+                 :items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
+                          :icon (coverage-status-icon :instrument.coverage.status/needs-review)
+                          :tag :button
+                          :attr (merge common-attrs {:hx-vals {"workflow-status" "needs-review"} :_ (confirm (tr [:instrument.coverage.status/needs-review]))})}
+                         {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
+                          :tag :button
+                          :attr (merge common-attrs {:hx-vals {"workflow-status" "reviewed"} :_ (confirm (tr [:instrument.coverage.status/reviewed]))})}]}
+                {:label "Change Status"
+                 :items [{:label (tr [:instrument.coverage.change/removed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/removed)
+                          :tag :button
+                          :attr (merge common-attrs {:hx-vals {"change-status" "removed"}})}
+                         {:label (tr [:instrument.coverage.change/new]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/new)
+                          :tag :button
+                          :attr (merge common-attrs {:hx-vals {"change-status" "new"}})}
+                         {:label (tr [:instrument.coverage.change/changed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/changed)
+                          :tag :button
+                          :attr (merge common-attrs {:hx-vals {"change-status" "changed"}})}
+                         {:label (tr [:instrument.coverage.change/none]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/none)
+                          :tag :button
+                          :attr (merge common-attrs {:hx-vals {"change-status" "none"}})}
+                         #_{:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
+                            :tag :button
+                            :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
+     :id "coverage-mark-as-actions")))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [tr] :as req}]
   insurance-instrument-coverage-table-mark-as
@@ -638,33 +672,10 @@ Mit freundlichen Grüßen,
 
                   :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]]
 
-       [:td {:class "actions-selected hidden" :colspan 2}
+       [:td {:class "actions-selected hidden flex" :colspan 2}
         [:div {:class (ui/cs col-all "flex gap-4  ml-4 pb-4 sm:pb-1")}
-         (ui/action-menu
-          :label (tr [:action/mark-as])
-          :sections [{:items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
-                               :icon (coverage-status-icon :instrument.coverage.status/needs-review)
-                               :tag :button
-                               :attr {:hx-vals {"workflow-status" "needs-review"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                              {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
-                               :tag :button
-                               :attr {:hx-vals {"workflow-status" "reviewed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                              {:label (tr [:instrument.coverage.change/removed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/removed)
-                               :tag :button
-                               :attr {:hx-vals {"change-status" "removed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                              {:label (tr [:instrument.coverage.change/new]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/new)
-                               :tag :button
-                               :attr {:hx-vals {"change-status" "new"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                              {:label (tr [:instrument.coverage.change/changed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/changed)
-                               :tag :button
-                               :attr {:hx-vals {"change-status" "changed"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                              {:label (tr [:instrument.coverage.change/none]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/none)
-                               :tag :button
-                               :attr {:hx-vals {"change-status" "none"} :hx-post endpoint-mark-as :hx-target (hash ".")}}
-                              #_{:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
-                                 :tag :button
-                                 :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
-          :id "coverage-table-actions")]]
+         (mark-coverage-as-menu req endpoint-mark-as (hash "."))]
+        [:div {:class (ui/cs  "status-selected hidden py-2 pl-2")}]]
        [:td {:class "status-totals"}
         [:span  {:class (ui/cs "py-2 flex px-2" (when (> total-needs-review 0) "font-medium"))}
          (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]]
@@ -938,7 +949,6 @@ Mit freundlichen Grüßen,
                               changes)]))
 
                         history)]]]]])))
-
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page [{:keys [db tr] :as req}]
   insurance-coverage-delete

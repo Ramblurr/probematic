@@ -1237,10 +1237,12 @@
      icon)
    label])
 
-(defn action-menu-section [id section]
+(defn action-menu-section [idx id section]
   [:div {:class
          ;; maybe add w-48 to make it wider and more clickable?
-         "z-10 py-1 mt-2 divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+         ;; mt-2
+         (cs (if (zero? idx) "rounded-t-md" "rounded-b-md")
+             "z-10 py-1 divide-y divide-gray-200  bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none")
          :role "none"}
    (when (:label section)
      [:div {:class "px-4 py-3", :role "none"}
@@ -1276,7 +1278,7 @@
         (icon/chevron-down {:class "w-3 h-3 ml-2"}))]]
     [:div {:id id :data-action-menu2 true
            :class "hidden" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
-     (map (partial action-menu-section id) sections)]]])
+     (map-indexed #(action-menu-section %1 id %2) sections)]]])
 
 (defn step-circles [total-steps current-step]
   [:nav {:aria-label "Progress"}

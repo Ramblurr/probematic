@@ -120,6 +120,9 @@
  :insurance {:title "Insurance & Instruments"
              :dashboard-title "Insurance TODOs"
              :name "Policy Name"
+             :confirm-mark-as-title "Mark as %1?"
+             :confirm-mark-as "Are you sure you want to mark as %1"
+             :confirm-mark-as-button "Mark as"
              :policies "Policies"
              :item-count "Count"
              :item-count-hint "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?"
@@ -185,8 +188,7 @@
               :create-subtitle "Enter details for the Instrument"
               :photo-upload-title "Photo Upload"
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."
-              :photos-public-link "Photos Public Link"
-              }
+              :photos-public-link "Photos Public Link"}
  :nav {:home "Home"
        :polls "Polls"
        :stats "Stats"
