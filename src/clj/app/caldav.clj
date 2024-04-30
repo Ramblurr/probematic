@@ -40,12 +40,10 @@
   [{:keys [env db i18n-langs ^NextcloudConnector calendar] :as sys} gig-id]
   (assert calendar)
   (assert i18n-langs)
-  (tap> gig-id)
   (let [tr (i18n/tr-with i18n-langs [:de])
         gig (q/retrieve-gig db gig-id)
         event (event-from-gig env tr gig)]
-    (tap> {:g gig
-           :e event})
+    ;; (tap> {:g gig :e event})
     (-> calendar (.createEvent (Event/fromClojure event)))))
 
 (defn update-gig-event!
@@ -54,11 +52,15 @@
   (assert i18n-langs)
   (let [tr (i18n/tr-with i18n-langs [:de])
         gig (q/retrieve-gig db gig-id)
+        cancelled? (= :gig.status/cancelled (:gig/status gig))
         event (event-from-gig env tr gig)
         existing-event (-> calendar (.getEventByUID (str gig-id)))]
     (if existing-event
-      (-> calendar (.updateEvent (Event/fromClojure event)))
-      (-> calendar (.createEvent (Event/fromClojure event))))))
+      (if cancelled?
+        (-> calendar (.deleteEvent (str gig-id)))
+        (-> calendar (.updateEvent (Event/fromClojure event))))
+      (when-not cancelled?
+        (-> calendar (.createEvent (Event/fromClojure event)))))))
 
 (defn delete-gig-event!
   [{:keys [env db i18n-langs ^NextcloudConnector calendar] :as sys} gig-id]
