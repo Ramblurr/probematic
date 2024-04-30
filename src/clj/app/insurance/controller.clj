@@ -605,13 +605,15 @@
                "Content-Length" (str (count file-bytes))}
      :body (java.io.ByteArrayInputStream. file-bytes)}))
 
-(defn- mark-policy-active [{:keys [db datomic-conn] :as req} policy-id]
+(defn- mark-policy-status [{:keys [datomic-conn] :as req} policy-id status]
+  (when-not ((set policy-statuses) status)
+    (throw (ex-info "Invalid insurance policy status" {:status status})))
   (let [tx-data [{:insurance.policy/policy-id  policy-id
-                  :insurance.policy/status :insurance.policy.status/active}]]
+                  :insurance.policy/status status}]]
     (transact-policy! datomic-conn tx-data)))
 
 (defn confirm-changes! [{:keys [db] :as req}]
-  (mark-policy-active req (util.http/path-param-uuid! req :policy-id)))
+  (mark-policy-status req (util.http/path-param-uuid! req :policy-id) :insurance.policy.status/active))
 
 (defn send-changes! [{:keys [db] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
@@ -622,7 +624,7 @@
         smtp (-> req :system :env :smtp-sno)
         from (:user smtp)]
     (excel/send-email! policy smtp from recipient subject body attachment-filename)
-    (mark-policy-active req (util.http/path-param-uuid! req :policy-id))))
+    (mark-policy-status req (util.http/path-param-uuid! req :policy-id) :insurance.policy.status/active)))
 
 (defn instrument-coverage-history [{:keys [db] :as req} {:instrument.coverage/keys [coverage-id instrument] :as coverage}]
   (let [instr-id (:instrument/instrument-id instrument)
@@ -646,6 +648,22 @@
       ;; (vals)
       ;; (flatten)
      )))
+
+(defn policy-totals [policy]
+  (let [covered-instruments (:insurance.policy/covered-instruments policy)
+        grouped-by-owner (coverages-grouped-by-owner policy)]
+    {:total-cost (sum-by grouped-by-owner :total)
+     :total-instruments  (count covered-instruments)
+     :total-private-count (count (filter :instrument.coverage/private? covered-instruments))
+     :total-band-count (count (remove :instrument.coverage/private? covered-instruments))
+     :total-needs-review (count (filter #(= :instrument.coverage.status/needs-review (:instrument.coverage/status %)) covered-instruments))
+     :total-reviewed (count (filter #(= :instrument.coverage.status/reviewed (:instrument.coverage/status %)) covered-instruments))
+     :total-coverage-active (count (filter #(= :instrument.coverage.status/coverage-active (:instrument.coverage/status %)) covered-instruments))
+     :total-changed (count (filter #(= :instrument.coverage.change/changed (:instrument.coverage/change %)) covered-instruments))
+     :total-removed (count (filter #(= :instrument.coverage.change/removed (:instrument.coverage/change %)) covered-instruments))
+     :total-new (count (filter #(= :instrument.coverage.change/new (:instrument.coverage/change %)) covered-instruments))}))
+
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -654,6 +672,8 @@
     (def db (datomic/db conn))) ;; rcf
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b9")
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b7")
+
+  (mark-policy-status {:datomic-conn conn} #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2" :insurance.policy.status/draft)
 
   (q/retrieve-policy db
                      (->

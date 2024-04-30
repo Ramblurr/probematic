@@ -394,7 +394,7 @@
                            :name name
                            :value value
                            :title title
-                           :href href})
+                           :href (when-not disabled? href)})
         {:class
          (cs
           (when-not (= :link priority)

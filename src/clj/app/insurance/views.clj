@@ -269,7 +269,9 @@ Mit freundlichen Grüßen,
           comp-name (util/comp-namer #'insurance-detail-page-header)
           {:insurance.policy/keys [name effective-at effective-until premium-factor status] :as policy} (q/retrieve-policy db policy-id)
           result (and post? (controller/update-policy! req policy-id))
-          can-send-changes? (= status :insurance.policy.status/draft)]
+          {:keys [total-needs-review]} (controller/policy-totals policy)
+          has-todos? (> total-needs-review 0)
+          policy-draft? (= status :insurance.policy.status/draft)]
       (if (:policy result)
         (response/hx-redirect (urls/link-policy policy-id))
         [(if edit? :form :div)
@@ -295,8 +297,9 @@ Mit freundlichen Grüßen,
                                             :priority :white
                                             :centered? true
                                             :hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true})
-                                 (when can-send-changes?
+                                 (when policy-draft?
                                    (ui/button :tag :a :label (tr [:insurance/send-changes])
+                                              :disabled? has-todos?
                                               :priority :primary
                                               :centered? true
                                               :href (urls/link-policy-changes policy-id)))))}
@@ -560,25 +563,23 @@ Mit freundlichen Grüßen,
   (let [policy (:policy req)
         endpoint-mark-as (util/endpoint-path insurance-instrument-coverage-table-mark-as)
         coverage-types (:insurance.policy/coverage-types policy)
-        covered-instruments (:insurance.policy/covered-instruments policy)
         grouped-by-owner (controller/coverages-grouped-by-owner policy)
-        total-cost (controller/sum-by grouped-by-owner :total)
-        total-instruments (count covered-instruments)
-        total-private-count (count (filter :instrument.coverage/private? covered-instruments))
-        total-band-count (- total-instruments total-private-count)
-        total-needs-review (count (filter #(= :instrument.coverage.status/needs-review (:instrument.coverage/status %)) covered-instruments))
-        total-reviewed (count (filter #(= :instrument.coverage.status/reviewed (:instrument.coverage/status %)) covered-instruments))
-        total-coverage-active (count (filter #(= :instrument.coverage.status/coverage-active (:instrument.coverage/status %)) covered-instruments))
-        total-changed (count (filter #(= :instrument.coverage.change/changed (:instrument.coverage/change %)) covered-instruments))
-        total-removed (count (filter #(= :instrument.coverage.change/removed (:instrument.coverage/change %)) covered-instruments))
-        total-new (count (filter #(= :instrument.coverage.change/new (:instrument.coverage/change %)) covered-instruments))
+        {:keys [total-cost
+                total-instruments
+                total-private-count
+                total-band-count
+                total-needs-review
+                total-reviewed
+                total-coverage-active
+                total-changed
+                total-removed
+                total-new]} (controller/policy-totals policy)
         grid-class "grid instrgrid--grid"
         col-all ""
         col-sm "hidden sm:block"
         col-md "hidden md:block"
         spacing "pl-2 md:pl-4 pr-2 md:pr-4 py-1"
         center-all "flex items-center justify-center"
-        center-vertical "flex items-center"
         number "text-right"
         number-total "border-double border-t-4 border-gray-300"]
     [:form {:id id
