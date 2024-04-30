@@ -663,6 +663,11 @@
      :total-removed (count (filter #(= :instrument.coverage.change/removed (:instrument.coverage/change %)) covered-instruments))
      :total-new (count (filter #(= :instrument.coverage.change/new (:instrument.coverage/change %)) covered-instruments))}))
 
+(defn policies-with-todos [db]
+  (->> (q/policies db)
+       (mapv (fn [policy]
+               (merge policy (policy-totals policy))))
+       (filter #(> (:total-needs-review %) 0))))
 
 (comment
   (do

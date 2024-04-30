@@ -68,16 +68,20 @@
     (when icon
       (icon {:class (ui/cs class "inline mr-1.5 h-5 w-5 flex-shrink-0")}))))
 
+(defn breadcrumb-index [tr]
+  (ui/breadcrumb-contained {:class "mt-6 sm:px-6 lg:px-8"}
+                           {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}))
+
 (defn breadcrumb-policy [tr policy]
-  (ui/breadcrumb-contained
-   {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
-   {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}))
+  (ui/breadcrumb-contained {}
+                           {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
+                           {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}))
 
 (defn breadcrumb-coverage [tr policy coverage]
-  (ui/breadcrumb-contained
-   {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
-   {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}
-   {:label (-> coverage :instrument.coverage/instrument :instrument/name) :href nil}))
+  (ui/breadcrumb-contained {}
+                           {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
+                           {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}
+                           {:label (-> coverage :instrument.coverage/instrument :instrument/name) :href nil}))
 
 (defn instrument-row [{:instrument/keys [name instrument-id category owner]}]
   (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
@@ -111,24 +115,32 @@
     (let [new-policy-id (->  (controller/duplicate-policy! req) :policy :insurance.policy/policy-id)]
       (response/hx-redirect (urls/link-policy new-policy-id)))))
 
-(defn policy-row [tr {:insurance.policy/keys [policy-id name effective-at effective-until status]}]
-  (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"]
+(defn policy-row [tr {:insurance.policy/keys [policy-id name status] :as policy}]
+  (let [style-icon "mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+        p-class "flex items-center text-sm text-gray-500 mr-6 tooltip"
+        {:keys [total-needs-review total-changed total-removed total-new]} (controller/policy-totals policy)]
     [:div {:class "block"}
      [:div {:class "px-4 py-4 sm:px-6"}
       [:div {:class "flex items-center justify-between"}
        [:a {:href  (urls/link-policy policy-id) :class "truncate text-sm font-medium text-sno-orange-600 hover:text-sno-orange-900"}
-        (policy-status-icon status)
+        [:span {:class "tooltip" :data-tooltip (tr [status])}
+         (policy-status-icon status)]
         name]]
 
       [:div {:class "mt-2 sm:flex sm:justify-between"}
        [:div {:class "flex"}
-        [:p {:class "flex items-center text-sm text-gray-500"}
-         (icon/calendar {:class style-icon})
-         (ui/datetime effective-at) " - " (ui/datetime effective-until)]]
+        (when (> total-needs-review 0)
+          [:p {:class p-class :data-tooltip (tr [:insurance/total-needs-review-tooltip])} (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review])
+        (when (> total-changed 0)
+          [:p {:class p-class :data-tooltip (tr [:insurance/total-total-changed-tooltip])} (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed])
+        (when (> total-removed 0)
+          [:p {:class p-class :data-tooltip (tr [:insurance/total-total-removed-tooltip])} (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed])
+        (when (> total-new 0)
+          [:p {:class p-class :data-tooltip (tr [:insurance/total-total-new-tooltip])} (coverage-change-icon-span tr :instrument.coverage.change/new) total-new])]
 
        [:div {:class "mt-2 flex items-center text-sm text-gray-500 sm:mt-0"}
                                         ;(icon/calendar {:class style-icon})
-                                        ;[:p "Last Played "]
+                                        ;; [:p "Last Played "]
         ]
        [:div {:class "ml-2 flex flex-shrink-0 gap-4"}
         (ui/button :label (tr [:action/delete])  :priority :white-destructive :size :small
@@ -1290,6 +1302,8 @@ document.addEventListener('DOMContentLoaded', function() {
   (let [tr (i18n/tr-from-req req)]
     [:div
      (ui/page-header :title (tr [:insurance/title]))
+
+     (breadcrumb-index tr)
 
      (let [policies (q/policies db)]
        [:div {:class "mt-6 sm:px-6 lg:px-8"}

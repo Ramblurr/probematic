@@ -1350,9 +1350,8 @@
              (escape confirm-text)
              (escape cancel-text)))))
 
-(defn breadcrumb-contained [& items]
-
-  [:div {:class "mx-auto mt-8 max-w-3xl gap-6 sm:px-6 lg:max-w-7xl "}
+(defn breadcrumb-contained [attrs & items]
+  [:div (merge {:class "mx-auto mt-8 max-w-3xl gap-6 sm:px-6 lg:max-w-7xl "} attrs)
    [:nav
     {:class "flex", :aria-label "Breadcrumb"}
     [:ol

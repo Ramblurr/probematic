@@ -1,18 +1,20 @@
 (ns app.dashboard.views
   (:require
-   [clojure.string :as str]
-   [app.config :as config]
    [app.auth :as auth]
-   [app.poll.controller :as poll.controller]
+   [app.config :as config]
+   [app.gigs.domain :as domain]
    [app.gigs.service :as gig.service]
    [app.gigs.views :as gig.view]
    [app.icons :as icon]
+   [app.insurance.controller :as insurance.controller]
+   [app.insurance.views :as insurance.view]
+   [app.poll.controller :as poll.controller]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
+   [clojure.string :as str]
    [ctmx.core :as ctmx]
-   [ctmx.rt :as rt]
-   [app.gigs.domain :as domain]))
+   [ctmx.rt :as rt]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [req gig-id member-id motivation]
   (gig.view/motivation-endpoint req
@@ -112,6 +114,27 @@
        [:div {:class "flex ml-4"}
         (icon/checkmark {:class style-icon}) votes-count]]]]))
 
+(ctmx/defcomponent ^:endpoint todo-policies [{:keys [tr]} idx {:insurance.policy/keys [name] :keys [total-needs-review total-changed total-new total-removed] :as policy}]
+  (let [p-class "flex items-center text-sm text-gray-500 mr-6 tooltip"]
+    [:a {:href (url/link-policy policy)}
+     [:div {:id id :class (ui/cs "flex flex-col md:grid md:grid-cols-4 gap-x-0 md:gap-y-8 px-4 py-2 sm:px-6 last:rounded-b-md border-b border-gray-200"
+                                 (when (= 0 idx) "sm:rounded-t-md")
+                                 (if (= 0 (mod idx 2))
+                                   "bg-white"
+                                   "bg-white"))}
+      [:div {:class "md:order-none md:col-span-1 text-sm whitespace-nowrap font-medium"}
+       [:div {:class "flex gap-x-2 md:grid md:grid-flow-col md:auto-cols-min"}
+        [:span {:class "link-blue"} name]]]
+      [:div {:class "md:order-none md:font-normal flex"}
+       (when (> total-needs-review 0)
+         [:p {:class p-class :data-tooltip (tr [:insurance/total-needs-review-tooltip])} (insurance.view/coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review])
+       (when (> total-changed 0)
+         [:p {:class p-class :data-tooltip (tr [:insurance/total-total-changed-tooltip])} (insurance.view/coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed])
+       (when (> total-removed 0)
+         [:p {:class p-class :data-tooltip (tr [:insurance/total-total-removed-tooltip])} (insurance.view/coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed])
+       (when (> total-new 0)
+         [:p {:class p-class :data-tooltip (tr [:insurance/total-total-new-tooltip])} (insurance.view/coverage-change-icon-span tr :instrument.coverage.change/new) total-new])]]]))
+
 (ctmx/defcomponent
   ^:endpoint
   calendar-page
@@ -175,7 +198,8 @@ put '%s' into .copy-link in me"
         _ (assert member)
         gigs-planned (gig.service/gigs-planned-for db member)
         polls-open (poll.controller/open-polls db)
-        need-answer-gigs (gig.service/gigs-needing-plan db member)]
+        need-answer-gigs (gig.service/gigs-needing-plan db member)
+        policies (insurance.controller/policies-with-todos db)]
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list
@@ -188,6 +212,10 @@ put '%s' into .copy-link in me"
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/polls-open]))
         (rt/map-indexed open-polls req polls-open)])
+     (when (seq policies)
+       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+        (ui/divider-left (tr [:dashboard/insurance-todo]))
+        (rt/map-indexed todo-policies req policies)])
      (when (seq need-answer-gigs)
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/unanswered]))

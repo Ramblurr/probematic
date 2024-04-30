@@ -199,7 +199,7 @@
 
 (defn retrieve-poll [db poll-id]
   (poll.domain/db->poll
-    (d/find-by db :poll/poll-id poll-id poll-detail-pattern)))
+   (d/find-by db :poll/poll-id poll-id poll-detail-pattern)))
 
 (defn votes-for-poll [db poll-id]
   (->>
@@ -395,7 +395,6 @@
   (filter :member/active?
           (members-for-select db)))
 
-
 (defn ->policy [policy]
   (-> policy
       (update :insurance.policy/effective-at t/zoned-date-time)
@@ -404,7 +403,8 @@
 (defn policies [db]
   (->> (d/find-all db :insurance.policy/policy-id policy-pattern)
        (mapv #(->policy (first %)))
-       (sort-by (juxt :insurance.policy/effective-until :insurance.policy/name))))
+       (sort-by (juxt :insurance.policy/effective-until :insurance.policy/name))
+       (reverse)))
 
 (defn retrieve-policy [db policy-id]
   (->policy (d/find-by db :insurance.policy/policy-id policy-id policy-pattern)))

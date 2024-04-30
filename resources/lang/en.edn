@@ -13,7 +13,8 @@
              :nightowl "Hi there nightowl, %1"
              :unanswered "Need Attention!"
              :upcoming "All Upcoming Gigs"
-             :polls-open "We have open polls!"}
+             :polls-open "We have open polls!"
+             :insurance-todo "Insurance TODOs"}
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
@@ -117,6 +118,7 @@
         :view-archive "View Gig Archive"
         :archive "Gig Archive"}
  :insurance {:title "Insurance & Instruments"
+             :dashboard-title "Insurance TODOs"
              :name "Policy Name"
              :policies "Policies"
              :item-count "Count"
@@ -140,8 +142,14 @@
              :create-subtitle "Enter details for the new policy."
              :coverage-for "The following information is for: %1"
              :send-changes "Send Changes"
-:error-edit-frozen-policy "Cannot update instrument and coverage on a policy that is not in draft status"
-             }
+             :error-edit-frozen-policy "Cannot update instrument and coverage on a policy that is not in draft status"
+             :total-needs-review-tooltip "Total instruments that need review"
+             :total-total-changed-tooltip "Total instruments that have changed"
+             :total-total-removed-tooltip "Total instruments that have been removed"
+             :total-total-new-tooltip "Total instruments that have been added"}
+ :insurance.policy.status {:active "Active"
+                           :sent "Sent"
+                           :draft "Draft"}
  :instrument.coverage {:private? "Private?"
                        :instrument  "Instrument"
                        :status "Coverage Status"

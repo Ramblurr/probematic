@@ -7,7 +7,11 @@
   :very-low "Gar nicht Motiviert!"},
  :private-instruments "Private Instrumente",
  :insurance
- {
+ {:dashboard-title "Versicherungs-TODOs"
+  :total-needs-review-tooltip "Insgesamt Instrumente, die einer Überprüfung bedürfen"
+  :total-total-changed-tooltip "Gesamtzahl der geänderten Instrumente"
+  :total-total-removed-tooltip "Gesamtzahl der entfernten Instrumente"
+  :total-total-new-tooltip "Gesamtzahl der hinzugefügten Instrumente"
   :send-changes "Änderungen senden"
   :item-count-hint
   "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?",
@@ -139,14 +143,15 @@
   :size "Größe"},
  :choose-calendar-app "Wählen Sie Ihre Kalender-App",
  :dashboard
- {:welcome "Willkommen %1!",
-  :morning "Guten Morgen, %1",
-  :afternoon "Guten Tag, %1",
-  :evening "Guten Abend, %1",
-  :nightowl "Hallo Nachteule, %1",
-  :unanswered "Zukünftige Termine: Sag Bescheid!",
-  :upcoming "Alle kommenden Termine",
-  :polls-open "Wir haben offene Umfragen!"},
+ {:welcome        "Willkommen %1!",
+  :morning        "Guten Morgen, %1",
+  :afternoon      "Guten Tag, %1",
+  :evening        "Guten Abend, %1",
+  :nightowl       "Hallo Nachteule, %1",
+  :unanswered     "Zukünftige Termine: Sag Bescheid!",
+  :upcoming       "Alle kommenden Termine",
+  :polls-open     "Wir haben offene Umfragen!"
+  :insurance-todo "Versicherungs-TODOs"},
  :oebb-discount "ÖBB-Rabatt",
  :Active "Aktiv?",
  :login "Anmelden",
