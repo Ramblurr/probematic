@@ -21,7 +21,7 @@
 
 (def link-policy (partial link-helper "/insurance-policy/" :insurance.policy/policy-id))
 (def link-policy-changes (partial link-helper "/insurance-policy-changes/" :insurance.policy/policy-id))
-(def link-policy-changes-file (partial link-helper "/insurance-changes-excel/" :insurance.policy/policy-id))
+(def link-policy-changes-confirm (partial link-helper "/insurance-changes-excel/" :insurance.policy/policy-id))
 (def link-poll (partial link-helper "/poll/" :poll/poll-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
 (def link-coverage (partial link-helper "/insurance-coverage/" :instrument.coverage/coverage-id))

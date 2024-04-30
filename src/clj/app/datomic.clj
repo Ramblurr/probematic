@@ -50,6 +50,47 @@
   ([{:keys [datomic-conn] :as req} opts comment]
    (d/transact datomic-conn (update opts :tx-data concat (audit-txs req comment)))))
 
+(defn expand-audit-user [db {:audit/keys [user] :as audit}]
+  (assoc-in audit [:audit/member] (d/pull db [:member/member-id :member/username :member/name :member/nick] (:db/id user))))
+
+(defn ident [db attr]
+  (:db/ident (d/pull db '[:db/ident] attr)))
+
+(defn ref? [db attr]
+  (= :db.type/ref
+     (->
+      (d/pull db '[*] attr)
+      :db/valueType
+      :db/ident)))
+
+(defn resolve-ref [db eid]
+  (d/pull db '[*] eid))
+
+
+(defn entity-history [db id-key id-value]
+  (->> (d/q '{:find [?tx ?attr ?val ?added]
+              :in [$ ?id-key ?id-value]
+              :where [
+                      [?e ?id-key ?id-value]
+                      [?e ?attr ?val ?tx ?added]]}
+            (d/history db)
+            id-key id-value)
+       (group-by first)
+       (map (fn [[tx transactions]]
+              (let [tx-info (d/pull db '[*] tx)]
+                {:timestamp (:db/txInstant tx-info)
+                 :ent-id-key id-key
+                 :ent-id-value id-value
+                 :tx-id (:db/id tx-info)
+                 :audit (expand-audit-user db (select-keys tx-info [:audit/user :audit/comment]))
+                 :changes (->> transactions
+                               (map (fn [[_ attr val added]]
+                                      [(ident db attr) (if (ref? db attr)
+                                                         (resolve-ref db val)
+                                                         val) (if added :added :retracted)]))
+                               (sort-by last))})))
+       (sort-by :timestamp)))
+
 (defn unique-error? [error]
   (= :db.error/unique-conflict (-> error :error :db/error)))
 
@@ -174,7 +215,9 @@
       (when (= 0 (count-all (d/db conn) :gig/gig-id))
         (demo/seed-gigs! conn))))
   :seeded)
+
 (def datum-elements (juxt :e :a :v :tx :added))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])

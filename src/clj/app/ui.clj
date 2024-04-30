@@ -1045,6 +1045,12 @@
      (format-dt dt)]
     "-"))
 
+(defn timestamp [dt]
+  (if dt
+    [:time {:dateetime (str dt)}
+     (format-dt dt "dd.MM.YY HH:mm:ss")]
+    "-"))
+
 (defn daterange
   "As per: https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Dates_and_numbers#Ranges"
   [start end]
@@ -1112,7 +1118,7 @@
   (when dt
     (let [local-dt (cond (inst? dt) (t/date-time dt)
                          :else dt)]
-      [:time {:datetime (str local-dt) :title (format-dt dt)}
+      [:time {:datetime (str local-dt) :title (format-dt dt (t/formatter "yyyy-MM-dd HH:mm:ss" Locale/GERMAN))}
        (humanize/from local-dt)])))
 
 (defn dl-item

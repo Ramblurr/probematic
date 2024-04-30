@@ -1,17 +1,21 @@
 (ns app.insurance.controller
   (:require
-   [app.schemas :as s]
    [app.datomic :as d]
+   [app.insurance.excel :as excel]
    [app.queries :as q]
+   [app.schemas :as s]
    [app.util :as util]
+   [app.util.http :as util.http]
    [clojure.data :as clojure.data]
+   [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [medley.core :as m]
-   [tick.core :as t]
    [malli.util :as mu]
-   [clojure.string :as str]
-   [app.util.http :as util.http]))
+   [medley.core :as m]
+   [tick.core :as t])
+  (:import
+   [java.io ByteArrayOutputStream]
+   [java.net URLEncoder]))
 
 (def instrument-coverage-statuses [:instrument.coverage.status/needs-review
                                    :instrument.coverage.status/reviewed
@@ -571,6 +575,66 @@
          :db-after db-after})
       (s/throw-error "Invalid arguments" nil MarkAsSchema p))))
 
+(defn download-changes-excel [{:keys [db] :as req}]
+  (let [policy-id (util.http/path-param-uuid! req :policy-id)
+
+        policy (q/retrieve-policy db policy-id)
+        {:keys [attachment-filename]} (util.http/unwrap-params req)
+        _ (assert "attachment-filename")
+        output-stream (ByteArrayOutputStream.)
+        file-bytes (.toByteArray (excel/generate-excel-changeset! policy output-stream))]
+    {:status 200
+     :headers {"Content-Disposition" (format "%s; filename*=UTF-8''%s" "attachment" (URLEncoder/encode attachment-filename "UTF-8"))
+               "Content-Type" "application/vnd.ms-excel"
+               "Content-Length" (str (count file-bytes))}
+     :body (java.io.ByteArrayInputStream. file-bytes)}))
+
+(defn- mark-policy-active [{:keys [db datomic-conn] :as req} policy-id]
+  (let [tx-data [{:insurance.policy/policy-id  policy-id
+                  :insurance.policy/status :insurance.policy.status/active}]]
+    (transact-policy! datomic-conn tx-data)))
+
+(defn confirm-changes! [{:keys [db] :as req}]
+  (mark-policy-active req (util.http/path-param-uuid! req :policy-id)))
+
+(defn send-changes! [{:keys [db] :as req}]
+  (let [policy-id (util.http/path-param-uuid! req :policy-id)
+        {:keys [attachment-filename] :as p} (util.http/unwrap-params req)
+        _ (assert "attachment-filename")
+        policy (q/retrieve-policy db policy-id)
+        {:keys [subject recipient body]} p
+        smtp (-> req :system :env :smtp-sno)
+        from (:user smtp)]
+    (excel/send-email! policy smtp from recipient subject body attachment-filename)
+    (mark-policy-active req (util.http/path-param-uuid! req :policy-id))))
+
+(defn instrument-coverage-history [{:keys [db] :as req} {:instrument.coverage/keys [coverage-id instrument] :as coverage}]
+  (let [instr-id (:instrument/instrument-id instrument)
+        instr-history (d/entity-history db :instrument/instrument-id instr-id)
+        coverage-history (d/entity-history db :instrument.coverage/coverage-id coverage-id)]
+    (tap> {:instr-history instr-history
+           :coverage-history coverage-history})
+    (->>
+      (concat instr-history
+              coverage-history)
+      (group-by :tx-id)
+      (vals)
+      (map (fn [txs]
+             (reduce (fn [agg {:keys [audit changes timestamp tx-id]}]
+                       (-> agg
+                           (assoc :tx-id tx-id)
+                           (assoc :timestamp timestamp)
+                           (assoc :audit audit)
+                           (update :changes concat changes)
+                           )
+                       ) {} txs)))
+      (sort-by :timestamp)
+      (reverse)
+      ;; (vals)
+      ;; (flatten)
+
+      )))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -724,13 +788,18 @@
   (defn resolve-ref [db eid]
     (datomic/pull db '[*] eid))
 
+  (require '[app.debug :refer [xxx xxx>>]])
+
+  (instrument-coverage-history {:db  (datomic/db conn)} (q/retrieve-coverage (datomic/db conn ) #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b8") ) ;; rcf
+
   (let [db (datomic/db conn)]
     (->> (datomic/q '{:find [?tx ?attr ?val ?added]
                       :in [$ ?coverage-id]
                       :where [[?e :instrument.coverage/coverage-id ?coverage-id]
                               [?e ?attr ?val ?tx ?added]]}
                     (datomic/history db)
-                    #uuid "0186c248-07ba-82c0-bfda-237986a75705")
+                    #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b8")
+         (xxx>>)
          (group-by first)
          (map (fn [[tx transactions]]
                 (let [tx-info (datomic/pull db '[*] tx)]

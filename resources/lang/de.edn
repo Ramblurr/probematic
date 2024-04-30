@@ -465,4 +465,25 @@
   :play-stats-title "Statistiken spielen",
   :sheet-music-title "Noten",
   :background-title "Hintergrund",
-  :list-title "Repertoire"}}
+  :list-title "Repertoire"}
+
+ :history {:retracted "Zurückgezogen"
+           :updated "Geändert"
+           :added "Hinzugefügt"
+           :title "Geschichte der Veränderungen"
+           :subtitle-coverage "Änderungen an diesem Instrument"}
+
+ :instrument.coverage {:private? "Privat?"
+                       :instrument  "Instrument"
+                       :status "Abdeckungsstatus"
+                       :coverage-id "Abdeckungs-ID"
+                       :types "Versicherungsdeckung"
+                       :description "Beschreibung"
+                       :item-count "Stückzahl"
+                       :value "Versicherungswert"
+                       :change "Änderungen"}
+
+ :instrument.coverage.change {:new "Neu hinzugefügt"
+                              :removed "Entfernt"
+                              :none "Keine Änderungen"
+                              :changed "Geändert"}}

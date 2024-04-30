@@ -6,7 +6,6 @@
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.insurance.controller :as controller]
-   [app.insurance.excel :as excel]
    [app.queries :as q]
    [app.sardine :as sardine]
    [app.ui :as ui]
@@ -18,10 +17,7 @@
    [ctmx.rt :as rt]
    [hiccup.util :as hiccup.util]
    [medley.core :as m]
-   [tick.core :as t])
-  (:import
-   [java.io ByteArrayOutputStream]
-   [java.net URLEncoder]))
+   [tick.core :as t]))
 
 (def coverage-status-data
   {:instrument.coverage.status/needs-review {:icon  icon/circle-question-outline :class "text-orange-400"}
@@ -29,7 +25,7 @@
    :instrument.coverage.status/coverage-active {:icon icon/circle-check-outline :class "text-green-400"}})
 
 (def coverage-change-data
-  {:instrument.coverage.change/new {:icon icon/circle-plus :class "text-green-400"}
+  {:instrument.coverage.change/new {:icon icon/circle-plus-outline :class "text-green-400"}
    :instrument.coverage.change/removed {:icon icon/circle-xmark :class "text-red-400"}
    :instrument.coverage.change/changed {:icon icon/circle-exclamation :class "text-orange-400"}
    ;; :instrument.coverage.change/none {:icon icon/circle-check :class "text-gray-400"}
@@ -146,22 +142,19 @@
 
 (defn insurance-policy-changes-file [{:keys [db] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
-        {:keys [attachment-filename action] :as p} (util.http/unwrap-params req)
-        _ (assert "attachment-filename")
-        policy (q/retrieve-policy db policy-id)
-        output-stream (ByteArrayOutputStream.)
-        file-bytes (.toByteArray (excel/generate-excel-changeset! policy output-stream))]
-    (if (= action "preview")
-      {:status 200
-       :headers {"Content-Disposition" (format "%s; filename*=UTF-8''%s" "attachment" (URLEncoder/encode attachment-filename "UTF-8"))
-                 "Content-Type" "application/vnd.ms-excel"
-                 "Content-Length" (str (count file-bytes))}
-       :body (java.io.ByteArrayInputStream. file-bytes)}
-
-      (let [{:keys [subject recipient body]} p
-            smtp (-> req :system :env :smtp-sno)
-            from (:user smtp)]
-        (excel/send-email! policy smtp from recipient subject body attachment-filename)
+        {:keys [action] :as p} (util.http/unwrap-params req)]
+    (condp = action
+      "preview"
+      (controller/download-changes-excel req)
+      "send"
+      (do
+        (controller/send-changes! req)
+        (if (:htmx? req)
+          (response/hx-redirect (urls/link-policy policy-id))
+          (response/redirect (urls/link-policy policy-id))))
+      "confirm-skip-send"
+      (do
+        (controller/confirm-changes! req)
         (if (:htmx? req)
           (response/hx-redirect (urls/link-policy policy-id))
           (response/redirect (urls/link-policy policy-id)))))))
@@ -178,7 +171,7 @@
     ;; (excel/generate-excel-changeset! policy nil)
 
     [:div {:class "bg-white shadow py-4 px-6 space-y-12"}
-     [:form {:action (urls/link-policy-changes-file policy) :method :post}
+     [:form {:action (urls/link-policy-changes-confirm policy) :method :post}
       [:div {:class "border-b border-gray-900/10 pb-12"}
        [:h2 {:class "text-lg font-semibold leading-7 text-gray-900"} "Benachrichtigung über Änderungen"]
        [:p {:class "mt-1 text-sm leading-6 text-gray-600"}
@@ -229,16 +222,27 @@ Mit freundlichen Grüßen,
        [:div {:class "mt-6 flex items-center justify-end gap-x-6"}
         (ui/button :label (tr [:action/cancel]) :priority :white
                    :tag :a :href (urls/link-policy policy-id))
+        (ui/button :label "Skip"
+                   :priority :secondary
+                   :name "action"
+                   :value "confirm-skip-send"
+                   :type :submit
+                   :hx-post (urls/link-policy-changes-confirm policy)
+                   :attr {:_ (ui/confirm-modal-script
+                              "Skip sending email?"
+                              "This will skip sending the email, but mark all the changes as confirmed."
+                              "Yes, mark all as confirmed"
+                              (tr [:action/cancel]))})
         (ui/button :label (tr [:action/send]) :icon icon/envelope :priority :primary
                    :name "action"
                    :value "send"
                    :type :submit
-                   :hx-post (urls/link-policy-changes-file policy)
+                   :hx-post (urls/link-policy-changes-confirm policy)
                    :attr {:_ (ui/confirm-modal-script
-                               "Send email?"
-                               "This will send an email and the excel attachment to the recipient"
-                               "Yes, send the email"
-                               (tr [:action/cancel]))})]]]]))
+                              "Send email?"
+                              "This will send an email and the excel attachment to the recipient"
+                              "Yes, send the email"
+                              (tr [:action/cancel]))})]]]]))
 
 (ctmx/defcomponent ^:endpoint insurance-detail-page-header [{:keys [db tr] :as req} ^:boolean edit?]
   (ctmx/with-req req
@@ -758,6 +762,139 @@ Mit freundlichen Grüßen,
                [:dt {:class "text-gray-500"} (tr [:insurance/total])]
                [:dd {:class "whitespace-nowrap text-gray-900"} (ui/money (:instrument.coverage/cost coverage) :EUR)]]]]))
 
+(defn member [m]
+  [:div {:class "flex items-center"}
+   [:div {:class "h-11 w-11 flex-shrink-0"}
+    (ui/avatar-img m :class "h-10 w-10 rounded-full")]
+   [:div {:class "ml-2"}
+    [:div {:class "font-medium text-gray-900"} (:member/name m)]
+    [:div {:class "mt-1 text-gray-500"} (:member/nick m)]]])
+
+(def history-field-exclusions #{
+    :instrument.coverage/coverage-id :instrument/instrument-id
+                                } )
+(defn change-value [tr k v]
+  ;; (tap> [:k k :v v])
+  (condp = k
+    :instrument/category (str (:instrument.category/name v))
+    :instrument.coverage/value (ui/money v :EUR)
+    :instrument/owner (member v)
+    :instrument.coverage/instrument (:instrument/name v)
+    :instrument.coverage/types (:insurance.coverage.type/name v)
+    (if (keyword? v)
+      (tr [v])
+      (str v))))
+
+(defn munge-field-change [acc field-change]
+  ;; (tap> [:field-change field-change])
+  (condp =  (count field-change)
+    1 (let [[k v action :as f] (first field-change)]
+        (conj acc
+              (if (= action :added)
+                (assoc f 1 {:before nil :after v :action action})
+                (assoc f 1 {:before v :after nil :action action}))))
+    2 (let [updated? (= #{:retracted :added} (set (map #(nth % 2) field-change)))]
+        (if updated?
+          (conj acc
+                (-> (first field-change)
+                    (assoc 2 :updated)
+                    (assoc 1 {:before (second (first field-change))
+                              :after  (second (second field-change))})))
+          (concat acc
+                  (map (fn [[k v action :as f]]
+                         (if (= :retracted action)
+                           (assoc f 1 {:before v :after nil :action action})
+                           (assoc f 1 {:before nil :after v :action action}))) field-change))))
+
+    (concat acc
+            (map (fn [[k v action :as f]]
+                   (if (= :retracted action)
+                     (assoc f 1 {:before v :after nil :action action})
+                     (assoc f 1 {:before nil :after v :action action}))) field-change))))
+
+(defn coverage-changes-panel [{:keys [tr] :as req} coverage policy]
+  (let [history (controller/instrument-coverage-history req coverage)]
+    ;; (tap> [:history history])
+    (ui/panel {:title (tr [:history/title])
+               :subtitle (tr [:history/subtitle-coverage])}
+              [:div {:class "mt-6 overflow-hidden border-t border-gray-100"}
+               [:div {:class "mx-auto max-w-7xl px-2 sm:px-6 lg:px-8"}
+                [:div {:class "mx-auto max-w-2xl lg:mx-0 lg:max-w-none"}
+                 [:table {:class "table-auto text-left w-full"}
+                  [:thead {:class "border-b border-gray-200 bg-gray-300"}
+                   [:tr {:class "relative isolate py-2 font-semibold"}
+                    [:th "Editor"
+                     [:div {:class "absolute inset-y-0 right-full -z-10 w-screen border-b border-gray-200 bg-gray-200"}]
+                     [:div {:class "absolute inset-y-0 left-0 -z-10 w-screen border-b border-gray-200 bg-gray-200"}]]
+                    [:th "Field"]
+                    [:th "Before"]
+                    [:th "After"]]]
+                  [:tbody
+                   (map (fn [{:keys [changes timestamp audit] :as tx}]
+                          (let [changes (->> changes
+                                             (group-by first)
+                                             (vals)
+                                             (reduce munge-field-change [])
+                                             (map (fn [[k {:keys [before after]} action]]
+                                                    {:field-key k
+                                                     :field-label (tr [k])
+                                                     :action action
+                                                     :before (when-let [before before] (change-value tr k before))
+                                                     :after (change-value tr k after)}
+
+                                                    ))
+                                             (remove #(history-field-exclusions (:field-key %)))
+                                             (sort-by :field-label))
+                                audit-user-name (:member/name (:audit/member audit))]
+                            [:div
+                             [:tr {:class "text-sm leading-6 text-gray-900"}
+                              [:th {:class "relative isolate py-2 font-semibold" :scope "colgroup" :colspan 5}
+
+                               [:time {:datetime "2023-03-22"} (ui/humanize-dt timestamp)]
+                                 [:div {:class "absolute inset-y-0 right-full -z-10 w-screen border-b border-gray-200 bg-gray-50"}]
+                                 [:div {:class "absolute inset-y-0 left-0 -z-10 w-screen border-b border-gray-200 bg-gray-50"}]
+                               ]]
+
+                             (map
+                              (fn [{:keys [action after before field-key field-label]}]
+                                (let [after (if (keyword? after) (tr [after]) after)
+                                      before (if (keyword? before) (tr [before]) before)]
+                                  [:tr
+                                   [:td {:class "relative py-3 pr-3"}
+                                    [:div {:class "flex gap-x-3"}
+                                     (condp = action
+                                       :retracted (icon/circle-xmark {:class "h-6 w-5 text-red-400 flex-none sm:block"})
+                                       :added (icon/circle-plus-solid {:class "h-6 w-5 text-green-400  flex-none sm:block"})
+                                       :updated (icon/circle-exclamation {:class "h-6 w-5 text-sno-orange-400  flex-none sm:block"}))
+                                     [:div
+                                      {:class "flex-auto"}
+                                      [:div
+                                       {:class "flex items-start gap-x-3"}
+                                       [:div
+                                        {:class "text-sm  leading-6 text-gray-900"}
+                                        audit-user-name]]
+                                      [:div {:class "mt-1 text-xs leading-5 text-gray-500"} (tr [(keyword "history" (name action))])]]]]
+
+                                   [:td
+                                    {:class ""}
+                                    [:div {:class "text-sm font-medium leading-6 text-gray-900"} field-label]
+                                    [:div
+                                     {:class "mt-1 text-xs leading-5 text-gray-500"}]]
+                                   [:td
+                                    {:class ""}
+                                    [:div {:class "text-sm leading-6 text-gray-900"} (or  before "-")]
+                                    [:div
+                                     {:class "mt-1 text-xs leading-5 text-gray-500"}]]
+                                   [:td
+                                    {:class ""}
+                                    [:div {:class "text-sm leading-6 text-gray-900"} (or  after "-")]
+                                    [:div
+                                     {:class "mt-1 text-xs leading-5 text-gray-500"}]]]))
+
+                              changes)]))
+
+                        history)]]]]])))
+
 (defn instrument-image-remote-path
   "Return the remote nextcloud path for the image upload dir or a specific file"
   ([req instrument-id]
@@ -808,7 +945,8 @@ Mit freundlichen Grüßen,
                     (ui/dl-item (tr [:instrument/description])
                                 (:instrument/description instrument) "sm:col-span-3"))
                    (ui/photo-grid photos))
-         (coverage-panel tr coverage policy)]))))
+         (coverage-panel tr coverage policy)
+         (coverage-changes-panel req coverage policy)]))))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page3 [{:keys [db tr] :as req}]
   (let [post? (util/post? req)
