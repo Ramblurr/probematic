@@ -87,7 +87,7 @@
    :jvm-opts    ["-XX:-OmitStackTraceInFastThrow"]}
   :run-m {:main-opts ["-m" "app.main"] :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]}
   :run-x {:ns-default app.main :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]}
-  :build {:deps       {io.github.clojure/tools.build {:git/tag "v0.10.0"
-                                                      ;; :git/sha "76b78fe"
+  :build {:deps       {io.github.clojure/tools.build {:git/tag "v0.10.1"
+                                                      :git/sha "5e3b8f3fa45991a4a6b08565da9fd9b3535f39e6"
                                                       }}
           :ns-default build}}}
