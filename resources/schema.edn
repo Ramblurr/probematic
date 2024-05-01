@@ -929,17 +929,57 @@
    {:db/ident :poll.vote/poll-option
     :db/doc "The option of this vote"
     :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.vote/author
+    :db/doc "The author of the poll.vote"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+
+   {:db/ident :poll.vote/created-at
+    :db/doc "The time the poll.vote was created."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+;;; Ledgers (Accounts) - for debt tracking
+   {:db/ident :ledger/ledger-id
+    :db/doc "The id of this ledger"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :ledger/owner
+    :db/doc "The ledger owner"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :ledger/entries
+    :db/doc "The ledger entries (transactions) in this ledger"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}
+   {:db/ident :ledger/balance
+    :db/doc "The current balance of this account"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+
+;;; Ledger Entries (Transactions) - for debt tracking
+   {:db/ident :ledger.entry/entry-id
+    :db/doc "The id of this transaction"
+    :db/unique :db.unique/identity
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :ledger.entry/tx-date
+    :db/doc "The date on which the transaction ocurred"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one
+    }
+   {:db/ident :ledger.entry/description
+    :db/doc "The user's description of the transaction"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    }
+   {:db/ident :ledger.entry/amount
+    :db/doc "The amount of currency in the transaction"
+    :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}]
-
-{:db/ident :poll.vote/author
- :db/doc "The author of the poll.vote"
- :db/valueType :db.type/ref
- :db/cardinality :db.cardinality/one}
-
-{:db/ident :poll.vote/created-at
- :db/doc "The time the poll.vote was created."
- :db/valueType :db.type/instant
- :db/cardinality :db.cardinality/one}
 
 ;;
 

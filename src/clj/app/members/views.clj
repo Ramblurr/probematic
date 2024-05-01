@@ -1,5 +1,6 @@
 (ns app.members.views
   (:require
+   [app.ledger.views :as ledger]
    [app.util.http :as http.util]
    [app.sardine :as sardine]
    [app.auth :as auth]
@@ -298,6 +299,9 @@
                                                                                   (ui/rich-li-action-a :href "#" :label
                                                                                                        (tr [:action/view]))))
                                                                     coverages))) "sm:col-span-3")))
+      (ui/panel {:title "Money Stuff"
+                 :subtitle "What you owe the band and what the band owes you"}
+                (ledger/ledger-table req member))
       (ui/panel {:title (tr ["Gigs & Probes"])
                  :subtitle (tr ["Fun stats!"])}
                 (ui/dl
@@ -377,9 +381,9 @@
       (tr [:total]) ": " (count members)]
      [:table {:class "min-w-full divide-y divide-gray-300"}
       (list
-        (ui/table-row-head table-headers)
-        (ui/table-body
-          (rt/map-indexed member-row-rw req (map :member/member-id members))))]]))
+       (ui/table-row-head table-headers)
+       (ui/table-body
+        (rt/map-indexed member-row-rw req (map :member/member-id members))))]]))
 
 (ctmx/defcomponent ^:endpoint member-table-ro [{:keys [tr db] :as req}]
   (let [members (controller/members db (sort-param req) (filter-param req))
@@ -390,7 +394,7 @@
      [:table {:class "min-w-full divide-y divide-gray-300"}
       (ui/table-row-head table-headers)
       (ui/table-body
-        (rt/map-indexed member-row-ro req (map :member/member-id members)))]]))
+       (rt/map-indexed member-row-ro req (map :member/member-id members)))]]))
 
 (defn member-add-form [{:keys [tr path sections]}]
   (let [required-label [:span  {:class "text-red-300 float-right"} " required"]]

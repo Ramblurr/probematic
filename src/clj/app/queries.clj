@@ -2,6 +2,7 @@
   (:require
    [app.datomic :as d]
    [app.gigs.domain :as gig.domain]
+   [app.ledger.domain :as ledger.domain]
    [app.poll.domain :as poll.domain]
    [app.settings.domain :as settings.domain]
    [app.util :as util]
@@ -117,6 +118,7 @@
      :insurance.coverage.type/description
      :insurance.coverage.type/type-id
      :insurance.coverage.type/premium-factor]}])
+
 (def policy-pattern [:insurance.policy/policy-id
                      :insurance.policy/currency
                      :insurance.policy/name
@@ -846,6 +848,18 @@
   (settings.domain/db->discount
    (d/find-by db :travel.discount/discount-id travel-discount-id travel-discount-pattern)))
 
+(def ledger-pattern
+  [:ledger/ledger-id :ledger/balance
+   {:ledger/owner member-pattern}
+   {:ledger/entries [:ledger.entry/entry-id
+                     :ledger.entry/amount
+                     :ledger.entry/tx-date
+                     :ledger.entry/description]}])
+
+(defn retrieve-ledger [db member-id]
+  (ledger.domain/db->ledger
+    (d/find-by db :ledger/owner [:member/member-id member-id] ledger-pattern)))
+
 ;;;; END
 (comment
   (do
@@ -917,7 +931,7 @@
                                                                        :attendance/motivation
                                                                        :attendance/updated]}])
                :attendance/_gig
-               ;; (group-by #(-> % :attendance/section :section/name))
+                ;; (group-by #(-> % :attendance/section :section/name))
                )
         plans (attendances-for-gig db "ag1zfmdpZy1vLW1hdGljcjMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDAsSA0dpZxiAgMD81q7OCww")
         members (active-members db)

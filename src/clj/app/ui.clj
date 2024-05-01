@@ -759,6 +759,11 @@
     [:span
      [:span (money-format value currency)]]))
 
+(defn money-cents
+  "Given a monetary value in cents, returns a formatted string with the currency symbol."
+  [value currency]
+  (money (/ value 100) currency))
+
 (defn money-input-left [& {:keys [id value label required? hint error integer?]
                            :or {required? true}}]
   (let [has-error? (get error (keyword id))
@@ -780,11 +785,11 @@
                 :step step
                 :placeholder "0.00" :value value :required required? :name id :id id
                 :class (cs
-                        "text-right pl-7 pr-12"
-                        "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
-                        (if has-error?
-                          "ring-red-300 focus:ring-red-500 placeholder:text-red-300"
-                          "ring-gray-300 focus:border-sno-orange-500  focus:ring-sno-orange-500"))}]
+                         "text-right pl-7 pr-12"
+                         "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
+                         (if has-error?
+                           "ring-red-300 focus:ring-red-500 placeholder:text-red-300"
+                           "ring-gray-300 focus:border-sno-orange-500  focus:ring-sno-orange-500"))}]
        [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
         [:span {:class "text-gray-500 sm:text-sm"} "EUR"]
         (when has-error?
