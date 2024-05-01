@@ -142,8 +142,12 @@
        [:div {:class "ml-2 flex flex-shrink-0 gap-4"}
         (ui/button :label (tr [:action/delete])  :priority :white-destructive :size :small
                    :hx-delete (util/comp-name #'insurance-policy-delete)
-                   :hx-confirm (tr [:action/confirm-delete-policy] [name])
-                   :hx-vals {:policy-id (str policy-id)})
+                   :hx-vals {:policy-id (str policy-id)}
+                   :attr {:_ (ui/confirm-modal-script
+                               (tr [:action/confirm-generic])
+                               (tr [:action/confirm-delete-policy] [name])
+                               (tr [:action/confirm-delete])
+                               (tr [:action/cancel]))})
         (ui/button :label (tr [:action/duplicate])  :priority :white :size :small
                    :hx-post (util/comp-name #'insurance-policy-duplicate)
                    :hx-vals {:policy-id (str policy-id)})]]]]))
