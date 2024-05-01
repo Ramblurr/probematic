@@ -235,6 +235,7 @@
           :confirm-close "Yes, close it."
           :confirm-delete-gig "Are you sure you want to delete the gig %1? "
           :confirm-delete-policy "Are you sure you want to delete the insurance policy %1?"
+          :confirm-delete-instrument "Are you sure you want to delete the instrument %1?"
           :confirm-delete-poll "Are you sure you want to delete the poll '%1?'"
           :confirm-delete-song "Are you sure you want to delete the song %1?"
           :confirm-delete "Yes, delete it."

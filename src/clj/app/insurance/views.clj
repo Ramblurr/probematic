@@ -802,11 +802,15 @@ Mit freundlichen Grüßen,
                            (tr [form-error])]])
                        (ui/form-buttons
                         :buttons-left (list
-                                       (ui/button {:label (tr [:action/delete]) :priority :white-destructive
-                                                   :hx-delete (util/endpoint-path insurance-coverage-delete)
-                                                   :hx-target (hash ".")
-                                                   :hx-vals {:coverage-id (str coverage-id)}
-                                                   :hx-confirm (tr [:action/confirm-generic])}))
+                                        (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
+                                                    :hx-delete (util/endpoint-path insurance-coverage-delete)
+                                                    :hx-target (hash ".")
+                                                    :hx-vals   {:coverage-id (str coverage-id)}
+                                                    :attr      {:_ (ui/confirm-modal-script
+                                                                     (tr [:action/confirm-generic])
+                                                                     (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
+                                                                     (tr [:action/confirm-delete])
+                                                                     (tr [:action/cancel]))}}))
                         :buttons-right (list
                                         (ui/link-button {:label (tr [:action/cancel]) :priority :white
                                                          :attr {:href (urls/link-policy policy)}})
