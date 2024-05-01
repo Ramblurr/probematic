@@ -166,7 +166,6 @@
     (def p (p/open {:theme :portal.colors/gruvbox}))
     (add-tap #'p/submit))
   (p/clear)
-  (tap> {:test 1})
 
   (reset)
   (halt)

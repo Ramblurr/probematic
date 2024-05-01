@@ -315,12 +315,7 @@ Mit freundlichen Grüßen,
                                             :priority :white
                                             :centered? true
                                             :hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true})
-                                 (when policy-draft?
-                                   (ui/button :tag :a :label (tr [:insurance/send-changes])
-                                              :disabled? has-todos?
-                                              :priority :primary
-                                              :centered? true
-                                              :href (urls/link-policy-changes policy-id)))))}
+                                 (send-changes-button req policy false)))}
 
                    [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-3"}
                     (ui/dl-item (tr [:insurance/effective-at])
@@ -573,8 +568,11 @@ Mit freundlichen Grüßen,
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table-mark-as [req]
   (when (util/post? req)
-    (let [{:keys [policy db-after]} (controller/mark-coverages-as! req)]
-      (insurance-instrument-coverage-table (util/make-get-request req {:db db-after :policy policy})))))
+    (let [{:keys [policy db-after]} (controller/mark-coverages-as! req)
+          new-req (util/make-get-request req {:db db-after :policy policy})]
+      (ui/multi-response
+       [(insurance-instrument-coverage-table new-req)
+        (send-changes-button new-req policy true)]))))
 
 (defn mark-coverage-as-menu [{:keys [tr]} endpoint-mark-as hx-target]
   (let [confirm #(ui/confirm-modal-script

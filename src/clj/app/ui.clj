@@ -123,6 +123,18 @@
                 trigger-name)}
     :body (ctmx.render/html body)}))
 
+(defn multi-response
+  "Return HTML has a response with multiple to-level HTML elements.
+  In normal Hiccup this isn't allowed, there can be only one top-level element.
+  This is useful when using hx-swap-oob
+  "
+  [bodies]
+  {:status 200
+   :headers {"Content-Type" "text/html"}
+   :body (->> bodies
+              (map ctmx.render/html)
+              (str/join "\n"))})
+
 (defn retarget-response
   [new-target body]
   {:status 200
