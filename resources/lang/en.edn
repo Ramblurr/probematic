@@ -123,6 +123,8 @@
              :confirm-mark-as-title "Mark as %1?"
              :confirm-mark-as "Are you sure you want to mark as %1"
              :confirm-mark-as-button "Mark as"
+             :confirm-and-send "Confirm and Send"
+             :confirm-skip-send "Confirm without Sending"
              :policies "Policies"
              :item-count "Count"
              :item-count-hint "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?"

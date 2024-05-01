@@ -250,7 +250,7 @@ Mit freundlichen Grüßen,
        [:div {:class "mt-6 flex items-center justify-end gap-x-6"}
         (ui/button :label (tr [:action/cancel]) :priority :white
                    :tag :a :href (urls/link-policy policy-id))
-        (ui/button :label "Skip"
+        (ui/button :label (tr [:insurance/confirm-skip-send])
                    :priority :secondary
                    :name "action"
                    :value "confirm-skip-send"
@@ -261,7 +261,7 @@ Mit freundlichen Grüßen,
                               "This will skip sending the email, but mark all the changes as confirmed."
                               "Yes, mark all as confirmed"
                               (tr [:action/cancel]))})
-        (ui/button :label (tr [:action/send]) :icon icon/envelope :priority :primary
+        (ui/button :label (tr [:insurance/confirm-and-send]) :icon icon/envelope :priority :primary
                    :name "action"
                    :value "send"
                    :type :submit
@@ -269,18 +269,27 @@ Mit freundlichen Grüßen,
                    :attr {:_ (ui/confirm-modal-script
                               "Send email?"
                               "This will send an email and the excel attachment to the recipient"
-                              "Yes, send the email"
+                              "Yes, send the email and confirm changes."
                               (tr [:action/cancel]))})]]]]))
+
+(defn send-changes-button [{:keys [tr] :as req} {:insurance.policy/keys [status] :as policy} oob?]
+  (let [policy-draft? (= status :insurance.policy.status/draft)
+        {:keys [total-needs-review]} (controller/policy-totals policy)
+        has-todos? (> total-needs-review 0)]
+    (when policy-draft?
+      [:div {:id "send-changes-button" :hx-swap-oob (when oob? "true")}
+       (ui/button :tag :a :label (tr [:insurance/send-changes])
+                  :disabled? has-todos?
+                  :priority :primary
+                  :centered? true
+                  :href (urls/link-policy-changes policy))])))
 
 (ctmx/defcomponent ^:endpoint insurance-detail-page-header [{:keys [db tr] :as req} ^:boolean edit?]
   (ctmx/with-req req
     (let [policy-id (util.http/path-param-uuid! req :policy-id)
           comp-name (util/comp-namer #'insurance-detail-page-header)
           {:insurance.policy/keys [name effective-at effective-until premium-factor status] :as policy} (q/retrieve-policy db policy-id)
-          result (and post? (controller/update-policy! req policy-id))
-          {:keys [total-needs-review]} (controller/policy-totals policy)
-          has-todos? (> total-needs-review 0)
-          policy-draft? (= status :insurance.policy.status/draft)]
+          result (and post? (controller/update-policy! req policy-id))]
       (if (:policy result)
         (response/hx-redirect (urls/link-policy policy-id))
         [(if edit? :form :div)
