@@ -141,7 +141,7 @@
                          :instrument/description
                          :instrument/serial-number
                          :instrument/build-year
-                         {:instrument/owner [:member/name]}
+                         {:instrument/owner [:member/name :member/member-id]}
                          {:instrument/category [:instrument.category/category-id
                                                 :instrument.category/code
                                                 :instrument.category/name]}]}

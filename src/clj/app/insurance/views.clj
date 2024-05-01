@@ -708,10 +708,10 @@ Mit freundlichen Grüßen,
       (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
       [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
      [:div {:class "instrgrid--body divide-y"}
-      (map (fn [{:member/keys [name] :keys [coverages total]}]
+      (map (fn [{:member/keys [name member-id] :keys [coverages total] :as member}]
              [:div {:class "instrgrid--group"}
               [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
-               [:span name]
+               [:span [:a {:href (urls/link-member member-id) :class "link-blue"} name]]
                [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
               [:div {:class "divide-y"}
                (map-indexed (fn [idx {:instrument.coverage/keys [coverage-id change status private? value item-count instrument cost] :keys [types] :as coverage}]
