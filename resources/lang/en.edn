@@ -157,12 +157,12 @@
                            :draft "Draft"}
  :instrument.coverage {:private? "Private?"
                        :instrument  "Instrument"
-                       :status "Coverage Status"
+                       :status "Workflow Status"
                        :coverage-id "Coverage ID"
                        :types "Coverage Types"
                        :value "Value"
                        :item-count "Item Count"
-                       :change "Change"}
+                       :change "Change Status"}
  :instrument.coverage.status {:needs-review "Todo"
                               :reviewed "Reviewed"
                               :coverage-active "Active"}

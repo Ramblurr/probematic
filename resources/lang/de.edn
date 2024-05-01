@@ -482,13 +482,13 @@
 
  :instrument.coverage {:private? "Privat?"
                        :instrument  "Instrument"
-                       :status "Abdeckungsstatus"
+                       :status "Workflow-Status"
                        :coverage-id "Abdeckungs-ID"
                        :types "Versicherungsdeckung"
                        :description "Beschreibung"
                        :item-count "Stückzahl"
                        :value "Versicherungswert"
-                       :change "Änderungen"}
+                       :change "Status der Änderungen"}
 
  :instrument.coverage.change {:new "Neu hinzugefügt"
                               :removed "Entfernt"

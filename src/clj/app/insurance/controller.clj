@@ -661,11 +661,13 @@
   (let [policy-txs [{:insurance.policy/policy-id  policy-id
                      :insurance.policy/status :insurance.policy.status/active}]
         policy (q/retrieve-policy db policy-id)
-        coverage-txs (map (fn [{:instrument.coverage/keys [coverage-id]}]
-                            [:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/status :instrument.coverage.status/coverage-active]) (:insurance.policy/covered-instruments policy))
+        coverage-txs (mapcat (fn [{:instrument.coverage/keys [coverage-id]}]
+                               [[:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/status :instrument.coverage.status/coverage-active]
+                                [:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/change :instrument.coverage.change/none]])
+                          (:insurance.policy/covered-instruments policy))
         txs (concat policy-txs coverage-txs)]
-    (tap> [:txs txs])
-    (d/transact-wrapper! req txs)))
+    (d/transact-wrapper! req {:tx-data txs})))
+
 
 (defn confirm-changes! [{:keys [db] :as req}]
   (confirm-and-activate-policy req (util.http/path-param-uuid! req :policy-id)))
@@ -734,7 +736,7 @@
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b9")
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b7")
 
-  (datomic/transact conn {:tx-data [{:insurance.policy/policy-id  #uuid "01843929-c116-80f5-9983-8ba691e77d3d"  :insurance.policy/status :insurance.policy.status/draft}]})
+  (datomic/transact conn {:tx-data [{:insurance.policy/policy-id  #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2"  :insurance.policy/status :insurance.policy.status/draft}]})
 
   (q/retrieve-policy db
                      (->

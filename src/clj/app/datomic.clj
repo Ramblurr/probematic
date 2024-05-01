@@ -48,6 +48,8 @@
   ([req opts]
    (transact-wrapper! req opts nil))
   ([{:keys [datomic-conn] :as req} opts comment]
+   (assert datomic-conn "datomic-conn is required")
+   (assert (map? opts) "opts must be a map")
    (d/transact datomic-conn (update opts :tx-data concat (audit-txs req comment)))))
 
 (defn expand-audit-user [db {:audit/keys [user] :as audit}]
