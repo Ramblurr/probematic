@@ -20,7 +20,8 @@
 (defn build-email [to subject body-html body-plain]
   (assert subject)
   (util/remove-nils
-   {:email/batch? false
+   {:email/sender :mailgun
+    :email/batch? false
     :email/email-id (sq/generate-squuid)
     :email/tos [to]
     :email/subject subject
@@ -28,10 +29,27 @@
     :email/body-html body-html
     :email/created-at (t/inst)}))
 
+(defn build-smtp-email
+  ([to subject body-html body-plain]
+   (build-smtp-email to subject body-html body-plain nil))
+  ([to subject body-html body-plain attachments]
+   (assert subject)
+   (util/remove-nils
+    {:email/sender :band-smtp
+     :email/batch? false
+     :email/attachments attachments
+     :email/email-id (sq/generate-squuid)
+     :email/tos [to]
+     :email/subject subject
+     :email/body-plain body-plain
+     :email/body-html body-html
+     :email/created-at (t/inst)})))
+
 (defn build-batch-emails [tos subject body-html body-plain recipient-variables]
   (assert subject)
   (util/remove-nils
-   {:email/batch? true
+   {:email/sender :mailgun
+    :email/batch? true
     :email/recipient-variables recipient-variables
     :email/email-id (sq/generate-squuid)
     :email/tos tos
@@ -58,9 +76,7 @@
 
 (defn build-gig-reminder-email [{:keys [tr] :as sys} gig members]
   (assert tr)
-  (tap> {:s (tr [:email-subject/gig-reminder] [(:gig/title gig)])
-         :t (:gig/title gig)
-         :tr tr})
+  ;; (tap> {:s (tr [:email-subject/gig-reminder] [(:gig/title gig)]) :t (:gig/title gig) :tr tr})
   (build-batch-emails
    (mapv :member/email members)
    (tr [:email-subject/gig-reminder] [(:gig/title gig)])
@@ -107,8 +123,7 @@
   (assert datomic-conn)
   (assert env)
   (assert redis)
-  (tap> {:i18n i18n-langs
-         :k (keys sys)})
+  ;; (tap> {:i18n i18n-langs :k (keys sys)})
   (assert i18n-langs)
   (let [db (datomic/db datomic-conn)
         tr (i18n/tr-with i18n-langs [:de])
@@ -170,6 +185,36 @@
                                        (tr [:email/cta-log-plays])
                                        (url/absolute-link-gig env (:gig/gig-id gig))))))
 
+(defn build-insurance-debt-notification-emails [{:keys [tr] :as sys} sender-name time-range member-data]
+  (assert tr)
+  (map (fn [{:keys [member private-cost-total count-private private-coverages] :as member}]
+         (assert private-cost-total)
+         (assert time-range)
+         (assert (:member/email member))
+         (let [args (tmpl/build-insurance-debt-args sys member private-coverages sender-name time-range private-cost-total)
+               to (:member/email member)
+               subject (tr [:insurance/email-subject] [(:member/name member) time-range])
+               body-html (tmpl/insurance-debt-html sys args)
+               body-plain (tmpl/insurance-debt-plain sys args)]
+           (build-smtp-email to subject body-html body-plain)))
+       member-data))
+
+(defn send-insurance-debt-notifications! [req sender-name time-range member-data]
+  (let [sys (sys-from-req req)
+        emails (build-insurance-debt-notification-emails sys sender-name time-range member-data)]
+    (doseq [email emails]
+      (queue-email! sys email))))
+
+(defn render-insurance-debt-email-template [{:keys [tr system] :as req} sender-name time-range sample-data]
+  (let [sys (sys-from-req req)]
+    (tmpl/insurance-debt-hiccup sys
+                                (tmpl/build-insurance-debt-args sys {:member/name (:member/name (:member sample-data))
+                                                                     :member/member-id (:member/member-id (:member sample-data))}
+                                                                (:private-coverages sample-data)
+                                                                sender-name
+                                                                time-range
+                                                                (:private-cost-total sample-data)))))
+
 (comment
 
   (do
@@ -205,32 +250,29 @@
     (def tr (i18n/tr-with (i18n/read-langs) ["en"]))
     (def sys {:tr tr :env env})) ;; rcf
 
-
   (spit "plain-email.txt"
         (->
-          (build-new-poll-opened sys (assoc poll :poll/description "") [member])
-          :email/body-plain
-          ))
+         (build-new-poll-opened sys (assoc poll :poll/description "") [member])
+         :email/body-plain))
 
   (spit "plain-email.html"
         (->
-          (build-new-poll-opened sys (assoc poll :poll/description "") [member])
-          :email/body-html
-          ))
+         (build-new-poll-opened sys (assoc poll :poll/description "") [member])
+         :email/body-html))
 
   (spit "plain-email.txt"
         (str
-          "\n++++\n"
-          (tmpl/gig-created-email-plain sys gig)
-          "\n++++\n"
-          (tmpl/gig-created-email-plain sys gig2)))
+         "\n++++\n"
+         (tmpl/gig-created-email-plain sys gig)
+         "\n++++\n"
+         (tmpl/gig-created-email-plain sys gig2)))
 
   (spit "plain-email.txt"
         (str
-          "\n++++\n"
-          (tmpl/gig-updated-email-plain sys gig [:gig/status])
-          "\n++++\n"
-          (tmpl/gig-updated-email-plain sys gig2 [:gig/status])))
+         "\n++++\n"
+         (tmpl/gig-updated-email-plain sys gig [:gig/status])
+         "\n++++\n"
+         (tmpl/gig-updated-email-plain sys gig2 [:gig/status])))
 
   (build-gig-created-email sys gig [member])
   :email/recipient-variables

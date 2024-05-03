@@ -981,6 +981,20 @@
    {:db/ident :ledger.entry/amount
     :db/doc "The amount of currency in the transaction"
     :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :ledger.entry/metadata
+    :db/doc "Some meta data about the transaction"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/one}
+;;; Ledger Entry Metadata
+   {:db/ident :ledger.entry.meta/meta-type
+    :db/doc "A keyword identifying the type of metadata"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :ledger.entry.meta.insurance/policy
+    :db/doc "For ledger entries that are about insurance, a ref to the policy"
+    :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}]
 
 ;;

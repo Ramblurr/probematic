@@ -1,25 +1,25 @@
 (ns app.ledger.views
   (:require
-   [clojure.string :as str]
-   [app.qrcode :as qr]
    [app.auth :as auth]
+   [app.config :as config]
    [app.i18n :as i18n]
    [app.icons :as icon]
-   [app.ledger.domain :as domain]
    [app.ledger.controller :as controller]
+   [app.ledger.domain :as domain]
+   [app.qrcode :as qr]
    [app.queries :as q]
    [app.ui :as ui]
    [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
+   [clojure.set :as cset]
+   [clojure.string :as str]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
    [hiccup.util :as hiccup.util]
    [medley.core :as m]
-   [tick.core :as t]
-   [clojure.set :as cset]
-   [app.config :as config]))
+   [tick.core :as t]))
 
 (defn payment-direction-button [{:keys [label direction type]}]
   (ui/button :label label
@@ -81,13 +81,13 @@
      [:div
       [:div {:class "text-sm font-medium text-gray-500"} (tr [:outstanding-balance])]
       [:div {:class (ui/cs (if member-owes-band? "text-red-700" "text-green-700") " text-2xl")} (ui/money-cents balance :EUR)]
-      [:div {:class "text-sm font-medium"} [:a {:class "link-blue" :href (urls/link-member-ledger-table (:ledger/owner ledger)) } "Why?"]]]
+      [:div {:class "text-sm font-medium"} [:a {:class "link-blue" :href (urls/link-member-ledger-table (:ledger/owner ledger))} "Why?"]]]
      [:div
       (when band-owes-member?
         [:div {:class "flex items-baseline"}
          (icon/circle-exclamation {:class "h-4 w-4 text-orange-500 relative top-0.5 mr-2"})
          [:div
-          [:p {:class "mb-4"} (tr [:band-owes-you] [(ui/money-cents-format balance :EUR)])]]])
+          [:p {:class "mb-4"} (tr [:band-owes-you] [(ui/money-cents-format (abs balance) :EUR)])]]])
       (when member-owes-band?
         [:div {:class "flex items-baseline"}
          (icon/circle-exclamation {:class "h-4 w-4 text-orange-500 relative top-0.5 mr-2"})
@@ -102,7 +102,19 @@
         [:img {:src
                (qr/image-to-data-uri (qr/qr (qr/sepa-payment-code {:bic bic :iban iban :name account-name :amount (/ balance 100) :unstructured-reference (maybe-transfer-reference balance entries)}) 300 300))}]])]))
 
-(defn ledger-table [{:keys [tr db] :as req} {:member/keys [member-id]}]
+(declare member-ledger-panel)
+
+(ctmx/defcomponent ^:endpoint delete-transaction-handler [{:keys [db] :as req}]
+  (when (util/delete? req)
+    (let [;; ledger (q/retrieve-ledger db member-id)
+          {:keys [error member]}  (controller/delete-ledger-entry! req)]
+      (if error
+        [:div
+         [:h2 {:class "text-2xl"} "Error"]
+         [:p {:class "text-red-700"} error]]
+        (member-ledger-panel (util/make-get-request req) member)))))
+
+(defn ledger-table [{:keys [tr db] :as req} {:member/keys [member-id]} delete-target delete-endpoint]
   (if-let [ledger (q/retrieve-ledger db member-id)]
     (let [entries (:ledger/entries ledger)]
       [:div
@@ -113,10 +125,9 @@
          [:tr {:class "isolate py-2 font-semibold"}
           [:th (tr [:ledger.entry/tx-date])]
           [:th (tr [:ledger.entry/description])]
-          [:th {:class "text-right"} (tr [:ledger.entry/amount])]]]
+          [:th {:class "text-right"} (tr [:ledger.entry/amount])]
+          [:th]]]
         [:tbody
-         (when-not (seq entries)
-           [:div (tr [:no-transactions-yet])])
          (map (fn [{:ledger.entry/keys [amount description tx-date entry-id]}]
                 [:tr
                  [:td
@@ -132,10 +143,18 @@
                  [:td {:class "text-right"}
                   [:div {:class (ui/cs "text-sm leading-6" (if (> amount 0) "text-red-700" "text-green-700"))} (ui/money-cents amount :EUR)]
                   [:div
-                   {:class "mt-1 text-xs leading-5 text-gray-500"}]]]) entries)]]])
+                   {:class "mt-1 text-xs leading-5 text-gray-500"}]]
+                 [:td {:class "ml-2 text-right"}
+                  [:button {:class "text-sm text-red-700"
+                            :type :button
+                            ;; :hx-confirm "Really delete this transaction?"
+                            :hx-delete  delete-endpoint
+                            :hx-vals {:ledger-entry-id (str entry-id)}
+                            :hx-target delete-target}
+                   (tr [:action/delete])]]]) entries)]]
+      (when-not (seq entries)
+           [:div (tr [:no-transactions-yet])]) ])
     [:p (tr [:no-transactions-yet])]))
-
-(declare member-ledger-panel)
 
 (ctmx/defcomponent ^:endpoint form-transaction-handler [{:keys [db] :as req}]
   (when (util/post? req)
@@ -145,11 +164,11 @@
         (member-ledger-panel (util/make-get-request req) member)))))
 
 (ctmx/defcomponent member-ledger-panel [{:keys [db] :as req} member]
-  form-transaction-handler
+  form-transaction-handler delete-transaction-handler
   (ui/panel {:id :comp/member-ledger-panel
              :title "Money Stuff"
              :subtitle
              [:span  "What " [:span {:class "text-red-700"} "you owe the band (+)"]  " and what " [:span {:class "text-green-700"} "the band owes you (-)"]]}
             [:div
-             (ledger-table req member)
+             (ledger-table req member (util/hash :comp/member-ledger-panel) (util/endpoint-path delete-transaction-handler))
              (add-transaction-form req member (util/hash :comp/member-ledger-panel) (util/endpoint-path form-transaction-handler))]))

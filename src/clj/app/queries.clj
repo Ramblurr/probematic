@@ -143,7 +143,7 @@
                          :instrument/description
                          :instrument/serial-number
                          :instrument/build-year
-                         {:instrument/owner [:member/name :member/member-id]}
+                         {:instrument/owner [:member/name :member/member-id :member/avatar-template :member/email]}
                          {:instrument/category [:instrument.category/category-id
                                                 :instrument.category/code
                                                 :instrument.category/name]}]}
@@ -848,17 +848,64 @@
   (settings.domain/db->discount
    (d/find-by db :travel.discount/discount-id travel-discount-id travel-discount-pattern)))
 
+(def ledger-entry-pattern [:ledger.entry/entry-id
+                     :ledger.entry/amount
+                     :ledger.entry/tx-date
+                     :ledger.entry/description])
+(def ledger-entry-pattern-with-ledger
+  (conj ledger-entry-pattern {:ledger/_entries [:ledger/ledger-id :ledger/balance {:ledger/owner member-pattern}]}))
+
 (def ledger-pattern
   [:ledger/ledger-id :ledger/balance
    {:ledger/owner member-pattern}
-   {:ledger/entries [:ledger.entry/entry-id
-                     :ledger.entry/amount
-                     :ledger.entry/tx-date
-                     :ledger.entry/description]}])
+   {:ledger/entries ledger-entry-pattern}])
 
 (defn retrieve-ledger [db member-id]
   (ledger.domain/db->ledger
-    (d/find-by db :ledger/owner [:member/member-id member-id] ledger-pattern)))
+   (d/find-by db :ledger/owner [:member/member-id member-id] ledger-pattern)))
+
+(defn retrieve-ledger-entry [db entry-id]
+  (ledger.domain/db->ledger
+   (d/find-by db :ledger.entry/entry-id entry-id ledger-entry-pattern-with-ledger )))
+
+(defn find-ledger-entries-insurance [db member-id]
+  (->>
+   (datomic/q '[:find (pull ?ledger-entry pattern)
+                :in $ ?member-ref pattern
+                :where [?ledger :ledger/owner ?member-ref]
+                [?ledger :ledger/entries ?ledger-entry]
+                [?ledger-entry :ledger.entry/metadata ?metadata]
+                [?metadata :ledger.entry.meta/meta-type :ledger.entry.meta.type/insurance]]
+              db [:member/member-id member-id]
+              [:ledger.entry/entry-id
+               :ledger.entry/amount
+               :ledger.entry/tx-date
+               :ledger.entry/description
+               {:ledger.entry/metadata [:ledger.entry.meta/meta-type {:ledger.entry.meta.insurance/policy [:insurance.policy/policy-id]}]}])
+   (map first)
+   (map ledger.domain/db->entry)))
+
+(defn ledger-entry-debit-for-policy
+  "Return the ledger-entries (if one exists) for the given member and policy that are debits"
+  [db member-id policy-id]
+  (->>
+   (datomic/q '[:find (pull ?ledger-entry pattern)
+                :in $ ?member-ref ?policy-ref pattern
+                :where [?ledger :ledger/owner ?member-ref]
+                [?ledger :ledger/entries ?ledger-entry]
+                [?ledger-entry :ledger.entry/metadata ?metadata]
+                [?ledger-entry :ledger.entry/amount ?amount]
+                [(> ?amount 0)]
+                [?metadata :ledger.entry.meta/meta-type :ledger.entry.meta.type/insurance]
+                [?metadata :ledger.entry.meta.insurance/policy ?policy-ref]]
+              db [:member/member-id member-id] [:insurance.policy/policy-id policy-id]
+              [:ledger.entry/entry-id
+               :ledger.entry/amount
+               :ledger.entry/tx-date
+               :ledger.entry/description
+               {:ledger.entry/metadata [:ledger.entry.meta/meta-type {:ledger.entry.meta.insurance/policy [:insurance.policy/policy-id]}]}])
+   (map first)
+   (map ledger.domain/db->entry)))
 
 ;;;; END
 (comment

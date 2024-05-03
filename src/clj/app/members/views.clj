@@ -1,20 +1,20 @@
 (ns app.members.views
   (:require
-   [app.ledger.views :as ledger]
-   [app.util.http :as http.util]
-   [app.sardine :as sardine]
    [app.auth :as auth]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.keycloak :as keycloak]
    [app.layout :as layout]
+   [app.ledger.views :as ledger]
    [app.members.controller :as controller]
-   [app.queries :as q]
-   [app.settings.domain :as settings.domain]
    [app.members.domain :as members.domain]
+   [app.queries :as q]
+   [app.sardine :as sardine]
+   [app.settings.domain :as settings.domain]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
+   [app.util.http :as http.util]
    [clojure.set :as set]
    [clojure.string :as str]
    [ctmx.core :as ctmx]
@@ -300,7 +300,6 @@
                                                                                   (ui/rich-li-action-a :href "#" :label
                                                                                                        (tr [:action/view]))))
                                                                     coverages))) "sm:col-span-3")))
-
 
       (ui/panel {:title (tr ["Gigs & Probes"])
                  :subtitle (tr ["Fun stats!"])}

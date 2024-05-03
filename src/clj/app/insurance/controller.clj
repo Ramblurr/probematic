@@ -1,9 +1,12 @@
 (ns app.insurance.controller
   (:require
+   [app.auth :as auth]
+   [app.email :as email]
    [app.config :as config]
    [app.datomic :as d]
    [app.errors :as errors]
    [app.file-utils :as fu]
+   [app.ledger.controller :as ledger.controller]
    [app.insurance.excel :as excel]
    [app.nextcloud :as nextcloud]
    [app.queries :as q]
@@ -664,10 +667,9 @@
         coverage-txs (mapcat (fn [{:instrument.coverage/keys [coverage-id]}]
                                [[:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/status :instrument.coverage.status/coverage-active]
                                 [:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/change :instrument.coverage.change/none]])
-                          (:insurance.policy/covered-instruments policy))
+                             (:insurance.policy/covered-instruments policy))
         txs (concat policy-txs coverage-txs)]
     (d/transact-wrapper! req {:tx-data txs})))
-
 
 (defn confirm-changes! [{:keys [db] :as req}]
   (confirm-and-activate-policy req (util.http/path-param-uuid! req :policy-id)))
@@ -679,7 +681,7 @@
         policy (q/retrieve-policy db policy-id)
         {:keys [subject recipient body]} p
         smtp (-> req :system :env :smtp-sno)
-        from (:user smtp)]
+        from (:from smtp)]
     (excel/send-email! policy smtp from recipient subject body attachment-filename)
     (confirm-and-activate-policy req (util.http/path-param-uuid! req :policy-id))))
 
@@ -726,6 +728,68 @@
        (mapv (fn [policy]
                (merge policy (policy-totals policy))))
        (filter #(> (:total-needs-review %) 0))))
+
+(defn build-data-notification-table [{:keys [db] :as req}]
+  (let [policy-id (util.http/path-param-uuid! req :policy-id)
+        {:insurance.policy/keys [effective-at effective-until] :as  policy} (q/retrieve-policy db policy-id)
+        grouped-by-owner (coverages-grouped-by-owner policy)]
+    {:policy policy
+     :time-range (format "%s - %s" (t/year effective-at) (t/year effective-until))
+     :sender-name (:member/name (auth/get-current-member req))
+     :members-data (->> grouped-by-owner
+                        (map (fn [{:member/keys [name member-id] :keys [coverages total] :as member}]
+                               (let [private-coverages (filter :instrument.coverage/private? coverages)
+                                     private-cost-total-decimal (reduce + (map :instrument.coverage/cost private-coverages))
+                                     private-cost-total (-> private-cost-total-decimal
+                                                            (double)
+                                                            (* 100)
+                                                            (Math/round)
+                                                            (int))]
+                                 (when (seq private-coverages)
+                                   {:member member
+                                    :private-coverages private-coverages
+                                    :count-private (count private-coverages)
+                                    :private-cost-total private-cost-total}))))
+
+                        (util/remove-nils))}))
+
+(defn member-debited-for-policy? [db policy-id member-id]
+  (let [existing-entries (q/ledger-entry-debit-for-policy db member-id policy-id)]
+    (boolean (seq existing-entries))))
+
+(defn transaction-datoms-for-member [db policy-id policy-name {:keys [member private-cost-total count-private] :as members-data}]
+  (ledger.controller/prepare-transaction-data db
+                                              (q/retrieve-ledger db (:member/member-id member))
+                                              {:ledger.entry/amount       private-cost-total
+                                               :ledger.entry/tx-date      (t/date)
+                                               :ledger.entry/posting-date (t/inst)
+                                               :ledger.entry/description   policy-name
+                                               :ledger.entry/entry-id     (sq/generate-squuid)}
+                                              {:ledger.entry.meta/meta-type :ledger.entry.meta.type/insurance
+                                               :ledger.entry.meta.insurance/policy [:insurance.policy/policy-id policy-id]}))
+
+(defn prepare-transaction-datoms [{:keys [db]} policy-id policy-name members-data]
+  (->> members-data
+       (remove #(member-debited-for-policy? db policy-id (-> % :member :member/member-id)))
+       (reduce #(concat %1 (transaction-datoms-for-member db policy-id policy-name %2)) (list))))
+
+(defn send-notifications! [{:keys [db] :as req}]
+  (let [{:keys [policy time-range members-data sender-name]} (build-data-notification-table req)
+        policy-id (util.http/path-param-uuid! req :policy-id)
+        params (util.http/unwrap-params req)
+        member-ids (set (map util/ensure-uuid! (util/ensure-coll (:member-ids params))))
+        to-send (filter #(member-ids (-> % :member :member/member-id))
+                        members-data)
+        tx-data (prepare-transaction-datoms req policy-id (:insurance.policy/name policy) to-send)]
+    ;; (tap> [:to-send to-send :tx-data tx-data])
+    (try
+      (let [result (d/transact-wrapper! req {:tx-data tx-data})]
+        (email/send-insurance-debt-notifications! req sender-name time-range to-send)
+        {:count-sent (count to-send) :policy policy})
+      (catch Exception e
+        (tap> e)
+        (errors/report-error! e)
+        {:error "Failed to send notifications" :ex e}))))
 
 (comment
   (do

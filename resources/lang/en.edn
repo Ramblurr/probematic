@@ -15,8 +15,7 @@
              :upcoming "All Upcoming Gigs"
              :polls-open "We have open polls!"
              :insurance-todo "Insurance TODOs"
-             :you-owe "You owe the band some money!"
-             }
+             :you-owe "You owe the band some money!"}
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
@@ -120,6 +119,7 @@
         :view-archive "View Gig Archive"
         :archive "Gig Archive"}
  :insurance {:title "Insurance & Instruments"
+             :cost "Cost"
              :dashboard-title "Insurance TODOs"
              :name "Policy Name"
              :confirm-mark-as-title "Mark as %1?"
@@ -149,11 +149,21 @@
              :create-subtitle "Enter details for the new policy."
              :coverage-for "The following information is for: %1"
              :send-changes "Send Changes"
+             :send-payment-notifications "Send Payment Notifications"
              :error-edit-frozen-policy "Cannot update instrument and coverage on a policy that is not in draft status"
              :total-needs-review-tooltip "Total instruments that need review"
              :total-total-changed-tooltip "Total instruments that have changed"
              :total-total-removed-tooltip "Total instruments that have been removed"
-             :total-total-new-tooltip "Total instruments that have been added"}
+             :total-total-new-tooltip "Total instruments that have been added"
+             :email-subject "%1 Versicherungskosten %2 SNO"
+             :email-p1 "wir möchten dich darum bitten deine Versicherungskosten an das Street Noise Orchestra zu überweisen. Es handelt sich dabei um Kosten für privat versicherte Instrumente für den Zeitraum: "
+             :email-p2 "Versicherungskosten %1:" ; arg is member name
+             :bank-data "Bankdaten"
+             :email-p3 "Möchtest du genau wissen woraus sich deine Kosten zusammenstellen, kannst du dies im Forum unter folgendem Link nachlesen."
+             :email-p4 "Im Falle eines Schadens findest du die Anleitung für eine Schadensmeldung und das dazu gehörige Schadensformular im Anhang."
+             :email-p5 "Solltest du weitere Fragen haben, kannst du dich gerne bei uns melden."
+             :request-payments-title "Request Insurance Payments"
+             :request-payments-subtitle "The following members have private instruments insured, and need to be notified."}
  :insurance.policy.status {:active "Active"
                            :sent "Sent"
                            :draft "Draft"}
@@ -220,7 +230,7 @@
  :private-instrument-payment "Die Kosten der Versicherung privater Instrumente werden nicht von Street Noise übernommen."
  :outstanding-balance "Outstanding Balance"
  :no-transactions-yet "No transactions yet"
- :please-pay-to-band "Please send %1 to the band account"
+ :please-pay-to-band "Please send %1 to the band account."
  :band-owes-you "The band owes you %1! Please contact the treasurer."
  :or-scan-qr-code "Or scan this QR Code with your banking app"
  :instruments "Instruments"
@@ -337,6 +347,7 @@
                  :new-invite "Your SNO ID is waiting for you.."
                  :poll-created "New Poll: %1"}
  :email {:greeting "Hello!"
+         :greeting-personal "Liebe:r %1"
          :new-gig-added "A new gig is coming up!"
          :new-probe-added "A new probe is coming up!"
          :new-extra-probe-added "A new extra-probe is coming up!"
@@ -354,6 +365,7 @@
          :cannot-make-it "I cannot make it"
          :gig-info-page "Take me to the Gig Info page"
          :sign-off "Mit groovigen Grüßen — SNObot"
+         :sign-off-personal "Danke und liebe Grüße,"
          :invite-expired "Sorry, the invitation code has expired. Please ask for a new one!"
          :invite-new-user-intro "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
          :invite-new-user-intro2 "Click the link below to setup your account."
@@ -472,9 +484,8 @@
                 :description "Reference"
                 :direction-debit "%1 owes the band"
                 :direction-credit "The band owes %1"
-                :payment-direction-debit "%1 paid the band"
-                :payment-direction-credit "The band paid %1"
-                }
+                :payment-direction-debit "The band paid %1"
+                :payment-direction-credit "%1 paid the band"}
  :money-input-format-error "Enter currency amount like 42,05"
 
  ;;

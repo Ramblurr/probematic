@@ -1,5 +1,6 @@
 (ns app.members.controller
   (:require
+   [app.ledger.domain :as ledger.domain]
    [app.auth :as auth]
    [app.datomic :as d]
    [app.email :as email]
@@ -124,6 +125,7 @@
     (try
       (let [{:keys [create-sno-id phone email name nick username section-name active?] :as params} (-> req :params)
             member-id (sq/generate-squuid)
+            member-tmpid (d/tempid)
             txs [{:member/name name
                   :member/nick nick
                   :member/member-id member-id
@@ -131,7 +133,9 @@
                   :member/username (validate-username tr username)
                   :member/active? (http.util/check->bool active?)
                   :member/section [:section/name section-name]
-                  :member/email (clean-email email)}]
+                  :member/email (clean-email email)
+                  :db/id member-tmpid}
+                 (ledger.domain/new-member-ledger-datom (d/tempid) (sq/generate-squuid) member-tmpid)]
             new-member (:member (transact-member! req member-id txs))]
         (when (http.util/check->bool create-sno-id)
           (email/send-new-user-email! req new-member (generate-invite-code! req new-member)))

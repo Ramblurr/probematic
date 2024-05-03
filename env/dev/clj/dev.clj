@@ -165,7 +165,11 @@
     (require '[portal.api :as p])
     (def p (p/open {:theme :portal.colors/gruvbox}))
     (add-tap #'p/submit))
+  (do
+    (remove-tap #'p/submit)
+    (p/close))
   (p/clear)
+  (tap> 1)
   (reset)
   (halt)
   (go)

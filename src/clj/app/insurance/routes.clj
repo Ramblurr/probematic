@@ -16,6 +16,14 @@
       (layout/app-shell req
                         (view/insurance-detail-page req))))])
 
+(defn insurance-notification []
+  [""
+   (ctmx/make-routes
+    "/insurance-policy-notify/{policy-id}/"
+    (fn [req]
+      (layout/app-shell req
+                        (view/insurance-notify-page req))))])
+
 (defn insurance-generate-changes []
   (ctmx/make-routes
    "/insurance-policy-changes/{policy-id}"
@@ -147,5 +155,6 @@
     (insurance-create)
     (insurance-generate-changes)
     (insurance-detail)
+    (insurance-notification)
     (instrument-detail)
     (instrument-create)]])

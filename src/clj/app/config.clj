@@ -84,3 +84,6 @@
 
 (defn band-bank-info [env]
   (-> env :band-bank-info))
+
+(defn band-smtp [env]
+  (-> env :smtp-sno))

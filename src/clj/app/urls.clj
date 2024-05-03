@@ -2,13 +2,16 @@
   (:import [java.net URLEncoder])
   (:require [app.config :as config]))
 
+(defn entity-id [id-key maybe-id]
+  (if (map? maybe-id) (id-key maybe-id)
+      maybe-id))
+
 (defn link-helper
   ([prefix id-key maybe-id]
    (link-helper prefix id-key maybe-id "/"))
   ([prefix id-key maybe-id suffix]
-   (let [maybe-id-id (if (map? maybe-id) (id-key maybe-id)
-                         maybe-id)]
-     (str prefix maybe-id-id suffix))))
+   (let [real-id (entity-id id-key maybe-id)]
+     (str prefix real-id suffix))))
 
 (defn url-encode
   [string]
@@ -22,11 +25,15 @@
 (def link-song (partial link-helper "/song/" :song/song-id))
 
 (def link-policy (partial link-helper "/insurance-policy/" :insurance.policy/policy-id))
+(def link-policy-send-notifications (partial link-helper "/insurance-policy-notify/" :insurance.policy/policy-id))
 (def link-policy-changes (partial link-helper "/insurance-policy-changes/" :insurance.policy/policy-id))
 (def link-policy-changes-confirm (partial link-helper "/insurance-changes-excel/" :insurance.policy/policy-id))
+(defn link-policy-table-member [policy-or-policy-id member-or-member-id]
+  (link-policy policy-or-policy-id (str "/#coverages-" (entity-id :member/member-id member-or-member-id))))
 (def link-poll (partial link-helper "/poll/" :poll/poll-id))
 (def link-instrument (partial link-helper "/instrument/" :instrument/instrument-id))
 (def link-coverage (partial link-helper "/insurance-coverage/" :instrument.coverage/coverage-id))
+
 (def link-coverage-edit (partial link-helper "/insurance-coverage-edit/" :instrument.coverage/coverage-id))
 
 (defn link-gigs-home [] "/gigs/")
@@ -61,6 +68,15 @@
 
 (defn absolute-link-song [env song-id]
   (str (config/app-base-url env) "/song/" song-id "/"))
+
+(defn absolute-link-member [env member-id]
+  (str (config/app-base-url env) "/member/" member-id "/"))
+
+(defn absolute-link-member-ledger [env member-id]
+  (str (absolute-link-member env member-id) "#member-ledger-table"))
+
+(defn absolute-link-insurance-policy-table [env policy-id]
+  (format "%s/%s" (config/app-base-url env) (link-policy policy-id "/#coverages-table")))
 
 (defn absolute-gig-answer-link-base [env]
   (str (config/app-base-url env) "/answer-link"))

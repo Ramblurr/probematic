@@ -1,5 +1,6 @@
 (ns app.insurance.views
   (:require
+   [app.email :as email]
    [app.auth :as auth]
    [app.i18n :as i18n]
    [app.icons :as icon]
@@ -16,14 +17,6 @@
    [hiccup.util :as hiccup.util]
    [medley.core :as m]
    [tick.core :as t]))
-
-(defn member [m]
-  [:div {:class "flex items-center"}
-   [:div {:class "h-11 w-11 flex-shrink-0"}
-    (ui/avatar-img m :class "h-10 w-10 rounded-full")]
-   [:div {:class "ml-2"}
-    [:div {:class "font-medium text-gray-900"} (:member/name m)]
-    [:div {:class "mt-1 text-gray-500"} (:member/nick m)]]])
 
 (def coverage-status-data
   {:instrument.coverage.status/needs-review {:icon  icon/circle-question-outline :class "text-orange-400"}
@@ -73,6 +66,12 @@
   (ui/breadcrumb-contained {}
                            {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
                            {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}))
+
+(defn breadcrumb-payments [tr policy]
+  (ui/breadcrumb-contained {}
+                           {:label (tr [:nav/insurance]) :href (urls/link-insurance) :icon icon/shield-check-solid}
+                           {:label (:insurance.policy/name policy) :href (urls/link-policy policy)}
+                           {:label "Payments" :href nil}))
 
 (defn breadcrumb-coverage [tr policy coverage]
   (ui/breadcrumb-contained {}
@@ -144,10 +143,10 @@
                    :hx-delete (util/comp-name #'insurance-policy-delete)
                    :hx-vals {:policy-id (str policy-id)}
                    :attr {:_ (ui/confirm-modal-script
-                               (tr [:action/confirm-generic])
-                               (tr [:action/confirm-delete-policy] [name])
-                               (tr [:action/confirm-delete])
-                               (tr [:action/cancel]))})
+                              (tr [:action/confirm-generic])
+                              (tr [:action/confirm-delete-policy] [name])
+                              (tr [:action/confirm-delete])
+                              (tr [:action/cancel]))})
         (ui/button :label (tr [:action/duplicate])  :priority :white :size :small
                    :hx-post (util/comp-name #'insurance-policy-duplicate)
                    :hx-vals {:policy-id (str policy-id)})]]]]))
@@ -288,6 +287,14 @@ Mit freundlichen Grüßen,
                   :centered? true
                   :href (urls/link-policy-changes policy))])))
 
+(defn send-notifications-button [{:keys [tr] :as req} {:insurance.policy/keys [status] :as policy} oob?]
+  (when (= status :insurance.policy.status/active)
+    [:div {:id "send-notifications-button" :hx-swap-oob (when oob? "true")}
+     (ui/button :tag :a :label (tr [:insurance/send-payment-notifications])
+                :priority :primary
+                :centered? true
+                :href (urls/link-policy-send-notifications policy))]))
+
 (ctmx/defcomponent ^:endpoint insurance-detail-page-header [{:keys [db tr] :as req} ^:boolean edit?]
   (ctmx/with-req req
     (let [policy-id (util.http/path-param-uuid! req :policy-id)
@@ -319,6 +326,7 @@ Mit freundlichen Grüßen,
                                             :priority :white
                                             :centered? true
                                             :hx-get (comp-name) :hx-target (hash ".") :hx-vals {:edit? true})
+                                 (send-notifications-button req policy false)
                                  (send-changes-button req policy false)))}
 
                    [:dl {:class "grid grid-cols-3 gap-x-4 gap-y-8 sm:grid-cols-3"}
@@ -576,6 +584,7 @@ Mit freundlichen Grüßen,
           new-req (util/make-get-request req {:db db-after :policy policy})]
       (ui/multi-response
        [(insurance-instrument-coverage-table new-req)
+        (send-notifications-button req policy true)
         (send-changes-button new-req policy true)]))))
 
 (defn mark-coverage-as-menu [{:keys [tr]} endpoint-mark-as hx-target]
@@ -641,7 +650,7 @@ Mit freundlichen Grüßen,
     [:form {:id id
             :class "instrgrid border-collapse overflow-hidden m-w-full"}
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
-     [:table {:class "table-auto ml-4"}
+     [:table {:class "table-auto ml-4" :id "coverages-table"}
       [:tr
        [:td]
        [:td [:span  {:class (ui/cs "py-2 flex px-2")}
@@ -715,7 +724,7 @@ Mit freundlichen Grüßen,
       (map (fn [{:member/keys [name member-id] :keys [coverages total] :as member}]
              [:div {:class "instrgrid--group"}
               [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
-               [:span [:a {:href (urls/link-member member-id) :class "link-blue"} name]]
+               [:span {:id (str "coverages-" member-id)} [:a {:href (urls/link-member member-id) :class "link-blue"} name]]
                [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
               [:div {:class "divide-y"}
                (map-indexed (fn [idx {:instrument.coverage/keys [coverage-id change status private? value item-count instrument cost] :keys [types] :as coverage}]
@@ -802,15 +811,15 @@ Mit freundlichen Grüßen,
                            (tr [form-error])]])
                        (ui/form-buttons
                         :buttons-left (list
-                                        (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
-                                                    :hx-delete (util/endpoint-path insurance-coverage-delete)
-                                                    :hx-target (hash ".")
-                                                    :hx-vals   {:coverage-id (str coverage-id)}
-                                                    :attr      {:_ (ui/confirm-modal-script
-                                                                     (tr [:action/confirm-generic])
-                                                                     (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
-                                                                     (tr [:action/confirm-delete])
-                                                                     (tr [:action/cancel]))}}))
+                                       (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
+                                                   :hx-delete (util/endpoint-path insurance-coverage-delete)
+                                                   :hx-target (hash ".")
+                                                   :hx-vals   {:coverage-id (str coverage-id)}
+                                                   :attr      {:_ (ui/confirm-modal-script
+                                                                   (tr [:action/confirm-generic])
+                                                                   (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
+                                                                   (tr [:action/confirm-delete])
+                                                                   (tr [:action/cancel]))}}))
                         :buttons-right (list
                                         (ui/link-button {:label (tr [:action/cancel]) :priority :white
                                                          :attr {:href (urls/link-policy policy)}})
@@ -850,7 +859,7 @@ Mit freundlichen Grüßen,
   (condp = k
     :instrument/category (str (:instrument.category/name v))
     :instrument.coverage/value (ui/money v :EUR)
-    :instrument/owner (member v)
+    :instrument/owner (ui/member v)
     :instrument.coverage/instrument (:instrument/name v)
     :instrument.coverage/types (:insurance.coverage.type/name v)
     (if (keyword? v)
@@ -988,7 +997,7 @@ Mit freundlichen Grüßen,
                                 (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
                    (ui/dl
                     (ui/dl-item (tr [:instrument/owner])
-                                (member (:instrument/owner instrument)))
+                                (ui/member (:instrument/owner instrument)))
                     (ui/dl-item (tr [:instrument/name])
                                 (:instrument/name instrument))
                     (ui/dl-item (tr [:instrument/category])
@@ -1346,19 +1355,80 @@ document.addEventListener('DOMContentLoaded', function() {
            [:ul {:role "list", :class "divide-y divide-gray-200"}
             (map (fn [policy]
                    [:li
-                    (policy-row tr policy)]) policies)])]])
+                    (policy-row tr policy)]) policies)])]])]))
 
-     #_(let [instruments (controller/instruments db)]
-         [:div {:class "mt-6 sm:px-6 lg:px-8"}
-          (ui/divider-left (tr [:instruments]) (ui/link-button :label (tr [:instrument/instrument])
-                                                               :priority :white-rounded
-                                                               :centered? true
-                                                               :attr {:href "/instrument-new/"} :icon icon/plus))
-          [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"
-                 :id "songs-list"}
-           (if (empty? instruments)
-             "No Instruments"
-             [:ul {:role "list", :class "divide-y divide-gray-200"}
-              (map (fn [instrument]
-                     [:li
-                      (instrument-row instrument)]) instruments)])]])]))
+(ctmx/defcomponent ^:endpoint insurance-send-notifications [{:keys [db tr] :as req}]
+  (let [{:keys [error count-sent policy]} (controller/send-notifications! req)]
+    (if error
+      [:div
+       [:h2 {:class "text-2xl"} "Error"]
+       [:p {:class "text-red-700"} error]]
+      [:div
+       [:h2 {:class "text-2xl mb-4"} (icon/circle-check {:class "w-8 h-8 text-sno-green-700 inline"}) " All good!"]
+       [:p (format "%d notifications sent!" count-sent)]
+       [:p
+        [:a {:class "link-blue" :href (urls/link-policy policy)} "Back to Insurance"]]])))
+
+(ctmx/defcomponent ^:endpoint insurance-notify-page [{:keys [db tr] :as req}]
+  (let [{:keys [policy sender-name members-data time-range]} (controller/build-data-notification-table req)]
+    [:div {:id :comp/insurance-notify-page}
+     (breadcrumb-payments tr policy)
+     (ui/panel {:title (tr [:insurance/request-payments-title])
+                :subtitle (tr [:insurance/request-payments-subtitle])}
+               [:form {:class "max-w-xl" :hx-post (util/endpoint-path insurance-send-notifications) :tx-target (util/hash :comp/insurance-notify-page)}
+                [:table {:class "table-auto w-full"}
+                 [:thead
+                  [:th {:class "text-left px-2"}
+                   [:input {:type "checkbox" :id "instr-select-all"
+                            :checked "true"
+                            :_ (format "on checkboxChanged
+                     if length of <tbody.instrgrid--body input[type=checkbox]:checked/> == length of <tbody.instrgrid--body input[type=checkbox]/>
+                          log \"some\"
+                         set my.indeterminate to false
+                         then set my.checked to true
+                         then set #send-payment@disabled to null
+                     else
+                       log \"not all\"
+                       if length of <tbody.instrgrid--body input[type=checkbox]:checked/> > 0
+                         set my.indeterminate to true
+                         then set #send-payment@disabled to null
+                       else
+                         set my.indeterminate to false
+                         then set my.checked to false
+                         then set #send-payment@disabled to true
+                       end
+                     end
+                     on click set the checked of <tbody.instrgrid--body input[type=checkbox]/> to my.checked
+                       then if length of <tbody.instrgrid--body input[type=checkbox]:checked/> == length of <tbody.instrgrid--body input[type=checkbox]/>
+                            set my.checked to true
+                            end
+                       then trigger checkboxChanged on me" (tr [:selected]))
+
+                            :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
+                  [:th {:class "text-left px-2"} "Member"]
+                  [:th {:class "text-right px-2 max-w-32 text-pretty"} (str "# " (tr [:private-instruments]))]
+                  [:th {:class "text-right"} (tr [:total])]]
+                 [:tbody {:class "instrgrid--body"}
+                  (map (fn [{:keys [member private-cost-total count-private]}]
+                         (let [{:member/keys [name member-id]} member]
+                           [:tr {:class "odd:bg-gray-200 even:bg-white"}
+                            [:td {:class "px-2"}
+                             [:input {:type "checkbox" :id "foo" :name "member-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+                                      :value (str member-id)
+                                      :checked "true"
+                                      :_ "on click trigger checkboxChanged on #instr-select-all"}]]
+                            [:td {:class "text-left px-2 py-1"} (ui/member member (urls/link-policy-table-member policy member))]
+                            [:td {:class "text-right px-2"} count-private]
+                            [:td {:class "text-right px-2"} (ui/money-cents private-cost-total :EUR)]]))
+
+                       members-data)]]
+                [:div {:class "mt-4"}
+                 [:p "Example of what the email will look like:"]
+                 [:div {:class "bg-gray-200 px-8 py-1  rounded-md prose"}
+                  (email/render-insurance-debt-email-template req sender-name time-range (second members-data))]]
+                [:div {:class "mt-4 text-right"}
+                 [:input {:type :hidden :name "dummy" :value "dummy"}]
+                 (ui/button :label (tr [:insurance/send-payment-notifications])
+                            :id "send-payment"
+                            :icon icon/envelope
+                            :priority :primary)]])]))

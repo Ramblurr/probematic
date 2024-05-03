@@ -492,4 +492,8 @@
  :instrument.coverage.change {:new "Neu hinzugefügt"
                               :removed "Entfernt"
                               :none "Keine Änderungen"
-                              :changed "Geändert"}}
+                              :changed "Geändert"}
+
+ :please-pay-to-band "Bitte überweise %1 auf das Bandkonto."
+ :band-owes-you "Die Band schuldet dir %1! Bitte kontaktiere den Kassier"
+ :or-scan-qr-code "Oder scanne den QR-Code mit deiner Banking-App"}

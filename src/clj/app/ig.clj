@@ -1,11 +1,13 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
+   [app.migrations.core :as migrations]
    [app.caldav :as caldav]
    [app.auth :as auth]
    [app.config :as config]
    [nrepl.server :as nrepl]
    [app.datomic :as datomic]
+   [app.datomic-migrations :as datomic.migrations]
    [app.email.email-worker :as email-worker]
    [app.i18n :as i18n]
    [app.interceptors :as interceptors]
@@ -129,7 +131,7 @@
         client (d/client (select-keys config [:server-type :system :storage-dir]))
         _ (d/create-database client db-name)
         conn (d/connect client db-name)]
-    (datomic/load-dataset (:env config) conn)
+    (datomic.migrations/migrate! (:env config) conn migrations/migration-fns)
     (assoc config :conn conn)))
 
 (defmethod ig/halt-key! ::datomic-db

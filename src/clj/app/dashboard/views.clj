@@ -1,6 +1,5 @@
 (ns app.dashboard.views
   (:require
-   [app.queries :as q]
    [app.auth :as auth]
    [app.config :as config]
    [app.gigs.domain :as domain]
@@ -9,14 +8,15 @@
    [app.icons :as icon]
    [app.insurance.controller :as insurance.controller]
    [app.insurance.views :as insurance.view]
+   [app.ledger.views :as ledger]
    [app.poll.controller :as poll.controller]
+   [app.queries :as q]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
    [clojure.string :as str]
    [ctmx.core :as ctmx]
-   [ctmx.rt :as rt]
-   [app.ledger.views :as ledger]))
+   [ctmx.rt :as rt]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [req gig-id member-id motivation]
   (gig.view/motivation-endpoint req
@@ -202,8 +202,7 @@ put '%s' into .copy-link in me"
         polls-open (poll.controller/open-polls db)
         need-answer-gigs (gig.service/gigs-needing-plan db member)
         policies (insurance.controller/policies-with-todos db)
-        ledger (q/retrieve-ledger db (:member/member-id member))
-        ]
+        ledger (q/retrieve-ledger db (:member/member-id member))]
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list

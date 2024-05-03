@@ -1,17 +1,17 @@
 (ns app.email.templates
   (:require
-   [tick.core :as t]
-   [app.markdown :as markdown]
    [app.config :as config]
+   [app.markdown :as markdown]
    [app.secret-box :as secret-box]
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
    [clojure.string :as str]
-   [hiccup2.core :refer [html]]
    [hiccup.util :as hiccup.util]
+   [hiccup2.core :refer [html]]
    [selmer.parser :as selmer]
-   [selmer.util :as selmer.util]))
+   [selmer.util :as selmer.util]
+   [tick.core :as t]))
 
 (def plans-template-key {:plan/no-response "noresponse"
                          :plan/definitely "definitely"
@@ -271,6 +271,122 @@
        :invite-link invite-link
        :sign-off (tr [:email/sign-off])}))))
 
+(defn summarize-instrument-str [{:instrument/keys [name make model serial-number build-year]}]
+  (str name
+       (when (not (str/blank? make)) (str " - " make))
+       (when (not (str/blank? model)) (str " - " model))
+       (when (not (str/blank? serial-number)) (str " - " serial-number))
+       (when (not (str/blank? build-year)) (str " - " build-year))))
+
+(defn build-insurance-debt-args [{:keys [env] :as sys} {:member/keys [name member-id]} private-coverages sender-name time-range amount-cents]
+  (let [{:keys [iban bic account-name]} (config/band-bank-info env)]
+    {:member-name name
+     :sender-name sender-name
+     :time-range time-range
+     :amount (if (string? amount-cents) amount-cents (ui/money-cents-format amount-cents :EUR))
+     :private-instruments (map (fn [{:instrument.coverage/keys [cost instrument description value]}]
+                                 {:instrument-summary (summarize-instrument-str  instrument)
+                                  :value (ui/money-format value :EUR)
+                                  :cost (ui/money-format cost :EUR)
+                                  :description description})
+                               private-coverages)
+     :account-name account-name
+     :iban iban
+     :bic bic
+     :insurance-link (url/absolute-link-member-ledger env member-id)}))
+
+(defn insurance-debt-hiccup [{:keys [tr env] :as sys} {:keys [member-name private-instruments time-range amount account-name iban bic insurance-link sender-name] :as data}]
+  [:div
+   [:p
+    (tr [:email/greeting-personal] [member-name])]
+   [:p (tr [:insurance/email-p1]) [:strong time-range]]
+   [:p [:strong (tr [:insurance/email-p2] [member-name])]]
+   [:table
+    [:tr
+     [:td [:strong (tr [:instrument/instrument])]]
+     [:td {:align "right"} [:strong (tr [:insurance/value])]]
+     [:td {:align "right"} [:strong (tr [:insurance/cost])]]]
+    (for [{:keys [value description instrument-summary cost]} private-instruments]
+      (list
+       [:tr
+        [:td
+         [:span instrument-summary]
+         (when description (list [:br] [:span description]))]
+        [:td {:align "right"} value]
+        [:td {:align "right"} cost]]))
+    [:tr
+     [:td]
+     [:td {:align "right"} (tr [:total])]
+     [:td {:align "right"} amount]]]
+   [:p (tr [:please-pay-to-band] [amount])]
+   [:p [:strong (tr [:insurance/bank-data])]]
+   [:p
+    account-name [:br]
+    iban [:br]
+    bic [:br]]
+   [:p (tr [:insurance/email-p3])]
+   [:p [:a {:href insurance-link} insurance-link]]
+   [:p (tr [:insurance/email-p4])]
+   [:p (tr [:insurance/email-p5])]
+   [:p]
+   [:p
+    (tr [:email/sign-off-personal])
+    [:br] sender-name
+    [:br] "Versicherungsteam StreetNoise Orchestra"]])
+
+(defn insurance-debt-html [sys args]
+  (str (html (insurance-debt-hiccup sys args))))
+
+(defn insurance-debt-plain [{:keys [tr env] :as sys} {:keys [member-name private-instruments time-range amount account-name iban bic insurance-link sender-name]}]
+  (selmer.util/without-escaping
+   (selmer/render
+    "{{greeting}}
+
+{{p1}}
+
+{{p2}}
+
+{{instruments}}
+
+{{amount}}
+
+{{please-pay}}
+
+{{bank-data}}
+-------------
+
+{{account-name}}
+{{iban}}
+{{bic}}
+
+{{p3}} {{insurance-link}}
+{{p4}}
+{{p5}}
+
+{{sign-off}}
+{{sender-name}}
+Versicherungsteam StreetNoise Orchestra
+"
+    {:greeting (tr [:email/greeting-personal] [member-name])
+     :p1 (str (tr [:insurance/email-p1]) " " time-range)
+     :p2 (tr [:insurance/email-p2] [member-name])
+     :amount (str (tr [:total]) ": " amount)
+     :instruments (str/join "\n"
+                            (map (fn [{:keys [value description instrument-summary cost]}]
+                                   (str "- " instrument-summary " (" (tr [:insurance/value]) ": " value ")"  " - " cost))
+                                 private-instruments))
+     :please-pay (tr [:please-pay-to-band] [amount])
+     :bank-data (tr [:insurance/bank-data])
+     :account-name account-name
+     :iban iban
+     :bic bic
+     :insurance-link insurance-link
+     :p3 (tr [:insurance/email-p3])
+     :p4 (tr [:insurance/email-p4])
+     :p5 (tr [:insurance/email-p5])
+     :sender-name sender-name
+     :sign-off (tr [:email/sign-off-personal])})))
+
 (defn generic-email-plain [{:keys [tr env] :as sys} body-text cta-text cta-url]
   (selmer.util/without-escaping
    (selmer/render
@@ -309,7 +425,7 @@
         description (:poll/description poll)
         closes-at (:poll/closes-at poll)]
     (selmer/render
-      "
+     "
 ### {{title}}
 
 * {{ closes-at-label }}: {{ closes-at}}
@@ -320,12 +436,12 @@
 {% for option in options %}* {{ option }}
 {% endfor %}"
 
-      {:title title
-       :options-label (tr [:poll/options])
-       :description description
-       :options (map :poll.option/value (:poll/options poll))
-       :closes-at-label (tr [:poll/closes-at])
-       :closes-at (str (ui/format-time closes-at) " " (ui/format-dt closes-at))})))
+     {:title title
+      :options-label (tr [:poll/options])
+      :description description
+      :options (map :poll.option/value (:poll/options poll))
+      :closes-at-label (tr [:poll/closes-at])
+      :closes-at (str (ui/format-time closes-at) " " (ui/format-dt closes-at))})))
 
 (defn poll-created-email-html-body [tr poll]
   (markdown/render (poll-created-email-plain-body tr poll)))

@@ -1,6 +1,8 @@
 (ns app.email.email-worker
   (:require
+   [tarayo.core :as tarayo]
    [clojure.tools.logging :as log]
+   [app.config :as config]
    [app.email.domain :refer [QueuedEmailMessage]]
    [app.email.mailgun :as mailgun]
    [app.schemas :as s]
@@ -19,25 +21,49 @@
              :result result}
      :throwable throwable} tap>)))
 
+(defn mailgun-handler [sys message]
+  (if (:email/batch? message)
+    (mailgun/send-batch! sys
+                         (:email/tos message)
+                         (:email/subject message)
+                         (:email/body-plain message)
+                         (:email/body-html message)
+                         (:email/recipient-variables message))
+
+    (mailgun/send-email! sys
+                         (first (:email/tos message))
+                         (:email/subject message)
+                         (:email/body-plain message)
+                         (:email/body-html message))))
+
+(defn format-attachments [attachments]
+  (map (fn [{:keys [content content-type filename]}]
+         {:content      content
+          :content-type content-type
+          :filename     filename})
+       attachments))
+
+(defn band-smtp-handler [sys message]
+  (assert (not (:email/batch? message)))
+  (let [{:keys [from dev-mode-override-recipient] :as smtp} (config/band-smtp (:env sys))]
+    (assert smtp)
+    (assert from)
+    (tarayo/send! (tarayo/connect smtp)
+                  {:from   from
+                   :to (or dev-mode-override-recipient nil) ;; (or dev-mode-override-recipient (first (:email/tos message)))
+                   :subject (:email/subject message)
+                   :body (into [] (concat [{:content-type "text/html" :content (:email/body-html message)}
+                                           {:content-type "text/plain" :content (:email/body-plain message)}]
+                                          (format-attachments (:email/attachments message))))})))
+
 (defn handler
   "Has strict return contract with carmine. See http://ptaoussanis.github.io/carmine/taoensso.carmine.message-queue.html#var-worker"
   [sys message attempt]
   (tap> {:email-worker/received message :email-worker/attempt attempt})
   (try
     (if (s/valid? QueuedEmailMessage message)
-      (let [result (if (:email/batch? message)
-                     (mailgun/send-batch! sys
-                                          (:email/tos message)
-                                          (:email/subject message)
-                                          (:email/body-plain message)
-                                          (:email/body-html message)
-                                          (:email/recipient-variables message))
-
-                     (mailgun/send-email! sys
-                                          (first (:email/tos message))
-                                          (:email/subject message)
-                                          (:email/body-plain message)
-                                          (:email/body-html message)))]
+      (let [sender (condp = (:email/sender message) :mailgun mailgun-handler :band-smtp band-smtp-handler)
+            result (sender sys message)]
         (tap> {:email-send result})
         (if (:error result)
           (do

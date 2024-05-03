@@ -439,6 +439,7 @@
           (when spinner? "button-spinner")
           (when centered? "items-center justify-center")
           (when disabled? "opacity-50 cursor-not-allowed")
+          "disabled:opacity-50 disabled:cursor-not-allowed"
           class)
          :disabled disabled?}
         attr)
@@ -962,6 +963,22 @@
                      (str/replace avatar-template "{size}" "200"))
                 "/img/default-avatar.png")}])
 
+(defn member
+  ([{:member/keys [name nick] :as m}]
+   (member m nil))
+  ([{:member/keys [name nick] :as m} link]
+   [:div {:class "flex items-center"}
+    [:div {:class "h-11 w-11 flex-shrink-0"}
+     (if link
+       [:a {:href link} (avatar-img m :class "h-10 w-10 rounded-full")]
+       (avatar-img m :class "h-10 w-10 rounded-full"))]
+    [:div {:class "ml-2"}
+     [:div {:class "font-medium text-gray-900"}
+      (if link
+        [:a {:class "link-blue" :href link} name]
+        name)]
+     [:div {:class "mt-1 text-gray-500"} nick]]]))
+
 (defn divider-center [title]
   [:div {:class "relative"}
    [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
@@ -1416,7 +1433,6 @@
                (when icon
                  (icon {:class "h-5 w-5 flex-shrink-0 mr-2 text-gray-400"}))
                label]]]) items)]]])
-
 
 (defn iban [iban]
   (->> (str/replace  iban #"\s" "")
