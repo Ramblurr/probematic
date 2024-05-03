@@ -14,7 +14,9 @@
              :unanswered "Need Attention!"
              :upcoming "All Upcoming Gigs"
              :polls-open "We have open polls!"
-             :insurance-todo "Insurance TODOs"}
+             :insurance-todo "Insurance TODOs"
+             :you-owe "You owe the band some money!"
+             }
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
           :name "Name"
@@ -216,7 +218,11 @@
  :private-instruments "Private Instruments"
  :private-instrument-description "A private instrument is an instrument that the owner will insure at their own expense."
  :private-instrument-payment "Die Kosten der Versicherung privater Instrumente werden nicht von Street Noise übernommen."
- :outstanding-payments "Outstanding Payments"
+ :outstanding-balance "Outstanding Balance"
+ :no-transactions-yet "No transactions yet"
+ :please-pay-to-band "Please send %1 to the band account"
+ :band-owes-you "The band owes you %1! Please contact the treasurer."
+ :or-scan-qr-code "Or scan this QR Code with your banking app"
  :instruments "Instruments"
  :none "None"
  :section "Section"
@@ -458,6 +464,18 @@
          :most-active-gig-count "Most at Gig"
          :least-active-gig-count-tooltip "Gig with least attendance had this many people"
          :most-active-gig-count-tooltip "Gig with most attendance had this many people"}
+ :ledger {:add-transaction "Add Transaction"
+          :add-payment "Add Payment"
+          :add-debt "Add Debt"}
+ :ledger.entry {:amount "Amount"
+                :tx-date "Transaction Date"
+                :description "Reference"
+                :direction-debit "%1 owes the band"
+                :direction-credit "The band owes %1"
+                :payment-direction-debit "%1 paid the band"
+                :payment-direction-credit "The band paid %1"
+                }
+ :money-input-format-error "Enter currency amount like 42,05"
 
  ;;
  }

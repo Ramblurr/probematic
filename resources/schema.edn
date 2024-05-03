@@ -968,14 +968,16 @@
     :db/cardinality :db.cardinality/one}
    {:db/ident :ledger.entry/tx-date
     :db/doc "The date on which the transaction ocurred"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :ledger.entry/posting-date
+    :db/doc "The timestamp on which the transaction was posted"
     :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one
-    }
+    :db/cardinality :db.cardinality/one}
    {:db/ident :ledger.entry/description
     :db/doc "The user's description of the transaction"
     :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    }
+    :db/cardinality :db.cardinality/one}
    {:db/ident :ledger.entry/amount
     :db/doc "The amount of currency in the transaction"
     :db/valueType :db.type/long

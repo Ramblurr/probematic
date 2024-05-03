@@ -21,56 +21,6 @@
    [jsonista.core :as j]
    [medley.core :as m]))
 
-(ctmx/defcomponent ^:endpoint songs-log-play [{:keys [db] :as req}]
-  (ctmx/with-req req
-    (let [result (and post? (controller/log-play! req))]
-      (if (:play result)
-        (response/hx-redirect "/songs/")
-        (let [conn (-> req :system :conn)
-              songs (q/retrieve-all-songs db)
-              gigs (q/find-all-gigs db)]
-
-          [:form {:id id :hx-post (path ".")
-                  :class "space-y-4"}
-           (list
-            (ui/select :id (path "song-id")
-                       :label "Songs"
-                       :value (value "song")
-                       :options (map (fn [s]
-                                       {:value (:song/title s)
-                                        :label (:song/title s)
-                                        :selected? false}) songs))
-
-            (ui/select :id (path "gig-id")
-                       :label "Gig/Probe"
-                       :value (value "song")
-                       :options (map (fn [{:gig/keys [gig-id title date]}]
-                                       {:value gig-id
-                                        :label (str title " " (when date (ui/format-dt date)))
-                                        :selected? false}) gigs)))
-
-           (ui/radio-button-group  :id (path  "play-type") :label "Play Type"
-                                   :required? true
-                                   :value (value "play-type")
-                                   :options [{:id (path "play-type/gig") :label "Gig" :value "play-emphasis/gig"  :size :large}
-                                             {:id (path "play-type/gig") :label "Probe: Intensiv" :value "play-emphasis/intensiv"  :size :large}
-                                             {:id (path "play-type/gig") :label "Probe: Durch" :value "play-emphasis/durch"  :size :large}])
-           (ui/radio-button-group  :id (path  "feeling") :label "How'd it go?"
-                                   :required? true
-                                   :value (value "feeling")
-                                   :class "emotion-radio"
-                                   :options [{:id (path "feeling/good") :label "Nice!" :value "play-rating/good" :icon icon/smile :size :large :class "icon-smile"}
-                                             {:id (path "feeling/ok")  :label "Okay" :value "play-rating/ok" :icon icon/meh :size :large :class "icon-meh"}
-                                             {:id  (path "feeling/bad")  :label "Uh-oh" :value "play-rating/bad" :icon icon/sad :size :large :class "icon-sad"}])
-           (ui/textarea :name (path  "comment") :label "Thoughts?"
-                        :value (value "comment"))
-
-           [:div
-            [:div {:class "flex justify-end"}
-             [:a {:href "/songs", :class "btn btn-sm btn-clear-normal"} "Cancel"]
-             [:button {:class "ml-3 btn btn-sm btn-sno-orange-high"
-                       :type "submit"} "Save"]]]])))))
-
 (declare song-sheet-music)
 (declare song-sheet-music-edit)
 

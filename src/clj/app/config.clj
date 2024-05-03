@@ -81,3 +81,6 @@
   (-> env :nextcloud :songs-images-upload-path))
 (defn public-calendar-url [env]
   (-> env :nextcloud :public-calendar-url))
+
+(defn band-bank-info [env]
+  (-> env :band-bank-info))

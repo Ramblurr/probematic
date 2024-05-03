@@ -35,6 +35,8 @@
         dk.ative/docjure                  {:mvn/version "1.19.0"}
         ;; Text
         io.github.nextjournal/markdown    {:mvn/version "0.5.148"}
+        ;; QR Codes
+        com.google.zxing/javase           {:mvn/version "3.5.3"}
         ;; Nextcloud {Cal,Web}DAV
         com.github.lookfirst/sardine      {:mvn/version "5.12"}
         com.github.caldav4j/caldav4j      {:mvn/version "1.0.5"}

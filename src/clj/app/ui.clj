@@ -223,6 +223,7 @@
     [:label {:id id
              :class
              (cs  "radio-button"
+                  "self-stretch"
                   class
                   (if checked?
                     "radio-button-checked"
@@ -308,9 +309,9 @@
 (def input-size {:normal "sm:text-sm"
                  :small "text-xs"})
 
-(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required? id minlength]
+(defn input [& {:keys [type label name placeholder value extra-attrs class pattern title size required? id minlength suffix]
                 :or {size :normal
-                     required? true}}]
+                     required? true} :as opts}]
   [:div {:class (cs class (get input-label-size size)
                     (get input-container-size size)
                     "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600")}
@@ -318,7 +319,8 @@
      [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white font-medium text-gray-900"}
       label])
    [:input (util/remove-nils (merge (or extra-attrs {})
-                                    {:class (cs (get input-size size) "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0")
+                                    {:class (cs (get input-size size) "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0"
+                                                (when suffix "text-right pl-7 pr-12"))
                                      :type type
                                      :id id
                                      :pattern pattern
@@ -327,7 +329,10 @@
                                      :name name
                                      :value (if (= "null" value) nil value)
                                      :required required?
-                                     :placeholder placeholder}))]])
+                                     :placeholder placeholder}))]
+   (when suffix
+     [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
+      [:span {:class "text-gray-500 sm:text-sm"} suffix]])])
 
 (defn text [& opts]
   (apply input (conj opts "text" :type)))
@@ -346,6 +351,22 @@
            :min min
            :max max
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
+
+(defn date2 [& {:keys [value name required? min max label size]
+                :or {size :normal
+                     required? true}}]
+  [:div {:class (cs class (get input-label-size size)
+                    (get input-container-size size)
+                    "flex-grow relative rounded-md border border-gray-300 shadow-sm focus-within:border-sno-orange-600 focus-within:ring-1 focus-within:ring-sno-orange-600")}
+   (when label
+     [:label {:for name :class "absolute -top-2 left-2 -mt-px inline-block bg-white font-medium text-gray-900"}
+      label])
+   [:input {:type "date" :name name
+            :value (when value  (t/date value))
+            :required required?
+            :min min
+            :max max
+            :class (cs (get input-size size) "block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0")}]])
 
 (defn input-time [& {:keys [value name required?]}]
   [:input {:type "time" :name name
@@ -754,6 +775,9 @@
 (defn money-format [v currency]
   (.format ^DecimalFormat (money-formatter (get currency-default-locale currency Locale/GERMANY)) v))
 
+(defn money-cents-format [v currency]
+  (money-format (/ v 100) currency))
+
 (defn money [value currency]
   (when value
     [:span
@@ -785,11 +809,11 @@
                 :step step
                 :placeholder "0.00" :value value :required required? :name id :id id
                 :class (cs
-                         "text-right pl-7 pr-12"
-                         "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
-                         (if has-error?
-                           "ring-red-300 focus:ring-red-500 placeholder:text-red-300"
-                           "ring-gray-300 focus:border-sno-orange-500  focus:ring-sno-orange-500"))}]
+                        "text-right pl-7 pr-12"
+                        "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
+                        (if has-error?
+                          "ring-red-300 focus:ring-red-500 placeholder:text-red-300"
+                          "ring-gray-300 focus:border-sno-orange-500  focus:ring-sno-orange-500"))}]
        [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
         [:span {:class "text-gray-500 sm:text-sm"} "EUR"]
         (when has-error?
@@ -824,19 +848,9 @@
            (icon/circle-exclamation {:class "h-5 w-5 text-red-500"})])]]
       (field-error error id)]]))
 
-(defn money-input [& {:keys [label required? id value extra-attrs]
-                      :or {required? true extra-attrs {}}}]
-  [:div
-   [:label {:for "price", :class "block text-sm font-medium"} label]
-   [:div {:class "relative mt-1 rounded-md shadow-sm"}
-    [:div {:class "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"}
-     [:span {:class "text-gray-500 sm:text-sm"} (:EUR currency-symbols)]]
-    [:input (merge
-             {:type "number" :min 0.01 :step 0.01 :placeholder "0.00" :value value :required required? :name id :id id
-              :class "block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}
-             extra-attrs)]
-    [:div {:class "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"}
-     [:span {:class "text-gray-500 sm:text-sm"} "EUR"]]]])
+(defn money-input [tr & {:as opts}]
+  (input (-> opts
+             (assoc :type "text" :suffix "EUR" :pattern "^\\d*(,\\d{2}$)?" :placeholder "0,00" :title (tr [:money-input-format-error])))))
 
 (defn checkbox [& {:keys [label id checked?]}]
   [:div {:class "mt-2 relative flex items-start"}
@@ -1402,3 +1416,10 @@
                (when icon
                  (icon {:class "h-5 w-5 flex-shrink-0 mr-2 text-gray-400"}))
                label]]]) items)]]])
+
+
+(defn iban [iban]
+  (->> (str/replace  iban #"\s" "")
+       (partition 4)
+       (map (fn [group]
+              [:span {:class "visually-spaced"} (apply str group)]))))

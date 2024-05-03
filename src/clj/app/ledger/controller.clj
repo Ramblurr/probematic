@@ -34,13 +34,13 @@
   "Appends the datomic transaction commands necessary to adjust balances
   for the transaction"
   [ledger transaction]
-  (concat [transaction ] (balance-adjustment-datoms ledger transaction)))
+  (concat [transaction] (balance-adjustment-datoms ledger transaction)))
 
 (defn new-member-ledger-datom [member]
   {:db/id (str (:member/member-id member))
-    :ledger/ledger-id (sq/generate-squuid)
-    :ledger/owner (d/ref member)
-    :ledger/balance 0})
+   :ledger/ledger-id (sq/generate-squuid)
+   :ledger/owner (d/ref member)
+   :ledger/balance 0})
 
 (defn new-member-ledger! [conn member]
   (if-let [ledger (q/retrieve-ledger (datomic/db conn) (:member/member-id member))]
@@ -60,6 +60,60 @@
       (datomic/transact conn {:tx-data tx-data}))
     {:error (s/explain-human domain/LedgerEntryEntity entry) :ledger-entry entry}))
 
+(defn coerce-amount [amount-str]
+  (when-let [num (util/parse-number amount-str)]
+    (-> num
+        (* 100)
+        (double)
+        (Math/round)
+        (int))))
+
+
+(def AddTransaction
+  "This schema describes the http post we receive when creating a transaction"
+  (s/schema
+    [:map {:name ::AddTransaction}
+     [:member-id :uuid]
+     [:tx-date ::s/date]
+     [:description :string]
+     [:amount {:decode/string coerce-amount} :int]
+     [:tx-direction [:enum "debit" "credit"]]]))
+
+(s/explain-human AddTransaction
+                 (s/decode AddTransaction {:member-id "01860c2a-2929-8727-af1a-5545941b1115"
+                                           :tx-date "2021-09-01"
+                                           :description "Testing"
+                                           :amount "10.00"
+                                           :tx-direction "debit"}))
+
+(defn adjust-amount-sign [direction amount]
+  (assert (> amount 0) "Amount must be positive")
+  (if (= direction "credit")
+    (- amount)
+    amount))
+
+(defn add-transaction! [{:keys [db datomic-conn] :as req}]
+  (let [decoded (util/remove-nils (s/decode AddTransaction (util.http/unwrap-params req)))]
+    (tap> [:decoded decoded])
+    (if (s/valid? AddTransaction decoded)
+      (let [member-id (:member-id decoded)
+            member (q/retrieve-member db member-id)
+            entry {:ledger.entry/amount (adjust-amount-sign (:tx-direction decoded) (:amount decoded))
+                   :ledger.entry/tx-date (:tx-date decoded)
+                   :ledger.entry/posting-date (t/inst)
+                   :ledger.entry/description (:description decoded)
+                   :ledger.entry/entry-id (sq/generate-squuid)}
+            _ (tap> [:post entry :member member])
+            {:keys [db-after] :as result-or-error} (post-transaction! datomic-conn member entry)]
+        (if db-after
+          {:ledger (q/retrieve-ledger db-after member-id)
+           :member (q/retrieve-member db-after member-id)}
+          result-or-error))
+      {:error (s/explain-human AddTransaction decoded)})))
+
+(defn delete-ledger-entry! [req])
+(defn update-ledger-entry! [req])
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
@@ -72,10 +126,10 @@
   (q/retrieve-ledger db (:member/member-id albert))
   (new-member-ledger! conn albert)
 
-(s/valid? domain/LedgerEntryEntity {:ledger.entry/amount 1000
-                                  :ledger.entry/tx-date (t/now)
-                                  :ledger.entry/description "Testing"
-                                  :ledger.entry/entry-id (sq/generate-squuid)})
+  (s/valid? domain/LedgerEntryEntity {:ledger.entry/amount 1000
+                                      :ledger.entry/tx-date (t/now)
+                                      :ledger.entry/description "Testing"
+                                      :ledger.entry/entry-id (sq/generate-squuid)})
 
   (post-transaction! conn albert {:ledger.entry/amount 1000
                                   :ledger.entry/tx-date (t/inst)
@@ -87,5 +141,5 @@
                                   :ledger.entry/description "Payment for testing"
                                   :ledger.entry/entry-id (sq/generate-squuid)})
 
-;;
+  ;;
   )

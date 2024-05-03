@@ -133,7 +133,6 @@
   :none "Keine Reiseermäßigungen",
   :add-discount-type "ÖBB-Rabatttyp hinzufügen",
   :add-discount "ÖBB-Rabatt hinzufügen"},
- :outstanding-payments "Ausstehende Zahlungen",
  :section-none "Kein Register",
  :Email "E-Mail",
  :section "Register",

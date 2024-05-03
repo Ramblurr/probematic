@@ -10,7 +10,8 @@
     [:ledger.entry/entry-id :uuid]
     [:ledger.entry/amount :int]
     [:ledger.entry/description ::s/non-blank-string]
-    [:ledger.entry/tx-date ::s/inst]]))
+    [:ledger.entry/posting-date ::s/inst]
+    [:ledger.entry/tx-date ::s/date]]))
 
 (def LedgerEntity
   (s/schema
@@ -21,17 +22,20 @@
     [:ledger/balance :int]]))
 
 (defn entry->db [entry]
-  (update entry :ledger.entry/tx-date #(t/inst (t/in % (t/zone "Europe/Vienna")))))
+  (-> entry
+      (update :ledger.entry/posting-date #(t/inst (t/in % (t/zone "Europe/Vienna"))))
+      (update :ledger.entry/tx-date str)))
 
 (defn db->entry
   [entry]
   (when entry
     (-> (s/decode-datomic LedgerEntryEntity entry)
-        (m/update-existing :ledger.entry/tx-data t/date-time))))
+        (m/update-existing :ledger.entry/posting-date t/date-time)
+        (m/update-existing :ledger.entry/tx-date t/date))))
 
 (defn db->ledger [ent]
   (when ent
     (update ent :ledger/entries #(->> %
                                       (map db->entry)
-                                      (sort-by :ledger.entry/tx-date)
+                                      (sort-by (juxt :ledger.entry/tx-date :ledger.entry/posting-date))
                                       (reverse)))))

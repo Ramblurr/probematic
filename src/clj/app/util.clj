@@ -6,8 +6,14 @@
    [clojure.walk :as walk]
    [ctmx.form :as form]
    [medley.core :as m]
-   [tick.core :as t])
+   [tick.core :as t]
+   [datomic.client.api :as datomic])
+
   (:import
+   (java.text NumberFormat ParsePosition)
+   (java.time LocalDate)
+   (java.time.format DateTimeFormatter DateTimeFormatterBuilder ResolverStyle)
+   (java.util Locale)
    (java.net URLDecoder URLEncoder)
    (java.security SecureRandom)))
 
@@ -119,14 +125,17 @@
   (= :delete request-method))
 
 (defn make-get-request
-  "Returns a new GET request based on passed in request.
+  "Returns a new GET request based on passed in request. Refreshes the db connection.
     See: https://github.com/spookylukey/django-htmx-patterns/blob/master/view_restart.rst"
   ([old-req]
    (-> old-req
-       (assoc :request-method :get)))
+       (assoc :request-method :get)
+       (assoc :db (datomic/db (:datomic-conn old-req)))))
   ([old-req extra]
-   (-> (merge old-req extra)
-       (assoc :request-method :get))))
+   (-> old-req
+       (assoc :db (datomic/db (:datomic-conn old-req)))
+       (assoc :request-method :get)
+       (merge extra))))
 
 (defn comp-namer [var]
   (fn
@@ -255,8 +264,59 @@
 (defn remove-dummy-uuid [coll]
   (remove #(= dummy-uuid %) coll))
 
+(def currency-regex #"[$€£¥₹₪₩₿¢\s]")
+
+(defn- remove-currency-signs
+  "Remove any recognized currency signs from the string (c.f. [[currency-regex]])."
+  [s]
+  (str/replace s currency-regex ""))
+
+(let [us (NumberFormat/getInstance (Locale. "en" "US"))
+      de (NumberFormat/getInstance (Locale. "de" "DE"))
+      fr (NumberFormat/getInstance (Locale. "fr" "FR"))
+      ch (NumberFormat/getInstance (Locale. "de" "CH"))]
+  (defn- parse-plain-number [number-separators s]
+    (let [has-parens?       (re-matches #"\(.*\)" s)
+          deparenthesized-s (str/replace s #"[()]" "")
+          parse-pos         (ParsePosition. 0)
+          parsed-number     (case number-separators
+                              ("." ".,") (. us parse deparenthesized-s parse-pos)
+                              ",."       (. de parse deparenthesized-s parse-pos)
+                              ", "       (. fr parse (str/replace deparenthesized-s \space \u00A0) parse-pos) ; \u00A0 is a non-breaking space
+                              ".’"       (. ch parse deparenthesized-s parse-pos))]
+      (let [parsed-idx (.getIndex parse-pos)]
+        (when-not (= parsed-idx (count deparenthesized-s))
+          (throw (ex-info "Unexpected trailing characters - this is probably not a number"
+                          {:full-string    s
+                           :parsed-number  parsed-number
+                           :parsed-string  (.substring deparenthesized-s 0 parsed-idx)
+                           :ignored-string (.substring deparenthesized-s parsed-idx)}))))
+      (if has-parens?
+        ;; By casting to double we ensure that the sign is preserved for 0.0
+        (- (double parsed-number))
+        parsed-number))))
+
+(def NUMBER-SEPARATORS-US  ".,")
+(def NUMBER-SEPARATORS-DE  ",.")
+
+(defn parse-number
+  "Parse an integer or float"
+  ([s]
+   (parse-number NUMBER-SEPARATORS-DE s))
+  ([number-separators s]
+   (try
+     (->> s
+          (str/trim)
+          (remove-currency-signs)
+          (parse-plain-number number-separators))
+     (catch Exception e
+       (tap> [:error (format "''%s'' is not a recognizable number" s) :ex e])
+       nil))))
+
 (comment
   (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])
+
+  (parse-number "100.200,50")
 
   ;;
   )

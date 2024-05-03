@@ -2,7 +2,6 @@
   (:require
    [app.layout :as layout]
    [app.songs.views :as view]
-   [app.ui :as ui]
    [ctmx.core :as ctmx]
    [reitit.ring.malli :as reitit.ring.malli]))
 
@@ -32,20 +31,10 @@
      (layout/app-shell req
                        (view/song-detail-page req false)))))
 
-(defn songs-log-play-routes []
-  (ctmx/make-routes
-   "/songs/log-play/"
-   (fn [req]
-     (layout/app-shell req
-                       [:div
-                        (ui/page-header :title "Log Play")
-                        (view/songs-log-play req)]))))
-
 (defn routes []
   ["" {:app.route/name :app/songs}
    (songs-sync)
    (song-detail-routes)
-   (songs-log-play-routes)
    (songs-list-routes)
    (songs-new-routes)
    ["/song-media/{song-id}"

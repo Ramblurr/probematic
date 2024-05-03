@@ -3,6 +3,7 @@
  :admin-email     #ref [:secrets :admin-email]
  :app-base-url    #ref [:secrets :app-base-url]
  :app-secret-key  #ref [:secrets :app-secret-key]
+ :band-bank-info  #ref [:secrets :band-bank-info]
  :session-config  {:cookie-attrs  {:same-site :strict
                                    :http-only true
                                    :path      "/"}

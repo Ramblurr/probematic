@@ -278,6 +278,8 @@
 
       (travel-discount-panel (util/make-get-request req))
 
+      (ledger/member-ledger-panel req member)
+
       (ui/panel {:title
                  (tr [:member/insurance-title])
                  :subtitle
@@ -286,7 +288,6 @@
 
                  (ui/dl-item (tr [:band-instruments])  (count band-instruments))
                  (ui/dl-item (tr [:private-instruments]) (count private-instruments))
-                 (ui/dl-item (tr [:outstanding-payments]) (ui/money 0 :EUR))
                  (ui/dl-item (tr [:instruments]) (if (empty? coverages)
                                                    (tr [:none])
                                                    (ui/rich-ul {}
@@ -299,9 +300,8 @@
                                                                                   (ui/rich-li-action-a :href "#" :label
                                                                                                        (tr [:action/view]))))
                                                                     coverages))) "sm:col-span-3")))
-      (ui/panel {:title "Money Stuff"
-                 :subtitle "What you owe the band and what the band owes you"}
-                (ledger/ledger-table req member))
+
+
       (ui/panel {:title (tr ["Gigs & Probes"])
                  :subtitle (tr ["Fun stats!"])}
                 (ui/dl

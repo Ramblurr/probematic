@@ -1,5 +1,6 @@
 (ns app.dashboard.views
   (:require
+   [app.queries :as q]
    [app.auth :as auth]
    [app.config :as config]
    [app.gigs.domain :as domain]
@@ -14,7 +15,8 @@
    [app.util :as util]
    [clojure.string :as str]
    [ctmx.core :as ctmx]
-   [ctmx.rt :as rt]))
+   [ctmx.rt :as rt]
+   [app.ledger.views :as ledger]))
 
 (ctmx/defcomponent ^:endpoint gig-attendance-person-motivation [req gig-id member-id motivation]
   (gig.view/motivation-endpoint req
@@ -199,7 +201,9 @@ put '%s' into .copy-link in me"
         gigs-planned (gig.service/gigs-planned-for db member)
         polls-open (poll.controller/open-polls db)
         need-answer-gigs (gig.service/gigs-needing-plan db member)
-        policies (insurance.controller/policies-with-todos db)]
+        policies (insurance.controller/policies-with-todos db)
+        ledger (q/retrieve-ledger db (:member/member-id member))
+        ]
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list
@@ -208,6 +212,12 @@ put '%s' into .copy-link in me"
                                            :priority :primary
                                            :centered? true
                                            :attr {:hx-boost "true" :href (url/link-gig-create)} :icon icon/plus)))
+
+     (when (and ledger (> (:ledger/balance ledger) 0))
+       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+        (ui/divider-left (tr [:dashboard/you-owe]))
+        [:div {:class "bg-white p-4 rounded-md shadow-md"}
+         (ledger/outstanding-balance-widget req ledger)]])
      (when (seq polls-open)
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/polls-open]))
