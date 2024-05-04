@@ -15,7 +15,7 @@
   :send-changes "Änderungen senden"
   :item-count-hint
   "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?",
-  :coverage-for "Die folgenden Informationen gelten für: %1",
+  :coverage-for "Die folgenden Informationen gelten für Versicherungspolice '%1'",
   :policies "Versicherungspolicen",
   :insurance-policy "Versicherungspolice",
   :name "Name der Versicherungspolice",

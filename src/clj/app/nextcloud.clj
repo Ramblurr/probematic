@@ -112,6 +112,11 @@
                 [tag (first content)]))
          (into {}))))
 
+
+(defn format-internal-url [nc-url path]
+  (let [base-path "/apps/files/?dir="]
+    (str nc-url base-path path)))
+
 (defn routes []
   ["/nextcloud-fetch" {:parameters {:query [:map [:path string?]]}
                        :coercion rcm/coercion

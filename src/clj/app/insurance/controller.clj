@@ -346,6 +346,11 @@
      (fu/validate-base-path! base-path path)
      path)))
 
+(defn internal-instrument-image-url [req {:instrument/keys [instrument-id]}]
+  (nextcloud/format-internal-url
+    (config/nextcloud-url (-> req :system :env) )
+    (instrument-image-remote-path req instrument-id) ))
+
 (defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
   (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))
        (map #(urls/absolute-link-instrument-image (:env system) instrument-id  %))))
@@ -441,7 +446,7 @@
     (concat coverage-changes
             [[:db/add coverage-ref :instrument.coverage/value (bigdec value)]
              [:db/add coverage-ref :instrument.coverage/status (if has-upstream-change? :instrument.coverage.status/needs-review (:instrument.coverage/status coverage))]
-             [:db/add coverage-ref :instrument.coverage/change (if has-upstream-change?  :instrument.coverage.change/changed  (:instrument.coverage/change coverage))]
+             [:db/add coverage-ref :instrument.coverage/change (if has-upstream-change?  :instrument.coverage.change/changed  (:instrument.coverage/change coverage :instrument.coverage.change/none))]
              [:db/add coverage-ref :instrument.coverage/private? (= "private" private-band)]
              [:db/add coverage-ref :instrument.coverage/item-count item-count]])))
 
@@ -470,13 +475,15 @@
     :instrument/owner [:member/member-id owner-member-id]
     :instrument/category [:instrument.category/category-id category-id]}])
 
-(defn try-create-instrument-nextcloud-share! [req instrument-id]
-  (try
-    (upsert-instrument-nextcloud-share! req (instrument-image-remote-path req instrument-id))
-    (catch Exception e
-      (tap> e)
-      (errors/report-error! e)
-      nil)))
+(defn try-create-instrument-nextcloud-share! [{:keys [webdav] :as req} instrument-id]
+  (let [remote-path (instrument-image-remote-path req instrument-id)]
+    (try
+      (sardine/mkdirs webdav remote-path)
+      (upsert-instrument-nextcloud-share! req remote-path)
+      (catch Exception e
+        (tap> e)
+        (errors/report-error! e)
+        nil))))
 
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]
@@ -484,6 +491,7 @@
       (let [instrument-id (if (str/blank? (:instrument-id decoded))
                             (sq/generate-squuid)
                             (:instrument-id decoded))
+
             txs (update-instrument-txs decoded instrument-id)
             share-url (try-create-instrument-nextcloud-share! req instrument-id)
             txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
@@ -531,10 +539,10 @@
             instrument-id (:instrument-id decoded)
             txs (concat (update-coverage-txs decoded coverage)
                         (update-instrument-txs decoded instrument-id))
-            ;; _ (tap> {:tx txs})
             share-url (try-create-instrument-nextcloud-share! req instrument-id)
             txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
                     txs)
+            ;; _ (tap> {:tx txs})
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after (:policy-id decoded))})
 

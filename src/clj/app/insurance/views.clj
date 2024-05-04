@@ -776,6 +776,37 @@ Mit freundlichen Grüßen,
   (when (util/delete? req)
     (response/hx-redirect (urls/link-policy (:policy (controller/delete-coverage! req))))))
 
+(defn photo-upload-widget
+  "Renders photo upload dropzone. Must be used insize a div/form with the dropzone class and an id of imageUpload"
+  ([]
+   (photo-upload-widget nil))
+  ([url]
+   [:div
+    [:script
+     (hiccup.util/raw-string
+       (format "
+document.addEventListener('DOMContentLoaded', function() {
+  Dropzone.options.imageUpload = {
+    %s
+    paramName: 'file',
+    acceptedFiles: '.jpeg,.jpg,.png,.gif',
+    maxFileSize: 10, //MB
+//    addRemoveLinks: true,
+  };
+});
+" (if url (format "url: \"%s\"," url) "")))]
+
+    [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
+     [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
+      [:div {:class "space-y-1 text-center"}
+       [:svg {:class "mx-auto h-12 w-12 text-gray-400", :stroke "currentColor", :fill "none", :viewbox "0 0 48 48", :aria-hidden "true"}
+        [:path {:d "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", :stroke-width "2", :stroke-linecap "round", :stroke-linejoin "round"}]]
+       [:div {:class "flex text-sm text-gray-600 justify-center"}
+        [:label {:for "file-upload" :class "relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500"}
+         [:span "Upload a file"]]
+        [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
+       [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]))
+
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page-rw [{:keys [db tr] :as req}]
   insurance-coverage-delete
   (let [post? (util/post? req)
@@ -786,7 +817,7 @@ Mit freundlichen Grüßen,
       (response/hx-redirect (urls/link-policy (:policy result)))
       (let [coverage-id (util.http/path-param-uuid! req :coverage-id)
             coverage (q/retrieve-coverage db coverage-id)
-            instrument (:instrument.coverage/instrument coverage)
+            {:instrument/keys [instrument-id] :as instrument} (:instrument.coverage/instrument coverage)
             policy (:insurance.policy/_covered-instruments coverage)
             coverage-types (:insurance.policy/coverage-types policy)]
         (assert coverage)
@@ -799,9 +830,14 @@ Mit freundlichen Grüßen,
                       [:div {:class "space-y-6 sm:space-y-5"}
                        [:input {:type :hidden :name "policy-id" :value (:insurance.policy/policy-id policy)}]
                        [:input {:type :hidden :name "coverage-id" :value (:instrument.coverage/coverage-id coverage)}]
-                       [:input {:type :hidden :name "instrument-id" :value (:instrument/instrument-id instrument)}]
+                       [:input {:type :hidden :name "instrument-id" :value instrument-id}]
                        (ui/form-left-section :label (tr [:instrument/instrument]) :hint (tr [:instrument/create-subtitle]))
                        (instrument-form req error instrument)
+                       [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-y sm:border-gray-200 sm:py-5"}
+                        [:div { :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"} (tr [:instrument/photo-upload])]
+                        [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+                         [:div {:class "relative max-w-lg sm:max-w-xs dropzone" :id "imageUpload" }
+                          (photo-upload-widget (urls/link-instrument-image-upload instrument-id))]]]
                        (ui/form-left-section :label (tr [:insurance/instrument-coverage]) :hint (tr [:insurance/coverage-for] [(:insurance.policy/name policy)]))
                        (coverage-form {:tr tr :path path} error coverage coverage-types)
                        (when form-error
@@ -809,21 +845,22 @@ Mit freundlichen Grüßen,
                           [:p {:class "mt-2 text-right text-red-600"}
                            (icon/circle-exclamation {:class "h-5 w-5 inline-block mr-2"})
                            (tr [form-error])]])
+
                        (ui/form-buttons
-                        :buttons-left (list
-                                       (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
-                                                   :hx-delete (util/endpoint-path insurance-coverage-delete)
-                                                   :hx-target (hash ".")
-                                                   :hx-vals   {:coverage-id (str coverage-id)}
-                                                   :attr      {:_ (ui/confirm-modal-script
-                                                                   (tr [:action/confirm-generic])
-                                                                   (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
-                                                                   (tr [:action/confirm-delete])
-                                                                   (tr [:action/cancel]))}}))
-                        :buttons-right (list
-                                        (ui/link-button {:label (tr [:action/cancel]) :priority :white
-                                                         :attr {:href (urls/link-policy policy)}})
-                                        (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
+                         :buttons-left (list
+                                         (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
+                                                     :hx-delete (util/endpoint-path insurance-coverage-delete)
+                                                     :hx-target (hash ".")
+                                                     :hx-vals   {:coverage-id (str coverage-id)}
+                                                     :attr      {:_ (ui/confirm-modal-script
+                                                                      (tr [:action/confirm-generic])
+                                                                      (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
+                                                                      (tr [:action/confirm-delete])
+                                                                      (tr [:action/cancel]))}}))
+                         :buttons-right (list
+                                          (ui/link-button {:label (tr [:action/cancel]) :priority :white
+                                                           :attr {:href (urls/link-policy policy)}})
+                                          (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
 
 (defn coverage-panel [tr coverage policy]
   (ui/panel {:title (tr [:insurance/instrument-coverage])
@@ -992,9 +1029,9 @@ Mit freundlichen Grüßen,
         [:div {:id id}
          (breadcrumb-coverage tr policy coverage)
          (ui/panel {:title (:instrument/name instrument)
-                    :buttons (list
-                              (when (controller/policy-editable? policy)
-                                (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
+                    :buttons (when (controller/policy-editable? policy)
+                               (list
+                                 (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))) )}
                    (ui/dl
                     (ui/dl-item (tr [:instrument/owner])
                                 (ui/member (:instrument/owner instrument)))
@@ -1012,9 +1049,15 @@ Mit freundlichen Grüßen,
                                 (:instrument/build-year instrument))
                     (ui/dl-item (tr [:instrument/description])
                                 (:instrument/description instrument) "sm:col-span-2")
-                    (ui/dl-item (tr [:instrument/photos-public-link])
+                    (ui/dl-item (tr [:instrument/images-share-url])
                                 (when-let [link (:instrument/images-share-url instrument)]
-                                  [:a {:href link :target "_blank" :class "link-blue"} link])))
+                                  [:p (tr [:instrument/images-share-url-hint]) ": "
+                                   [:a {:href link :target "_blank" :class "link-blue"} link]]))
+                    (ui/dl-item (tr [:instrument/images-internal-url])
+                                (when-let [link (controller/internal-instrument-image-url req instrument)]
+                                  [:p (tr [:instrument/images-internal-url-hint]) ": "
+                                   [:a {:href link  :target "_blank" :class "link-blue"}
+                                    link]])))
                    (ui/photo-grid photos))
          (coverage-panel tr coverage policy)
          (coverage-changes-panel req coverage policy)]))))
@@ -1060,6 +1103,7 @@ Mit freundlichen Grüßen,
                     file))
   {:status 201})
 
+
 (ctmx/defcomponent ^:endpoint image-upload [{:keys [tr] :as req}]
   (let [instrument-id (util.http/path-param-uuid! req :instrument-id)
         policy-id (util.http/path-param-uuid! req :policy-id)]
@@ -1068,33 +1112,15 @@ Mit freundlichen Grüßen,
       (ui/step-circles 3 2)]
      (ui/panel {:title (tr [:instrument/photo-upload-title])
                 :subtitle (tr [:instrument/photo-upload-subtitle])}
-               [:script
-                (hiccup.util/raw-string
-                 "
-document.addEventListener('DOMContentLoaded', function() {
-  Dropzone.options.imageUpload = {
-    paramName: 'file',
-    acceptedFiles: '.jpeg,.jpg,.png,.gif',
-    maxFileSize: 10, //MB
-    addRemoveLinks: true,
-  };
-});
-")]
-               [:form {:action (urls/link-instrument-image-upload instrument-id) :class "dropzone space-y-8" :id (util/id :comp/imageUpload) :enctype "multipart/form-data"}
-                [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
-                 [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
-                  [:div {:class "space-y-1 text-center"}
-                   [:svg {:class "mx-auto h-12 w-12 text-gray-400", :stroke "currentColor", :fill "none", :viewbox "0 0 48 48", :aria-hidden "true"}
-                    [:path {:d "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", :stroke-width "2", :stroke-linecap "round", :stroke-linejoin "round"}]]
-                   [:div {:class "flex text-sm text-gray-600 justify-center"}
-                    [:label {:for "file-upload" :class "relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500"}
-                     [:span "Upload a file"]]
-                    [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
-                   [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]
+               [:form {:action (urls/link-instrument-image-upload instrument-id)
+                       :class "dropzone space-y-8"
+                       :id (util/id :comp/imageUpload)
+                       :enctype "multipart/form-data"}
+                (photo-upload-widget)]
                (ui/form-buttons :buttons-left (list
-                                               (ui/link-button {:attr {:href (urls/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                                                (ui/link-button {:attr {:href (urls/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
                                 :buttons-right (list
-                                                (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
+                                                 (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
   (let [post? (util/post? req)
