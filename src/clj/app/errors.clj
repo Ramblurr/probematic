@@ -40,15 +40,13 @@
   (let [user-email (get-in v [:session :session/email])
         member-id (get-in v [:session :session/member :member/member-id])
         v (->> v
-            (util/remove-deep dangerous-keys)
-            (util/replace-deep redact-keys "<REDACTED>"))
-        ]
+               (util/remove-deep dangerous-keys)
+               (util/replace-deep redact-keys "<REDACTED>"))]
     (tap> {:u user-email :m member-id :v v})
     (if (map? v)
       (-> v
-       (assoc :user-email user-email)
-       (assoc :member-id (str member-id))
-       )
+          (assoc :user-email user-email)
+          (assoc :member-id (str member-id)))
       v)))
 
 (defn unwrap-ex [ex]

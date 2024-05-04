@@ -162,7 +162,7 @@
 (defn close-poll! [{:keys [db] :as req} poll-id]
   (let [poll (q/retrieve-poll db poll-id)]
     {:poll (-> (d/transact-wrapper! req {:tx-data [[:db/add (d/ref poll) :poll/poll-status :poll.status/closed]
-                                                  [:db/add (d/ref poll) :poll/closes-at (domain/closes-at-inst (t/date-time))]]})
+                                                   [:db/add (d/ref poll) :poll/closes-at (domain/closes-at-inst (t/date-time))]]})
                :db-after
                (q/retrieve-poll poll-id))}))
 

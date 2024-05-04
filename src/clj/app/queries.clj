@@ -849,9 +849,9 @@
    (d/find-by db :travel.discount/discount-id travel-discount-id travel-discount-pattern)))
 
 (def ledger-entry-pattern [:ledger.entry/entry-id
-                     :ledger.entry/amount
-                     :ledger.entry/tx-date
-                     :ledger.entry/description])
+                           :ledger.entry/amount
+                           :ledger.entry/tx-date
+                           :ledger.entry/description])
 (def ledger-entry-pattern-with-ledger
   (conj ledger-entry-pattern {:ledger/_entries [:ledger/ledger-id :ledger/balance {:ledger/owner member-pattern}]}))
 
@@ -866,7 +866,7 @@
 
 (defn retrieve-ledger-entry [db entry-id]
   (ledger.domain/db->ledger
-   (d/find-by db :ledger.entry/entry-id entry-id ledger-entry-pattern-with-ledger )))
+   (d/find-by db :ledger.entry/entry-id entry-id ledger-entry-pattern-with-ledger)))
 
 (defn find-ledger-entries-insurance [db member-id]
   (->>

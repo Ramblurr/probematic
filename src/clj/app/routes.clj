@@ -33,7 +33,7 @@
    (gigs/unauthenticated-routes)
    (members/unauthenticated-routes)
 
-   [""{:interceptors [(interceptors/webdav-interceptor system)]}
+   ["" {:interceptors [(interceptors/webdav-interceptor system)]}
     (songs/unauthenticated-routes)]
 
    ["" {:interceptors [auth/require-authenticated-user

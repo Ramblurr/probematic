@@ -114,17 +114,16 @@
           result-or-error))
       {:error (s/explain-human AddTransaction decoded)})))
 
-
-(defn prepare-delete-transaction-datoms [ {:ledger.entry/keys [amount entry-id] :as entry}]
+(defn prepare-delete-transaction-datoms [{:ledger.entry/keys [amount entry-id] :as entry}]
   (let [{:ledger/keys [balance entries] :as ledger} (first (:ledger/_entries entry))]
     (assert ledger "Ledger must be present")
     [[:db/retractEntity [:ledger.entry/entry-id entry-id]]
-     [:db/add (d/ref ledger) :ledger/balance (- balance amount)]]) )
+     [:db/add (d/ref ledger) :ledger/balance (- balance amount)]]))
 
 (defn delete-ledger-entry! [{:keys [db member] :as req}]
   (let [params (util.http/unwrap-params req)
         entry-id (util/ensure-uuid! (:ledger-entry-id params))
-        tx-data (prepare-delete-transaction-datoms (q/retrieve-ledger-entry db entry-id) ) ]
+        tx-data (prepare-delete-transaction-datoms (q/retrieve-ledger-entry db entry-id))]
     (try
       (d/transact-wrapper! req {:tx-data tx-data})
       {:member member}
@@ -146,9 +145,9 @@
   (def albert (q/retrieve-member db #uuid "01860c2a-2929-8727-af1a-5545941b1115"))
 
   (def maggo-ledger (q/retrieve-ledger db #uuid "01860c2a-2929-8727-af1a-5545941b110f"))
-  (datomic/transact conn {:tx-data [[:db/add (d/ref maggo-ledger) :ledger/balance 0 ]]})
+  (datomic/transact conn {:tx-data [[:db/add (d/ref maggo-ledger) :ledger/balance 0]]})
   (:ledger/_entries
-    (q/retrieve-ledger-entry db #uuid "018f4031-2d54-822a-a7a2-2fa0cd39847c"))
+   (q/retrieve-ledger-entry db #uuid "018f4031-2d54-822a-a7a2-2fa0cd39847c"))
 
   (q/retrieve-ledger db (:member/member-id albert))
   (new-member-ledger! conn albert)

@@ -177,7 +177,6 @@ msgstr \"\"
 \"Content-Transfer-Encoding: 8bit\\n\"
 " (t/format (t/formatter "YYYY-MM-dd HH:mmxx") (t/zoned-date-time))))
 
-
 (defn locale->seq
   "Convert a tempura locale map into a list of key/string tuples"
   [m]

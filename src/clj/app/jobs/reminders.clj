@@ -60,8 +60,7 @@
 
 (defn send-reminders!
   ([system _]
-   (send-reminders! system (t/instant) _)
-   )
+   (send-reminders! system (t/instant) _))
   ([{:keys [datomic] :as system} as-of _]
    (log/info "sending reminders")
    (try
@@ -79,8 +78,7 @@
        :done)
      (catch Throwable e
        (tap> e)
-       (errors/report-error! e))
-     )))
+       (errors/report-error! e)))))
 
 (defn make-reminder-job [system]
   (fn [{:job/keys [frequency initial-delay]}]

@@ -152,8 +152,8 @@
                             :hx-vals {:ledger-entry-id (str entry-id)}
                             :hx-target delete-target}
                    (tr [:action/delete])]]]) entries)]]
-      (when-not (seq entries)
-           [:div (tr [:no-transactions-yet])]) ])
+       (when-not (seq entries)
+         [:div (tr [:no-transactions-yet])])])
     [:p (tr [:no-transactions-yet])]))
 
 (ctmx/defcomponent ^:endpoint form-transaction-handler [{:keys [db] :as req}]

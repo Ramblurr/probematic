@@ -169,7 +169,7 @@
           (datomic/transact datomic-conn {:tx-data [reminder]}))))))
 
 (defn send-reminder-to-all! [req gig-id]
-    (email/send-gig-reminder-to-all! req gig-id))
+  (email/send-gig-reminder-to-all! req gig-id))
 
 (defn get-attendance
   ([db gig-id member-id]

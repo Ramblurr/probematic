@@ -76,7 +76,6 @@
     (assert password)
     (NextcloudConnector. host username password calendar-path)))
 
-
 (comment
 
   (->
@@ -84,15 +83,12 @@
     {:ical.event/created-at (t/instant)
      :ical.event/start-time (t/instant)
      :ical.event/end-time (t/instant)
-     :ical.event/timezone (t/zone "Europe/Vienna")
-     }) (.toVEvent))
+     :ical.event/timezone (t/zone "Europe/Vienna")}) (.toVEvent))
   (t/instant)
 
   (gig-date-to-inst (t/date "2023-10-17") (t/time "18:45"))
 
-
-
-  (def client (create-http-client ))
+  (def client (create-http-client))
 
   (do
     (require '[integrant.repl.state :as state])
@@ -105,14 +101,9 @@
   (def gig
     (nth
      (q/gigs-after db (q/date-midnight-today!))
-     11
-     ))
+     11))
 
   (event-from-gig env gig)
 
-
-
-
-
-  ;;
+;;
   )

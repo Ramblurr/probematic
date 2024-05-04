@@ -10,4 +10,4 @@
 (defn make-songs-sync-job [system]
   (fn [{:job/keys [frequency initial-delay]}]
     (jobs/make-repeating-job
-      (partial #'song-sync-job system) frequency initial-delay)))
+     (partial #'song-sync-job system) frequency initial-delay)))

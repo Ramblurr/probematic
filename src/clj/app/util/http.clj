@@ -69,7 +69,6 @@
     (catch NumberFormatException e
       nil)))
 
-
 (defn order-invert [o]
   (get {:asc :desc
         :desc :asc} o))

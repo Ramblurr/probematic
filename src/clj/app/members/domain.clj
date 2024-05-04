@@ -30,11 +30,11 @@ END:VCARD"
 ;; text/x-vcard
 
 (comment
-    (spit "test.vcf"
-          (generate-vcard {:member/name "Casey"
-                           :member/nick "casey"
-                           :member/member-id "e362d49e-5b1e-4eb6-b7e5-7953879ae74f"
-                           :member/email "test@example.com"
-                           :member/phone "+43000000000"})) ;; rcf
+  (spit "test.vcf"
+        (generate-vcard {:member/name "Casey"
+                         :member/nick "casey"
+                         :member/member-id "e362d49e-5b1e-4eb6-b7e5-7953879ae74f"
+                         :member/email "test@example.com"
+                         :member/phone "+43000000000"})) ;; rcf
   ;;
-    )
+  )

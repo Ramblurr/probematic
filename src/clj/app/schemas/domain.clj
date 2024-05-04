@@ -1,8 +1,7 @@
 (ns app.schemas.domain)
 
 (def registry
-  {
-   :db/auto_id            int?
+  {:db/auto_id            int?
    :user/id          :db/auto_id
    :user/username    string?
    :user/email       :email_address
@@ -19,5 +18,4 @@
    :doc/user-unsaved [:map {:closed true}
                       [:user/username]
                       [:user/email]
-                      [:user/active]]
-   })
+                      [:user/active]]})

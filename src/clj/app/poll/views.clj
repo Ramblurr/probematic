@@ -83,25 +83,23 @@ set its @name to optName
                                      (poll-option position value)) options))
                             (empty-opts))]
     (tap> {:single? single?
-           :pt poll-type
-           })
+           :pt poll-type})
     (ui/panel {:title (tr [:poll/poll])
                :buttons (list
-                          (when existing-poll
-                            (ui/button :priority :white-destructive :label "Delete" :hx-post (util/endpoint-path poll-delete)
-                                       :attr {:_ (ui/confirm-modal-script
-                                                   (tr [:action/confirm-generic])
-                                                   (tr [:action/confirm-delete-poll] [title])
-                                                   (tr [:action/confirm-delete])
-                                                   (tr [:action/cancel]))}))
-                          (when (and existing-poll (= poll-status :poll.status/open))
-                            (ui/button :label (tr [:poll/close-early]) :hx-post (util/endpoint-path poll-close)
-                                       :attr {:_ (ui/confirm-modal-script
-                                                   (tr [:action/confirm-generic])
-                                                   (tr [:action/confirm-close-poll] [title])
-                                                   (tr [:action/confirm-close])
-                                                   (tr [:action/cancel]))})))
-               }
+                         (when existing-poll
+                           (ui/button :priority :white-destructive :label "Delete" :hx-post (util/endpoint-path poll-delete)
+                                      :attr {:_ (ui/confirm-modal-script
+                                                 (tr [:action/confirm-generic])
+                                                 (tr [:action/confirm-delete-poll] [title])
+                                                 (tr [:action/confirm-delete])
+                                                 (tr [:action/cancel]))}))
+                         (when (and existing-poll (= poll-status :poll.status/open))
+                           (ui/button :label (tr [:poll/close-early]) :hx-post (util/endpoint-path poll-close)
+                                      :attr {:_ (ui/confirm-modal-script
+                                                 (tr [:action/confirm-generic])
+                                                 (tr [:action/confirm-close-poll] [title])
+                                                 (tr [:action/confirm-close])
+                                                 (tr [:action/cancel]))})))}
               [:div
 
                [:div {:class "hidden" :id "poll-opt-template"} (poll-option 999  nil)]
@@ -138,7 +136,7 @@ set its @name to optName
                     (ui/datetime-left :label (tr [:poll/closes-at]) :hint (tr [:poll/closes-at-hint]) :id "closes-at" :value closes-at :required? true)
                     [:input {:type :hidden :name "autoremind?" :value nil}]
                     #_(ui/toggle-checkbox-left :id "autoremind?" :name "autoremind?" :label (tr [:poll/autoremind?]) :checked? autoremind?
-                                             :hint (tr [:poll/autoremind-hint])))
+                                               :hint (tr [:poll/autoremind-hint])))
 
                    (ui/form-left-section :label (tr [:poll/choices]))
                    (if semi-read-only?
@@ -205,8 +203,7 @@ set its @name to optName
                         (frequencies)
                         (map (fn [[{:poll.option/keys [value]} freq]]
                                #_[value (/ (* 100 freq) total-voters)]
-                               [value freq]
-                               ))
+                               [value freq]))
                         (sort-by second))
         y-labels (map first graph-data)
         graph-values (map second graph-data)
@@ -240,7 +237,6 @@ set its @name to optName
      (when (= poll-status :poll.status/open)
        [:div {:class "mt-2"}
         (ui/link-button :label (tr [:action/change-vote]) :icon icon/arrow-small-left :href (url/link-poll poll "/?change-vote=true"))])]))
-
 
 (ctmx/defcomponent ^:endpoint poll-vote [{:keys [tr db] :as req} poll]
   (let [poll (or poll (controller/retrieve-poll db (util.http/path-param-uuid! req :poll-id)))

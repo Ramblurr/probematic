@@ -130,7 +130,6 @@
 
   (email/send-rehearsal-leader-email! system (q/next-probe db) (q/member-by-email db "me@caseylink.com"))
 
-
   (assign-rehearsal-leaders! conn)
   (notify-rehearsal-leader! system)
   ;;
