@@ -348,8 +348,8 @@
 
 (defn internal-instrument-image-url [req {:instrument/keys [instrument-id]}]
   (nextcloud/format-internal-url
-    (config/nextcloud-url (-> req :system :env) )
-    (instrument-image-remote-path req instrument-id) ))
+   (config/nextcloud-url (-> req :system :env))
+   (instrument-image-remote-path req instrument-id)))
 
 (defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
   (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))

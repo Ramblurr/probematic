@@ -995,7 +995,23 @@
    {:db/ident :ledger.entry.meta.insurance/policy
     :db/doc "For ledger entries that are about insurance, a ref to the policy"
     :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one}]
+    :db/cardinality :db.cardinality/one}
+;;; Teams
+   {:db/ident :team/name
+    :db/doc "The name of the team"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/value
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :team/team-id
+    :db/doc "The id of the team"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :team/members
+    :db/doc "The members of the team"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}
+   ]
 
 ;;
 

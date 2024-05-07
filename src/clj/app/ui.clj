@@ -853,7 +853,10 @@
   (input (-> opts
              (assoc :type "text" :suffix "EUR" :pattern "^\\d*(,\\d{2}$)?" :placeholder "0,00" :title (tr [:money-input-format-error])))))
 
-(defn checkbox [& {:keys [label id checked?]}]
+(defn checkbox
+  "TODO: misuses name and id"
+  [& {:keys [label id checked?]}]
+
   [:div {:class "mt-2 relative flex items-start"}
    [:div {:class "flex h-5 items-center"}
     [:input {:type "checkbox" :id id :name id :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
@@ -1435,7 +1438,8 @@
                label]]]) items)]]])
 
 (defn iban [iban]
-  (->> (str/replace  iban #"\s" "")
-       (partition 4)
-       (map (fn [group]
-              [:span {:class "visually-spaced"} (apply str group)]))))
+  (when iban
+    (->> (str/replace iban #"\s" "")
+         (partition 4)
+         (map (fn [group]
+                [:span {:class "visually-spaced"} (apply str group)])))))

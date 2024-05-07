@@ -1,5 +1,6 @@
 (ns app.settings.views
   (:require
+   [app.urls :as urls]
    [app.auth :as auth]
    [app.icons :as icon]
    [app.queries :as q]
@@ -8,6 +9,116 @@
    [app.util :as util]
    [ctmx.core :as ctmx]
    [ctmx.rt :as rt]))
+
+(declare teams-panel)
+
+(ctmx/defcomponent ^:endpoint teams-create-handler [{:keys [db tr] :as req}]
+  (when (util/post? req)
+    (let [{:keys [error]} (controller/create-team! req)]
+      (teams-panel (util/make-get-request req) error))))
+
+(ctmx/defcomponent ^:endpoint teams-update-handler [{:keys [db tr] :as req}]
+  (when (util/post? req)
+    (let [{:keys [error]} (controller/update-team! req)]
+      (teams-panel (util/make-get-request req) error))))
+
+(ctmx/defcomponent ^:endpoint teams-delete-handler [{:keys [db tr] :as req}]
+  (when (util/delete? req)
+    (let [{:keys [error]} (controller/delete-team! req)]
+      (teams-panel (util/make-get-request req) error))))
+
+(defn team-create-form [{:keys [tr] :as req}]
+  [:form {:class  "team-add-form hidden"
+          :hx-target (util/hash :comp/teams-panel)
+          :hx-post (util/endpoint-path teams-create-handler)}
+   [:div {:class "pb-12 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:pb-0"}
+    [:div {:class "sm:grid sm:grid-cols-4 sm:items-start sm:gap-4"}
+     [:label {:for "team-name" :class "block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"}
+      (tr [:team/name])]
+     [:div {:class "sm:col-span-2"}
+      [:div {:class "flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-sno-orange-600 sm:max-w-md"}
+       (ui/text  :placeholder "" :id "team-name" :name "team-name")]]
+     (ui/button :class "grid-cols-1 mt-4 sm:mt-0"
+                :priority :primary
+                :icon icon/plus
+                :label (tr [:action/create]))]]])
+
+(ctmx/defcomponent teams-panel [{:keys [db tr] :as req} error]
+  teams-create-handler teams-update-handler
+  (let [teams (q/retrieve-all-teams db)]
+    [:div {:id (util/id :comp/teams-panel)}
+     (ui/panel {:title "Teams"
+                :subtitle "Because someone has to do the work"
+                :buttons (list
+                          (ui/button :attr {:_ "on click remove .hidden from .team-add-form then add .hidden to me"}
+                                     :icon icon/plus
+                                     :label (tr [:team/create-team])))}
+               [:dl {:class "divide-y divide-gray-100 text-sm leading-6"}
+                (map-indexed (fn [idx  {:team/keys [name team-id members] :as team}]
+                               (let [form-class (str "team-form-" idx)
+                                     label-class (str "team-label-" idx)
+                                     add-member-class (str "team-add-member-" idx)]
+                                 [:form {:class "sm:flex" :hx-target (util/hash :comp/teams-panel) :hx-post (util/endpoint-path teams-update-handler)}
+                                  [:input {:type :hidden :name "team-id" :value (str team-id)}]
+                                  ;; rw
+                                  [:dt {:class (ui/cs "hidden text-gray-900 sm:w-64 sm:flex-none sm:pr-6" form-class)}
+                                   [:div
+                                    (ui/text :name "team-name" :value name :required? true :label (tr [:team/name]))]]
+                                  [:dd {:class (ui/cs "hidden mt-1 flex sm:items-center justify-between gap-x-6 sm:mt-0 sm:flex-auto" form-class)}
+                                   [:div {:class "text-gray-900"}
+                                    (if (seq members)
+                                      [:div {:class "flex flex-col space-y-1"}
+                                       [:p {:class "text-red-600"} (tr [:team/choose-remove-members])]
+                                       (->> members
+                                            (map (fn [{:member/keys [name member-id] :as member}]
+                                                   [:div {:class "flex space-x-1"}
+                                                    [:input {:type :checkbox :value (str member-id) :name "remove-members" :checked nil :class "h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"}]
+                                                    [:div name]])))]
+
+                                      "No members in this team yet.")]
+                                   [:div {:class "flex space-x-2"}
+                                    (ui/button :priority :white-destructive :label (tr [:action/delete]) :size :xsmall
+                                               :hx-delete (util/comp-name #'teams-delete-handler)
+                                               :hx-vals {:team-id (str team-id)}
+                                               :attr {:_
+                                                      (ui/confirm-modal-script
+                                                       (tr [:action/confirm-generic])
+                                                       (tr [:action/confirm-delete-team] [name])
+                                                       (tr [:action/confirm-delete])
+                                                       (tr [:action/cancel]))})
+                                    (ui/button :priority :primary :label (tr [:action/save]) :size :xsmall)]]
+
+                                  ;; add member
+                                  [:dt {:class (ui/cs  "hidden text-gray-900 sm:w-64 sm:flex-none sm:pr-6" add-member-class)}
+                                   [:div name]]
+                                  [:dd {:class (ui/cs "hidden mt-1 mb-1 flex sm:items-center gap-x-6 sm:mt-0 sm:flex-auto" add-member-class)}
+                                   [:div {:class "text-gray-900"}
+                                    (ui/member-select :variant :inline-no-label :id "add-member-id" :members (q/members-for-select db) :with-empty-opt? true)]
+                                   (ui/button :priority :primary :label (tr [:action/add]) :size :xsmall)]
+                                  ;; ro
+                                  [:dt {:class (ui/cs  "text-gray-900 sm:w-64 sm:flex-none sm:pr-6" label-class)}
+                                   [:div name]]
+                                  [:dd {:class (ui/cs "mt-1 flex sm:items-center justify-between gap-x-6 sm:mt-0 sm:flex-auto" label-class)}
+                                   [:div {:class "text-gray-900"}
+                                    (if (seq members)
+                                      [:div {:class "flex space-x-2"}
+                                       (->> members
+                                            (map (fn [{:member/keys [name] :as member}]
+                                                   [:a {:class "link-blue" :href (urls/link-member member)} name]))
+                                            (interpose ", "))]
+
+                                      "No members in this team yet.")]
+                                   [:div {:class "flex space-x-2"}
+                                    (ui/button :priority :link :label (tr [:team/add-member])
+                                               :attr {:type :button
+                                                      :_ (format  "on click remove .hidden from .%s then add .hidden to .%s" add-member-class label-class)})
+                                    (ui/button :priority :link :label (tr [:action/update])
+                                               :attr {:type :button
+                                                      :_ (format  "on click remove .hidden from .%s then add .hidden to .%s" form-class label-class)})]]]))
+                             teams)]
+               (when error
+                 [:div {:class "text-red-700 my-4"} "Error: " error])
+               (team-create-form req))]))
 
 (ctmx/defcomponent ^:endpoint travel-discount-type-single [{:keys [db tr] :as req}  idx discount-type-id]
   (let  [{:travel.discount.type/keys [discount-type-name enabled?]}  (if (util/post? req)
@@ -143,5 +254,6 @@
   (let [member (auth/get-current-member req)]
     [:div
      (ui/page-header :title (tr [:nav/band-settings]))
+     (teams-panel req nil)
      (travel-discount-types req)
      (sections req false)]))

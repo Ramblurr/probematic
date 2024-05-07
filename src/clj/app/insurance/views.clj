@@ -784,7 +784,7 @@ Mit freundlichen Grüßen,
    [:div
     [:script
      (hiccup.util/raw-string
-       (format "
+      (format "
 document.addEventListener('DOMContentLoaded', function() {
   Dropzone.options.imageUpload = {
     %s
@@ -834,9 +834,9 @@ document.addEventListener('DOMContentLoaded', function() {
                        (ui/form-left-section :label (tr [:instrument/instrument]) :hint (tr [:instrument/create-subtitle]))
                        (instrument-form req error instrument)
                        [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-y sm:border-gray-200 sm:py-5"}
-                        [:div { :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"} (tr [:instrument/photo-upload])]
+                        [:div {:class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"} (tr [:instrument/photo-upload])]
                         [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
-                         [:div {:class "relative max-w-lg sm:max-w-xs dropzone" :id "imageUpload" }
+                         [:div {:class "relative max-w-lg sm:max-w-xs dropzone" :id "imageUpload"}
                           (photo-upload-widget (urls/link-instrument-image-upload instrument-id))]]]
                        (ui/form-left-section :label (tr [:insurance/instrument-coverage]) :hint (tr [:insurance/coverage-for] [(:insurance.policy/name policy)]))
                        (coverage-form {:tr tr :path path} error coverage coverage-types)
@@ -847,20 +847,20 @@ document.addEventListener('DOMContentLoaded', function() {
                            (tr [form-error])]])
 
                        (ui/form-buttons
-                         :buttons-left (list
-                                         (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
-                                                     :hx-delete (util/endpoint-path insurance-coverage-delete)
-                                                     :hx-target (hash ".")
-                                                     :hx-vals   {:coverage-id (str coverage-id)}
-                                                     :attr      {:_ (ui/confirm-modal-script
-                                                                      (tr [:action/confirm-generic])
-                                                                      (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
-                                                                      (tr [:action/confirm-delete])
-                                                                      (tr [:action/cancel]))}}))
-                         :buttons-right (list
-                                          (ui/link-button {:label (tr [:action/cancel]) :priority :white
-                                                           :attr {:href (urls/link-policy policy)}})
-                                          (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
+                        :buttons-left (list
+                                       (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
+                                                   :hx-delete (util/endpoint-path insurance-coverage-delete)
+                                                   :hx-target (hash ".")
+                                                   :hx-vals   {:coverage-id (str coverage-id)}
+                                                   :attr      {:_ (ui/confirm-modal-script
+                                                                   (tr [:action/confirm-generic])
+                                                                   (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
+                                                                   (tr [:action/confirm-delete])
+                                                                   (tr [:action/cancel]))}}))
+                        :buttons-right (list
+                                        (ui/link-button {:label (tr [:action/cancel]) :priority :white
+                                                         :attr {:href (urls/link-policy policy)}})
+                                        (ui/button {:label (tr [:action/save]) :priority :primary-orange})))]]]])]))))
 
 (defn coverage-panel [tr coverage policy]
   (ui/panel {:title (tr [:insurance/instrument-coverage])
@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', function() {
          (ui/panel {:title (:instrument/name instrument)
                     :buttons (when (controller/policy-editable? policy)
                                (list
-                                 (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))) )}
+                                (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
                    (ui/dl
                     (ui/dl-item (tr [:instrument/owner])
                                 (ui/member (:instrument/owner instrument)))
@@ -1103,7 +1103,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     file))
   {:status 201})
 
-
 (ctmx/defcomponent ^:endpoint image-upload [{:keys [tr] :as req}]
   (let [instrument-id (util.http/path-param-uuid! req :instrument-id)
         policy-id (util.http/path-param-uuid! req :policy-id)]
@@ -1118,9 +1117,9 @@ document.addEventListener('DOMContentLoaded', function() {
                        :enctype "multipart/form-data"}
                 (photo-upload-widget)]
                (ui/form-buttons :buttons-left (list
-                                                (ui/link-button {:attr {:href (urls/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                                               (ui/link-button {:attr {:href (urls/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
                                 :buttons-right (list
-                                                 (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
+                                                (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
   (let [post? (util/post? req)

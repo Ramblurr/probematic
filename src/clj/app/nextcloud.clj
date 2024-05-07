@@ -112,7 +112,6 @@
                 [tag (first content)]))
          (into {}))))
 
-
 (defn format-internal-url [nc-url path]
   (let [base-path "/apps/files/?dir="]
     (str nc-url base-path path)))

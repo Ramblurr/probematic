@@ -259,6 +259,7 @@
           :confirm-delete-instrument "Are you sure you want to delete the instrument %1?"
           :confirm-delete-poll "Are you sure you want to delete the poll '%1?'"
           :confirm-delete-song "Are you sure you want to delete the song %1?"
+          :confirm-delete-team "Are you sure you want to delete the team %1?"
           :confirm-delete "Yes, delete it."
           :confirm-generic "Are you sure?"
           :confirm-open-poll "Yes, open the poll."
@@ -492,6 +493,13 @@
                 :payment-direction-debit "The band paid %1"
                 :payment-direction-credit "%1 paid the band"}
  :money-input-format-error "Enter currency amount like 42,05"
+
+ :team {:name "Team Name"
+        :members "Members"
+        :create-team "Create Team"
+        :add-member "Add Member"
+        :choose-remove-members "Choose members to remove"
+        }
 
  ;;
  }

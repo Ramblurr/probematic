@@ -848,6 +848,19 @@
   (settings.domain/db->discount
    (d/find-by db :travel.discount/discount-id travel-discount-id travel-discount-pattern)))
 
+(def team-pattern [:team/team-id
+                   :team/name
+                   {:team/members member-pattern}])
+(defn retrieve-all-teams [db]
+  (->>
+   (d/find-all db :team/team-id team-pattern)
+   (map first)
+   (map settings.domain/db->team)
+   (sort-by :team/name)))
+
+(defn retrieve-team [db team-id]
+  (d/find-by db :team/team-id team-id team-pattern))
+
 (def ledger-entry-pattern [:ledger.entry/entry-id
                            :ledger.entry/amount
                            :ledger.entry/tx-date

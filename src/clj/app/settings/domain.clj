@@ -43,3 +43,6 @@
 
 (defn expired? [{:travel.discount/keys [expiry-date]}]
   (t/> (t/date expiry-date) (t/date)))
+
+(defn db->team [ent]
+  ent)
