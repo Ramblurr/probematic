@@ -1011,6 +1011,10 @@
     :db/doc "The members of the team"
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many}
+   {:db/ident :team/team-type
+    :db/doc "The type of the team (if any"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
    ]
 
 ;;

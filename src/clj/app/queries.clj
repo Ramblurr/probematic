@@ -850,6 +850,7 @@
 
 (def team-pattern [:team/team-id
                    :team/name
+                   :team/team-type
                    {:team/members member-pattern}])
 (defn retrieve-all-teams [db]
   (->>
@@ -860,6 +861,19 @@
 
 (defn retrieve-team [db team-id]
   (d/find-by db :team/team-id team-id team-pattern))
+
+(defn member-of-team? [db team-type member-id]
+  (= 1
+     (count
+      (datomic/q '[:find ?t
+                   :in $ ?team-type ?member-ref
+                   :where
+                   [?t :team/team-type ?team-type]
+                   [?t :team/members ?member-ref]]
+                 db team-type [:member/member-id member-id]))))
+
+(defn insurance-team-member? [db {:member/keys [member-id]}]
+  (member-of-team? db :team.type/insurance member-id))
 
 (def ledger-entry-pattern [:ledger.entry/entry-id
                            :ledger.entry/amount
@@ -927,6 +941,8 @@
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  (member-of-team? db :team.type/insurance #uuid "01887b0c-23f8-86f0-8891-89e322a505d9")
 
   (let [sheets (->>
                 (d/q '[:find

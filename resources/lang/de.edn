@@ -1,4 +1,6 @@
-{:motivation
+{
+ :my-profile "Mein Profil"
+ :motivation
  {:none "-",
   :very-high "Sehr motiviert!",
   :high "Motiviert",

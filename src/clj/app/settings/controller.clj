@@ -8,6 +8,7 @@
    [app.util.http :as common]
    [app.datomic :as d]
    [datomic.client.api :as datomic]
+   [app.settings.domain :as domain]
    [app.util :as util]))
 
 (defn create-discount-type [{:keys [datomic-conn db] :as req}]
@@ -74,8 +75,10 @@
     (concat add-tx remove-tx)))
 
 (defn update-team! [{:keys [db datomic-conn] :as req}]
-  (let [{:keys [team-name team-id add-member-id remove-members] :as params} (common/unwrap-params req)
+  (let [{:keys [team-name team-id add-member-id remove-members team-type] :as params} (common/unwrap-params req)
+        team-name (str/trim team-name)
         team-id (util/ensure-uuid! team-id)
+        team-type (domain/str->team-type team-type)
         valid? (and team-name (not (str/blank? team-name)))
         team-ref [:team/team-id team-id]
         team (q/retrieve-team db team-id)
@@ -86,6 +89,7 @@
         ;; _ (tap> {:before before-members :after after-members})
         member-changes (reconcile-team-members team-ref before-members after-members)
         tx-data (concat (when (not= team-name (:team/name team)) [[:db/add team-ref :team/name team-name]])
+                        (when team-type [[:db/add team-ref :team/team-type team-type]])
                         member-changes)]
     #_(tap> [:params params :tx-data tx-data])
     (if valid?

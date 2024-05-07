@@ -6,6 +6,7 @@
  :Email "E-Mail"
  :Phone "Phone"
  :Active "Active?"
+ :my-profile "My Profile"
  :dashboard {:welcome "Welcome %1!"
              :morning "Good morning, %1"
              :afternoon "Good afternoon, %1"
@@ -499,7 +500,9 @@
         :create-team "Create Team"
         :add-member "Add Member"
         :choose-remove-members "Choose members to remove"
+        :team-type "Team Type"
         }
+ :team.type {:insurance "Insurance Team"}
 
  ;;
  }

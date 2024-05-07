@@ -4,6 +4,7 @@
    [app.auth :as auth]
    [app.icons :as icon]
    [app.queries :as q]
+   [app.settings.domain :as domain]
    [app.settings.controller :as controller]
    [app.ui :as ui]
    [app.util :as util]
@@ -54,7 +55,7 @@
                                      :icon icon/plus
                                      :label (tr [:team/create-team])))}
                [:dl {:class "divide-y divide-gray-100 text-sm leading-6"}
-                (map-indexed (fn [idx  {:team/keys [name team-id members] :as team}]
+                (map-indexed (fn [idx  {team-name :team/name :team/keys [team-id members team-type] :as team}]
                                (let [form-class (str "team-form-" idx)
                                      label-class (str "team-label-" idx)
                                      add-member-class (str "team-add-member-" idx)]
@@ -63,9 +64,16 @@
                                   ;; rw
                                   [:dt {:class (ui/cs "hidden text-gray-900 sm:w-64 sm:flex-none sm:pr-6" form-class)}
                                    [:div
-                                    (ui/text :name "team-name" :value name :required? true :label (tr [:team/name]))]]
+                                    (ui/text :name "team-name" :value team-name :required? true :label (tr [:team/name]))]]
                                   [:dd {:class (ui/cs "hidden mt-1 flex sm:items-center justify-between gap-x-6 sm:mt-0 sm:flex-auto" form-class)}
-                                   [:div {:class "text-gray-900"}
+                                   [:div {:class "text-gray-900 flex space-x-2"}
+                                    [:div {:class "flex flex-col space-y-1"}
+                                     (ui/select
+                                      :id "team-type"
+                                      :label (tr [:team/team-type])
+                                      :value (when team-type (name team-type))
+                                      :size :small
+                                      :options (concat [{:value "" :label " - "}] (map (fn [m] {:label (tr [m]) :value (name m)}) domain/team-types)))]
                                     (if (seq members)
                                       [:div {:class "flex flex-col space-y-1"}
                                        [:p {:class "text-red-600"} (tr [:team/choose-remove-members])]
@@ -90,14 +98,14 @@
 
                                   ;; add member
                                   [:dt {:class (ui/cs  "hidden text-gray-900 sm:w-64 sm:flex-none sm:pr-6" add-member-class)}
-                                   [:div name]]
+                                   [:div team-name]]
                                   [:dd {:class (ui/cs "hidden mt-1 mb-1 flex sm:items-center gap-x-6 sm:mt-0 sm:flex-auto" add-member-class)}
                                    [:div {:class "text-gray-900"}
                                     (ui/member-select :variant :inline-no-label :id "add-member-id" :members (q/members-for-select db) :with-empty-opt? true)]
                                    (ui/button :priority :primary :label (tr [:action/add]) :size :xsmall)]
                                   ;; ro
                                   [:dt {:class (ui/cs  "text-gray-900 sm:w-64 sm:flex-none sm:pr-6" label-class)}
-                                   [:div name]]
+                                   [:div team-name]]
                                   [:dd {:class (ui/cs "mt-1 flex sm:items-center justify-between gap-x-6 sm:mt-0 sm:flex-auto" label-class)}
                                    [:div {:class "text-gray-900"}
                                     (if (seq members)

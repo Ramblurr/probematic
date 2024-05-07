@@ -201,7 +201,6 @@ put '%s' into .copy-link in me"
         gigs-planned (gig.service/gigs-planned-for db member)
         polls-open (poll.controller/open-polls db)
         need-answer-gigs (gig.service/gigs-needing-plan db member)
-        policies (insurance.controller/policies-with-todos db)
         ledger (q/retrieve-ledger db (:member/member-id member))]
     [:div
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
@@ -221,10 +220,12 @@ put '%s' into .copy-link in me"
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/polls-open]))
         (rt/map-indexed open-polls req polls-open)])
-     (when (seq policies)
-       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
-        (ui/divider-left (tr [:dashboard/insurance-todo]))
-        (rt/map-indexed todo-policies req policies)])
+     (when (q/insurance-team-member? db member)
+       (let [policies (insurance.controller/policies-with-todos db)]
+         (when (seq policies)
+           [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+            (ui/divider-left (tr [:dashboard/insurance-todo]))
+            (rt/map-indexed todo-policies req policies)])))
      (when (seq need-answer-gigs)
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/unanswered]))

@@ -25,11 +25,12 @@
    {:label (tr [:nav/band-settings]) :icon icon/cog :href "/band-settings" :route-name :app/band-settings}])
 
 (defn user-menu-sections
-  [req tr]
+  [{:keys [tr]} member]
   [{:items [;; {:label (tr [:nav/profile]) :href "#"}
             ;; {:label (tr [:nav/settings]) :href "#"}
             ;; {:label (tr [:nav/notifications]) :href "#"}
             ]}
+   {:items [{:label (tr [:my-profile]) :href (url/link-member member)}]}
    {:items [{:label (tr [:nav/logout]) :href (url/link-logout)}]}])
 
 (defn user-menu-item
@@ -64,7 +65,7 @@
          (ui/avatar-img member :class "h-8 w-8 rounded-full")]]
        [:div {:id "user-menu" :data-action-menu true
               :class "hidden absolute right-0 z-10 mt-2 w-48 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :role "menu" :aria-orientation "vertical" :aria-labelledby "user-menu-button" :tabindex "-1"}
-        (map user-menu-section (user-menu-sections req (i18n/tr-from-req req)))]]]]]
+        (map user-menu-section (user-menu-sections req member))]]]]]
    [:main {:class "flex-1" :id "main"}
     body]])
 
@@ -88,7 +89,7 @@
           :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           ;; :class "hidden absolute right-0 left-0 z-10 mx-3 mt-1 origin-top divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           :role "menu" :aria-orientation "vertical" :aria-labelledby "options-menu-button" :tabindex "-1"}
-    (map user-menu-section (user-menu-sections req (i18n/tr-from-req req)))]])
+    (map user-menu-section (user-menu-sections req member))]])
 
 (defn secondary-navigation
   []

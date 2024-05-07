@@ -3,6 +3,9 @@
    [app.schemas :as s]
    [tick.core :as t]))
 
+(def team-types #{:team.type/insurance})
+(def str->team-type (zipmap (map name team-types) team-types))
+
 (def TravelDiscountTypeEntity
   (s/schema
    [:map {:name :app.entity/travel.discount.type}

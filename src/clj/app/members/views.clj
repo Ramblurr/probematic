@@ -208,7 +208,7 @@
         section-name (:section/name section)
         current-user-admin? (auth/current-user-admin? req)
         account-enabled? (keycloak/user-account-enabled? (keycloak/kc-from-req req) keycloak-id)]
-    [:div
+    [:div {:class "mt-2"}
      [(if edit? :form :div)
       (if edit?
         {:id id :hx-post (comp-name)}
