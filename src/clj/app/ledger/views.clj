@@ -147,7 +147,7 @@
                  [:td {:class "ml-2 text-right"}
                   [:button {:class "text-sm text-red-700"
                             :type :button
-                            ;; :hx-confirm "Really delete this transaction?"
+                            :hx-confirm "Really delete this transaction?"
                             :hx-delete  delete-endpoint
                             :hx-vals {:ledger-entry-id (str entry-id)}
                             :hx-target delete-target}
