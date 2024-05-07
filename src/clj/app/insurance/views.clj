@@ -650,7 +650,7 @@ Mit freundlichen Grüßen,
     [:form {:id id
             :class "instrgrid border-collapse overflow-hidden m-w-full"}
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
-     [:table {:class "table-auto ml-4" :id "coverages-table"}
+     [:table {:class "table-auto ml-3 sm:ml-4" :id "coverages-table"}
       [:tr
        [:td]
        [:td [:span  {:class (ui/cs "py-2 flex px-2")}
@@ -892,13 +892,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 (def history-field-exclusions #{:instrument.coverage/coverage-id :instrument/instrument-id})
 (defn change-value [tr k v]
-  ;; (tap> [:k k :v v])
+  (tap> [:k k :v v])
   (condp = k
     :instrument/category (str (:instrument.category/name v))
     :instrument.coverage/value (ui/money v :EUR)
     :instrument/owner (ui/member v)
     :instrument.coverage/instrument (:instrument/name v)
     :instrument.coverage/types (:insurance.coverage.type/name v)
+    :instrument.coverage/private? (band-or-private tr v)
     (if (keyword? v)
       (tr [v])
       (str v))))

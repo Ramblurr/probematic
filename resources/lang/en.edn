@@ -179,7 +179,7 @@
  :instrument.coverage.status {:needs-review "Todo"
                               :reviewed "Reviewed"
                               :coverage-active "Active"}
- :instrument.coverage.change {:new "Newly Added"
+ :instrument.coverage.change {:new "Added"
                               :removed "Removed"
                               :none "No changes"
                               :changed "Modified"}

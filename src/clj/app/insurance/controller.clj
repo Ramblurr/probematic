@@ -427,12 +427,19 @@
         before-types (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
         after-types (util/remove-dummy-uuid (mapv util.http/ensure-uuid (util/ensure-coll coverage-types)))
         coverage-changes (reconcile-coverage-types coverage-ref after-types before-types)
+        private? (= "private" private-band)
         ;; if these things have changed then we need to ensure the changes get marked so we can send them upstream
         has-upstream-change? (or
                               (not (== (:instrument.coverage/value coverage) value))
                               (not (== (:instrument.coverage/item-count coverage 1) item-count))
+                              (not (= (:instrument.coverage/private? coverage) private?))
                               (boolean (seq coverage-changes)))
-
+        current-change-status (get coverage :instrument.coverage/change :instrument.coverage.change/none)
+        is-new? (= :instrument.coverage.change/new current-change-status)
+        change-status-value (cond
+                              (not has-upstream-change?) current-change-status
+                              is-new? :instrument.coverage.change/new
+                              :else :instrument.coverage.change/changed)
         #_#__ (tap> {:value-new value
                      :value-old (:instrument.coverage/value coverage)
                      :value-changed (not (== (:instrument.coverage/value coverage) value))
@@ -446,8 +453,8 @@
     (concat coverage-changes
             [[:db/add coverage-ref :instrument.coverage/value (bigdec value)]
              [:db/add coverage-ref :instrument.coverage/status (if has-upstream-change? :instrument.coverage.status/needs-review (:instrument.coverage/status coverage))]
-             [:db/add coverage-ref :instrument.coverage/change (if has-upstream-change?  :instrument.coverage.change/changed  (:instrument.coverage/change coverage :instrument.coverage.change/none))]
-             [:db/add coverage-ref :instrument.coverage/private? (= "private" private-band)]
+             [:db/add coverage-ref :instrument.coverage/change change-status-value]
+             [:db/add coverage-ref :instrument.coverage/private? private?]
              [:db/add coverage-ref :instrument.coverage/item-count item-count]])))
 
 (defn create-coverage-txs [{:keys [value coverage-types item-count private-band policy-id instrument-id] :as decoded}]
@@ -464,16 +471,16 @@
                  :db/id "covered_instrument"}
                 [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
 
-(defn update-instrument-txs [{:keys [description build-year serial-number make instrument-name owner-member-id model category-id] :as decoded} instrument-id]
-  [{:instrument/instrument-id instrument-id
-    :instrument/description description
-    :instrument/build-year build-year
-    :instrument/serial-number serial-number
-    :instrument/make make
-    :instrument/model model
-    :instrument/name instrument-name
-    :instrument/owner [:member/member-id owner-member-id]
-    :instrument/category [:instrument.category/category-id category-id]}])
+(defn update-instrument-tx [{:keys [description build-year serial-number make instrument-name owner-member-id model category-id] :as decoded} instrument-id]
+  {:instrument/instrument-id instrument-id
+   :instrument/description description
+   :instrument/build-year build-year
+   :instrument/serial-number serial-number
+   :instrument/make make
+   :instrument/model model
+   :instrument/name instrument-name
+   :instrument/owner [:member/member-id owner-member-id]
+   :instrument/category [:instrument.category/category-id category-id]})
 
 (defn try-create-instrument-nextcloud-share! [{:keys [webdav] :as req} instrument-id]
   (let [remote-path (instrument-image-remote-path req instrument-id)]
@@ -488,13 +495,16 @@
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]
     (if (s/valid? UpdateInstrument decoded)
-      (let [instrument-id (if (str/blank? (:instrument-id decoded))
-                            (sq/generate-squuid)
-                            (:instrument-id decoded))
-
-            txs (update-instrument-txs decoded instrument-id)
+      (let [creating? (str/blank? (:instrument-id decoded))
+            instrument-id (if creating? (sq/generate-squuid) (:instrument-id decoded))
+            instr-tx (update-instrument-tx decoded instrument-id)
+            tempid (d/tempid)
+            instr-tx (if creating?
+                       (assoc instr-tx :db/id tempid)
+                       instr-tx)
             share-url (try-create-instrument-nextcloud-share! req instrument-id)
-            txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
+            txs [instr-tx]
+            txs (if share-url (conj txs [:db/add (if creating? tempid [:instrument/instrument-id instrument-id]) :instrument/images-share-url share-url])
                     txs)
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:instrument (q/retrieve-instrument db-after instrument-id)})
@@ -538,7 +548,7 @@
 
             instrument-id (:instrument-id decoded)
             txs (concat (update-coverage-txs decoded coverage)
-                        (update-instrument-txs decoded instrument-id))
+                        [(update-instrument-tx decoded instrument-id)])
             share-url (try-create-instrument-nextcloud-share! req instrument-id)
             txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
                     txs)
