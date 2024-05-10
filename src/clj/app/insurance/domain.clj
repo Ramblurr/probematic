@@ -128,7 +128,6 @@
       tx)))
 
 (defn closes-at-inst [closes-at]
-  (tap> [:closes-at-inst closes-at])
   (t/inst (t/in closes-at (t/zone "Europe/Vienna"))))
 
 (defn survey->db
@@ -233,17 +232,23 @@
 (defn txns-complete-survey-report [report]
   [[:db/add (report-ref report) :insurance.survey.report/completed-at (t/inst)]])
 
+(defn txns-uncomplete-survey-report [report]
+  (when-let [old-value (:insurance.survey.report/completed-at report)]
+    [[:db/retract (report-ref report) :insurance.survey.report/completed-at (t/inst old-value)]]))
+
 (defn txns-maybe-survey-response-complete [{:insurance.survey.report/keys [report-id]  :as report} {:insurance.survey.response/keys [response-id coverage-reports] :as response}]
   (assert response "Response must be non-nil")
   (let [open-reports (filter (comp nil? :insurance.survey.report/completed-at) coverage-reports)
 
         maybe-first-report-id    (:insurance.survey.report/report-id (first open-reports))]
-    (tap> {:r response :report report})
+    ;; (tap> {:r response :report report})
     (when (and (= 1 (count open-reports))
                (= maybe-first-report-id report-id))
       [[:db/add (response-ref response) :insurance.survey.response/completed-at (t/inst)]])))
 
-(defn txns-toggle-response-completion [{:insurance.survey.response/keys [completed-at] :as r}]
+(defn txns-toggle-response-completion [{:insurance.survey.response/keys [completed-at coverage-reports] :as r}]
   (if completed-at
-    [[:db/retract (response-ref r) :insurance.survey.response/completed-at (t/inst completed-at)]]
+    (concat
+     [[:db/retract (response-ref r) :insurance.survey.response/completed-at (t/inst completed-at)]]
+     (mapcat txns-uncomplete-survey-report coverage-reports))
     [[:db/add (response-ref r) :insurance.survey.response/completed-at (t/inst)]]))

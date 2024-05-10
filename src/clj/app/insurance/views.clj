@@ -560,7 +560,7 @@ Mit freundlichen Grüßen,
          {:instrument/keys [name]} instrument]
      (list
       (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or item-count 1) :error error)
-      (ui/money-input-left :id "value" :label (tr [:insurance/value]) :label-hint (tr [:insurance/value-hint]) :required? true :value value :error error :integer? true)
+      (ui/money-input-left :id "value" :label (tr [:insurance/value]) :hint (tr [:insurance/value-hint]) :required? true :value value :error error :integer? true)
       (when-not hide-private?
         (ui/checkbox-group-left :label (tr [:band-private]) :id "label-private-band"
                                 :label-hint (tr [:private-instrument-payment])
@@ -1653,12 +1653,12 @@ document.addEventListener('DOMContentLoaded', function() {
 (defn instrument-card [{:keys [tr]} {:insurance.survey.report/keys [coverage]}]
   (let [{:instrument.coverage/keys [instrument private? value item-count cost types]} coverage
         {:instrument/keys [name build-year description make model serial-number]} instrument
-        _ (tap> {:instr-card-i instrument :coverage coverage})
+        ;; _ (tap> {:instr-card-i instrument :coverage coverage})
         _ (assert instrument "Instrument is required")
         _ (assert coverage "Coverage is required")
         item-image nil ;; TODO "/img/tuba-robot-boat-1000.jpg"
         make-detail (partial instrument-card-detail-data tr)
-        _ (tap> {:coverage coverage :value value :cost cost :instrument instrument})
+        ;; _ (tap> {:coverage coverage :value value :cost cost :instrument instrument})
         details [(make-detail :instrument/description description)
                  (make-detail :instrument.coverage/private? (band-or-private-bubble tr private?))
                  (when (and private?)
@@ -1782,8 +1782,21 @@ document.addEventListener('DOMContentLoaded', function() {
         [:div {:class "flex items-center justify-center text-sno-green-500"}
          (icon/shield-check-outline {:class "h-32 w-32"})
          [:h1 {:class "text-3xl font-bold"} (tr [:insurance.survey/all-done])]]
-        [:div
-         (ui/button :size :xlarge  :label (tr [:action/celebrate]) :priority :white :attr {:_ "on click call celebrate()"})]]]
+        [:div {:class "flex flex-col items-center"}
+         (ui/button :size :xlarge  :label (tr [:action/celebrate]) :priority :white
+                    :attr {:data-counter 0 :_
+                           "on click call celebrate() then increment @data-counter
+if @data-counter as Int is equal to 1 remove .opacity-0 from .stage-1
+else if @data-counter as Int is equal to 2 remove .opacity-0 from .stage-2
+else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then remove .opacity-0 from .go-home "})
+
+         [:p {:class "opacity-0 stage-1 pt-2 transition-opacity duration-1000"} "Why not celebrate again?"]]
+        [:p {:class "opacity-0 stage-2 pt-2 transition-opacity duration-1000"} "Feels good right?"]
+        [:p {:class "opacity-0 stage-3 pt-2 transition-opacity duration-1000"}
+         "The Versicherungsteam Team thanks you"
+         [:span {:class "text-red-500"} "❤️"]]
+        [:div {:class "h-12"}
+         (ui/link-button  :href "/" :size :xlarge :class "opacity-0 transition-opacity delay-1000 duration-1000 go-home" :label (tr [:error/go-home]) :priority :white)]]]
 
       (if (show-encouragement? current-idx total-todo)
         [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
@@ -1828,15 +1841,15 @@ document.addEventListener('DOMContentLoaded', function() {
         {:instrument/keys [name build-year description make model serial-number instrument-id owner]} instrument
         policy (:insurance.policy/_covered-instruments coverage)
         coverage-types (:insurance.policy/coverage-types policy)]
-    (tap> {:report active-report
-           :coverage coverage
-           :ins instrument
-           :cts coverage-types
-           :upload-url (urls/link-instrument-image-upload instrument-id)})
+    #_(tap> {:report active-report
+             :coverage coverage
+             :ins instrument
+             :cts coverage-types
+             :upload-url (urls/link-instrument-image-upload instrument-id)})
     [:form {:id (util/id :comp/survey-page-flow)
             :class "bg-white mx-auto max-w-2xl overflow-hidden p-6 mt-8 rounded-md"
             :hx-post (util/endpoint-path survey-edit-instrument-handler)
-            :hx-target (util/hash :comp/survey-page-flow)}
+            :hx-target (util/hash :comp/survey-page)}
 
      [:input {:type :hidden :name "report-id" :value (str (:insurance.survey.report/report-id active-report))}]
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
@@ -1925,7 +1938,6 @@ document.addEventListener('DOMContentLoaded', function() {
   survey-edit-instrument-handler
   (let [{:as data :keys [active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req)
         {:keys [start-flow] :as flow} (build-survey-flow req)]
-    (tap> data)
     (if (= 0 total-todo)
       (survey-report-interstitial (util/make-get-request req {:transitioning? true}))
       [:div {:id :comp/survey-page}

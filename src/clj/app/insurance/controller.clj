@@ -783,7 +783,7 @@
                  (mapcat #(domain/txns-for-decision active-report %))
                  (concat (domain/txns-complete-survey-report active-report))
                  (concat (domain/txns-maybe-survey-response-complete active-report (q/open-survey-for-member db (-> active-report :response :insurance.survey.response/member)))))]
-    (tap> {:report active-report :deci decisions :txs txs})
+    ;; (tap> {:report active-report :deci decisions :txs txs})
     (d/transact-wrapper! req {:tx-data txs})))
 
 (defn open-survey-for-member [{:keys [db] :as req} member]
