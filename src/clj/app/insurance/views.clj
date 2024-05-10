@@ -284,11 +284,11 @@ Mit freundlichen Grüßen,
     (when policy-draft?
       [:div {:id "send-changes-button" :hx-swap-oob (when oob? "true")
              :class "tooltip" :data-tooltip (tr [:insurance/send-changes-disabled-hint])}
-       (ui/button :label (tr [:insurance/send-changes])
-                  :disabled? has-todos?
-                  :priority :primary
-                  :centered? true
-                  :href (urls/link-policy-changes policy))])))
+       (ui/link-button :label (tr [:insurance/send-changes])
+                       :disabled? has-todos?
+                       :priority :primary
+                       :centered? true
+                       :href (urls/link-policy-changes policy))])))
 
 (defn send-notifications-button [{:keys [tr] :as req} {:insurance.policy/keys [status] :as policy} oob?]
   (when (= status :insurance.policy.status/active)

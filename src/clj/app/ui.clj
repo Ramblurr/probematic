@@ -447,7 +447,7 @@
           (priority button-priority-classes)
           (when spinner? "button-spinner")
           (when centered? "items-center justify-center")
-          #_(when disabled? "opacity-50 cursor-not-allowed")
+          (when (and disabled? (= :tag :a)) "opacity-50 cursor-not-allowed")
           "disabled:opacity-50 disabled:cursor-not-allowed"
           class)
          :disabled disabled?}
