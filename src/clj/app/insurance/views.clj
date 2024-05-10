@@ -1731,10 +1731,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                        {:label "Yes, remove it" :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
    :go-private {:question {:primary "Do you want to pay to keep it insured?"
                            :secondaries ["Since this wasn't used at a gig in the last year you the band can no longer pay for it."
-                                         "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about XX€ per year."]}
+                                         (fn [{:keys [active-report]}]
+                                           (let [coverage (:insurance.survey.report/coverage active-report)
+                                                 cost (:instrument.coverage/cost coverage)]
+                                             (format  "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about %s€ per year for this item."
+                                                      (ui/money-format cost :EUR))))]}
                 :answers [{:label "No, stop insurance" :icon icon/xmark :next-flow-key :confirm-private-removal}
                           {:label "Yes, I'll pay" :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
-   :confirm-go-private {:question {:primary "You will have to pay XXXEUR per year. Is that OK?"}
+   :confirm-go-private {:question {:primary (fn [{:keys [active-report]}]
+                                              (let [coverage (:insurance.survey.report/coverage active-report)
+                                                    cost (:instrument.coverage/cost coverage)]
+                                                (format  "You will have to pay about %s€ per year for this item. Is that OK?"
+                                                         (ui/money-format cost :EUR))))}
                         :answers [{:label "No" :next-flow-key :go-private}
                                   {:label "Yes, I'll pay it" :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
    :data-check {:question {:primary "Is all the data shown still correct?" :secondaries ["You might want to change the insured value if the market value has change or if you want to change the type of coverage."]}
@@ -1916,6 +1924,7 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
   (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)
         transitioning? (:transitioning? req)
         todo-reports                                                                   (filter #(nil? (:insurance.survey.report/completed-at %)) coverage-reports)
+        text-params {:tr tr :active-report active-report}
         {:keys [question answers]}                                                     (get flow current-flow-key)
         {:keys [primary secondaries]}                                                  question]
     [:div {:id (util/id :comp/survey-page-flow) :class (ui/cs  "mx-auto max-w-2xl overflow-hidden")}
@@ -1926,9 +1935,15 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
              ;; for when using view transition api
              ;; :class "slide-it"
              :class "slide-it slide-me-in-out"}
-       [:p {:class "text-center text-lg"} primary]
+       [:p {:class "text-center text-lg"}
+        (if (fn? primary)
+          (primary text-params)
+          primary)]
        (map (fn [s]
-              [:p {:class "text-center text-gray-500"} s]) secondaries)
+              [:p {:class "text-center text-gray-500"}
+               (if (fn? s)
+                 (s text-params)
+                 s)]) secondaries)
        [:div {:class "flex gap-x-2 items-center justify-center mt-2"}
         (map (partial survey-answer-button decisions (util/endpoint-path survey-flow-progress)) answers)]
        [:div {:class "htmx-indicator pulsate text-center text-gray-500 mt-2"} (tr [:updating])]]
