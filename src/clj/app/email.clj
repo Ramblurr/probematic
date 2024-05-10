@@ -234,10 +234,8 @@
      nil)))
 
 (defn send-survey-notifications! [{:keys [tr system] :as req} sender-name policy members email-data]
-  #_(queue-email! (sys-from-req req)
-                  (build-survey-notifications req policy members email-data))
-  (tap>
-   (build-survey-notifications req sender-name policy members email-data)))
+  (queue-email! (sys-from-req req)
+                (build-survey-notifications req sender-name policy members email-data)))
 
 (comment
 
