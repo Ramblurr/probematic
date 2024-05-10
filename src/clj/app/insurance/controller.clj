@@ -586,6 +586,7 @@
 
 (defn mark-coverages-as! [req]
   (let [{:keys [policy-id coverage-ids workflow-status change-status] :as p} (s/decode MarkAsSchema (:params req))]
+    ;; (tap> {:mark-as p :valid? (s/valid? MarkAsSchema p)})
     (if (s/valid? MarkAsSchema p)
       (let [workflow-status-txs (if workflow-status (map (fn [cid]
                                                            [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/status workflow-status]) coverage-ids)
@@ -593,7 +594,9 @@
             change-status-txs (if change-status (map (fn [cid]
                                                        [:db/add [:instrument.coverage/coverage-id cid] :instrument.coverage/change change-status]) coverage-ids)
                                   [])
-            {:keys [db-after]} (d/transact-wrapper! req {:tx-data (concat change-status-txs workflow-status-txs)})]
+            txs (concat change-status-txs workflow-status-txs)
+            ;; _ (tap> [:txs txs])
+            {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after policy-id)
          :db-after db-after})
       (s/throw-error "Invalid arguments" nil MarkAsSchema p))))
@@ -613,14 +616,9 @@
      :body (java.io.ByteArrayInputStream. file-bytes)}))
 
 (defn- confirm-and-activate-policy [{:keys [db] :as req} policy-id]
-  (let [policy-txs [{:insurance.policy/policy-id  policy-id
-                     :insurance.policy/status :insurance.policy.status/active}]
-        policy (q/retrieve-policy db policy-id)
-        coverage-txs (mapcat (fn [{:instrument.coverage/keys [coverage-id]}]
-                               [[:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/status :instrument.coverage.status/coverage-active]
-                                [:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/change :instrument.coverage.change/none]])
-                             (:insurance.policy/covered-instruments policy))
-        txs (concat policy-txs coverage-txs)]
+  (let [policy (q/retrieve-policy db policy-id)
+        txs (domain/txns-confirm-and-activate-policy policy)]
+    ;; (tap> {:confirm-txs txs})
     (d/transact-wrapper! req {:tx-data txs})))
 
 (defn confirm-changes! [{:keys [db] :as req}]

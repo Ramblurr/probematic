@@ -253,3 +253,15 @@
      [[:db/retract (response-ref r) :insurance.survey.response/completed-at (t/inst completed-at)]]
      (mapcat txns-uncomplete-survey-report coverage-reports))
     [[:db/add (response-ref r) :insurance.survey.response/completed-at (t/inst)]]))
+
+(defn txns-confirm-and-activate-policy-coverages [{:instrument.coverage/keys [coverage-id status change] :as coverage}]
+  (if (= change :instrument.coverage.change/removed)
+    [[:db/retractEntity (coverage-ref coverage)]]
+    [[:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/status :instrument.coverage.status/coverage-active]
+     [:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/change :instrument.coverage.change/none]]))
+
+(defn txns-confirm-and-activate-policy [{:as policy :insurance.policy/keys [policy-id covered-instruments]}]
+  (concat
+   [{:insurance.policy/policy-id policy-id
+     :insurance.policy/status    :insurance.policy.status/active}]
+   (mapcat txns-confirm-and-activate-policy-coverages covered-instruments)))
