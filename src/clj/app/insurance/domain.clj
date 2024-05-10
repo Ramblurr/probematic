@@ -45,6 +45,7 @@
                 ;; (tap> {:type coverage-type :cov coverage :cat-f category-factor :base base-premium-factor})
                 (assoc coverage-type :insurance.coverage.type/cost
                        (* (:instrument.coverage/value coverage)
+                          (or (:instrument.coverage/item-count coverage) 1)
                           category-factor
                           base-premium-factor
                           (:insurance.coverage.type/premium-factor coverage-type)))) (:instrument.coverage/types coverage))))
