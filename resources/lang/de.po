@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2024-05-10 15:03+0200\n"
-"PO-Revision-Date: 2023-10-25 18:04+0200\n"
-"Last-Translator: casey <me@caseylink.com>\n"
+"PO-Revision-Date: 2024-05-11 15:44+0000\n"
+"Last-Translator: finn <finn.achatz@gmail.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
 "Language: de\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Weblate 5.5.3\n"
 
 #: :please-pay-to-band
 #, ycp-format
 msgctxt ":please-pay-to-band"
 msgid "Please send %1 to the band account."
-msgstr ""
+msgstr "Bitte überweise %1 an den Streetnoise Bankaccount."
 
 #: :motivation/none
 #, ycp-format
@@ -62,18 +62,16 @@ msgid "Private Instruments"
 msgstr "Private Instrumente"
 
 #: :ledger/add-transaction
-#, fuzzy, ycp-format
-#| msgctxt ":section-add"
-#| msgid "Add Section"
+#, ycp-format
 msgctxt ":ledger/add-transaction"
 msgid "Add Transaction"
-msgstr "Register hinzufügen"
+msgstr "Zahlung hinzufügen"
 
 #: :ledger/add-payment
 #, ycp-format
 msgctxt ":ledger/add-payment"
 msgid "Add Payment"
-msgstr ""
+msgstr "Zahlung hinzufügen"
 
 #: :ledger/add-debt
 #, fuzzy, ycp-format
