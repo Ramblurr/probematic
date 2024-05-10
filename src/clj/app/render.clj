@@ -44,16 +44,16 @@
 
 (defn script [relative-prefix path & extra]
   (let [sri-hash (sha384-resource (str "public/js/" path))
-        suffix (subs sri-hash  (- 71 8))]
-    [:script (merge {:src (str relative-prefix "/js/" path "?" suffix)
+        cache-buster (subs sri-hash  (- 71 8))]
+    [:script (merge {:src (str relative-prefix "/js/" path "?" cache-buster)
                      :integrity  sri-hash}
                     (apply hash-map extra))]))
 
 (defn stylesheet [relative-prefix path & extra]
   (let [sri-hash (sha384-resource (str "public/" path))
-        suffix (subs sri-hash (- 71 8))]
+        cache-buster (subs sri-hash (- 71 8))]
     [:link (merge {:rel "stylesheet"
-                   :href (str relative-prefix "/" path "?" suffix)
+                   :href (str relative-prefix "/" path "?" cache-buster)
                    :integrity sri-hash}
                   (apply hash-map extra))]))
 
