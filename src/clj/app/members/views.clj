@@ -291,13 +291,13 @@
                  (ui/dl-item (tr [:instruments]) (if (empty? coverages)
                                                    (tr [:none])
                                                    (ui/rich-ul {}
-                                                               (map (fn [{:instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
+                                                               (map (fn [{:as coverage :instrument.coverage/keys [private? value] {:instrument/keys [name category]} :instrument.coverage/instrument}]
                                                                       (ui/rich-li {:icon icon/trumpet}
                                                                                   (ui/rich-li-text {} name)
                                                                                   (ui/rich-li-text {} (:instrument.category/name category))
                                                                                   (ui/rich-li-text {} (ui/money value :EUR))
                                                                                   (ui/rich-li-text {} (ui/bool-bubble (not private?) {false "Private" true "Band"}))
-                                                                                  (ui/rich-li-action-a :href "#" :label
+                                                                                  (ui/rich-li-action-a :href (url/link-coverage coverage) :label
                                                                                                        (tr [:action/view]))))
                                                                     coverages))) "sm:col-span-3")))
 
