@@ -1654,14 +1654,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 (defn instrument-card [{:keys [tr]} {:insurance.survey.report/keys [coverage]}]
   (let [{:instrument.coverage/keys [instrument private? value item-count cost types]} coverage
-        {:instrument/keys [name build-year description make model serial-number]} instrument
-        ;; _ (tap> {:instr-card-i instrument :coverage coverage})
+        {:instrument/keys [name build-year description make model serial-number category]} instrument
         _ (assert instrument "Instrument is required")
         _ (assert coverage "Coverage is required")
         item-image nil ;; TODO "/img/tuba-robot-boat-1000.jpg"
         make-detail (partial instrument-card-detail-data tr)
         ;; _ (tap> {:coverage coverage :value value :cost cost :instrument instrument})
         details [(make-detail :instrument/description description)
+                 (make-detail :instrument/category (:instrument.category/name category))
                  (make-detail :instrument.coverage/private? (band-or-private-bubble tr private?))
                  (when (and private?)
                    (make-detail :instrument.coverage/cost
