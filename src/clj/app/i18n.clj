@@ -160,12 +160,15 @@
   [s]
   (parse (str/split-lines s)))
 
+(defn escape-quotes [s]
+  (clojure.string/escape s {\\ "\\\\" \" "\\\""}))
+
 (defn ->po-entry [[key untranslated-str]]
   (format "#: %s
 #, ycp-format
 msgctxt \"%s\"
 msgid \"%s\"
-msgstr \"\"" (str key) (str key) untranslated-str))
+msgstr \"\"" (str key) (escape-quotes (str key)) (escape-quotes untranslated-str)))
 
 (defn pot-header []
   (format "msgid \"\"
