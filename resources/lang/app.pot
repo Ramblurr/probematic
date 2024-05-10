@@ -1,10 +1,16 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Probematic\n"
-"POT-Creation-Date: 2023-10-25 17:45+0200\n"
+"POT-Creation-Date: 2024-05-10 14:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+#: :please-pay-to-band
+#, ycp-format
+msgctxt ":please-pay-to-band"
+msgid "Please send %1 to the band account."
+msgstr ""
+
 #: :motivation/none
 #, ycp-format
 msgctxt ":motivation/none"
@@ -47,16 +53,58 @@ msgctxt ":private-instruments"
 msgid "Private Instruments"
 msgstr ""
 
+#: :ledger/add-transaction
+#, ycp-format
+msgctxt ":ledger/add-transaction"
+msgid "Add Transaction"
+msgstr ""
+
+#: :ledger/add-payment
+#, ycp-format
+msgctxt ":ledger/add-payment"
+msgid "Add Payment"
+msgstr ""
+
+#: :ledger/add-debt
+#, ycp-format
+msgctxt ":ledger/add-debt"
+msgid "Add Debt"
+msgstr ""
+
+#: :insurance/error-edit-frozen-policy
+#, ycp-format
+msgctxt ":insurance/error-edit-frozen-policy"
+msgid "Cannot update instrument and coverage on a policy that is not in draft status"
+msgstr ""
+
+#: :insurance/email-p3
+#, ycp-format
+msgctxt ":insurance/email-p3"
+msgid "Möchtest du genau wissen woraus sich deine Kosten zusammenstellen, kannst du dies im Forum unter folgendem Link nachlesen."
+msgstr ""
+
 #: :insurance/item-count-hint
 #, ycp-format
 msgctxt ":insurance/item-count-hint"
 msgid "Wieviele identische Produkte möchtest du versichern (z.B. 1x Trompete/ 4x Drumsticks…)?"
 msgstr ""
 
+#: :insurance/total-needs-review-tooltip
+#, ycp-format
+msgctxt ":insurance/total-needs-review-tooltip"
+msgid "Total instruments that need review"
+msgstr ""
+
 #: :insurance/coverage-for
 #, ycp-format
 msgctxt ":insurance/coverage-for"
-msgid "The following information is for: %1"
+msgid "The following information is for the insurance policy '%1'"
+msgstr ""
+
+#: :insurance/total-total-changed-tooltip
+#, ycp-format
+msgctxt ":insurance/total-total-changed-tooltip"
+msgid "Total instruments that have changed"
 msgstr ""
 
 #: :insurance/policies
@@ -71,6 +119,12 @@ msgctxt ":insurance/insurance-policy"
 msgid "Insurance Policy"
 msgstr ""
 
+#: :insurance/total-total-removed-tooltip
+#, ycp-format
+msgctxt ":insurance/total-total-removed-tooltip"
+msgid "Total instruments that have been removed"
+msgstr ""
+
 #: :insurance/name
 #, ycp-format
 msgctxt ":insurance/name"
@@ -83,6 +137,42 @@ msgctxt ":insurance/value"
 msgid "Versicherungswert"
 msgstr ""
 
+#: :insurance/request-payments-title
+#, ycp-format
+msgctxt ":insurance/request-payments-title"
+msgid "Request Insurance Payments"
+msgstr ""
+
+#: :insurance/send-changes
+#, ycp-format
+msgctxt ":insurance/send-changes"
+msgid "Send Changes"
+msgstr ""
+
+#: :insurance/confirm-and-send
+#, ycp-format
+msgctxt ":insurance/confirm-and-send"
+msgid "Confirm and Send"
+msgstr ""
+
+#: :insurance/email-p5
+#, ycp-format
+msgctxt ":insurance/email-p5"
+msgid "Solltest du weitere Fragen haben, kannst du dich gerne bei uns melden."
+msgstr ""
+
+#: :insurance/send-changes-disabled-hint
+#, ycp-format
+msgctxt ":insurance/send-changes-disabled-hint"
+msgid "Changes cannot be sent while there are open TODOs"
+msgstr ""
+
+#: :insurance/email-p1
+#, ycp-format
+msgctxt ":insurance/email-p1"
+msgid "wir möchten dich darum bitten deine Versicherungskosten an das Street Noise Orchestra zu überweisen. Es handelt sich dabei um Kosten für privat versicherte Instrumente für den Zeitraum: "
+msgstr ""
+
 #: :insurance/effective-at
 #, ycp-format
 msgctxt ":insurance/effective-at"
@@ -93,6 +183,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":insurance/title"
 msgid "Insurance & Instruments"
+msgstr ""
+
+#: :insurance/dashboard-title
+#, ycp-format
+msgctxt ":insurance/dashboard-title"
+msgid "Insurance TODOs"
 msgstr ""
 
 #: :insurance/value-abbrev
@@ -113,10 +209,28 @@ msgctxt ":insurance/create-title"
 msgid "New Insurance Policy"
 msgstr ""
 
+#: :insurance/confirm-skip-send
+#, ycp-format
+msgctxt ":insurance/confirm-skip-send"
+msgid "Confirm without Sending"
+msgstr ""
+
+#: :insurance/send-payment-notifications
+#, ycp-format
+msgctxt ":insurance/send-payment-notifications"
+msgid "Send Payment Notifications"
+msgstr ""
+
 #: :insurance/coverage-types
 #, ycp-format
 msgctxt ":insurance/coverage-types"
 msgid "Coverage Types"
+msgstr ""
+
+#: :insurance/confirm-mark-as-button
+#, ycp-format
+msgctxt ":insurance/confirm-mark-as-button"
+msgid "Mark as"
 msgstr ""
 
 #: :insurance/coverage-type-description
@@ -137,10 +251,22 @@ msgctxt ":insurance/category-factors"
 msgid "Category Factors"
 msgstr ""
 
+#: :insurance/email-p4
+#, ycp-format
+msgctxt ":insurance/email-p4"
+msgid "Im Falle eines Schadens findest du die Anleitung für eine Schadensmeldung und das dazu gehörige Schadensformular im Anhang."
+msgstr ""
+
 #: :insurance/value-hint
 #, ycp-format
 msgctxt ":insurance/value-hint"
 msgid "Bei mehreren versicherten Gegenständen bitte nur den Stückpreis angeben"
+msgstr ""
+
+#: :insurance/email-p2
+#, ycp-format
+msgctxt ":insurance/email-p2"
+msgid "Versicherungskosten %1:"
 msgstr ""
 
 #: :insurance/premium-base-factor
@@ -161,10 +287,52 @@ msgctxt ":insurance/instrument-coverage"
 msgid "Instrument Coverage"
 msgstr ""
 
+#: :insurance/bank-data
+#, ycp-format
+msgctxt ":insurance/bank-data"
+msgid "Bankdaten"
+msgstr ""
+
+#: :insurance/cost
+#, ycp-format
+msgctxt ":insurance/cost"
+msgid "Cost"
+msgstr ""
+
 #: :insurance/coverage-name
 #, ycp-format
 msgctxt ":insurance/coverage-name"
 msgid "Coverage Name"
+msgstr ""
+
+#: :insurance/confirm-mark-as
+#, ycp-format
+msgctxt ":insurance/confirm-mark-as"
+msgid "Are you sure you want to mark as %1"
+msgstr ""
+
+#: :insurance/request-payments-subtitle
+#, ycp-format
+msgctxt ":insurance/request-payments-subtitle"
+msgid "The following members have private instruments insured, and need to be notified."
+msgstr ""
+
+#: :insurance/email-subject
+#, ycp-format
+msgctxt ":insurance/email-subject"
+msgid "%1 Versicherungskosten %2 SNO"
+msgstr ""
+
+#: :insurance/total-total-new-tooltip
+#, ycp-format
+msgctxt ":insurance/total-total-new-tooltip"
+msgid "Total instruments that have been added"
+msgstr ""
+
+#: :insurance/confirm-mark-as-title
+#, ycp-format
+msgctxt ":insurance/confirm-mark-as-title"
+msgid "Mark as %1?"
 msgstr ""
 
 #: :insurance/create-subtitle
@@ -245,6 +413,12 @@ msgctxt ":email/subject-log-plays"
 msgid "What did we play at the Probe?"
 msgstr ""
 
+#: :email/sign-off-insurance-team
+#, ycp-format
+msgctxt ":email/sign-off-insurance-team"
+msgid "Versicherungsteam StreetNoise Orchestra"
+msgstr ""
+
 #: :email/new-probe-added
 #, ycp-format
 msgctxt ":email/new-probe-added"
@@ -285,6 +459,18 @@ msgstr ""
 #, ycp-format
 msgctxt ":email/invite-new-user-intro"
 msgid "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
+msgstr ""
+
+#: :email/greeting-personal
+#, ycp-format
+msgctxt ":email/greeting-personal"
+msgid "Liebe:r %1"
+msgstr ""
+
+#: :email/sign-off-personal
+#, ycp-format
+msgctxt ":email/sign-off-personal"
+msgid "Danke und liebe Grüße,"
 msgstr ""
 
 #: :email/remind-gig
@@ -443,6 +629,12 @@ msgctxt ":instrument/name"
 msgid "Instrument Name"
 msgstr ""
 
+#: :instrument/images-internal-url
+#, ycp-format
+msgctxt ":instrument/images-internal-url"
+msgid "Photos Internal Link"
+msgstr ""
+
 #: :instrument/create-title
 #, ycp-format
 msgctxt ":instrument/create-title"
@@ -458,7 +650,19 @@ msgstr ""
 #: :instrument/photo-upload-title
 #, ycp-format
 msgctxt ":instrument/photo-upload-title"
-msgid "Photo Upload"
+msgid "Upload Instrument PHotos"
+msgstr ""
+
+#: :instrument/images-share-url-hint
+#, ycp-format
+msgctxt ":instrument/images-share-url-hint"
+msgid "Use this link when sharing outside the band"
+msgstr ""
+
+#: :instrument/images-share-url
+#, ycp-format
+msgctxt ":instrument/images-share-url"
+msgid "Photos Public Link"
 msgstr ""
 
 #: :instrument/create-subtitle
@@ -471,6 +675,18 @@ msgstr ""
 #, ycp-format
 msgctxt ":instrument/owner"
 msgid "Owner"
+msgstr ""
+
+#: :instrument/photo-upload
+#, ycp-format
+msgctxt ":instrument/photo-upload"
+msgid "Photo Upload"
+msgstr ""
+
+#: :instrument/images-internal-url-hint
+#, ycp-format
+msgctxt ":instrument/images-internal-url-hint"
+msgid "Use this link to delete/rename photos in Nextcloud"
 msgstr ""
 
 #: :instrument/model
@@ -575,6 +791,30 @@ msgctxt ":Contact-Information"
 msgid "Contact Information"
 msgstr ""
 
+#: :instrument.coverage.change/new
+#, ycp-format
+msgctxt ":instrument.coverage.change/new"
+msgid "Added"
+msgstr ""
+
+#: :instrument.coverage.change/removed
+#, ycp-format
+msgctxt ":instrument.coverage.change/removed"
+msgid "Removed"
+msgstr ""
+
+#: :instrument.coverage.change/none
+#, ycp-format
+msgctxt ":instrument.coverage.change/none"
+msgid "No changes"
+msgstr ""
+
+#: :instrument.coverage.change/changed
+#, ycp-format
+msgctxt ":instrument.coverage.change/changed"
+msgid "Modified"
+msgstr ""
+
 #: :password/commonly-used
 #, ycp-format
 msgctxt ":password/commonly-used"
@@ -591,6 +831,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":password/does-not-match"
 msgid "The passwords do not match."
+msgstr ""
+
+#: :outstanding-balance
+#, ycp-format
+msgctxt ":outstanding-balance"
+msgid "Outstanding Balance"
 msgstr ""
 
 #: :travel-discounts/discount-type-name
@@ -635,10 +881,10 @@ msgctxt ":travel-discounts/add-discount"
 msgid "Add a ÖBB discount"
 msgstr ""
 
-#: :outstanding-payments
+#: :money-input-format-error
 #, ycp-format
-msgctxt ":outstanding-payments"
-msgid "Outstanding Payments"
+msgctxt ":money-input-format-error"
+msgid "Enter currency amount like 42,05"
 msgstr ""
 
 #: :section-none
@@ -677,10 +923,22 @@ msgctxt ":file/size"
 msgid "Size"
 msgstr ""
 
+#: :team.type/insurance
+#, ycp-format
+msgctxt ":team.type/insurance"
+msgid "Insurance Team"
+msgstr ""
+
 #: :choose-calendar-app
 #, ycp-format
 msgctxt ":choose-calendar-app"
 msgid "Choose Your Calendar App"
+msgstr ""
+
+#: :dashboard/afternoon
+#, ycp-format
+msgctxt ":dashboard/afternoon"
+msgid "Good afternoon, %1"
 msgstr ""
 
 #: :dashboard/welcome
@@ -695,16 +953,10 @@ msgctxt ":dashboard/morning"
 msgid "Good morning, %1"
 msgstr ""
 
-#: :dashboard/afternoon
+#: :dashboard/upcoming
 #, ycp-format
-msgctxt ":dashboard/afternoon"
-msgid "Good afternoon, %1"
-msgstr ""
-
-#: :dashboard/evening
-#, ycp-format
-msgctxt ":dashboard/evening"
-msgid "Good evening, %1"
+msgctxt ":dashboard/upcoming"
+msgid "All Upcoming Gigs"
 msgstr ""
 
 #: :dashboard/nightowl
@@ -719,10 +971,16 @@ msgctxt ":dashboard/unanswered"
 msgid "Need Attention!"
 msgstr ""
 
-#: :dashboard/upcoming
+#: :dashboard/insurance-todo
 #, ycp-format
-msgctxt ":dashboard/upcoming"
-msgid "All Upcoming Gigs"
+msgctxt ":dashboard/insurance-todo"
+msgid "Insurance Team TODOs"
+msgstr ""
+
+#: :dashboard/you-owe
+#, ycp-format
+msgctxt ":dashboard/you-owe"
+msgid "You owe the band some money!"
 msgstr ""
 
 #: :dashboard/polls-open
@@ -731,16 +989,202 @@ msgctxt ":dashboard/polls-open"
 msgid "We have open polls!"
 msgstr ""
 
+#: :dashboard/evening
+#, ycp-format
+msgctxt ":dashboard/evening"
+msgid "Good evening, %1"
+msgstr ""
+
+#: :history/title
+#, ycp-format
+msgctxt ":history/title"
+msgid "History of Changes"
+msgstr ""
+
+#: :history/subtitle-coverage
+#, ycp-format
+msgctxt ":history/subtitle-coverage"
+msgid "Changes to the coverage of this instrument"
+msgstr ""
+
+#: :history/retracted
+#, ycp-format
+msgctxt ":history/retracted"
+msgid "Retracted"
+msgstr ""
+
+#: :history/updated
+#, ycp-format
+msgctxt ":history/updated"
+msgid "Updated"
+msgstr ""
+
+#: :history/added
+#, ycp-format
+msgctxt ":history/added"
+msgid "Added"
+msgstr ""
+
 #: :oebb-discount
 #, ycp-format
 msgctxt ":oebb-discount"
 msgid "ÖBB Discount"
 msgstr ""
 
+#: :my-profile
+#, ycp-format
+msgctxt ":my-profile"
+msgid "My Profile"
+msgstr ""
+
+#: :or-scan-qr-code
+#, ycp-format
+msgctxt ":or-scan-qr-code"
+msgid "Or scan this QR Code with your banking app"
+msgstr ""
+
 #: :Active
 #, ycp-format
 msgctxt ":Active"
 msgid "Active?"
+msgstr ""
+
+#: :insurance.survey/edit-survey
+#, ycp-format
+msgctxt ":insurance.survey/edit-survey"
+msgid "Edit Survey"
+msgstr ""
+
+#: :insurance.survey/confirm-close
+#, ycp-format
+msgctxt ":insurance.survey/confirm-close"
+msgid "This will close the survey for all members."
+msgstr ""
+
+#: :insurance.survey/email-p3
+#, ycp-format
+msgctxt ":insurance.survey/email-p3"
+msgid "You have until %1 to complete the survey (that's only %2 days!)."
+msgstr ""
+
+#: :insurance.survey/all-done
+#, ycp-format
+msgctxt ":insurance.survey/all-done"
+msgid "All Done!"
+msgstr ""
+
+#: :insurance.survey/cta-p1
+#, ycp-format
+msgctxt ":insurance.survey/cta-p1"
+msgid "%1, it's time to review your insured instruments/items."
+msgstr ""
+
+#: :insurance.survey/closes-at-hint
+#, ycp-format
+msgctxt ":insurance.survey/closes-at-hint"
+msgid "The date and time when the insurance survey will stop accepting responses."
+msgstr ""
+
+#: :insurance.survey/send-notifications
+#, ycp-format
+msgctxt ":insurance.survey/send-notifications"
+msgid "Send Notifications"
+msgstr ""
+
+#: :insurance.survey/cta-p2
+#, ycp-format
+msgctxt ":insurance.survey/cta-p2"
+msgid "You have %1 items to review, it should take about %2 minutes. Ready to go?"
+msgstr ""
+
+#: :insurance.survey/email-p2-many
+#, ycp-format
+msgctxt ":insurance.survey/email-p2-many"
+msgid "Or add new ones! It only takes a few minutes (unless you're %1 who has %2 to review!)"
+msgstr ""
+
+#: :insurance.survey/cta-p2-none
+#, ycp-format
+msgctxt ":insurance.survey/cta-p2-none"
+msgid "You don't have any insured instruments to review. But you should add new ones!"
+msgstr ""
+
+#: :insurance.survey/start-survey
+#, ycp-format
+msgctxt ":insurance.survey/start-survey"
+msgid "Start Survey"
+msgstr ""
+
+#: :insurance.survey/completed-count
+#, ycp-format
+msgctxt ":insurance.survey/completed-count"
+msgid "%1 of %2 completed"
+msgstr ""
+
+#: :insurance.survey/no-surveys
+#, ycp-format
+msgctxt ":insurance.survey/no-surveys"
+msgid "No open surveys"
+msgstr ""
+
+#: :insurance.survey/closes-at
+#, ycp-format
+msgctxt ":insurance.survey/closes-at"
+msgid "Closes At"
+msgstr ""
+
+#: :insurance.survey/start-button
+#, ycp-format
+msgctxt ":insurance.survey/start-button"
+msgid "Start Review"
+msgstr ""
+
+#: :insurance.survey/admin-subtitle
+#, ycp-format
+msgctxt ":insurance.survey/admin-subtitle"
+msgid "Get the whole band to check/control all their insured instruments."
+msgstr ""
+
+#: :insurance.survey/email-p1
+#, ycp-format
+msgctxt ":insurance.survey/email-p1"
+msgid "It's time to review your insured instruments/items."
+msgstr ""
+
+#: :insurance.survey/admin-title
+#, ycp-format
+msgctxt ":insurance.survey/admin-title"
+msgid "Band Insurance Survey"
+msgstr ""
+
+#: :insurance.survey/survey-name
+#, ycp-format
+msgctxt ":insurance.survey/survey-name"
+msgid "Survey Name"
+msgstr ""
+
+#: :insurance.survey/close-survey
+#, ycp-format
+msgctxt ":insurance.survey/close-survey"
+msgid "Close Survey"
+msgstr ""
+
+#: :insurance.survey/email-p2
+#, ycp-format
+msgctxt ":insurance.survey/email-p2"
+msgid "Or add new ones! It only takes a few minutes."
+msgstr ""
+
+#: :insurance.survey/confirm-close-title
+#, ycp-format
+msgctxt ":insurance.survey/confirm-close-title"
+msgid "Close Survey?"
+msgstr ""
+
+#: :insurance.survey/email-title
+#, ycp-format
+msgctxt ":insurance.survey/email-title"
+msgid "SNO Insurance Time!"
 msgstr ""
 
 #: :login
@@ -921,6 +1365,30 @@ msgstr ""
 #, ycp-format
 msgctxt ":poll/results"
 msgid "Poll Results"
+msgstr ""
+
+#: :no-transactions-yet
+#, ycp-format
+msgctxt ":no-transactions-yet"
+msgid "No transactions yet"
+msgstr ""
+
+#: :insurance.policy.status/active
+#, ycp-format
+msgctxt ":insurance.policy.status/active"
+msgid "Active"
+msgstr ""
+
+#: :insurance.policy.status/sent
+#, ycp-format
+msgctxt ":insurance.policy.status/sent"
+msgid "Sent"
+msgstr ""
+
+#: :insurance.policy.status/draft
+#, ycp-format
+msgctxt ":insurance.policy.status/draft"
+msgid "Draft"
 msgstr ""
 
 #: :account/account-created-title
@@ -1139,10 +1607,22 @@ msgctxt ":instruments"
 msgid "Instruments"
 msgstr ""
 
+#: :good-job
+#, ycp-format
+msgctxt ":good-job"
+msgid "Good Job!"
+msgstr ""
+
 #: :total
 #, ycp-format
 msgctxt ":total"
 msgid "Total"
+msgstr ""
+
+#: :youve-completed-plural
+#, ycp-format
+msgctxt ":youve-completed-plural"
+msgid "You've completed %1 item! %2 left to go!"
 msgstr ""
 
 #: :Phone
@@ -1151,10 +1631,70 @@ msgctxt ":Phone"
 msgid "Phone"
 msgstr ""
 
+#: :team/name
+#, ycp-format
+msgctxt ":team/name"
+msgid "Team Name"
+msgstr ""
+
+#: :team/members
+#, ycp-format
+msgctxt ":team/members"
+msgid "Members"
+msgstr ""
+
+#: :team/create-team
+#, ycp-format
+msgctxt ":team/create-team"
+msgid "Create Team"
+msgstr ""
+
+#: :team/add-member
+#, ycp-format
+msgctxt ":team/add-member"
+msgid "Add Member"
+msgstr ""
+
+#: :team/choose-remove-members
+#, ycp-format
+msgctxt ":team/choose-remove-members"
+msgid "Choose members to remove"
+msgstr ""
+
+#: :team/team-type
+#, ycp-format
+msgctxt ":team/team-type"
+msgid "Team Type"
+msgstr ""
+
 #: :private-instrument-payment
 #, ycp-format
 msgctxt ":private-instrument-payment"
 msgid "Die Kosten der Versicherung privater Instrumente werden nicht von Street Noise übernommen."
+msgstr ""
+
+#: :col/member
+#, ycp-format
+msgctxt ":col/member"
+msgid "Member"
+msgstr ""
+
+#: :col/completed?
+#, ycp-format
+msgctxt ":col/completed?"
+msgid "Completed?"
+msgstr ""
+
+#: :col/num-reviewed
+#, ycp-format
+msgctxt ":col/num-reviewed"
+msgid "# Reviewed?"
+msgstr ""
+
+#: :col/total-instruments
+#, ycp-format
+msgctxt ":col/total-instruments"
+msgid "Total Instruments"
 msgstr ""
 
 #: :instrument.coverage.status/needs-review
@@ -1173,6 +1713,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":instrument.coverage.status/coverage-active"
 msgid "Active"
+msgstr ""
+
+#: :youve-completed-sing
+#, ycp-format
+msgctxt ":youve-completed-sing"
+msgid "You completed one item! %1 left to go!"
 msgstr ""
 
 #: :band-instrument-description
@@ -1211,10 +1757,22 @@ msgctxt ":sno-id"
 msgid "SNO ID"
 msgstr ""
 
+#: :band-owes-you
+#, ycp-format
+msgctxt ":band-owes-you"
+msgid "The band owes you %1! Please contact the treasurer."
+msgstr ""
+
 #: :updating
 #, ycp-format
 msgctxt ":updating"
 msgid "Updating…"
+msgstr ""
+
+#: :time-left
+#, ycp-format
+msgctxt ":time-left"
+msgid "Time Remaining"
 msgstr ""
 
 #: :section-add
@@ -1229,10 +1787,22 @@ msgctxt ":action/confirm-open-poll"
 msgid "Yes, open the poll."
 msgstr ""
 
+#: :action/confirm-delete-instrument
+#, ycp-format
+msgctxt ":action/confirm-delete-instrument"
+msgid "Are you sure you want to delete the instrument %1?"
+msgstr ""
+
 #: :action/duplicate
 #, ycp-format
 msgctxt ":action/duplicate"
 msgid "Duplicate"
+msgstr ""
+
+#: :action/im-finished
+#, ycp-format
+msgctxt ":action/im-finished"
+msgid "I'm Finished"
 msgstr ""
 
 #: :action/confirm-close
@@ -1263,6 +1833,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":action/continue"
 msgid "Continue"
+msgstr ""
+
+#: :action/keep-going
+#, ycp-format
+msgctxt ":action/keep-going"
+msgid "Keep Going"
 msgstr ""
 
 #: :action/change-vote
@@ -1325,6 +1901,12 @@ msgctxt ":action/save"
 msgid "Save"
 msgstr ""
 
+#: :action/celebrate
+#, ycp-format
+msgctxt ":action/celebrate"
+msgid "Celebrate!"
+msgstr ""
+
 #: :action/copy-link
 #, ycp-format
 msgctxt ":action/copy-link"
@@ -1353,6 +1935,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":action/confirm-delete-poll"
 msgid "Are you sure you want to delete the poll '%1?'"
+msgstr ""
+
+#: :action/ignore
+#, ycp-format
+msgctxt ":action/ignore"
+msgid "Ignore"
 msgstr ""
 
 #: :action/select-all
@@ -1385,10 +1973,22 @@ msgctxt ":action/back"
 msgid "Back"
 msgstr ""
 
+#: :action/confirm-delete-team
+#, ycp-format
+msgctxt ":action/confirm-delete-team"
+msgid "Are you sure you want to delete the team %1?"
+msgstr ""
+
 #: :action/comment
 #, ycp-format
 msgctxt ":action/comment"
 msgid "Comment"
+msgstr ""
+
+#: :action/send
+#, ycp-format
+msgctxt ":action/send"
+msgid "Send"
 msgstr ""
 
 #: :action/add-to-calendar
@@ -1443,6 +2043,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":action/view"
 msgid "View"
+msgstr ""
+
+#: :action/open-insurance-survey
+#, ycp-format
+msgctxt ":action/open-insurance-survey"
+msgid "Open Insurance Survey"
 msgstr ""
 
 #: :action/open-poll
@@ -1565,10 +2171,136 @@ msgctxt ":reminders/one-week"
 msgid "1 Week"
 msgstr ""
 
+#: :instrument.coverage/private?
+#, ycp-format
+msgctxt ":instrument.coverage/private?"
+msgid "Private?"
+msgstr ""
+
+#: :instrument.coverage/instrument
+#, ycp-format
+msgctxt ":instrument.coverage/instrument"
+msgid "Instrument"
+msgstr ""
+
+#: :instrument.coverage/cost-hint
+#, ycp-format
+msgctxt ":instrument.coverage/cost-hint"
+msgid "The cost to insure the instrument. If private, the owner must pay this."
+msgstr ""
+
+#: :instrument.coverage/create-button
+#, ycp-format
+msgctxt ":instrument.coverage/create-button"
+msgid "Add Instrument"
+msgstr ""
+
+#: :instrument.coverage/value
+#, ycp-format
+msgctxt ":instrument.coverage/value"
+msgid "Versicherungswert"
+msgstr ""
+
+#: :instrument.coverage/cost-hint-direct
+#, ycp-format
+msgctxt ":instrument.coverage/cost-hint-direct"
+msgid "You'll have to pay this to the band."
+msgstr ""
+
+#: :instrument.coverage/types
+#, ycp-format
+msgctxt ":instrument.coverage/types"
+msgid "Coverage Types"
+msgstr ""
+
+#: :instrument.coverage/status
+#, ycp-format
+msgctxt ":instrument.coverage/status"
+msgid "Workflow Status"
+msgstr ""
+
+#: :instrument.coverage/item-count
+#, ycp-format
+msgctxt ":instrument.coverage/item-count"
+msgid "Item Count"
+msgstr ""
+
+#: :instrument.coverage/value-hint
+#, ycp-format
+msgctxt ":instrument.coverage/value-hint"
+msgid "The estimated market value of the item, i.e., how much it would cost to replace it if lost."
+msgstr ""
+
+#: :instrument.coverage/cost
+#, ycp-format
+msgctxt ":instrument.coverage/cost"
+msgid "Cost"
+msgstr ""
+
+#: :instrument.coverage/change
+#, ycp-format
+msgctxt ":instrument.coverage/change"
+msgid "Change Status"
+msgstr ""
+
+#: :instrument.coverage/coverage-id
+#, ycp-format
+msgctxt ":instrument.coverage/coverage-id"
+msgid "Coverage ID"
+msgstr ""
+
+#: :instrument.coverage/private?-hint
+#, ycp-format
+msgctxt ":instrument.coverage/private?-hint"
+msgid "Is this instrument a band instrument or private instrument?"
+msgstr ""
+
 #: :missing
 #, ycp-format
 msgctxt ":missing"
 msgid ":en missing text"
+msgstr ""
+
+#: :ledger.entry/amount
+#, ycp-format
+msgctxt ":ledger.entry/amount"
+msgid "Amount"
+msgstr ""
+
+#: :ledger.entry/tx-date
+#, ycp-format
+msgctxt ":ledger.entry/tx-date"
+msgid "Transaction Date"
+msgstr ""
+
+#: :ledger.entry/description
+#, ycp-format
+msgctxt ":ledger.entry/description"
+msgid "Reference"
+msgstr ""
+
+#: :ledger.entry/direction-debit
+#, ycp-format
+msgctxt ":ledger.entry/direction-debit"
+msgid "%1 owes the band"
+msgstr ""
+
+#: :ledger.entry/direction-credit
+#, ycp-format
+msgctxt ":ledger.entry/direction-credit"
+msgid "The band owes %1"
+msgstr ""
+
+#: :ledger.entry/payment-direction-debit
+#, ycp-format
+msgctxt ":ledger.entry/payment-direction-debit"
+msgid "The band paid %1"
+msgstr ""
+
+#: :ledger.entry/payment-direction-credit
+#, ycp-format
+msgctxt ":ledger.entry/payment-direction-credit"
+msgid "%1 paid the band"
 msgstr ""
 
 #: :gigs/title
@@ -1647,6 +2379,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":email-subject/poll-created"
 msgid "New Poll: %1"
+msgstr ""
+
+#: :email-subject/insurance-survey
+#, ycp-format
+msgctxt ":email-subject/insurance-survey"
+msgid "It's SNO Insurance Time!"
 msgstr ""
 
 #: :plan/definitely
