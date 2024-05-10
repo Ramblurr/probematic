@@ -45,9 +45,17 @@
 (defn link-gig-archive [] "/gigs/archive/")
 (defn link-polls-create [] "/polls/new/")
 (defn link-insurance [] "/insurance/")
+
 (defn link-coverage-create
   ([policy-id] (link-coverage-create policy-id nil))
   ([policy-id instrument-id] (str "/insurance-coverage-create/" policy-id "/" (when instrument-id (str "?instrument-id=" instrument-id)))))
+
+(defn link-insurance-survey-start [policy-id]
+  (str "/insurance-survey/" policy-id "/"))
+
+(defn link-insurance-add-coverage [policy-id]
+  (str "/insurance-coverage-create/" policy-id "/"))
+
 (defn link-coverage-create2 [policy-id instrument-id] (str "/insurance-coverage-create2/" policy-id "/" instrument-id "/"))
 (defn link-coverage-create3 [policy-id instrument-id] (str "/insurance-coverage-create3/" policy-id "/" instrument-id "/"))
 
@@ -77,6 +85,9 @@
 
 (defn absolute-link-insurance-policy-table [env policy-id]
   (format "%s/%s" (config/app-base-url env) (link-policy policy-id "/#coverages-table")))
+
+(defn absolute-link-insurance-survey-start [env policy-id]
+  (format "%s/%s" (config/app-base-url env) (link-insurance-survey-start policy-id)))
 
 (defn absolute-gig-answer-link-base [env]
   (str (config/app-base-url env) "/answer-link"))

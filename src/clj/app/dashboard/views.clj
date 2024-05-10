@@ -193,16 +193,23 @@ put '%s' into .copy-link in me"
                           :icon (icon/apple-calendar {:class (ui/cs class "mr-1.5 h-5 w-5 flex-shrink-0 border border-gray-500 rounded")})
                           :attr {:href webcal}}]}])))
 
-(ctmx/defcomponent
-  ^:endpoint dashboard-page
-  [{:keys [db tr system] :as req}]
+(declare dashboard-page)
+
+(ctmx/defcomponent ^:endpoint dismiss-insurance-widget [{:keys [db] :as req}]
+  (when (util/post? req)
+    (insurance.controller/dismiss-insurance-widget! req)
+    (dashboard-page (util/make-get-request req))))
+
+(ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db tr system] :as req}]
+  dismiss-insurance-widget
   (let [member (auth/get-current-member req)
         _ (assert member)
         gigs-planned (gig.service/gigs-planned-for db member)
         polls-open (poll.controller/open-polls db)
         need-answer-gigs (gig.service/gigs-needing-plan db member)
-        ledger (q/retrieve-ledger db (:member/member-id member))]
-    [:div
+        ledger (q/retrieve-ledger db (:member/member-id member))
+        survey-response (q/open-survey-for-member db member)]
+    [:div {:id (util/id :comp/dashboard)}
      (ui/page-header :title (tr [(keyword "dashboard" (name (util/time-window (util/local-time-austria!))))] [(ui/member-nick member)])
                      :buttons  (list
                                 (calendar-subscribe-button (:env system) tr)
@@ -216,6 +223,11 @@ put '%s' into .copy-link in me"
         (ui/divider-left (tr [:dashboard/you-owe]))
         [:div {:class "bg-white p-4 rounded-md shadow-md"}
          (ledger/outstanding-balance-widget req ledger)]])
+     (when (and  survey-response (nil? (:insurance.survey.response/completed-at survey-response)))
+       [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
+        (ui/divider-left [:span   "Insurance Time!"])
+        [:div {:class "bg-white p-4 rounded-md shadow-md"}
+         (insurance.view/dashboard-survey-widget req survey-response (util/endpoint-path dismiss-insurance-widget) (util/hash :comp/dashboard))]])
      (when (seq polls-open)
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/polls-open]))

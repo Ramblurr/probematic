@@ -344,6 +344,11 @@
            :required required?
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
+(defn input-datetime2 [& {:keys [value] :as opts}]
+  (input (-> opts
+             (assoc :type "datetime-local"
+                    :value (when value (t/truncate (t/date-time value) :minutes))))))
+
 (defn date [& {:keys [value name required? min max]}]
   [:input {:type "date" :name name
            :value (when value  (t/date value))
@@ -375,6 +380,8 @@
            :class "block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-sno-orange-500 focus:ring-sno-orange-500 sm:text-sm"}])
 
 (def button-priority-classes {:link "font-semibold text-sno-orange-600 hover:text-sno-orange-500"
+                              :success
+                              "border-transparent bg-sno-green-600 text-white shadow-sm hover:bg-sno-green-700 focus:outline-none focus:ring-2 focus:ring-sno-green-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :secondary
                               "border-transparent bg-sno-orange-100 px-4 py-2  text-sno-orange-700 hover:bg-sno-orange-200 focus:outline-none focus:ring-2 focus:ring-sno-orange-500 focus:ring-offset-2"
                               :white
@@ -389,8 +396,10 @@
 
 (def spinner-priority-classes {:secondary
                                "text-sno-orange-900"
+                               :success
+                               "text-sno-green-700"
                                :white
-                               "text-sno-orange-900"
+                               "text-sno-green-700"
                                :white-destructive
                                "text-sno-orange-900"
                                :primary
@@ -407,8 +416,8 @@
                            :large "px-4 py-2 text-base"
                            :xlarge "px-6 py-3 text-base"})
 
-(def button-icon-sizes-classes {:xsmall "h-2 w-2"
-                                :small "h-3 w-3"
+(def button-icon-sizes-classes {:xsmall "h-3 w-3"
+                                :small "h-4 w-4"
                                 :normal "h-5 w-5"
                                 :large "h-5 w-5"
                                 :xlarge "h-5 w-5"})
@@ -438,21 +447,16 @@
           (priority button-priority-classes)
           (when spinner? "button-spinner")
           (when centered? "items-center justify-center")
-          (when disabled? "opacity-50 cursor-not-allowed")
+          #_(when disabled? "opacity-50 cursor-not-allowed")
           "disabled:opacity-50 disabled:cursor-not-allowed"
           class)
          :disabled disabled?}
         attr)
-   (when icon (icon  {:class (cs (size button-icon-sizes-classes)  (when label "-ml-1 mr-2"))}))
-   (when spinner? (list (icon/spinner {:class (cs "spinner"
-                                                  (size button-icon-sizes-classes)
-                                                  (priority spinner-priority-classes)
-                                                  (when label "-ml-1 mr-2"))})
-                        (icon/checkmark {:class (cs "spinner-check"
-                                                    (size button-icon-sizes-classes)
-                                                    (priority spinner-priority-classes)
-                                                    (when label "-ml-1 mr-2"))})))
-   label])
+   (when icon (icon  {:class (cs "button-icon" (size button-icon-sizes-classes)  (when label "-ml-1 mr-2"))}))
+   (when spinner? (icon/spinner {:class (cs "spinner"
+                                            (size button-icon-sizes-classes)
+                                            (priority spinner-priority-classes))}))
+   [:span {:class "button-label"} label]])
 
 (defn link-button [& opts]
   (apply button (conj opts :a :tag)))
@@ -1332,40 +1336,63 @@
      (map-indexed #(action-menu-section %1 id %2) sections)]]])
 
 (defn step-circles [total-steps current-step]
-  [:nav {:aria-label "Progress"}
-   [:ol {:role "list" :class "flex items-center"}
-    (map (fn [n]
-           (let [last? (= n total-steps)]
-             (cond
-               (< n current-step)
-               [:li {:class "relative pr-8 sm:pr-20"}
-                ;; "<!-- Completed Step -->"
-                [:div {:class "absolute inset-0 flex items-center" :aria-hidden "true"}
-                 [:div {:class "h-0.5 w-full bg-sno-orange-600"}]]
-                [:a {:href "#" :class "relative flex h-8 w-8 items-center justify-center rounded-full bg-sno-orange-600 hover:bg-sno-orange-900"}
-                 [:svg {:class "h-5 w-5 text-white" :viewbox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
-                  [:path {:fill-rule "evenodd" :d "M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" :clip-rule "evenodd"}]]
-                 [:span {:class "sr-only"} "Step 1"]]]
-               (= n current-step)
-               [:li {:class (cs  "relative"
-                                 (when-not last? "pr-8 sm:pr-20"))}
-                ;; "<!-- Current Step -->"
-                [:div {:class "absolute inset-0 flex items-center" :aria-hidden "true"}
-                 [:div {:class "h-0.5 w-full bg-gray-200"}]]
-                [:a {:href "#" :class "relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-sno-orange-600 bg-white" :aria-current "step"}
-                 [:span {:class "h-2.5 w-2.5 rounded-full bg-sno-orange-600" :aria-hidden "true"}]
-                 [:span {:class "sr-only"} "Step 3"]]]
-               :else
-               [:li {:class (cs "relative" (cs  "relative"
-                                                (when-not last? "pr-8 sm:pr-20")))}
-                ;; "<!-- Final Step -->"
-                [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
-                 [:div {:class "h-0.5 w-full bg-gray-200"}]]
-                [:a {:href "#", :class "group relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 bg-white hover:border-gray-400"}
-                 [:span {:class "h-2.5 w-2.5 rounded-full bg-transparent group-hover:bg-gray-300", :aria-hidden "true"}]
-                 [:span {:class "sr-only"} "Step 5"]]])))
+  (let [$circle-complete "steps-circle-complete" #_"relative flex h-8 w-8 items-center justify-center rounded-full bg-sno-orange-600 hover:bg-sno-orange-900"
+        $circle-current "steps-circle-current" #_"relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-sno-orange-600 bg-white"
+        $circle-empty "group steps-circle-empty"
+        finished? (> current-step total-steps)]
+    [:nav {:aria-label "Progress"}
+     [:ol {:role "list" :class "flex items-center"}
+      (map (fn [n]
+             (let [last? (= n total-steps)
+                   previous? (= n (dec current-step))
+                   next? (= n (inc current-step))]
+               (cond
+                 (< n current-step)
+                 [:li {:class (cs "relative pr-8 sm:pr-20" (when previous? "steps-step-previous"))}
+                  ;; "<!-- Completed Step -->"
+                  [:div {:class "absolute inset-0 flex items-center" :aria-hidden "true"}
+                   [:div {:class (cs "h-0.5 w-full" (if previous? "bg-gray-200" "bg-sno-orange-600"))}]]
+                  [:div {:class (cs "bar absolute inset-0 flex items-center") :aria-hidden "true"}
+                   [:div {:class "h-0.5 w-full bg-sno-orange-600"}]]
+                  [:a {:href "#" :class $circle-complete}
+                   [:svg {:class "h-5 w-5 text-white" :viewbox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+                    [:path {:fill-rule "evenodd" :d "M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" :clip-rule "evenodd"}]]
+                   [:span {:class "sr-only"} "Step 1"]]]
+                 (= n current-step)
+                 [:li {:class (cs  "relative steps-step-current"
+                                   (when-not last? "pr-8 sm:pr-20"))}
+                  ;; "<!-- Current Step -->"
+                  [:div {:class "absolute inset-0 flex items-center" :aria-hidden "true"}
+                   [:div {:class "h-0.5 w-full bg-gray-200"}]]
+                  #_[:div {:class "absolute inset-0 flex items-center steps-step-current" :aria-hidden "true"}
+                     [:div {:class "h-0.5 w-full bg-sno-orange-600 "}]]
+                  [:a {:href "#" :class $circle-current :aria-current "step"}
+                   [:span {:class "h-2.5 w-2.5 rounded-full bg-sno-orange-600 step-dot-inner" :aria-hidden "true"}]
+                   [:span {:class "sr-only"} "Step 3"]]]
+                 :else
+                 [:li {:class (cs  "relative"
+                                   (when-not last? "pr-8 sm:pr-20")
+                                   (when next? "steps-step-next"))}
+                  ;; "<!-- Final Step -->"
+                  [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
+                   [:div {:class "h-0.5 w-full bg-gray-200"}]]
+                  [:a {:href "#", :class $circle-empty}
+                   [:span {:class "h-2.5 w-2.5 rounded-full bg-transparent group-hover:bg-gray-300", :aria-hidden "true"}]
+                   [:span {:class "sr-only"} "Step 5"]]])))
 
-         (range 1 (inc total-steps)))]])
+           (range 1
+                  (if finished?
+                    (dec total-steps)
+                    (inc total-steps))))
+      (when finished?
+        [:li {:class (cs  "relative"
+                          "pr-8 sm:pr-20")}
+         ;; "<!-- Final Step -->"
+         [:div {:class "absolute inset-0 flex items-center", :aria-hidden "true"}
+          #_[:div {:class "h-0.5 w-full bg-gray-200"}]]
+         [:a {:href "final", :class "group steps-circle-complete"}
+          [:svg {:class "h-5 w-5 text-white" :viewbox "0 0 20 20" :fill "currentColor" :aria-hidden "true"}
+           [:path {:fill-rule "evenodd" :d "M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" :clip-rule "evenodd"}]]]])]]))
 
 (defn photo-grid [photos]
   [:section {:class "overflow-hidden text-neutral-700"}
@@ -1393,8 +1420,7 @@
                             icon: 'warning',
                             iconColor: '#e00087',
                             showCancelButton: true,
-                            confirmButtonColor: '#ea580c',
-                            cancelButtonColor: '#dc2626'
+                            confirmButtonColor: '#dc2626'
                           })
                           if result.isConfirmed issueRequest()"
              event
@@ -1443,3 +1469,18 @@
          (partition 4)
          (map (fn [group]
                 [:span {:class "visually-spaced"} (apply str group)])))))
+
+(defn thumbs-up-animation
+  "Must be wrapped in a :hx-ext class-tools" []
+  [:div {:class "flex items-center relative  transition-all duration-500 ml-[50%] -translate-x-1/2" :classes "remove ml-[50%]:1s & remove -translate-x-1/2:1s"}
+   [:div {:class "thumb opacity-0" :classes "remove opacity-0:30ms"}
+    (icon/thumbs-up {:class "h-32 w-32 text-sno-green-500 transition-all duration-500" :classes "remove h-32:1.0s & remove w-32:1.0s & add h-8:1.0s & add w-8:1.0s"})]
+   [:div {:class "circle-wrap"}
+    [:div {:class "circle-lg"}]]
+   [:div {:class "dots-wrap"}
+    [:div {:class "dot dot--t"}]
+    [:div {:class "dot dot--tr"}]
+    [:div {:class "dot dot--br"}]
+    [:div {:class "dot dot--b"}]
+    [:div {:class "dot dot--bl"}]
+    [:div {:class "dot dot--tl"}]]])

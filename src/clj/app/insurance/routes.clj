@@ -50,6 +50,15 @@
    (fn [req]
      (layout/app-shell req
                        (view/insurance-coverage-create-page req)))))
+
+(defn insurance-survey []
+  (ctmx/make-routes
+   "/insurance-survey/{policy-id}/"
+   (fn [req]
+     (layout/app-shell req
+                       (view/survey-start-page req)
+                       {:extra-scripts [[nil "confetti.js" :type :module]]}))))
+
 (defn insurance-coverage-create2 []
   (ctmx/make-routes
    "/insurance-coverage-create2/{policy-id}/{instrument-id}"
@@ -116,6 +125,8 @@
 
 (defn routes []
   [""
+   [""
+    (insurance-survey)]
    ["" {:app.route/name :app/insurance1
         :interceptors [policy-interceptor]}
     (insurance-coverage-create)

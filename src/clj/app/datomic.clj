@@ -188,7 +188,10 @@
                  :poll.vote/poll-vote-id
                  :attendance/gig+member
                  :ledger/ledger-id
-                 :ledger.entry/entry-id])
+                 :ledger.entry/entry-id
+                 :insurance.survey.response/response-id
+                 :insurance.survey/survey-id
+                 :insurance.survey.report/report-id])
 
 (defn ref
   "Given a map and a key returns a tuple of [key value]. Useful for building datomic ref tuples from a pull result"

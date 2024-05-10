@@ -215,6 +215,30 @@
                                                                 time-range
                                                                 (:private-cost-total sample-data)))))
 
+(defn build-survey-notifications [{:keys [tr system] :as req} sender-name policy members email-data]
+  (let [url (url/absolute-link-insurance-survey-start (:env system) (:insurance.policy/policy-id policy))
+        sys (sys-from-req req)]
+    (build-batch-emails
+     (mapv :member/email members)
+     (tr [:email-subject/insurance-survey])
+     (tmpl/generic-email-html sys (tmpl/insurance-survey-created-email-html-body tr email-data) (tr [:insurance.survey/start-button]) url
+                              {:sign-off
+                               [:p
+                                (tr [:email/sign-off-personal])
+                                [:br] sender-name
+                                [:br] (tr [:email/sign-off-insurance-team])]})
+     (tmpl/generic-email-plain sys (tmpl/insurance-survey-created-email-plain-body tr email-data) (tr [:insurance.survey/start-button])  url
+                               {:sign-off (str (tr [:email/sign-off-personal])
+                                               "\n" sender-name
+                                               "\n" (tr [:email/sign-off-insurance-team]))})
+     nil)))
+
+(defn send-survey-notifications! [{:keys [tr system] :as req} sender-name policy members email-data]
+  #_(queue-email! (sys-from-req req)
+                  (build-survey-notifications req policy members email-data))
+  (tap>
+   (build-survey-notifications req sender-name policy members email-data)))
+
 (comment
 
   (do

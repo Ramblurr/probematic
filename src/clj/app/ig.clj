@@ -66,7 +66,7 @@
                                         :object-src  "'none'"
                                         :default-src (format  "%s %s 'self'" base-uri id-uri)
                                         :font-src    (format  "%s 'self'" base-uri)
-                                        :script-src  (format  "%s %s 'self' 'unsafe-inline' 'unsafe-eval'" base-uri forum-uri)
+                                        :script-src  (format  "%s %s 'self' 'unsafe-inline' 'unsafe-eval' blob:" base-uri forum-uri)
                                         :style-src   (format "%s 'self' 'unsafe-inline'" base-uri)
                                         :connect-src "'self'"
                                         :frame-src (format  "%s %s 'self'" nextcloud-uri forum-uri)}}))

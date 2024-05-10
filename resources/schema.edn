@@ -1015,7 +1015,70 @@
     :db/doc "The type of the team (if any"
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
-   ]
+;;;; Insurance Survey
+   {:db/ident :insurance.survey/survey-id
+    :db/doc "The id of the survey"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey/survey-name
+    :db/doc "The name of the survey"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey/policy
+    :db/doc "The policy this survey is for"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey/created-at
+    :db/doc "The time the survey was created."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey/closes-at
+    :db/doc "The time the survey will be automatically closed."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey/closed-at
+    :db/doc "When the survey was closed"
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey/responses
+    :db/doc "The responses for the survey"
+    :db/valueType :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+;;;; Insurance Survey - Response
+   {:db/ident :insurance.survey.response/response-id
+    :db/doc "The id of this survey response"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey.response/member
+    :db/doc "The member who responded"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey.response/completed-at
+    :db/doc "The time the response was completed."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident       :insurance.survey.response/coverage-reports
+    :db/doc         "The reports for each coverage"
+    :db/valueType   :db.type/ref
+    :db/isComponent true
+    :db/cardinality :db.cardinality/many}
+;;;; Insurance Survey - Coverage Report
+   {:db/ident :insurance.survey.report/report-id
+    :db/doc "The id of this coverage report"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey.report/completed-at
+    :db/doc "The time the report was completed."
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :insurance.survey.report/coverage
+    :db/doc "The coverage this report is for"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}]
 
 ;;
 

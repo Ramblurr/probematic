@@ -1009,8 +1009,9 @@ on change if I match <:checked/>
     (when should-send?
       (service/send-reminder-to-all! req (-> req :gig :gig/gig-id)))
     (ui/button :label (tr [:reminders/remind-all])
-               :priority :secondary :centered? true :size :xsmall
-               :class (when should-send? "hx-success")
+               :priority (if should-send? :success :secondary)
+               :centered? true :size :xsmall
+               :icon (when should-send? icon/checkmark)
                :spinner? true
                :attr {:id (util/id :comp/gig-detail-page-remind-all-button)
                       :hx-indicator hash

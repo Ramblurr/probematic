@@ -68,13 +68,13 @@
       (> minutes 0) (plural-msg minutes :time/minute.ago :time/minutes.ago)
       (> seconds 0) (plural-msg seconds :time/second.ago :time/seconds.ago)
 
-      (< years 0) (plural-msg years :time/year.within :time/years.within)
-      (< months 0) (plural-msg months :time/month.within :time/months.within)
-      (< weeks 0) (plural-msg weeks :time/week.within :time/weeks.within)
-      (< days 0) (plural-msg days :time/day.within :time/days.within)
-      (< hours 0) (plural-msg hours :time/hour.within :time/hours.within)
-      (< minutes 0) (plural-msg minutes :time/minute.within :time/minutes.within)
-      (< seconds 0) (plural-msg seconds :time/second.within :time/seconds.within)
+      (< years 0) (plural-msg (abs years) :time/year.within :time/years.within)
+      (< months 0) (plural-msg (abs months) :time/month.within :time/months.within)
+      (< weeks 0) (plural-msg (abs weeks) :time/week.within :time/weeks.within)
+      (< days 0) (plural-msg (abs days) :time/day.within :time/days.within)
+      (< hours 0) (plural-msg (abs hours) :time/hour.within :time/hours.within)
+      (< minutes 0) (plural-msg (abs minutes) :time/minute.within :time/minutes.within)
+      (< seconds 0) (plural-msg (abs seconds) :time/second.within :time/seconds.within)
       :else (tr [:now]))))
 
 (defn logn [num base]

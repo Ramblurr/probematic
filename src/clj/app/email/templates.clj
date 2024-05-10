@@ -387,10 +387,13 @@ Versicherungsteam StreetNoise Orchestra
      :sender-name sender-name
      :sign-off (tr [:email/sign-off-personal])})))
 
-(defn generic-email-plain [{:keys [tr env] :as sys} body-text cta-text cta-url]
-  (selmer.util/without-escaping
-   (selmer/render
-    "{{greeting}}
+(defn generic-email-plain
+  ([sys body-text cta-text cta-url]
+   (generic-email-plain sys body-text cta-text cta-url nil))
+  ([{:keys [tr env] :as sys} body-text cta-text cta-url {:keys [sign-off greeting]}]
+   (selmer.util/without-escaping
+    (selmer/render
+     "{{greeting}}
 
 {{body-text}}
 
@@ -400,25 +403,29 @@ Versicherungsteam StreetNoise Orchestra
 
 {{sign-off}}
 "
-    {:greeting (tr [:email/greeting])
-     :body-text body-text
-     :cta-text cta-text
-     :cta-url cta-url
-     :sign-off (tr [:email/sign-off])})))
+     {:greeting (or greeting (tr [:email/greeting]))
+      :body-text body-text
+      :cta-text cta-text
+      :cta-url cta-url
+      :sign-off (or sign-off (tr [:email/sign-off]))}))))
 
-(defn generic-email-html [{:keys [tr]} body-hiccup cta-text cta-url]
-  (str (html
-        [:div
-         [:p
-          (tr [:email/greeting])]
-         (if (vector? body-hiccup)
-           body-hiccup
-           [:p body-hiccup])
-         (when cta-text
-           [:p [:a {:href cta-url} cta-text]])
+(defn generic-email-html
+  ([sys body-hiccup cta-text cta-url]
+   (generic-email-html sys body-hiccup cta-text cta-url nil))
+  ([{:keys [tr]} body-hiccup cta-text cta-url {:keys [sign-off greeting]}]
+   (str (html
+         [:div
+          [:p
+           (or greeting (tr [:email/greeting]))]
+          (if (vector? body-hiccup)
+            body-hiccup
+            [:p body-hiccup])
+          (when cta-text
+            [:p [:a {:href cta-url} cta-text]])
 
-         [:p]
-         [:p (tr [:email/sign-off])]])))
+          [:p]
+          [:p
+           (or sign-off (tr [:email/sign-off]))]]))))
 
 (defn poll-created-email-plain-body [tr poll]
   (let [title (:poll/title poll)
@@ -445,3 +452,32 @@ Versicherungsteam StreetNoise Orchestra
 
 (defn poll-created-email-html-body [tr poll]
   (markdown/render (poll-created-email-plain-body tr poll)))
+
+(defn insurance-survey-created-email-plain-body [tr {:keys [closes-at member-most-instruments member-most-instrument-count]}]
+  (let [closes-at-str (str (ui/format-time closes-at) " " (ui/format-dt closes-at))
+        closes-at-str-bolded (str "**" closes-at-str "**")
+        closes-at-days (-> (t/instant)
+                           (t/between  closes-at)
+                           (t/days))]
+
+    (selmer/render
+     "
+### {{title}}
+
+{{ p1 }}
+
+{{ p2 }}
+
+{{ p3 }}
+"
+
+     {:title (tr [:insurance.survey/email-title])
+      :p1 (tr [:insurance.survey/email-p1])
+      :p2
+      (if (and member-most-instruments (> member-most-instrument-count 10))
+        (tr [:insurance.survey/email-p2-many] [(or (:member/nick  member-most-instruments) (:member/name member-most-instruments)) member-most-instrument-count])
+        (tr [:insurance.survey/email-p2]))
+      :p3 (tr [:insurance.survey/email-p3] [closes-at-str-bolded closes-at-days])})))
+
+(defn insurance-survey-created-email-html-body [tr closes-at]
+  (markdown/render (insurance-survey-created-email-plain-body tr closes-at)))

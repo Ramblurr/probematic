@@ -15,7 +15,7 @@
              :unanswered "Need Attention!"
              :upcoming "All Upcoming Gigs"
              :polls-open "We have open polls!"
-             :insurance-todo "Insurance TODOs"
+             :insurance-todo "Insurance Team TODOs"
              :you-owe "You owe the band some money!"}
  :member {:insurance-title "Insurance & Instruments"
           :insurance-subtitle "Instruments and other items registered with the band for insurance purposes."
@@ -150,6 +150,7 @@
              :create-subtitle "Enter details for the new policy."
              :coverage-for "The following information is for the insurance policy '%1'"
              :send-changes "Send Changes"
+             :send-changes-disabled-hint "Changes cannot be sent while there are open TODOs"
              :send-payment-notifications "Send Payment Notifications"
              :error-edit-frozen-policy "Cannot update instrument and coverage on a policy that is not in draft status"
              :total-needs-review-tooltip "Total instruments that need review"
@@ -169,13 +170,19 @@
                            :sent "Sent"
                            :draft "Draft"}
  :instrument.coverage {:private? "Private?"
+                       :private?-hint "Is this instrument a band instrument or private instrument?"
+                       :create-button "Add Instrument"
                        :instrument  "Instrument"
                        :status "Workflow Status"
                        :coverage-id "Coverage ID"
                        :types "Coverage Types"
-                       :value "Value"
+                       :value "Versicherungswert"
+                       :value-hint "The estimated market value of the item, i.e., how much it would cost to replace it if lost."
                        :item-count "Item Count"
-                       :change "Change Status"}
+                       :change "Change Status"
+                       :cost "Cost"
+                       :cost-hint "The cost to insure the instrument. If private, the owner must pay this."
+                       :cost-hint-direct "You'll have to pay this to the band."}
  :instrument.coverage.status {:needs-review "Todo"
                               :reviewed "Reviewed"
                               :coverage-active "Active"}
@@ -207,8 +214,7 @@
               :images-share-url "Photos Public Link"
               :images-share-url-hint "Use this link when sharing outside the band"
               :images-internal-url "Photos Internal Link"
-              :images-internal-url-hint "Use this link to delete/rename photos in Nextcloud"
-              }
+              :images-internal-url-hint "Use this link to delete/rename photos in Nextcloud"}
  :nav {:home "Home"
        :polls "Polls"
        :stats "Stats"
@@ -250,7 +256,11 @@
  :action {:add "Add"
           :add-to-calendar "Add To Calendar"
           :back "Back"
+          :keep-going "Keep Going"
+          :ignore "Ignore"
+          :im-finished "I'm Finished"
           :cancel "Cancel"
+          :celebrate "Celebrate!"
           :change-vote "Change Vote"
           :comment "Comment"
           :confirm-close-poll "Are you sure you want to close the poll '%1'?"
@@ -277,6 +287,7 @@
           :mark-as "Mark As"
           :next "Next"
           :open-poll "Open Poll"
+          :open-insurance-survey "Open Insurance Survey"
           :quick-edit "Quick Edit"
           :remove "Remove"
           :reorder "Reorder"
@@ -352,7 +363,8 @@
                  :gig-updated "Gig Edit: %1"
                  :gig-reminder "Gig Reminder: %1"
                  :new-invite "Your SNO ID is waiting for you.."
-                 :poll-created "New Poll: %1"}
+                 :poll-created "New Poll: %1"
+                 :insurance-survey "It's SNO Insurance Time!"}
  :email {:greeting "Hello!"
          :greeting-personal "Liebe:r %1"
          :new-gig-added "A new gig is coming up!"
@@ -372,6 +384,7 @@
          :cannot-make-it "I cannot make it"
          :gig-info-page "Take me to the Gig Info page"
          :sign-off "Mit groovigen Grüßen — SNObot"
+         :sign-off-insurance-team "Versicherungsteam StreetNoise Orchestra"
          :sign-off-personal "Danke und liebe Grüße,"
          :invite-expired "Sorry, the invitation code has expired. Please ask for a new one!"
          :invite-new-user-intro "You've received an invite to create a StreetNoise Orchestra (SNO) ID!"
@@ -494,15 +507,44 @@
                 :payment-direction-debit "The band paid %1"
                 :payment-direction-credit "%1 paid the band"}
  :money-input-format-error "Enter currency amount like 42,05"
-
  :team {:name "Team Name"
         :members "Members"
         :create-team "Create Team"
         :add-member "Add Member"
         :choose-remove-members "Choose members to remove"
-        :team-type "Team Type"
-        }
+        :team-type "Team Type"}
  :team.type {:insurance "Insurance Team"}
+ :insurance.survey {:admin-title "Band Insurance Survey"
+                    :admin-subtitle "Get the whole band to check/control all their insured instruments."
+                    :cta-p1 "%1, it's time to review your insured instruments/items."
+                    :cta-p2 "You have %1 items to review, it should take about %2 minutes. Ready to go?"
+                    :cta-p2-none "You don't have any insured instruments to review. But you should add new ones!"
+                    :no-surveys "No open surveys"
+                    :start-button "Start Review"
+                    :start-survey "Start Survey"
+                    :close-survey "Close Survey"
+                    :closes-at "Closes At"
+                    :closes-at-hint "The date and time when the insurance survey will stop accepting responses."
+                    :survey-name "Survey Name"
+                    :confirm-close-title "Close Survey?"
+                    :confirm-close "This will close the survey for all members."
+                    :completed-count "%1 of %2 completed"
+                    :send-notifications "Send Notifications"
+                    :edit-survey "Edit Survey"
+                    :all-done "All Done!"
+                    :email-title "SNO Insurance Time!"
+                    :email-p1 "It's time to review your insured instruments/items."
+                    :email-p2 "Or add new ones! It only takes a few minutes."
+                    :email-p2-many "Or add new ones! It only takes a few minutes (unless you're %1 who has %2 to review!)"
+                    :email-p3 "You have until %1 to complete the survey (that's only %2 days!)."}
+ :col {:member "Member"
+       :completed? "Completed?"
+       :num-reviewed "# Reviewed?"
+       :total-instruments "Total Instruments"}
+ :good-job  "Good Job!"
+ :time-left "Time Remaining"
+ :youve-completed-sing "You completed one item! %1 left to go!"
+ :youve-completed-plural "You've completed %1 item! %2 left to go!"
 
- ;;
+;;
  }

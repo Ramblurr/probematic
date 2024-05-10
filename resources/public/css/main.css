@@ -19,6 +19,8 @@
 
 @import "./sweetalert2@11.7.5.css";
 
+@import "./thumb-animation.css";
+
 .dropzone {
   /*@apply sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5;
      */
@@ -546,35 +548,37 @@ body {
 
 /* ANIMATIONS */
 
+.htmx-request.pulsate,
 .htmx-request .pulsate {
   animation: pulsate 1s ease-out;
   animation-iteration-count: infinite;
   opacity: 0.5;
 }
-.button-spinner svg.spinner {
-  opacity: 0;
-}
-
 .button-spinner svg.spinner-check {
   display: none;
 }
 
-.button-spinner.hx-success {
-  @apply border-transparent bg-sno-green-500 text-white shadow-sm hover:bg-sno-green-700 focus:outline-none focus:ring-2 focus:ring-sno-green-500 focus:ring-offset-2 focus:ring-offset-gray-100;
-}
-
-.button-spinner.hx-success svg.spinner-check {
-  display: block;
-  @apply text-green-900;
-}
-.button-spinner.hx-success svg.spinner {
+.button-spinner svg.spinner {
   opacity: 0;
-  @apply text-green-900;
+  display: none;
+  /*transition: all 1000ms ease-in;*/
+}
+.htmx-request.button-spinner svg.spinner,
+.htmx-request .button-spinner svg.spinner {
+  opacity: 1;
+  display: inline-block;
 }
 
-.htmx-request.button-spinner svg.spinner {
-  transition: all 1000ms ease-in;
-  opacity: 1;
+.htmx-request.button-spinner > .button-label,
+.htmx-request .button-spinner > .button-label {
+  opacity: 0;
+  display: none;
+}
+
+.htmx-request.button-spinner > .button-icon,
+.htmx-request .button-spinner > .button-icon {
+  opacity: 0;
+  display: none;
 }
 
 .pulse-delay {
@@ -688,4 +692,127 @@ body {
 .visually-spaced + .visually-spaced:before {
   content: " ";
   letter-spacing: 0.25rem;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slide-from-right {
+  from {
+    transform: translateX(200px);
+  }
+}
+
+@keyframes slide-to-left {
+  to {
+    transform: translateX(-200px);
+  }
+}
+
+/* disabled until better support
+ *
+.slide-it {
+  view-transition-name: slide-it;
+}
+::view-transition-old(slide-it) {
+  animation:
+    180ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
+    600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+}
+::view-transition-new(slide-it) {
+  animation:
+    420ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
+    600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+}
+ */
+
+/* htmx-settling targets old content */
+.htmx-swapping .slide-me-in-out {
+  opacity: 0;
+  transform: translateX(-200px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+/* htmx-added targets new content */
+.htmx-added .slide-me-in-out {
+  opacity: 0;
+  transform: translateX(200px);
+}
+
+.slide-me-in-out {
+  opacity: 1;
+  transition:
+    opacity 0.6s ease-in,
+    transform 0.6s ease-in;
+}
+.slide-me-in {
+  opacity: 1;
+  transition: all 0.6s ease-out;
+}
+
+.steps-circle-complete {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full bg-sno-orange-600 hover:bg-sno-orange-900;
+  transition: all 0.6s ease-out;
+}
+.steps-circle-current {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-sno-orange-600 bg-white;
+  transition: all 0.6s ease-out;
+}
+
+.steps-circle-empty {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 bg-white hover:border-gray-400;
+  transition: all 0.6s ease-out;
+}
+
+.htmx-added .steps-new-step .steps-step-previous .bar {
+  transform: translateX(-100px);
+}
+
+.htmx-added .steps-new-step .steps-step-previous .steps-circle-complete {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-sno-orange-600 bg-white;
+}
+
+.htmx-added .steps-new-step .steps-step-current .steps-circle-current {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 bg-white hover:border-gray-400;
+}
+.htmx-added
+  .steps-new-step
+  .steps-step-current
+  .steps-circle-current
+  .step-dot-inner {
+  opacity: 0;
+}
+.steps-circle-current .step-dot-inner {
+  opacity: 1;
+  transition: all 0.3s ease-out 0.9s;
+}
+
+.steps-step-previous .bar {
+  transform: translateX(0px);
+  transition: all 0.6s ease-out 0.3s;
+}
+.steps-step-current {
+}
+
+.htmx-added .survey-panel-fade-in {
+  opacity: 0;
+}
+
+.survey-panel-fade-in {
+  opacity: 1;
+  transition: opacity 0.6s ease-out 1s;
+}
+
+/* Copied from htmx, this is here to ensure the indicator doesn't flash unstyled */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
 }

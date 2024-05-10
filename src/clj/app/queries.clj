@@ -2,6 +2,7 @@
   (:require
    [app.datomic :as d]
    [app.gigs.domain :as gig.domain]
+   [app.insurance.domain :as insurance.domain]
    [app.ledger.domain :as ledger.domain]
    [app.poll.domain :as poll.domain]
    [app.settings.domain :as settings.domain]
@@ -118,6 +119,22 @@
      :insurance.coverage.type/description
      :insurance.coverage.type/type-id
      :insurance.coverage.type/premium-factor]}])
+
+(def policy-lite-pattern [:insurance.policy/policy-id
+                          :insurance.policy/currency
+                          :insurance.policy/name
+                          :insurance.policy/status
+                          :insurance.policy/effective-at
+                          :insurance.policy/effective-until
+                          :insurance.policy/premium-factor
+                          {:insurance.policy/coverage-types
+                           [:insurance.coverage.type/description :insurance.coverage.type/name :insurance.coverage.type/premium-factor :insurance.coverage.type/type-id]}
+                          {:insurance.policy/category-factors
+                           [{:insurance.category.factor/category
+                             [:instrument.category/name
+                              :instrument.category/category-id]}
+                            :insurance.category.factor/factor
+                            :insurance.category.factor/category-factor-id]}])
 
 (def policy-pattern [:insurance.policy/policy-id
                      :insurance.policy/currency
@@ -934,6 +951,93 @@
    (map first)
    (map ledger.domain/db->entry)))
 
+(def insurance-survey-coverage-report-pattern
+  [:insurance.survey.report/report-id
+   {:insurance.survey.report/coverage instrument-coverage-detail-pattern}
+   :insurance.survey.report/completed-at])
+
+(def insurance-survey-response-pattern
+  [:insurance.survey.response/response-id
+   {:insurance.survey.response/member member-pattern}
+   :insurance.survey.response/completed-at
+   {:insurance.survey.response/coverage-reports insurance-survey-coverage-report-pattern}])
+
+(def insurance-survey-response-pattern-backwards
+  (conj insurance-survey-response-pattern
+        {:insurance.survey/_responses [:insurance.survey/survey-id
+                                       :insurance.survey/survey-name
+                                       {:insurance.survey/policy policy-lite-pattern}
+                                       :insurance.survey/created-at
+                                       :insurance.survey/closes-at
+                                       :insurance.survey/closed-at]}))
+(def insurance-survey-report-pattern-backwards
+  (-> insurance-survey-coverage-report-pattern
+      (conj  {:insurance.survey.response/_coverage-reports [:insurance.survey.response/response-id
+                                                            {:insurance.survey.response/member member-pattern}
+                                                            :insurance.survey.response/completed-at]})))
+
+(def insurance-survey-pattern
+  [:insurance.survey/survey-id
+   :insurance.survey/survey-name
+   {:insurance.survey/policy policy-lite-pattern}
+   :insurance.survey/created-at
+   :insurance.survey/closes-at
+   :insurance.survey/closed-at
+   {:insurance.survey/responses insurance-survey-response-pattern}])
+
+(defn surveys-for-policy [db policy]
+  (->>
+   (datomic/q '[:find (pull ?survey pattern)
+                :in $ ?policy-id pattern
+                :where [?survey :insurance.survey/policy ?policy-id]]
+              db (d/ref policy)  insurance-survey-pattern)
+   (map first)
+   (map insurance.domain/db->survey)))
+
+(defn open-survey-for-member-items [db member]
+  (or
+   (->>
+    (datomic/q '[:find (count ?report)
+                 :in $ ?member
+                 :where
+                 [?response :insurance.survey.response/member ?member]
+                 [?survey :insurance.survey/responses ?response]
+                 [(missing? $ ?survey :insurance.survey/closed-at)]
+                 [(missing? $ ?response :insurance.survey.response/completed-at)]
+                 [?response :insurance.survey.response/coverage-reports ?report]
+                 [(missing? $ ?report :insurance.survey.report/completed-at)]]
+               db (d/ref member))
+    (map first)
+    first)
+   0))
+
+(defn open-survey-for-member
+  "Returns the response for the member for the first open survey"
+  [db member]
+  (->>
+   (datomic/q '[:find (pull ?response pattern)
+                :in $ ?member pattern
+                :where
+                [?response :insurance.survey.response/member ?member]
+                [?survey :insurance.survey/responses ?response]
+                [(missing? $ ?survey :insurance.survey/closed-at)]]
+              db (d/ref member) insurance-survey-response-pattern-backwards)
+   (map first)
+   (map insurance.domain/db->survey-response)
+   first))
+
+(defn retrieve-survey-report [db report-id]
+  (insurance.domain/db->survey-report
+   (d/find-by db :insurance.survey.report/report-id report-id insurance-survey-report-pattern-backwards)))
+
+(defn retrieve-survey-response [db response-id]
+  (insurance.domain/db->survey-response
+   (d/find-by db :insurance.survey.response/response-id response-id insurance-survey-response-pattern-backwards)))
+
+(defn retrieve-survey [db survey-id]
+  (insurance.domain/db->survey
+   (d/find-by db :insurance.survey/survey-id survey-id insurance-survey-pattern)))
+
 ;;;; END
 (comment
   (do
@@ -941,6 +1045,18 @@
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  :insurance.survey.response/response-id
+  (def my-response-id
+    #uuid "018f5861-30d2-896f-a4f6-9fb26e50b6b2")
+
+  (open-survey-for-member-items db {:member/member-id #uuid "01860c2a-2929-8727-af1a-5545941b1111"})
+  (open-survey-for-member db {:member/member-id #uuid "01860c2a-2929-8727-af1a-5545941b1111"})
+
+  (open-survey-for-member-items db {:member/member-id #uuid "01860c2a-292b-8545-a6b4-a4783be6e8c6"})
+  (open-survey-for-member db {:member/member-id #uuid "01860c2a-292b-8545-a6b4-a4783be6e8c6"})
+
+  (surveys-for-policy db #uuid "018f1059-4acd-86c1-8f55-4b3e5eb856e0")
 
   (member-of-team? db :team.type/insurance #uuid "01887b0c-23f8-86f0-8891-89e322a505d9")
 

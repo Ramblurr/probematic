@@ -1,5 +1,7 @@
 (ns app.insurance.controller
   (:require
+   [clojure.set :as set]
+   [app.insurance.domain :as domain]
    [app.auth :as auth]
    [app.email :as email]
    [app.config :as config]
@@ -28,70 +30,12 @@
 
 (def NEXTCLOUD_SHARE_LABEL "snorga-bot-insurance")
 
-(def instrument-coverage-statuses [:instrument.coverage.status/needs-review
-                                   :instrument.coverage.status/reviewed
-                                   :instrument.coverage.status/coverage-active])
-
-(def instrument-coverage-changes [:instrument.coverage.change/new
-                                  :instrument.coverage.change/removed
-                                  :instrument.coverage.change/changed
-                                  :instrument.coverage.change/none])
-
-(def policy-statuses [:insurance.policy.status/active
-                      :insurance.policy.status/sent
-                      :insurance.policy.status/draft])
-
-(def str->instrument-coverage-status (zipmap (map name instrument-coverage-statuses) instrument-coverage-statuses))
-(def str->policy-status (zipmap (map name policy-statuses) policy-statuses))
-(def str->instrument-coverage-change (zipmap (map name instrument-coverage-changes) instrument-coverage-changes))
+(def str->instrument-coverage-status (zipmap (map name domain/instrument-coverage-statuses) domain/instrument-coverage-statuses))
+(def str->policy-status (zipmap (map name domain/policy-statuses) domain/policy-statuses))
+(def str->instrument-coverage-change (zipmap (map name domain/instrument-coverage-changes) domain/instrument-coverage-changes))
 
 (defn policy-editable? [{:insurance.policy/keys [status]}]
   (= status :insurance.policy.status/draft))
-
-(defn sum-by [ms k]
-  ;; (tap> {:ms ms :k k})
-  (when (seq ms)
-    (->> ms
-         (map k)
-         (reduce + 0))))
-
-(defn make-category-factor-lookup
-  "Given a policy, create a map where the keys are the category ids and the values are the category factors"
-  [policy]
-  (->> (-> policy :insurance.policy/category-factors)
-       (map (fn [factor]
-              {:instrument.category/category-id (-> factor :insurance.category.factor/category :instrument.category/category-id)
-               :insurance.category.factor/factor (:insurance.category.factor/factor factor)}))
-       (reduce (fn [r m]
-                 (assoc r (:instrument.category/category-id m) (:insurance.category.factor/factor m))) {})))
-
-(defn update-coverage-price [category-factor base-premium-factor coverage]
-  (assert category-factor)
-  ;; (tap> {:coverage coverage :base-factor base-premium-factor :category category-factor})
-  (assoc coverage :instrument.coverage/types
-         (map (fn [coverage-type]
-                ;; (tap> {:type coverage-type :cov coverage :cat-f category-factor :base base-premium-factor})
-                (assoc coverage-type :insurance.coverage.type/cost
-                       (* (:instrument.coverage/value coverage)
-                          category-factor
-                          base-premium-factor
-                          (:insurance.coverage.type/premium-factor coverage-type)))) (:instrument.coverage/types coverage))))
-
-(defn update-total-coverage-price
-  "Given a policy and a specific instrument coverage, calculate the total price for the instrument"
-  [policy {:instrument.coverage/keys [value instrument] :as coverage}]
-    ;;  value * category factor * premium factor * coverage factor
-  (let [category-id (-> instrument :instrument/category :instrument.category/category-id)
-        category-factor (get  (make-category-factor-lookup policy) category-id)
-        ;; _ (tap> {:lookup (make-category-factor-lookup policy) :cat-id category-id})
-        _  (assert category-factor)
-        ;; _ (tap> {:cat-id category-id :cat-fact category-factor :lookup (make-category-factor-lookup policy) :policy policy})
-        premium-factor (-> policy :insurance.policy/premium-factor)
-        coverage  (update-coverage-price category-factor premium-factor coverage)
-        ;; _ (tap> {:cov coverage})
-        total-cost (sum-by (:instrument.coverage/types coverage) :insurance.coverage.type/cost)]
-
-    (assoc coverage :instrument.coverage/cost total-cost)))
 
 (defn create-policy-txs [{:keys [name effective-at effective-until
                                  base-factor overnight-factor proberaum-factor
@@ -422,7 +366,7 @@
   "This schema describes the http post we receive when updating an instrument and coverage "
   (mu/merge UpdateInstrument UpdateCoverage))
 
-(defn update-coverage-txs [{:keys [value coverage-types item-count private-band] :as decoded} coverage]
+(defn update-coverage-txs [{:keys [value coverage-types item-count private-band] :as decoded} coverage owner-changed?]
   (let [coverage-ref (d/ref coverage)
         before-types (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
         after-types (util/remove-dummy-uuid (mapv util.http/ensure-uuid (util/ensure-coll coverage-types)))
@@ -430,6 +374,7 @@
         private? (= "private" private-band)
         ;; if these things have changed then we need to ensure the changes get marked so we can send them upstream
         has-upstream-change? (or
+                              owner-changed?
                               (not (== (:instrument.coverage/value coverage) value))
                               (not (== (:instrument.coverage/item-count coverage 1) item-count))
                               (not (= (:instrument.coverage/private? coverage) private?))
@@ -524,7 +469,7 @@
       valid-change?
       (let [txs (if coverage-id
                   ;; upsert
-                  (update-coverage-txs decoded (q/retrieve-coverage db coverage-id))
+                  (update-coverage-txs decoded (q/retrieve-coverage db coverage-id) false)
                   ;; create
                   (create-coverage-txs decoded))
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
@@ -536,6 +481,7 @@
 (defn update-instrument-and-coverage! [{:keys [db] :as req}]
   (let [params (util.http/unwrap-params req)
         decoded  (util/remove-nils (s/decode UpdateInstrumentAndCoverage params))
+        ;; _ (tap> {:decoded decoded})
         policy (q/retrieve-policy db (:policy-id decoded))
         change-valid? (s/valid? UpdateInstrumentAndCoverage decoded)]
     (cond
@@ -545,9 +491,11 @@
       change-valid?
       (let [coverage (q/retrieve-coverage db (util.http/ensure-uuid (:coverage-id decoded)))
             _ (assert coverage)
-
             instrument-id (:instrument-id decoded)
-            txs (concat (update-coverage-txs decoded coverage)
+            new-owner-member-id (:owner-member-id decoded)
+            old-owner-member-id (-> (q/retrieve-instrument db instrument-id) :instrument/owner :member/member-id)
+            owner-changed? (not= new-owner-member-id old-owner-member-id)
+            txs (concat (update-coverage-txs decoded coverage owner-changed?)
                         [(update-instrument-tx decoded instrument-id)])
             share-url (try-create-instrument-nextcloud-share! req instrument-id)
             txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
@@ -569,15 +517,11 @@
         result (d/transact-wrapper! req {:tx-data txs})]
     {:policy (q/retrieve-policy (:db-after result) (-> coverage :insurance.policy/_covered-instruments  :insurance.policy/policy-id))}))
 
-(defn get-coverage-type-from-coverage [instrument-coverage type-id]
-  (m/find-first #(= type-id (:insurance.coverage.type/type-id %))
-                (:instrument.coverage/types instrument-coverage)))
-
 (defn toggle-instrument-coverage-type! [{:keys [datomic-conn db]} coverage-id type-id]
   (let [coverage-id (util.http/ensure-uuid coverage-id)
         type-id (util.http/ensure-uuid type-id)
         coverage (q/retrieve-coverage db coverage-id)
-        operation (if (get-coverage-type-from-coverage coverage type-id) :db/retract :db/add)
+        operation (if (domain/get-coverage-type-from-coverage coverage type-id) :db/retract :db/add)
         tx-data [[operation [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/types [:insurance.coverage.type/type-id (util.http/ensure-uuid type-id)]]]
         result (datomic/transact datomic-conn {:tx-data tx-data})]
     {:coverage (q/retrieve-coverage (:db-after result) coverage-id)}))
@@ -622,32 +566,22 @@
     :instrument.category/name "Streich"
     :instrument.category/code "7"}])
 
-(defn enrich-coverages [policy coverage-types coverages]
-  (mapv (fn [coverage]
-          (let [coverage (update-total-coverage-price policy coverage)]
-            (assoc coverage :types
-                   (mapv (fn [{:insurance.coverage.type/keys [type-id]}]
-                           (when-let [coverage-type (get-coverage-type-from-coverage coverage type-id)]
-                             coverage-type))
-                         coverage-types))))
-        coverages))
-
 (defn coverages-grouped-by-owner [policy]
   (->> (:insurance.policy/covered-instruments policy)
        (util/group-by-into-list :coverages (fn [c] (get-in c [:instrument.coverage/instrument :instrument/owner])))
        (mapv (fn [r] (update r :coverages #(sort-by (fn [c] (get-in c [:instrument.coverage/instrument :instrument/name])) %))))
-       (mapv (fn [r] (update r :coverages #(enrich-coverages policy (:insurance.policy/coverage-types policy) %))))
+       (mapv (fn [r] (update r :coverages #(domain/enrich-coverages policy (:insurance.policy/coverage-types policy) %))))
        (mapv (fn [{:keys [coverages] :as person}]
-               (assoc person :total (sum-by coverages :instrument.coverage/cost))))
+               (assoc person :total (domain/sum-by coverages :instrument.coverage/cost))))
        (sort-by :member/name)))
 
 (def MarkAsSchema
   (s/schema
    [:map {:name ::MarkAs}
     [:policy-id :uuid]
-    [:workflow-status {:optional true} (into [:enum {:kw-namespace true}] instrument-coverage-statuses)
+    [:workflow-status {:optional true} (into [:enum {:kw-namespace true}] domain/instrument-coverage-statuses)
      [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]
-    [:change-status {:optional true} (into [:enum {:kw-namespace true}] instrument-coverage-changes)]
+    [:change-status {:optional true} (into [:enum {:kw-namespace true}] domain/instrument-coverage-changes)]
     [:coverage-ids [:vector {:vectorize true} :uuid]]]))
 
 (defn mark-coverages-as! [req]
@@ -729,7 +663,7 @@
 (defn policy-totals [policy]
   (let [covered-instruments (:insurance.policy/covered-instruments policy)
         grouped-by-owner (coverages-grouped-by-owner policy)]
-    {:total-cost (sum-by grouped-by-owner :total)
+    {:total-cost (domain/sum-by grouped-by-owner :total)
      :total-instruments  (count covered-instruments)
      :total-private-count (count (filter :instrument.coverage/private? covered-instruments))
      :total-band-count (count (remove :instrument.coverage/private? covered-instruments))
@@ -809,16 +743,141 @@
         (errors/report-error! e)
         {:error "Failed to send notifications" :ex e}))))
 
+(defn report-belongs-to-current? [req report]
+  (let [current-member (auth/get-current-member req)
+        owning-member-id (-> report :response :insurance.survey.response/member :member/member-id)]
+    (= owning-member-id (:member/member-id current-member))))
+
+(defn survey-report-for-member [{:keys [db] :as req}]
+  (let [{:keys [report-id]}  (util.http/unwrap-params req)
+        report-id (util/ensure-uuid! report-id)
+        report (q/retrieve-survey-report db report-id)]
+    (if (report-belongs-to-current? req report)
+      report
+      (throw (ex-info "Report does not belong to current user")))))
+
+(defn survey-response-for-member [{:keys [db] :as req}]
+  (let [response (q/open-survey-for-member db (auth/get-current-member req))]
+    response))
+
+(defn survey-table-items [{:keys [db] :as req}]
+  (let [surveys (q/surveys-for-policy db (:policy req))
+        open-surveys (filter #(nil? (:insurance.survey/closed-at %)) surveys)
+        closed-surveys (filter #(some? (:insurance.survey/closed-at %)) surveys)]
+    {:open-surveys open-surveys
+     :closed-surveys closed-surveys}))
+
+(defn complete-member-survey-response [db response member]
+  [:db/add (d/ref response) :insurance.survey.response/completed-at (t/inst)])
+
+(defn dismiss-insurance-widget! [{:keys [db] :as req}]
+  (let [member (auth/get-current-member req)
+        open-items (q/open-survey-for-member-items db member)]
+    (when (= 0 open-items)
+      (let [response (q/open-survey-for-member db member)
+            tx (complete-member-survey-response db response member)]
+        (d/transact-wrapper! req {:tx-data [tx]})))))
+
+(defn resolve-survey-report! [{:keys [db] :as req} active-report decisions]
+  (let [txs (->> decisions
+                 (mapcat #(domain/txns-for-decision active-report %))
+                 (concat (domain/txns-complete-survey-report active-report))
+                 (concat (domain/txns-maybe-survey-response-complete active-report (q/open-survey-for-member db (-> active-report :response :insurance.survey.response/member)))))]
+    (tap> {:report active-report :deci decisions :txs txs})
+    (d/transact-wrapper! req {:tx-data txs})))
+
+(defn open-survey-for-member [{:keys [db] :as req} member]
+  (q/open-survey-for-member db member))
+
+(defn members-for-policy-survey
+  "Returns a list of members that are covered by the policy and active members that are not covered.
+  Includes the :coverages and cost :total"
+  [db policy]
+  (let [existing-coverages-by-member (coverages-grouped-by-owner policy)
+        existing-member-ids (set (map :member/member-id existing-coverages-by-member))
+        active-members (q/active-members db)
+        all-active-member-ids (set (map :member/member-id active-members))
+        member-ids-without-insurance (set/difference all-active-member-ids existing-member-ids)]
+    (->> active-members
+         (filter #(member-ids-without-insurance (-> % :member/member-id)))
+         (map #(assoc % :coverages [] :total 0))
+         (concat existing-coverages-by-member)
+         (sort-by :member/name))))
+
+(defn new-survey-datoms [db survey-name closes-at policy]
+  (let [survey-tempid (d/tempid)
+        members (members-for-policy-survey db policy)
+        policy-id (:insurance.policy/policy-id policy)
+        response-txs (mapcat (fn [{:keys [coverages] :member/keys [member-id]}]
+                               (let [report-datoms (map (fn [{:instrument.coverage/keys [coverage-id] :as cov}]
+                                                          (domain/new-survey-report-datom (d/tempid) coverage-id))
+                                                        coverages)
+                                     report-tempids (map :db/id report-datoms)]
+                                 (conj report-datoms
+                                       (domain/new-survey-response-datom (d/tempid) member-id report-tempids))))
+                             members)
+        response-tempids (map :db/id response-txs)
+        survey-tx (domain/new-survey-datom survey-tempid survey-name policy-id closes-at response-tempids)]
+    (conj response-txs survey-tx)))
+
+(defn create-survey! [{:keys [db] :as req}]
+  (let [policy (:policy req)
+        {:keys [survey-name closes-at] :as p} (util.http/unwrap-params req)
+        txs (new-survey-datoms db survey-name (t/date-time closes-at) policy)]
+    ;; (tap> [:params p :tx txs])
+    (d/transact-wrapper! req {:tx-data txs})))
+
+(defn close-survey! [{:keys [db] :as req}]
+  (let [policy (:policy req)
+        {:keys [survey-id] :as p} (util.http/unwrap-params req)
+        survey-id (util/ensure-uuid! survey-id)
+        txs [[:db/add [:insurance.survey/survey-id survey-id] :insurance.survey/closed-at (t/inst)]]]
+    ;; (tap> [:params p :tx txs])
+    (d/transact-wrapper! req {:tx-data txs})))
+
+(defn members-to-email-about-survey [{:insurance.survey/keys [responses] :as survey}]
+  ;; return a list of members who have not completed the survey
+  (->> responses
+       (filter #(nil? (:insurance.survey.response/completed-at %)))
+       (map :insurance.survey.response/member)))
+
+(defn send-survey-notifications! [{:keys [db] :as req}]
+  (let [policy (:policy req)
+        {:keys [survey-id] :as p} (util.http/unwrap-params req)
+        survey-id (util/ensure-uuid! survey-id)
+        {:insurance.survey/keys [closes-at responses] :as survey} (q/retrieve-survey db survey-id)
+        members-to-email (members-to-email-about-survey survey)
+        most-member (apply max-key (comp count :insurance.survey.response/coverage-reports) responses)
+        email-data {:closes-at closes-at
+                    :member-most-instruments (:insurance.survey.response/member most-member)
+                    :member-most-instrument-count (count (:insurance.survey.response/coverage-reports most-member))}]
+    (email/send-survey-notifications! req (:member/name (auth/get-current-member req)) policy members-to-email email-data)))
+
+(defn toggle-survey-response-completion! [{:keys [db] :as req}]
+  (let [{:keys [response-id]} (util.http/unwrap-params req)
+        response-id (util/ensure-uuid! response-id)
+        response (q/retrieve-survey-response db response-id)
+        txs (domain/txns-toggle-response-completion response)
+        result (d/transact-wrapper! req {:tx-data txs})]
+    (q/retrieve-survey-response (:db-after result) response-id)))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
     (require '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  (members-for-policy-survey db (q/retrieve-policy db #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2"))
+  (new-survey-datoms db
+                     "Survey 2024"
+                     (t/>> (t/instant) (t/new-period 3 :days))
+                     (q/retrieve-policy db #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2")) ;; rcf
+
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b9")
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b7")
 
-  (datomic/transact conn {:tx-data [{:insurance.policy/policy-id  #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2"  :insurance.policy/status :insurance.policy.status/draft}]})
+  (datomic/transact conn {:tx-data [{:insurance.policy/policy-id #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2" :insurance.policy/status :insurance.policy.status/draft}]})
 
   (q/retrieve-policy db
                      (->
@@ -851,64 +910,64 @@
      (d/find-by db :member/name "Casey Link" [:member/member-id])
      :member/member-id))
 
-  (datomic/transact conn {:tx-data [{:instrument/owner casey-ref
-                                     :instrument/category category-blech-ref
-                                     :instrument/name "Marching Trombone"
+  (datomic/transact conn {:tx-data [{:instrument/owner         casey-ref
+                                     :instrument/category      category-blech-ref
+                                     :instrument/name          "Marching Trombone"
                                      :instrument/instrument-id (sq/generate-squuid)
-                                     :instrument/make "King"
-                                     :instrument/model "Flugelbone"
-                                     :instrument/build-year "1971"
+                                     :instrument/make          "King"
+                                     :instrument/model         "Flugelbone"
+                                     :instrument/build-year    "1971"
                                      :instrument/serial-number "12345"}]})
 
   (def caseys-instrument-ref (d/ref
                               (d/find-by (datomic/db conn) :instrument/owner casey-ref [:instrument/instrument-id])
                               :instrument/instrument-id))
 
-  (datomic/transact conn {:tx-data [{:db/ident :insurance.policy/effective-until
-                                     :db/doc "The instant at which this policy ends"
-                                     :db/valueType :db.type/instant
+  (datomic/transact conn {:tx-data [{:db/ident       :insurance.policy/effective-until
+                                     :db/doc         "The instant at which this policy ends"
+                                     :db/valueType   :db.type/instant
                                      :db/cardinality :db.cardinality/one}]})
 
-  (def txns [{:db/id "cat_factor_blech"
+  (def txns [{:db/id                                        "cat_factor_blech"
               :insurance.category.factor/category-factor-id (sq/generate-squuid)
-              :insurance.category.factor/category category-blech-ref
-              :insurance.category.factor/factor (bigdec 2.0)}
-             {:db/id "ct_basic"
-              :insurance.coverage.type/type-id (sq/generate-squuid)
-              :insurance.coverage.type/name "Basic Coverage"
-              :insurance.coverage.type/description ""
+              :insurance.category.factor/category           category-blech-ref
+              :insurance.category.factor/factor             (bigdec 2.0)}
+             {:db/id                                  "ct_basic"
+              :insurance.coverage.type/type-id        (sq/generate-squuid)
+              :insurance.coverage.type/name           "Basic Coverage"
+              :insurance.coverage.type/description    ""
               :insurance.coverage.type/premium-factor (bigdec 1.0)}
 
-             {:db/id "ct_overnight"
-              :insurance.coverage.type/type-id (sq/generate-squuid)
-              :insurance.coverage.type/name "Auto/Overnight"
-              :insurance.coverage.type/description ""
+             {:db/id                                  "ct_overnight"
+              :insurance.coverage.type/type-id        (sq/generate-squuid)
+              :insurance.coverage.type/name           "Auto/Overnight"
+              :insurance.coverage.type/description    ""
               :insurance.coverage.type/premium-factor (bigdec 0.25)}
-             {:db/id "ct_proberaum"
-              :insurance.coverage.type/type-id (sq/generate-squuid)
-              :insurance.coverage.type/name "Proberaum"
-              :insurance.coverage.type/description ""
+             {:db/id                                  "ct_proberaum"
+              :insurance.coverage.type/type-id        (sq/generate-squuid)
+              :insurance.coverage.type/name           "Proberaum"
+              :insurance.coverage.type/description    ""
               :insurance.coverage.type/premium-factor (bigdec 0.2)}
 
              {:instrument.coverage/coverage-id (sq/generate-squuid)
-              :instrument.coverage/instrument caseys-instrument-ref
-              :instrument.coverage/types ["ct_basic" "ct_overnight" "ct_proberaum"]
-              :instrument.coverage/private? false
-              :instrument.coverage/value (bigdec 1000)}
+              :instrument.coverage/instrument  caseys-instrument-ref
+              :instrument.coverage/types       ["ct_basic" "ct_overnight" "ct_proberaum"]
+              :instrument.coverage/private?    false
+              :instrument.coverage/value       (bigdec 1000)}
 
-             {:insurance.policy/policy-id (sq/generate-squuid)
-              :insurance.policy/currency :currency/EUR
-              :insurance.policy/name "2022-2023"
-              :insurance.policy/effective-at (t/inst)
+             {:insurance.policy/policy-id           (sq/generate-squuid)
+              :insurance.policy/currency            :currency/EUR
+              :insurance.policy/name                "2022-2023"
+              :insurance.policy/effective-at        (t/inst)
               :insurance.policy/effective-until
               (t/inst
                (t/>>
                 (t/inst)
                 (t/new-duration 365 :days)))
               :insurance.policy/covered-instruments []
-              :insurance.policy/coverage-types ["ct_basic" "ct_overnight" "ct_proberaum"]
-              :insurance.policy/premium-factor (* (bigdec 1.07) (bigdec 0.00447))
-              :insurance.policy/category-factors ["cat_factor_blech"]}])
+              :insurance.policy/coverage-types      ["ct_basic" "ct_overnight" "ct_proberaum"]
+              :insurance.policy/premium-factor      (* (bigdec 1.07) (bigdec 0.00447))
+              :insurance.policy/category-factors    ["cat_factor_blech"]}])
 
   (datomic/transact conn {:tx-data txns})
 
@@ -922,10 +981,10 @@
                                         [:instrument.coverage/coverage-id]))
                            :instrument.coverage/coverage-id))
 
-  (datomic/transact conn {:tx-data [{:db/id policy-ref
+  (datomic/transact conn {:tx-data [{:db/id                                policy-ref
                                      :insurance.policy/covered-instruments [caseys-covered-ref]}]})
 
-  (datomic/transact conn {:tx-data [{:db/id caseys-covered-ref
+  (datomic/transact conn {:tx-data [{:db/id                     caseys-covered-ref
                                      :instrument.coverage/value (bigdec 3000)}]})
 
   (def policy
@@ -968,11 +1027,11 @@
 
   (require '[app.debug :refer [xxx xxx>>]])
 
-  (instrument-coverage-history {:db  (datomic/db conn)} (q/retrieve-coverage (datomic/db conn) #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b8")) ;; rcf
+  (instrument-coverage-history {:db (datomic/db conn)} (q/retrieve-coverage (datomic/db conn) #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b8"))
 
   (let [db (datomic/db conn)]
-    (->> (datomic/q '{:find [?tx ?attr ?val ?added]
-                      :in [$ ?coverage-id]
+    (->> (datomic/q '{:find  [?tx ?attr ?val ?added]
+                      :in    [$ ?coverage-id]
                       :where [[?e :instrument.coverage/coverage-id ?coverage-id]
                               [?e ?attr ?val ?tx ?added]]}
                     (datomic/history db)
@@ -982,13 +1041,13 @@
          (map (fn [[tx transactions]]
                 (let [tx-info (datomic/pull db '[*] tx)]
                   {:timestamp (:db/txInstant tx-info)
-                   :audit (select-keys tx-info [:audit/user])
-                   :changes (->> transactions
-                                 (map (fn [[_ attr val added]]
-                                        [(ident db attr) (if (ref? db attr)
-                                                           (resolve-ref db val)
-                                                           val) (if added :added :retracted)]))
-                                 (sort-by last))})))
+                   :audit     (select-keys tx-info [:audit/user])
+                   :changes   (->> transactions
+                                   (map (fn [[_ attr val added]]
+                                          [(ident db attr) (if (ref? db attr)
+                                                             (resolve-ref db val)
+                                                             val) (if added :added :retracted)]))
+                                   (sort-by last))})))
          (sort-by :timestamp)))
 
   (map

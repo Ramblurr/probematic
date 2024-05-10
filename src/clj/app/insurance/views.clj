@@ -1,10 +1,12 @@
 (ns app.insurance.views
   (:require
+   [clojure.string :as str]
    [app.email :as email]
    [app.auth :as auth]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.insurance.controller :as controller]
+   [app.insurance.domain :as domain]
    [app.queries :as q]
    [app.sardine :as sardine]
    [app.ui :as ui]
@@ -280,8 +282,9 @@ Mit freundlichen Grüßen,
         {:keys [total-needs-review]} (controller/policy-totals policy)
         has-todos? (> total-needs-review 0)]
     (when policy-draft?
-      [:div {:id "send-changes-button" :hx-swap-oob (when oob? "true")}
-       (ui/button :tag :a :label (tr [:insurance/send-changes])
+      [:div {:id "send-changes-button" :hx-swap-oob (when oob? "true")
+             :class "tooltip" :data-tooltip (tr [:insurance/send-changes-disabled-hint])}
+       (ui/button :label (tr [:insurance/send-changes])
                   :disabled? has-todos?
                   :priority :primary
                   :centered? true
@@ -529,52 +532,60 @@ Mit freundlichen Grüßen,
     [:span {:class "text-red-500" :title (tr [:private-instrument])} "P"]
     [:span {:class "text-green-500" :title (tr [:band-instrument])} "B"]))
 
-(defn instrument-form [{:keys [tr db] :as req} error {:instrument/keys [name owner make model build-year serial-number description] :as instrument}]
+(defn instrument-form
+  ([req error instrument]
+   (instrument-form req error instrument {}))
+  ([{:keys [tr db] :as req} error {:instrument/keys [name owner make model build-year serial-number description] :as instrument} {:keys [hide-owner?] :as opts}]
 
-  (let [owner-id (if (:member/member-id owner)
-                   (:member/member-id owner)
-                   (:member/member-id (auth/get-current-member req)))]
+   (let [owner-id (if (:member/member-id owner)
+                    (:member/member-id owner)
+                    (:member/member-id (auth/get-current-member req)))]
 
-    (list
-     (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error)
-     (ui/member-select :variant :left :label (tr [:instrument/owner]) :id "owner-member-id" :value owner-id :members (q/members-for-select db) :error error)
-     (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :categories (controller/instrument-categories db) :error error)
-     (ui/text-left :label (tr [:instrument/make]) :id  "make" :value make  :error error)
-     (ui/text-left :label (tr [:instrument/model]) :hint (tr [:instrument/if-available]) :id  "model" :value model :required? false :error error)
-     (ui/text-left :label (tr [:instrument/serial-number]) :hint (tr [:instrument/if-available]) :id  "serial-number" :value serial-number :required? false :error error)
-     (ui/text-left :label (tr [:instrument/build-year]) :hint (tr [:instrument/if-available]) :id  "build-year" :value build-year :required? false :error error)
-     (ui/textarea-left :label (tr [:instrument/description]) :hint (tr [:instrument/description-hint]) :name "description" :id "description" :value description :required? false :error error))))
+     (list
+      (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error)
+      (when-not hide-owner?
+        (ui/member-select :variant :left :label (tr [:instrument/owner]) :id "owner-member-id" :value owner-id :members (q/members-for-select db) :error error))
+      (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :categories (controller/instrument-categories db) :error error)
+      (ui/text-left :label (tr [:instrument/make]) :id  "make" :value make  :error error)
+      (ui/text-left :label (tr [:instrument/model]) :hint (tr [:instrument/if-available]) :id  "model" :value model :required? false :error error)
+      (ui/text-left :label (tr [:instrument/serial-number]) :hint (tr [:instrument/if-available]) :id  "serial-number" :value serial-number :required? false :error error)
+      (ui/text-left :label (tr [:instrument/build-year]) :hint (tr [:instrument/if-available]) :id  "build-year" :value build-year :required? false :error error)
+      (ui/textarea-left :label (tr [:instrument/description]) :hint (tr [:instrument/description-hint]) :name "description" :id "description" :value description :required? false :error error)))))
 
-(defn coverage-form [{:keys [tr]} error coverage  coverage-types]
-  (let [{:instrument.coverage/keys [value private? instrument item-count types]} coverage
-        {:instrument/keys [name]} instrument]
-    (list
-     (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or item-count 1) :error error)
-     (ui/money-input-left :id "value" :label (tr [:insurance/value]) :label-hint (tr [:insurance/value-hint]) :required? true :value value :error error :integer? true)
-     (ui/checkbox-group-left :label (tr [:band-private]) :id "label-private-band"
-                             :label-hint (tr [:private-instrument-payment])
-                             :checkboxes (list
-                                          (ui/radio-left :name "private-band" :id "private" :value "private" :label (tr [:private-instrument]) :checked? private?
-                                                         :hint (tr [:private-instrument-description]))
-                                          (ui/radio-left :name "private-band" :id "band" :value "band" :label (tr [:band-instrument]) :checked? (not  private?)
-                                                         :hint (tr [:band-instrument-description]))))
-     [:input {:type :hidden :name "coverage-types" :value "00000000-0000-0000-0000-000000000000"}]
-     (ui/checkbox-group-left :label (tr [:insurance/coverage-types]) :id "coverage-type"
+(defn coverage-form
+  ([req error coverage coverage-types]
+   (coverage-form req error coverage coverage-types {}))
+  ([{:keys [tr]} error coverage coverage-types {:keys [hide-private?] :as opts}]
+   (let [{:instrument.coverage/keys [value private? instrument item-count types]} coverage
+         {:instrument/keys [name]} instrument]
+     (list
+      (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or item-count 1) :error error)
+      (ui/money-input-left :id "value" :label (tr [:insurance/value]) :label-hint (tr [:insurance/value-hint]) :required? true :value value :error error :integer? true)
+      (when-not hide-private?
+        (ui/checkbox-group-left :label (tr [:band-private]) :id "label-private-band"
+                                :label-hint (tr [:private-instrument-payment])
+                                :checkboxes (list
+                                             (ui/radio-left :name "private-band" :id "private" :value "private" :label (tr [:private-instrument]) :checked? private?
+                                                            :hint (tr [:private-instrument-description]))
+                                             (ui/radio-left :name "private-band" :id "band" :value "band" :label (tr [:band-instrument]) :checked? (not  private?)
+                                                            :hint (tr [:band-instrument-description])))))
+      [:input {:type :hidden :name "coverage-types" :value "00000000-0000-0000-0000-000000000000"}]
+      (ui/checkbox-group-left :label (tr [:insurance/coverage-types]) :id "coverage-type"
 
-                             :checkboxes (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name description]}]
+                              :checkboxes (map-indexed (fn [type-idx {:insurance.coverage.type/keys [type-id name description]}]
 
-                                                        (let [checked? (m/find-first (fn [assigned-type]
-                                                                                       (= (:insurance.coverage.type/type-id assigned-type) type-id)) types)]
+                                                         (let [checked? (m/find-first (fn [assigned-type]
+                                                                                        (= (:insurance.coverage.type/type-id assigned-type) type-id)) types)]
 
-                                                          (list
-                                                           (when (= 0 type-idx)
-                                                             [:input {:type :hidden :name "coverage-types" :value type-id}])
-                                                           (ui/checkbox-left :id type-id :label name :name "coverage-types"
-                                                                             :value type-id  :hint description
-                                                                             :checked? (if (= 0 type-idx) true checked?)
-                                                                             :disabled? (= 0 type-idx)))))
+                                                           (list
+                                                            (when (= 0 type-idx)
+                                                              [:input {:type :hidden :name "coverage-types" :value type-id}])
+                                                            (ui/checkbox-left :id type-id :label name :name "coverage-types"
+                                                                              :value type-id  :hint description
+                                                                              :checked? (if (= 0 type-idx) true checked?)
+                                                                              :disabled? (= 0 type-idx)))))
 
-                                                      coverage-types)))))
+                                                       coverage-types))))))
 
 (declare insurance-instrument-coverage-table)
 
@@ -621,6 +632,140 @@ Mit freundlichen Grüßen,
                             :tag :button
                             :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
      :id "coverage-mark-as-actions")))
+
+(declare insurance-survey-table)
+(declare survey-response-table-row)
+(ctmx/defcomponent ^:endpoint create-survey-handler [req]
+  (when (util/post? req)
+    (controller/create-survey! req)
+    (insurance-survey-table (util/make-get-request req))))
+
+(ctmx/defcomponent ^:endpoint close-survey-handler [req]
+  (when (util/post? req)
+    (controller/close-survey! req)
+    (insurance-survey-table (util/make-get-request req))))
+
+(ctmx/defcomponent ^:endpoint toggle-survey-response-completion-handler [req]
+  (when (util/post? req)
+    (let [survey-response (controller/toggle-survey-response-completion! req)]
+      (survey-response-table-row (util/make-get-request req) survey-response))))
+
+(ctmx/defcomponent ^:endpoint send-survey-notifications-handler [req]
+  (when (util/post? req)
+    (controller/send-survey-notifications! req)
+    (insurance-survey-table (util/make-get-request req))))
+
+(def survey-col-classes {:$first-col     "py-2 text-left pl-2"
+                         :$mobile-col    "py-2 text-right px-2"
+                         :$no-mobile-col "hidden sm:table-cell py-2 text-right px-2"
+                         :$action-col    "relative py-2 pl-2 pr-0 text-right h-12 w-28"})
+
+(defn survey-response-table-row [{:keys [tr policy]} {:insurance.survey.response/keys [member response-id coverage-reports completed-at] :as r}]
+  (let [{:member/keys [name member-id] :keys [total]} member
+        {:keys [open completed finished?] :as summary} (domain/summarize-member-reports coverage-reports)
+        row-id (str "response-row-" response-id)
+        {:keys [$no-mobile-col $mobile-col $action-col $first-col]} survey-col-classes]
+    [:tr {:class "even:bg-gray-100 odd:bg-white" :id row-id}
+     [:td {:class $first-col}
+      (if (> (count coverage-reports) 0)
+        [:a {:href (urls/link-policy-table-member policy member) :class "link-blue"} name]
+        name)
+      [:div {:class "sm:hidden text-gray-800 text-sm"}
+       (tr [:insurance.survey/completed-count] [completed (count coverage-reports)])]]
+
+     [:td {:class $no-mobile-col} completed]
+     [:td {:class $no-mobile-col} (count coverage-reports)]
+     [:td {:class $mobile-col}
+      (if completed-at
+        (icon/checkmark {:class "w-5 h-6 text-sno-green-600 inline"})
+        (icon/xmark {:class "w-5 h-6 text-red-600 inline"}))]
+     [:td {:class $action-col}
+      (ui/button :label (if completed-at "Uncomplete" "Complete") :priority :link :size :small
+                 :hx-target (str "#" row-id)
+                 :spinner? true
+                 :hx-vals {:response-id (str response-id)}
+                 :hx-post (util/endpoint-path toggle-survey-response-completion-handler))]]))
+
+(defn insurance-survey-table [{:keys [tr db] :as req}]
+  (let [policy (:policy req)
+        {:keys [open-surveys closed-surveys]} (controller/survey-table-items req)
+        has-open-surveys? (seq open-surveys)
+        {:insurance.survey/keys [survey-name closes-at responses survey-id] :as active-survey} (first open-surveys)
+        end-date (t/>> (t/instant) (t/new-period 4 :weeks))
+        toggle-rw-script "on click toggle .hidden on .survey-ro then toggle .hidden on .survey-rw"
+        {:keys [$no-mobile-col $mobile-col $action-col $first-col]} survey-col-classes]
+    [:div {:id (util/id :comp/insurance-survey-table)}
+     (ui/panel {:title  (tr [:insurance.survey/admin-title])
+                :subtitle (tr [:insurance.survey/admin-subtitle])
+                :buttons (list
+                          (when-not has-open-surveys?
+                            (ui/button :label (tr [:insurance.survey/start-survey]) :priority :primary
+                                       :attr {:_ "on click add .hidden to me then remove .hidden from .create-survey-form then add .hidden to .no-surveys"})))}
+
+               [:div {:class "mb-2"}
+                [:form {:class "create-survey-form hidden" :hx-post (util/endpoint-path create-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)}
+                 (ui/text-left :label (tr [:insurance.survey/survey-name]) :id "survey-name" :value (:insurance.policy/name policy))
+                 (ui/datetime-left :label (tr [:insurance.survey/closes-at]) :hint (tr [:insurance.survey/closes-at-hint]) :id "closes-at" :value end-date :required? true)
+                 (ui/form-buttons
+                  :buttons-right (list
+                                  (ui/button {:label (tr [:action/open-insurance-survey]) :priority :primary-orange})))]]
+               (when-not active-survey
+                 [:p {:class "no-surveys"} (tr [:insurance.survey/no-surveys])])
+
+               (when active-survey
+                 [:div
+                  [:div {:class "mb-2 sm:flex sm:items-center"}
+                   [:div
+                    {:class "sm:flex-auto"}
+                    [:div {:class "survey-ro"}
+                     (ui/dl (ui/dl-item (tr [:insurance.survey/survey-name]) survey-name)
+                            (ui/dl-item (tr [:insurance.survey/closes-at]) (ui/format-dt closes-at))
+                            (ui/dl-item (tr [:time-left]) (ui/humanize-dt closes-at)))]
+                    [:div {:class "survey-rw hidden"}
+                     (ui/dl (ui/dl-item ""
+                                        (ui/text :label (tr [:insurance.survey/survey-name]) :id "survey-name" :value (:insurance.policy/name policy) :required? true))
+                            (ui/dl-item ""
+                                        (ui/input-datetime2 :value end-date :label (tr [:insurance.survey/closes-at]) :name "closes-at"))
+                            (ui/dl-item ""
+                                        [:div {:class "flex space-x-4"}
+                                         (ui/button :label (tr [:action/cancel]) :priority :white :attr {:_ toggle-rw-script})
+                                         (ui/button :label (tr [:action/save]) :priority :primary)]))]]
+
+                   [:div {:class "mt-4 sm:ml-16 sm:mt-0 flex sm:flex-none space-x-4"}
+                    (ui/button :label (tr [:insurance.survey/edit-survey]) :priority :white
+                               :class "survey-ro"
+                               :attr {:_ toggle-rw-script})
+                    (ui/button :label (tr [:insurance.survey/close-survey]) :priority :white
+                               :class "survey-ro"
+                               :hx-post (util/endpoint-path close-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)
+                               :hx-vals {:survey-id (str survey-id)}
+                               :attr {:_ (ui/confirm-modal-script
+                                          (tr [:insurance.survey/confirm-close-title])
+                                          (tr [:insurance.survey/confirm-close])
+                                          (tr [:insurance.survey/close-survey])
+                                          (tr [:action/cancel]))})
+                    (ui/button :label (tr [:insurance.survey/send-notifications]) :priority :primary
+                               :class "survey-ro"
+                               :icon icon/envelope
+                               :hx-post (util/endpoint-path send-survey-notifications-handler) :hx-target (util/hash :comp/insurance-survey-table)
+                               :hx-vals {:survey-id (str survey-id)}
+                               :attr {:_ (ui/confirm-modal-script
+                                          (tr [:reminders/confirm-remind-all-title])
+                                          (tr [:reminders/confirm-remind-all])
+                                          (tr [:reminders/confirm])
+                                          (tr [:action/cancel]))})]]
+                  [:table {:class "pt-4 sm:pt-0 table-auto min-w-full"}
+
+                   [:thead {:class "hidden sm:table-header-group"}
+                    [:tr
+                     [:th {:class $first-col} (tr [:col/member])]
+                     [:th {:class $no-mobile-col} (tr [:col/num-reviewed])]
+                     [:th {:class $no-mobile-col} (tr [:col/total-instruments])]
+                     [:th {:class $mobile-col} (tr [:col/completed?])]
+                     [:th {:class $action-col}]]]
+                   [:tbody
+                    (map (partial survey-response-table-row req)
+                         responses)]]]))]))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [tr] :as req}]
   insurance-instrument-coverage-table-mark-as
@@ -777,25 +922,11 @@ Mit freundlichen Grüßen,
     (response/hx-redirect (urls/link-policy (:policy (controller/delete-coverage! req))))))
 
 (defn photo-upload-widget
-  "Renders photo upload dropzone. Must be used insize a div/form with the dropzone class and an id of imageUpload"
+  "Renders photo upload dropzone. Must be used inside a div/form with the dropzone class and an id of imageUpload"
   ([]
    (photo-upload-widget nil))
   ([url]
    [:div
-    [:script
-     (hiccup.util/raw-string
-      (format "
-document.addEventListener('DOMContentLoaded', function() {
-  Dropzone.options.imageUpload = {
-    %s
-    paramName: 'file',
-    acceptedFiles: '.jpeg,.jpg,.png,.gif',
-    maxFileSize: 10, //MB
-//    addRemoveLinks: true,
-  };
-});
-" (if url (format "url: \"%s\"," url) "")))]
-
     [:div {:class "mt-2 sm:col-span-2 sm:mt-0"}
      [:div {:class "dz-message flex justify-center rounded-md px-6 pt-5 pb-6"}
       [:div {:class "space-y-1 text-center"}
@@ -805,7 +936,29 @@ document.addEventListener('DOMContentLoaded', function() {
         [:label {:for "file-upload" :class "relative rounded-md bg-white font-medium text-sno-orange-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-sno-orange-500 focus-within:ring-offset-2 hover:text-sno-orange-500"}
          [:span "Upload a file"]]
         [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
-       [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]]))
+       [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]
+
+    [:script
+     (hiccup.util/raw-string
+      (format "
+function initUpload() {
+  try {
+    Dropzone.options.imageUpload = {
+      %s
+      paramName: 'file',
+      acceptedFiles: '.jpeg,.jpg,.png,.gif',
+      maxFileSize: 10, //MB
+  //    addRemoveLinks: true,
+    };
+  } catch (e) {
+    console.error(e);
+  }
+}
+initUpload();
+document.addEventListener('DOMContentLoaded', function() {
+  initUpload();
+}); "
+              (if url (format "url: \"%s\"," url) "")))]]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page-rw [{:keys [db tr] :as req}]
   insurance-coverage-delete
@@ -839,7 +992,7 @@ document.addEventListener('DOMContentLoaded', function() {
                          [:div {:class "relative max-w-lg sm:max-w-xs dropzone" :id "imageUpload"}
                           (photo-upload-widget (urls/link-instrument-image-upload instrument-id))]]]
                        (ui/form-left-section :label (tr [:insurance/instrument-coverage]) :hint (tr [:insurance/coverage-for] [(:insurance.policy/name policy)]))
-                       (coverage-form {:tr tr :path path} error coverage coverage-types)
+                       (coverage-form req error coverage coverage-types)
                        (when form-error
                          [:div
                           [:p {:class "mt-2 text-right text-red-600"}
@@ -1023,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             coverage (q/retrieve-coverage db coverage-id)
             policy (:insurance.policy/_covered-instruments coverage)
             coverage-types (:insurance.policy/coverage-types policy)
-            coverage (first (controller/enrich-coverages policy coverage-types [coverage]))
+            coverage (first (domain/enrich-coverages policy coverage-types [coverage]))
             {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
             photos (controller/list-image-uris req instrument-id)]
         (assert coverage)
@@ -1080,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', function() {
                    [:form {:hx-post (path ".") :class "space-y-8" :hx-target (hash ".")}
                     [:input {:type :hidden :name "policy-id" :value policy-id}]
                     [:input {:type :hidden :name "instrument-id" :value instrument-id}]
-                    (coverage-form {:tr tr :path path} error nil coverage-types)
+                    (coverage-form req error nil coverage-types)
                     (ui/form-buttons
                      :buttons-left
                      (list
@@ -1178,30 +1331,26 @@ document.addEventListener('DOMContentLoaded', function() {
             [:div {:class "overflow-hidden md:mx-0 md:rounded-lg"}
              (insurance-instrument-coverage-table req)]]]]]]
 
-       [:div {:class "mt-2 pt-8 bg-white w-full"}
-        [:div {:class ""}
-         [:div {:class "px-4 sm:px-6 lg:px-8 sm:flex sm:items-center"}
-          [:div {:class "sm:flex-auto"}
-           [:h1 {:class "text-2xl font-semibold text-gray-900"}]
-           [:p {:class "mt-2 text-sm text-gray-700"} ""]]
-          [:div {:class "mt-4 sm:mt-0 sm:ml-16 flex sm:flex-row sm:space-x-4"}]]]
+       (when (empty? instrument-coverages)
+         [:div {:class "mt-2 pt-8 bg-white w-full"}
+          [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
 
-        [:div {:class "mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8"}
-         (when (empty? instrument-coverages)
            [:div
             [:div
              "You should add a coverage to an instrument"]
             [:div
              (ui/link-button :label (tr [:insurance/instrument-coverage])
                              :attr {:href (urls/link-coverage-create policy-id)}
-                             :priority :primary :icon icon/plus)]])]]])))
+                             :priority :primary :icon icon/plus)]]]])])))
 
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
+  create-survey-handler close-survey-handler toggle-survey-response-completion-handler send-survey-notifications-handler
   [:div
    (insurance-detail-page-header req false)
+   (insurance-survey-table req)
+   (insurance-instrument-coverage req)
    (insurance-coverage-types req false false)
-   (insurance-category-factors req false false)
-   (insurance-instrument-coverage req)])
+   (insurance-category-factors req false false)])
 
 (ctmx/defcomponent ^:endpoint insurance-create-page [{:keys [db] :as req}]
   (let [this-year (t/year (t/now))
@@ -1458,3 +1607,329 @@ document.addEventListener('DOMContentLoaded', function() {
                             :id "send-payment"
                             :icon icon/envelope
                             :priority :primary)]])]))
+
+(defn dashboard-survey-widget [{:keys [tr db] :as req} survey-response dismiss-endpoint-path dismiss-target]
+  (let [{:member/keys [name] :as member} (:insurance.survey.response/member survey-response)
+        open-items (q/open-survey-for-member-items db member)
+        has-open-items? (not= 0 open-items)
+        time-dur (java.lang.String/format java.util.Locale/GERMAN "%.2f" (to-array [(float (* open-items 0.75))]))]
+    [:div {:class "flex items-center justify-center space-x-4"}
+     [:div
+      [:img {:class "cursor-pointer pbj-frozen hidden w-32 sm:w-16" :src "/img/peanut_butter_jelly_time_still.gif"
+             :_ "on click remove .hidden from .pbj-live then add .hidden to me"}]
+      [:img {:class "cursor-pointer pbj-live w-32 sm:w-16" :src "/img/peanut_butter_jelly_time.gif"
+             :_ "on click remove .hidden from .pbj-frozen then add .hidden to me"}]]
+     [:div
+      [:p (tr [:insurance.survey/cta-p1] [name])]
+      (if has-open-items?
+        [:p (tr [:insurance.survey/cta-p2] [open-items time-dur])]
+        [:p (tr [:insurance.survey/cta-p2-none])])
+      [:div {:class "mt-2 flex items-center space-x-4"}
+       (if has-open-items?
+         (ui/link-button
+          :href (urls/link-insurance-survey-start "123")
+          :label (tr [:insurance.survey/start-button]) :priority :primary :icon icon/arrow-right)
+         (ui/link-button
+          :href (urls/link-insurance-add-coverage (-> survey-response :survey :insurance.survey/policy :insurance.policy/policy-id))
+          :label (tr [:instrument.coverage/create-button]) :priority :primary))
+       (when-not has-open-items?
+         (ui/button :label (tr [:action/im-finished]) :priority :white :hx-post dismiss-endpoint-path :hx-target dismiss-target))]]]))
+
+(defn band-or-private-bubble [tr private?]
+  (ui/bool-bubble (not private?) {true "Band" false "Privat"}))
+
+(defn kw->hint [kw]
+  (keyword (namespace kw) (str (name kw) "-hint")))
+
+(defn instrument-card-detail-data [tr k v]
+  (let [tooltip-k (kw->hint k)
+        tooltip (tr [tooltip-k])
+        has-tooltip? (not= tooltip (tr [:missing]))]
+    {:label (if has-tooltip? [:span {:class "tooltip underline decoration-dashed" :data-tooltip tooltip}
+                              (tr [k])]
+                (tr [k]))
+     :value v}))
+
+(defn instrument-card [{:keys [tr]} {:insurance.survey.report/keys [coverage]}]
+  (let [{:instrument.coverage/keys [instrument private? value item-count cost types]} coverage
+        {:instrument/keys [name build-year description make model serial-number]} instrument
+        _ (tap> {:instr-card-i instrument :coverage coverage})
+        _ (assert instrument "Instrument is required")
+        _ (assert coverage "Coverage is required")
+        item-image nil ;; TODO "/img/tuba-robot-boat-1000.jpg"
+        make-detail (partial instrument-card-detail-data tr)
+        _ (tap> {:coverage coverage :value value :cost cost :instrument instrument})
+        details [(make-detail :instrument/description description)
+                 (make-detail :instrument.coverage/private? (band-or-private-bubble tr private?))
+                 (when (and private?)
+                   (make-detail :instrument.coverage/cost
+                                (if private?
+                                  [:span  {:class "text-red-600 tooltip underline decoration-dashed" :data-tooltip (tr [:instrument.coverage/cost-hint-direct])} (ui/money-format cost :EUR)]
+                                  (ui/money-format cost :EUR))))
+                 (make-detail :instrument.coverage/value (ui/money-format value :EUR))
+                 (make-detail :instrument.coverage/item-count (or item-count 1))
+                 (make-detail :instrument.coverage/types (str/join ", " (map :insurance.coverage.type/name types)))
+                 (make-detail :instrument/make make)
+                 (make-detail :instrument/model model)
+                 (make-detail :instrument/serial-number serial-number)
+                 (make-detail :instrument/build-year build-year)]]
+
+    [:li {:class "overflow-hidden rounded-xl border border-gray-200 divide-y divide-gray-200 "}
+     [:div {:class "flex items-center gap-x-4 bg-gray-50 px-6 pt-3 pb-3"}
+      #_[:img
+         {:src "https://tailwindui.com/img/logos/48x48/tuple.svg",
+          :alt "Tuple",
+          :class
+          "h-12 w-12 flex-none rounded-lg bg-white object-cover ring-1 ring-gray-900/10"}]
+      [:div {:class "text-lg font-medium leading-6 text-gray-900"}
+       name]]
+     (when item-image
+       [:div {:class "flex items-center justify-center"}
+        [:img {:src item-image :class "w-full sm:w-1/2"}]])
+     [:dl {:class " divide-y divide-gray-100 px-6 py-2 text-sm leading-6"}
+      (map (fn [{:keys [label value]}]
+             (when label
+               [:div
+                {:class "flex justify-between gap-x-4 py-3"}
+                [:dt {:class "text-gray-500"} label]
+                [:dd {:class "text-gray-700 text-right"}
+                 value]]))
+           details)]
+     #_[:div
+        {:class "-mt-px flex divide-x divide-gray-200"}
+        [:div
+         {:class "flex w-0 flex-1"}
+         [:button
+          {:class "relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-700  hover:bg-sno-orange-200 focus:bg-sno-orange-500 focus:text-white"}
+          (icon/pencil {:class "h-5 w-5"})
+          "Change"]]
+        [:div
+         {:class "-ml-px flex w-0 flex-1"}
+         [:button
+          {:class "relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-700 hover:bg-sno-green-200 focus:bg-sno-green-600 focus:text-white"}
+          (icon/checkmark {:class "h-5 w-5"})
+          "Approve"]]]]))
+
+;; (instrument-card nil nil nil)
+
+(defn build-survey-flow [req]
+  {:start-flow        :used
+   :used          {:question {:primary "Was this used at a SNO gig in the past year?"}
+                   :answers  [{:label "No" :icon icon/xmark  :next-flow-key :go-private :vals {:decisions [:confirm-not-band]}}
+                              {:label "Yes" :icon icon/checkmark :next-flow-key :keep-insured :vals {:decisions [:confirm-band]}}]}
+   :keep-insured {:question {:primary "Do you want to keep this instrument insured?"}
+                  :answers  [{:label "No" :icon icon/xmark  :next-flow-key :confirm-band-removal}
+                             {:label "Yes" :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
+   :confirm-band-removal {:question {:primary "Are you sure you want to remove the insurance?"
+                                     :secondaries ["The band pays for the cost of the insurance since it is a band instrument."]}
+                          :answers [{:label "No, keep the insurance" :next-flow-key :data-check}
+                                    {:label "Yes, remove it" :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
+   :confirm-private-removal {:question {:primary "Are you sure you want to remove the insurance?"}
+                             :answers [{:label "No, keep the insurance" :next-flow-key :confirm-go-private}
+                                       {:label "Yes, remove it" :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
+   :go-private {:question {:primary "Do you want to pay to keep it insured?"
+                           :secondaries ["Since this wasn't used at a gig in the last year you the band can no longer pay for it."
+                                         "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about XX€ per year."]}
+                :answers [{:label "No, stop insurance" :icon icon/xmark :next-flow-key :confirm-private-removal}
+                          {:label "Yes, I'll pay" :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
+   :confirm-go-private {:question {:primary "You will have to pay XXXEUR per year. Is that OK?"}
+                        :answers [{:label "No" :next-flow-key :go-private}
+                                  {:label "Yes, I'll pay it" :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
+   :data-check {:question {:primary "Is all the data shown still correct?" :secondaries ["You might want to change the insured value if the market value has change or if you want to change the type of coverage."]}
+                :answers  [{:label "No" :icon icon/xmark  :next-flow-key :data-edit}
+                           {:label "Yes" :icon icon/checkmark  :next-flow-key :complete :vals {:decisions [:confirm-data-ok]}}]}
+   :data-edit {:next-flow-key :complete}})
+
+(defn valid-survey-flow-transition? [flow current-key next-key]
+  (let [current-answers (get-in flow [current-key :answers])
+        valid-answer-next-steps (set (map :next-flow-key current-answers))]
+    #_(tap> {:current-answers current-answers :flow flow :curr current-key :next next-key :valid-steps valid-answer-next-steps :valid? (contains? valid-answer-next-steps next-key)})
+    (contains? valid-answer-next-steps next-key)))
+
+(declare survey-question-page)
+(declare survey-start-page)
+(declare survey-edit-page)
+
+(defn survey-flow-invalid-transition []
+  [:div "That isn't allowed"])
+
+(defn prepare-next-active-report [{:keys [db] :as req}]
+  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)
+        todo-reports (filter #(nil? (:insurance.survey.report/completed-at %)) coverage-reports)]
+    {:active-report (first todo-reports)
+     :todo-reports todo-reports
+     :total-reports (count coverage-reports)
+     :total-todo (count todo-reports)
+     :current-idx  (inc (- (count coverage-reports) (count todo-reports)))
+     :new-step? (some? (-> (util/unwrap-params req) :new-step))}))
+
+(defn show-encouragement? [current-idx total-todo]
+  (or
+    ;; show on 2nd item, cause at least they did one
+   (= current-idx 2)
+    ;; otherwise show every 4th item, unless its the 2nd to last one
+   (and (= 0 (mod current-idx 4))
+        (not= current-idx (dec total-todo)))))
+
+(defn survey-report-interstitial [{:keys [tr] :as req}]
+  (let [{:keys [active-report todo-reports total-reports total-todo current-idx]} (prepare-next-active-report req)
+        total-completed (- total-reports total-todo)
+        {:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)]
+    (if (= 0 total-todo)
+      [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
+       [:div {:data-celebrate "true"}]
+       [:div {:class "bg-white min-h-80 mt-8 gap-6 p-6 flex flex-col items-center justify-center"}
+        [:div {:class "flex items-center justify-center text-sno-green-500"}
+         (icon/shield-check-outline {:class "h-32 w-32"})
+         [:h1 {:class "text-3xl font-bold"} (tr [:insurance.survey/all-done])]]
+        [:div
+         (ui/button :size :xlarge  :label (tr [:action/celebrate]) :priority :white :attr {:_ "on click call celebrate()"})]]]
+
+      (if (show-encouragement? current-idx total-todo)
+        [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
+         [:form {:class (ui/cs "mx-auto mt-8 max-w-2xl gap-6 p-6 bg-white min-h-80") :hx-ext "class-tools"}
+          [:div {:class "flex items-center space-x-2"}
+           (ui/thumbs-up-animation)
+           [:div {:class "transition-opacity opacity-0 hidden" :classes "remove hidden:1.1s & remove opacity-0:1.1s"}
+            [:h1 {:class "text-2xl"} (tr [:good-job])]
+            [:p {:class "opacity-0 transition-opacity" :classes "remove opacity-0:1.5s"}
+             (if (> total-completed 1)
+               (tr [:youve-completed-plural] [total-completed total-todo])
+               (tr [:youve-completed-sing] [total-todo]))]
+            [:div {:class "opacity-0 transition-opacity" :classes "remove opacity-0:1.5s"}
+             (ui/button :label (tr [:action/keep-going]) :icon icon/arrow-right
+                        :hx-get (util/endpoint-path survey-start-page)
+                        :hx-target (util/hash :comp/survey-page)
+                        :hx-vals {:new-step true})]]]]]
+        (survey-start-page req)))))
+
+(defn survey-flow-complete [{:keys [tr] :as req} flow decisions active-report]
+  (let [decisions (set (map keyword decisions))]
+    (controller/resolve-survey-report! req active-report decisions)
+    (survey-report-interstitial (util/make-get-request req {:transitioning? true}))))
+
+(ctmx/defcomponent ^:endpoint survey-edit-instrument-handler [{:keys [db tr] :as req}]
+  (when (util/post? req)
+    (let [result (controller/update-instrument-and-coverage! req)
+          error (:error result)
+          form-error (:form-error error)
+          {:keys [decisions] :as params} (util.http/unwrap-params req)
+          decisions (util/ensure-coll decisions)
+          flow (build-survey-flow req)
+          active-report (controller/survey-report-for-member req)]
+      #_(tap> {:error error :form-error form-error :next-flow-key next-flow-key})
+      (if error
+        (survey-edit-page req decisions active-report error form-error)
+        (survey-flow-complete (util/make-get-request req) flow decisions active-report)))))
+
+(defn survey-edit-page [{:keys [tr] :as req} decisions active-report error form-error]
+  (let [{:insurance.survey.report/keys [coverage]} active-report
+        {:instrument.coverage/keys [instrument private? value item-count cost types coverage-id]} coverage
+        {:instrument/keys [name build-year description make model serial-number instrument-id owner]} instrument
+        policy (:insurance.policy/_covered-instruments coverage)
+        coverage-types (:insurance.policy/coverage-types policy)]
+    (tap> {:report active-report
+           :coverage coverage
+           :ins instrument
+           :cts coverage-types
+           :upload-url (urls/link-instrument-image-upload instrument-id)})
+    [:form {:id (util/id :comp/survey-page-flow)
+            :class "bg-white mx-auto max-w-2xl overflow-hidden p-6 mt-8 rounded-md"
+            :hx-post (util/endpoint-path survey-edit-instrument-handler)
+            :hx-target (util/hash :comp/survey-page-flow)}
+
+     [:input {:type :hidden :name "report-id" :value (str (:insurance.survey.report/report-id active-report))}]
+     [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
+     [:input {:type :hidden :name "instrument-id" :value (str instrument-id)}]
+     [:input {:type :hidden :name "coverage-id" :value (str coverage-id)}]
+     [:input {:type :hidden :name "owner-member-id" :value (str (:member/member-id owner))}]
+     [:input {:type :hidden :name "private-band" :value (if private? "private" "band")}]
+     (map (fn [v]
+            [:input {:type :hidden :name :decisions :value v}]) decisions)
+     (when form-error
+       [:div
+        [:p {:class "mt-2 text-right text-red-600"}
+         (icon/circle-exclamation {:class "h-5 w-5 inline-block mr-2"})
+         (tr [form-error])]])
+     (instrument-form req error instrument {:hide-owner? true})
+     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:py-5 mt-2"}
+      [:div {:class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"} (tr [:instrument/photo-upload])]
+      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
+       [:div {:class "relative max-w-lg sm:max-w-xs dropzone" :id "imageUpload"}
+        (photo-upload-widget (urls/link-instrument-image-upload instrument-id))]]]
+     (coverage-form req error coverage coverage-types {:hide-private? true})
+     [:div {:class "flex justify-end"}
+      (ui/button :label (tr [:action/save]) :priority :primary :spinner? true)]]))
+
+(ctmx/defcomponent ^:endpoint survey-flow-progress [{:keys [db tr] :as req}]
+  (let [{:keys [current-flow-key next-flow-key decisions] :as params} (util.http/unwrap-params req)
+        decisions (util/ensure-coll decisions)
+        next-flow-key (keyword next-flow-key)
+        current-flow-key (keyword current-flow-key)
+        flow (build-survey-flow req)
+        valid-transition? (valid-survey-flow-transition? flow current-flow-key next-flow-key)
+        active-report (controller/survey-report-for-member req)]
+    ;; (tap> [:current-flow-key current-flow-key :next-flow-key next-flow-key :params params :active active-report :valid? valid-transition?])
+    (if valid-transition?
+      (condp = next-flow-key
+        :complete (survey-flow-complete req flow decisions active-report)
+        :data-edit (survey-edit-page req decisions active-report nil nil)
+        (survey-question-page req flow decisions active-report next-flow-key))
+      (survey-flow-invalid-transition))))
+
+(defn- survey-answer-button
+  [decisions endpoint {:keys [label icon vals next-flow-key]}]
+  (let [decisions (concat (:decisions vals) decisions)
+        final-vals {:next-flow-key next-flow-key}
+        final-vals (assoc final-vals :decisions decisions)]
+    ;; (tap> [:combined-decisions decisions :old-de decisions :new-de (:decisions vals) :vals final-vals])
+    (ui/button :label label :priority :white :icon icon
+               :spinner? true
+               ;; :disabled? true
+               :hx-target (if (= :complete next-flow-key)
+                            (util/hash :comp/survey-page)
+                            (util/hash :comp/survey-page-flow))
+               :hx-post endpoint
+               :hx-vals final-vals
+
+               :attr {;; :_            "on load wait 1s then set @disabled to null end"
+                      ;; for when using view transition api
+                      ;; :hx-swap      "innerHTML transition:true"
+                      :hx-swap      "outerHTML swap:0.6s"})))
+
+(defn survey-question-page [{:keys [tr] :as req} flow decisions active-report current-flow-key]
+  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)
+        transitioning? (:transitioning? req)
+        todo-reports                                                                   (filter #(nil? (:insurance.survey.report/completed-at %)) coverage-reports)
+        {:keys [question answers]}                                                     (get flow current-flow-key)
+        {:keys [primary secondaries]}                                                  question]
+    [:div {:id (util/id :comp/survey-page-flow) :class (ui/cs  "mx-auto max-w-2xl overflow-hidden")}
+     [:form {:class (ui/cs "mx-auto mt-8 max-w-2xl gap-6 p-6 bg-white rounded-md" (when transitioning? "slide-me-in-out"))}
+      [:input {:type :hidden :name "report-id" :value (str (:insurance.survey.report/report-id active-report))}]
+      [:input {:type :hidden :name "current-flow-key" :value current-flow-key}]
+      [:div {:id "survey-card-question"
+             ;; for when using view transition api
+             ;; :class "slide-it"
+             :class "slide-it slide-me-in-out"}
+       [:p {:class "text-center text-lg"} primary]
+       (map (fn [s]
+              [:p {:class "text-center text-gray-500"} s]) secondaries)
+       [:div {:class "flex gap-x-2 items-center justify-center mt-2"}
+        (map (partial survey-answer-button decisions (util/endpoint-path survey-flow-progress)) answers)]
+       [:div {:class "htmx-indicator pulsate text-center text-gray-500 mt-2"} (tr [:updating])]]
+      [:ul {:role "list" :class "grid grid-cols-1 gap-x-6 gap-y-8 mb-2"}
+       (instrument-card req active-report)]]]))
+
+(ctmx/defcomponent ^:endpoint survey-start-page [{:keys [db tr] :as req}]
+  survey-flow-progress
+  survey-edit-instrument-handler
+  (let [{:as data :keys [active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req)
+        {:keys [start-flow] :as flow} (build-survey-flow req)]
+    (tap> data)
+    (if (= 0 total-todo)
+      (survey-report-interstitial (util/make-get-request req {:transitioning? true}))
+      [:div {:id :comp/survey-page}
+       [:div {:class (ui/cs "flex justify-center items-center mt-10" (when new-step? "steps-new-step"))}
+        (ui/step-circles total-reports current-idx)]
+       [:div {:class "survey-panel-fade-in"}
+        (survey-question-page req flow [] active-report start-flow)]])))

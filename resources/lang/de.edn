@@ -1,5 +1,4 @@
-{
- :my-profile "Mein Profil"
+{:my-profile "Mein Profil"
  :motivation
  {:none "-",
   :very-high "Sehr motiviert!",
@@ -9,7 +8,7 @@
   :very-low "Gar nicht Motiviert!"},
  :private-instruments "Private Instrumente",
  :insurance
- {:dashboard-title "Versicherungs-TODOs"
+ {:dashboard-title "Versicherungs Team TODOs"
   :total-needs-review-tooltip "Insgesamt Instrumente, die einer Überprüfung bedürfen"
   :total-total-changed-tooltip "Gesamtzahl der geänderten Instrumente"
   :total-total-removed-tooltip "Gesamtzahl der entfernten Instrumente"

@@ -71,10 +71,8 @@
 (defn body-end [relative-prefix]
   (list
    (script relative-prefix "hyperscript.org@0.9.12.js")
-   ;; (script relative-prefix "hyperscript.org@0.9.7.js")
-   ;; (script relative-prefix "htmx@1.9.2.js")
-   (script relative-prefix "htmx@1.9.6.js")
-   ;; (script relative-prefix "htmx.js")
+   (script relative-prefix "htmx.org@1.9.12.js")
+   (script relative-prefix "class-tools@1.9.12.js")
    (script relative-prefix "nprogress.js")
    (script relative-prefix "popperjs@2-dev.js")
    (script relative-prefix "tippy@6-dev.js")
@@ -102,13 +100,15 @@
 
 (defn html5-response
   ([body] (html5-response nil body))
-  ([{:keys [js title]} body]
+  ([{:keys [js extra-scripts title]} body]
    (html-response
     (html5-safe
      (head title nil)
      [:body (ctmx.render/walk-attrs body)
       (conj
        (body-end nil)
+       (when extra-scripts
+         (map #(apply script %) extra-scripts))
        (when js (map (partial script nil) js)))]))))
 
 (defn html5-response-absolute
