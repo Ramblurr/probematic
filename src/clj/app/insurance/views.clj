@@ -535,7 +535,7 @@ Mit freundlichen Grüßen,
 (defn instrument-form
   ([req error instrument]
    (instrument-form req error instrument {}))
-  ([{:keys [tr db] :as req} error {:instrument/keys [name owner make model build-year serial-number description] :as instrument} {:keys [hide-owner?] :as opts}]
+  ([{:keys [tr db] :as req} error {:instrument/keys [name owner make model build-year serial-number description category] :as instrument} {:keys [hide-owner?] :as opts}]
 
    (let [owner-id (if (:member/member-id owner)
                     (:member/member-id owner)
@@ -545,7 +545,7 @@ Mit freundlichen Grüßen,
       (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error)
       (when-not hide-owner?
         (ui/member-select :variant :left :label (tr [:instrument/owner]) :id "owner-member-id" :value owner-id :members (q/members-for-select db) :error error))
-      (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :categories (controller/instrument-categories db) :error error)
+      (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :value (:instrument.category/category-id category) :categories (controller/instrument-categories db) :error error)
       (ui/text-left :label (tr [:instrument/make]) :id  "make" :value make  :error error)
       (ui/text-left :label (tr [:instrument/model]) :hint (tr [:instrument/if-available]) :id  "model" :value model :required? false :error error)
       (ui/text-left :label (tr [:instrument/serial-number]) :hint (tr [:instrument/if-available]) :id  "serial-number" :value serial-number :required? false :error error)
