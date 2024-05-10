@@ -918,7 +918,7 @@ Mit freundlichen Grüßen,
        [:div {:class (ui/cs col-all number number-total)} (ui/money total-cost :EUR)]]]]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-delete [{:keys [db tr] :as req}]
-  (when (util/delete? req)
+  (when (and (q/insurance-team-member? db (auth/get-current-member req)) (util/delete? req))
     (response/hx-redirect (urls/link-policy (:policy (controller/delete-coverage! req))))))
 
 (defn photo-upload-widget
@@ -964,6 +964,7 @@ document.addEventListener('DOMContentLoaded', function() {
   insurance-coverage-delete
   (let [post? (util/post? req)
         result (when post? (controller/update-instrument-and-coverage! req))
+        insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
         error (:error result)
         form-error (:form-error error)]
     (if (and post? (not error))
@@ -1001,15 +1002,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
                        (ui/form-buttons
                         :buttons-left (list
-                                       (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
-                                                   :hx-delete (util/endpoint-path insurance-coverage-delete)
-                                                   :hx-target (hash ".")
-                                                   :hx-vals   {:coverage-id (str coverage-id)}
-                                                   :attr      {:_ (ui/confirm-modal-script
-                                                                   (tr [:action/confirm-generic])
-                                                                   (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
-                                                                   (tr [:action/confirm-delete])
-                                                                   (tr [:action/cancel]))}}))
+                                       (when insurance-team-member?
+                                         (ui/button {:label     (tr [:action/delete]) :priority :white-destructive
+                                                     :hx-delete (util/endpoint-path insurance-coverage-delete)
+                                                     :hx-target (hash ".")
+                                                     :hx-vals   {:coverage-id (str coverage-id)}
+                                                     :attr      {:_ (ui/confirm-modal-script
+                                                                     (tr [:action/confirm-generic])
+                                                                     (tr [:action/confirm-delete-instrument] [(:instrument/name instrument)])
+                                                                     (tr [:action/confirm-delete])
+                                                                     (tr [:action/cancel]))}})))
                         :buttons-right (list
                                         (ui/link-button {:label (tr [:action/cancel]) :priority :white
                                                          :attr {:href (urls/link-policy policy)}})
