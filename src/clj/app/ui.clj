@@ -812,7 +812,7 @@
        [:input {:type "number"
                 :min min
                 :step step
-                :placeholder "0.00" :value value :required required? :name id :id id
+                :placeholder "0" :value value :required required? :name id :id id
                 :class (cs
                         "text-right pl-7 pr-12"
                         "block w-full rounded-md shadow-sm sm:text-sm border-0 ring-1 ring-inset focus:ring-2 focus:ring-inset"
