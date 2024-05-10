@@ -1859,8 +1859,9 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
     [:form {:id (util/id :comp/survey-page-flow)
             :class "bg-white mx-auto max-w-2xl overflow-hidden p-6 mt-8 rounded-md"
             :hx-post (util/endpoint-path survey-edit-instrument-handler)
-            :hx-target (util/hash :comp/survey-page)}
-
+            :hx-target (if error
+                         (util/hash :comp/survey-page-flow)
+                         (util/hash :comp/survey-page))}
      [:input {:type :hidden :name "report-id" :value (str (:insurance.survey.report/report-id active-report))}]
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
      [:input {:type :hidden :name "instrument-id" :value (str instrument-id)}]
