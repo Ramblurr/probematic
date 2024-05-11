@@ -1,76 +1,31 @@
+
 (ns app.ledger.controller
   (:require
-   [app.config :as config]
    [app.datomic :as d]
    [app.errors :as errors]
    [app.ledger.domain :as domain]
    [app.queries :as q]
    [app.schemas :as s]
-   [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
-   [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [malli.util :as mu]
-   [medley.core :as m]
    [tick.core :as t]))
-
-(defn balance-adjustment-datoms
-  "Calculates the adjustment datoms for the specified transaction"
-  [ledger entry]
-  (let [balance-before (:ledger/balance ledger)
-        entry-amount (:ledger.entry/amount entry)
-        balance-after (+ balance-before entry-amount)]
-    [[:db/add (d/ref ledger) :ledger/entries (:db/id entry)]
-     [:db/add (d/ref ledger) :ledger/balance balance-after]]))
-
-(defn append-balance-adjustment-datoms
-  "Appends the datomic transaction commands necessary to adjust balances
-  for the transaction"
-  [ledger transaction]
-  (concat [transaction] (balance-adjustment-datoms ledger transaction)))
-
-(defn append-entry-metadata-datoms [metadata entry-tmpid datoms]
-  (if metadata
-    (concat datoms
-            [(merge metadata {:db/id "metadata"})
-             [:db/add entry-tmpid :ledger.entry/metadata "metadata"]])
-    datoms))
 
 (defn new-member-ledger! [conn {:member/keys [member-id] :as member}]
   (if-let [ledger (q/retrieve-ledger (datomic/db conn) member-id)]
     ledger
-    (let [result (datomic/transact conn {:tx-data [(domain/new-member-ledger-datom (str member-id) (sq/generate-squuid) (d/ref member))]})]
+    (let [result (datomic/transact conn {:tx-data (domain/txs-new-member-ledger (str member-id) (sq/generate-squuid) (d/ref member))})]
       (q/retrieve-ledger (:db-after result) member-id))))
-
-(defn prepare-transaction-data
-  "Takes the raw transaction data and makes it ready to use with d/transact"
-  [db ledger entry metadata]
-  (assert (s/valid? domain/LedgerEntryEntity entry))
-  (assert ledger)
-  (let [entry-tmpid (d/tempid)]
-    (->> (domain/entry->db entry)
-         (merge {:db/id entry-tmpid})
-         (append-balance-adjustment-datoms ledger)
-         (append-entry-metadata-datoms metadata entry-tmpid))))
 
 (defn post-transaction! [conn member entry metadata]
   (if (s/valid? domain/LedgerEntryEntity entry)
     (let [ledger (new-member-ledger! conn member)
           db (datomic/db conn)
-          tx-data (prepare-transaction-data db ledger entry metadata)]
+          tx-data (domain/prepare-transaction-data db ledger entry metadata)]
       (tap> [:tx-data tx-data])
       (datomic/transact conn {:tx-data tx-data}))
     {:error (s/explain-human domain/LedgerEntryEntity entry) :ledger-entry entry}))
-
-(defn coerce-amount [amount-str]
-  (when-let [num (util/parse-number amount-str)]
-    (-> num
-        (* 100)
-        (double)
-        (Math/round)
-        (int))))
 
 (def AddTransaction
   "This schema describes the http post we receive when creating a transaction"
@@ -79,7 +34,7 @@
     [:member-id :uuid]
     [:tx-date ::s/date]
     [:description :string]
-    [:amount {:decode/string coerce-amount} :int]
+    [:amount {:decode/string domain/coerce-amount} :int]
     [:tx-direction [:enum "debit" "credit"]]]))
 
 (s/explain-human AddTransaction
@@ -114,7 +69,7 @@
           result-or-error))
       {:error (s/explain-human AddTransaction decoded)})))
 
-(defn prepare-delete-transaction-datoms [{:ledger.entry/keys [amount entry-id] :as entry}]
+(defn prepare-delete-transaction-txs [{:ledger.entry/keys [amount entry-id] :as entry}]
   (let [{:ledger/keys [balance entries] :as ledger} (first (:ledger/_entries entry))]
     (assert ledger "Ledger must be present")
     [[:db/retractEntity [:ledger.entry/entry-id entry-id]]
@@ -123,7 +78,7 @@
 (defn delete-ledger-entry! [{:keys [db member] :as req}]
   (let [params (util.http/unwrap-params req)
         entry-id (util/ensure-uuid! (:ledger-entry-id params))
-        tx-data (prepare-delete-transaction-datoms (q/retrieve-ledger-entry db entry-id))]
+        tx-data (prepare-delete-transaction-txs (q/retrieve-ledger-entry db entry-id))]
     (try
       (d/transact-wrapper! req {:tx-data tx-data})
       {:member member}
@@ -132,8 +87,6 @@
         {:error (ex-data e)
          :exception e
          :msg (ex-message e)}))))
-
-(defn update-ledger-entry! [req])
 
 (comment
   (do

@@ -1,8 +1,10 @@
 (ns app.ledger.domain
   (:require
-   [taoensso.nippy :as nippy]
+   [app.datomic :as d]
    [app.schemas :as s]
+   [app.util :as util]
    [medley.core :as m]
+   [taoensso.nippy :as nippy]
    [tick.core :as t]))
 
 (def entry-meta-types #{:ledger.entry.meta.type/insurance})
@@ -50,8 +52,49 @@
                                       (sort-by (juxt :ledger.entry/tx-date :ledger.entry/posting-date))
                                       (reverse)))))
 
-(defn new-member-ledger-datom [tmpid ledger-id owner]
-  {:db/id tmpid
-   :ledger/ledger-id ledger-id
-   :ledger/owner owner
-   :ledger/balance 0})
+(defn txs-new-member-ledger [tmpid ledger-id owner]
+  [{:db/id tmpid
+    :ledger/ledger-id ledger-id
+    :ledger/owner owner
+    :ledger/balance 0}])
+
+(defn txs-balance-adjustment
+  "Calculates the adjustment datoms for the specified transaction"
+  [ledger entry]
+  (let [balance-before (:ledger/balance ledger)
+        entry-amount (:ledger.entry/amount entry)
+        balance-after (+ balance-before entry-amount)]
+    [[:db/add (d/ref ledger) :ledger/entries (:db/id entry)]
+     [:db/add (d/ref ledger) :ledger/balance balance-after]]))
+
+(defn append-balance-adjustment-txs
+  "Appends the datomic transaction commands necessary to adjust balances
+  for the transaction"
+  [ledger transaction]
+  (concat [transaction] (txs-balance-adjustment ledger transaction)))
+
+(defn append-entry-metadata-txs [metadata entry-tmpid datoms]
+  (if metadata
+    (concat datoms
+            [(merge metadata {:db/id "metadata"})
+             [:db/add entry-tmpid :ledger.entry/metadata "metadata"]])
+    datoms))
+
+(defn prepare-transaction-data
+  "Takes the raw transaction data and makes it ready to use with d/transact"
+  [db ledger entry metadata]
+  (assert (s/valid? LedgerEntryEntity entry))
+  (assert ledger)
+  (let [entry-tmpid (d/tempid)]
+    (->> (entry->db entry)
+         (merge {:db/id entry-tmpid})
+         (append-balance-adjustment-txs ledger)
+         (append-entry-metadata-txs metadata entry-tmpid))))
+
+(defn coerce-amount [amount-str]
+  (when-let [num (util/parse-number amount-str)]
+    (-> num
+        (* 100)
+        (double)
+        (Math/round)
+        (int))))

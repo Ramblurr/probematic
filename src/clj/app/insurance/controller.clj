@@ -1,16 +1,15 @@
 (ns app.insurance.controller
   (:require
-   [clojure.set :as set]
-   [app.filestore.controller :as filestore]
-   [app.insurance.domain :as domain]
    [app.auth :as auth]
-   [app.email :as email]
    [app.config :as config]
    [app.datomic :as d]
+   [app.email :as email]
    [app.errors :as errors]
    [app.file-utils :as fu]
-   [app.ledger.controller :as ledger.controller]
+   [app.filestore.controller :as filestore]
+   [app.insurance.domain :as domain]
    [app.insurance.excel :as excel]
+   [app.ledger.domain :as ledger.domain]
    [app.nextcloud :as nextcloud]
    [app.queries :as q]
    [app.sardine :as sardine]
@@ -19,6 +18,7 @@
    [app.util :as util]
    [app.util.http :as util.http]
    [clojure.data :as clojure.data]
+   [clojure.set :as set]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
@@ -618,7 +618,7 @@
 
 (defn- confirm-and-activate-policy [{:keys [db] :as req} policy-id]
   (let [policy (q/retrieve-policy db policy-id)
-        txs (domain/txns-confirm-and-activate-policy policy)]
+        txs (domain/txs-confirm-and-activate-policy policy)]
     ;; (tap> {:confirm-txs txs})
     (d/transact-wrapper! req {:tx-data txs})))
 
@@ -708,21 +708,21 @@
   (let [existing-entries (q/ledger-entry-debit-for-policy db member-id policy-id)]
     (boolean (seq existing-entries))))
 
-(defn transaction-datoms-for-member [db policy-id policy-name {:keys [member private-cost-total count-private] :as members-data}]
-  (ledger.controller/prepare-transaction-data db
-                                              (q/retrieve-ledger db (:member/member-id member))
-                                              {:ledger.entry/amount       private-cost-total
-                                               :ledger.entry/tx-date      (t/date)
-                                               :ledger.entry/posting-date (t/inst)
-                                               :ledger.entry/description   policy-name
-                                               :ledger.entry/entry-id     (sq/generate-squuid)}
-                                              {:ledger.entry.meta/meta-type :ledger.entry.meta.type/insurance
-                                               :ledger.entry.meta.insurance/policy [:insurance.policy/policy-id policy-id]}))
+(defn txs-new-transaction-for-member [db policy-id policy-name {:keys [member private-cost-total count-private] :as members-data}]
+  (ledger.domain/prepare-transaction-data db
+                                          (q/retrieve-ledger db (:member/member-id member))
+                                          {:ledger.entry/amount       private-cost-total
+                                           :ledger.entry/tx-date      (t/date)
+                                           :ledger.entry/posting-date (t/inst)
+                                           :ledger.entry/description   policy-name
+                                           :ledger.entry/entry-id     (sq/generate-squuid)}
+                                          {:ledger.entry.meta/meta-type :ledger.entry.meta.type/insurance
+                                           :ledger.entry.meta.insurance/policy [:insurance.policy/policy-id policy-id]}))
 
-(defn prepare-transaction-datoms [{:keys [db]} policy-id policy-name members-data]
+(defn prepare-new-transaction-txs [{:keys [db]} policy-id policy-name members-data]
   (->> members-data
        (remove #(member-debited-for-policy? db policy-id (-> % :member :member/member-id)))
-       (reduce #(concat %1 (transaction-datoms-for-member db policy-id policy-name %2)) (list))))
+       (reduce #(concat %1 (txs-new-transaction-for-member db policy-id policy-name %2)) (list))))
 
 (defn send-notifications! [{:keys [db] :as req}]
   (let [{:keys [policy time-range members-data sender-name]} (build-data-notification-table req)
@@ -731,7 +731,7 @@
         member-ids (set (map util/ensure-uuid! (util/ensure-coll (:member-ids params))))
         to-send (filter #(member-ids (-> % :member :member/member-id))
                         members-data)
-        tx-data (prepare-transaction-datoms req policy-id (:insurance.policy/name policy) to-send)]
+        tx-data (prepare-new-transaction-txs req policy-id (:insurance.policy/name policy) to-send)]
     ;; (tap> [:to-send to-send :tx-data tx-data])
     (try
       (let [result (d/transact-wrapper! req {:tx-data tx-data})]
@@ -753,7 +753,7 @@
         report (q/retrieve-survey-report db report-id)]
     (if (report-belongs-to-current? req report)
       report
-      (throw (ex-info "Report does not belong to current user")))))
+      (throw (ex-info "Report does not belong to current user" {:report-id report-id})))))
 
 (defn survey-response-for-member [{:keys [db] :as req}]
   (let [response (q/open-survey-for-member db (auth/get-current-member req))]
@@ -779,9 +779,9 @@
 
 (defn resolve-survey-report! [{:keys [db] :as req} active-report decisions]
   (let [txs (->> decisions
-                 (mapcat #(domain/txns-for-decision active-report %))
-                 (concat (domain/txns-complete-survey-report active-report))
-                 (concat (domain/txns-maybe-survey-response-complete active-report (q/open-survey-for-member db (-> active-report :response :insurance.survey.response/member)))))]
+                 (mapcat #(domain/txs-for-decision active-report %))
+                 (concat (domain/txs-complete-survey-report active-report))
+                 (concat (domain/txs-maybe-survey-response-complete active-report (q/open-survey-for-member db (-> active-report :response :insurance.survey.response/member)))))]
     ;; (tap> {:report active-report :deci decisions :txs txs})
     (d/transact-wrapper! req {:tx-data txs})))
 
@@ -803,26 +803,26 @@
          (concat existing-coverages-by-member)
          (sort-by :member/name))))
 
-(defn new-survey-datoms [db survey-name closes-at policy]
+(defn txs-new-survey [db survey-name closes-at policy]
   (let [survey-tempid (d/tempid)
         members (members-for-policy-survey db policy)
         policy-id (:insurance.policy/policy-id policy)
         response-txs (mapcat (fn [{:keys [coverages] :member/keys [member-id]}]
-                               (let [report-datoms (map (fn [{:instrument.coverage/keys [coverage-id] :as cov}]
-                                                          (domain/new-survey-report-datom (d/tempid) coverage-id))
-                                                        coverages)
-                                     report-tempids (map :db/id report-datoms)]
-                                 (conj report-datoms
-                                       (domain/new-survey-response-datom (d/tempid) member-id report-tempids))))
+                               (let [report-txs (map (fn [{:instrument.coverage/keys [coverage-id] :as cov}]
+                                                       (domain/tx-new-survey-report (d/tempid) coverage-id))
+                                                     coverages)
+                                     report-tempids (map :db/id report-txs)]
+                                 (conj report-txs
+                                       (domain/tx-new-survey-response (d/tempid) member-id report-tempids))))
                              members)
         response-tempids (map :db/id response-txs)
-        survey-tx (domain/new-survey-datom survey-tempid survey-name policy-id closes-at response-tempids)]
+        survey-tx (domain/tx-new-survey survey-tempid survey-name policy-id closes-at response-tempids)]
     (conj response-txs survey-tx)))
 
 (defn create-survey! [{:keys [db] :as req}]
   (let [policy (:policy req)
         {:keys [survey-name closes-at] :as p} (util.http/unwrap-params req)
-        txs (new-survey-datoms db survey-name (t/date-time closes-at) policy)]
+        txs (txs-new-survey db survey-name (t/date-time closes-at) policy)]
     ;; (tap> [:params p :tx txs])
     (d/transact-wrapper! req {:tx-data txs})))
 
@@ -856,7 +856,7 @@
   (let [{:keys [response-id]} (util.http/unwrap-params req)
         response-id (util/ensure-uuid! response-id)
         response (q/retrieve-survey-response db response-id)
-        txs (domain/txns-toggle-response-completion response)
+        txs (domain/txs-toggle-response-completion response)
         result (d/transact-wrapper! req {:tx-data txs})]
     (q/retrieve-survey-response (:db-after result) response-id)))
 
@@ -885,10 +885,10 @@
   (datomic/transact conn {:tx-data [[:db/retractEntity [:image/image-id #uuid "018f670f-96ef-8a29-a183-cf2d713b3f26"]]]})
 
   (members-for-policy-survey db (q/retrieve-policy db #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2"))
-  (new-survey-datoms db
-                     "Survey 2024"
-                     (t/>> (t/instant) (t/new-period 3 :days))
-                     (q/retrieve-policy db #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2")) ;; rcf
+  (txs-new-survey db
+                  "Survey 2024"
+                  (t/>> (t/instant) (t/new-period 3 :days))
+                  (q/retrieve-policy db #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2")) ;; rcf
 
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b9")
   (q/retrieve-coverage db #uuid "018e15c2-ddbf-89a1-bb60-61e5e01189b7")

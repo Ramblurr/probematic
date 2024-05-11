@@ -1,9 +1,8 @@
 (ns app.insurance.domain
   (:require
+   [app.schemas :as s]
    [clojure.set :as set]
    [com.yetanalytics.squuid :as sq]
-   [taoensso.nippy :as nippy]
-   [app.schemas :as s]
    [medley.core :as m]
    [tick.core :as t]))
 
@@ -107,14 +106,14 @@
     [:insurance.survey/closed-at {:optional true} ::s/inst]
     [:insurance.survey/responses {:optional true} [:sequential s/DatomicRefOrTempid]]]))
 
-(defn new-survey-report-datom [tempid coverage-id]
+(defn tx-new-survey-report [tempid coverage-id]
   (assert tempid "Tempid must be non-nil")
   (assert coverage-id "Coverage ID must be non-nil")
   {:db/id tempid
    :insurance.survey.report/report-id (sq/generate-squuid)
    :insurance.survey.report/coverage [:instrument.coverage/coverage-id coverage-id]})
 
-(defn new-survey-response-datom [tempid member-id coverage-report-tempids]
+(defn tx-new-survey-response [tempid member-id coverage-report-tempids]
   (assert tempid "Tempid must be non-nil")
   (assert member-id "Member ID must be non-nil")
   (when (seq coverage-report-tempids)
@@ -142,7 +141,7 @@
                                      :human (s/explain-human schema survey)})))
      (s/encode-datomic schema survey))))
 
-(defn new-survey-datom [tempid name policy-id closes-at response-tempids]
+(defn tx-new-survey [tempid name policy-id closes-at response-tempids]
   (assert tempid "Tempid must be non-nil")
   (assert name "Name must be non-nil")
   (assert policy-id "Policy ID must be non-nil")
@@ -205,37 +204,37 @@
 (defn response-ref [{:insurance.survey.response/keys [response-id]}]
   [:insurance.survey.response/response-id response-id])
 
-(defn txns-confirm-keep-insured [{:insurance.survey.report/keys [coverage]}]
+(defn txs-confirm-keep-insured [{:insurance.survey.report/keys [coverage]}]
   ;; member wants to keep insurance, so if it was marked for removal, unremove it
   (when (= :instrument.coverage.change/removed (:instrument.coverage/change coverage))
     [[:db/add (coverage-ref coverage) :instrument.coverage/change :instrument.coverage.change/changed]]))
 
-(defn txns-confirm-band [{:insurance.survey.report/keys [coverage]}]
+(defn txs-confirm-band [{:insurance.survey.report/keys [coverage]}]
   [[:db/add (coverage-ref coverage) :instrument.coverage/private? false]])
 
-(defn txns-confirm-not-band [{:insurance.survey.report/keys [coverage]}]
+(defn txs-confirm-not-band [{:insurance.survey.report/keys [coverage]}]
   [[:db/add (coverage-ref coverage) :instrument.coverage/private? true]])
 
-(defn txns-remove-coverage [{:insurance.survey.report/keys [coverage]}]
+(defn txs-remove-coverage [{:insurance.survey.report/keys [coverage]}]
   [[:db/add (coverage-ref coverage) :instrument.coverage/change :instrument.coverage.change/removed]])
 
-(defn txns-for-decision [active-report decision]
+(defn txs-for-decision [active-report decision]
   (condp = decision
-    :confirm-keep-insured (txns-confirm-keep-insured active-report)
+    :confirm-keep-insured (txs-confirm-keep-insured active-report)
     :confirm-data-ok nil                ;; nothing to change for this one (yet?)
-    :confirm-band (txns-confirm-band active-report)
-    :confirm-not-band (txns-confirm-not-band active-report)
-    :remove-coverage (txns-remove-coverage active-report)
+    :confirm-band (txs-confirm-band active-report)
+    :confirm-not-band (txs-confirm-not-band active-report)
+    :remove-coverage (txs-remove-coverage active-report)
     nil))
 
-(defn txns-complete-survey-report [report]
+(defn txs-complete-survey-report [report]
   [[:db/add (report-ref report) :insurance.survey.report/completed-at (t/inst)]])
 
-(defn txns-uncomplete-survey-report [report]
+(defn txs-uncomplete-survey-report [report]
   (when-let [old-value (:insurance.survey.report/completed-at report)]
     [[:db/retract (report-ref report) :insurance.survey.report/completed-at (t/inst old-value)]]))
 
-(defn txns-maybe-survey-response-complete [{:insurance.survey.report/keys [report-id]  :as report} {:insurance.survey.response/keys [response-id coverage-reports] :as response}]
+(defn txs-maybe-survey-response-complete [{:insurance.survey.report/keys [report-id]  :as report} {:insurance.survey.response/keys [response-id coverage-reports] :as response}]
   (assert response "Response must be non-nil")
   (let [open-reports (filter (comp nil? :insurance.survey.report/completed-at) coverage-reports)
 
@@ -245,24 +244,24 @@
                (= maybe-first-report-id report-id))
       [[:db/add (response-ref response) :insurance.survey.response/completed-at (t/inst)]])))
 
-(defn txns-toggle-response-completion [{:insurance.survey.response/keys [completed-at coverage-reports] :as r}]
+(defn txs-toggle-response-completion [{:insurance.survey.response/keys [completed-at coverage-reports] :as r}]
   (if completed-at
     (concat
      [[:db/retract (response-ref r) :insurance.survey.response/completed-at (t/inst completed-at)]]
-     (mapcat txns-uncomplete-survey-report coverage-reports))
+     (mapcat txs-uncomplete-survey-report coverage-reports))
     [[:db/add (response-ref r) :insurance.survey.response/completed-at (t/inst)]]))
 
-(defn txns-confirm-and-activate-policy-coverages [{:instrument.coverage/keys [coverage-id status change] :as coverage}]
+(defn txs-confirm-and-activate-policy-coverages [{:instrument.coverage/keys [coverage-id status change] :as coverage}]
   (if (= change :instrument.coverage.change/removed)
     [[:db/retractEntity (coverage-ref coverage)]]
     [[:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/status :instrument.coverage.status/coverage-active]
      [:db/add [:instrument.coverage/coverage-id coverage-id] :instrument.coverage/change :instrument.coverage.change/none]]))
 
-(defn txns-confirm-and-activate-policy [{:as policy :insurance.policy/keys [policy-id covered-instruments]}]
+(defn txs-confirm-and-activate-policy [{:as policy :insurance.policy/keys [policy-id covered-instruments]}]
   (concat
    [{:insurance.policy/policy-id policy-id
      :insurance.policy/status    :insurance.policy.status/active}]
-   (mapcat txns-confirm-and-activate-policy-coverages covered-instruments)))
+   (mapcat txs-confirm-and-activate-policy-coverages covered-instruments)))
 
 (defn txs-add-instrument-image [instrument-id image-ref]
   [[:db/add [:instrument/instrument-id instrument-id] :instrument/images image-ref]])
