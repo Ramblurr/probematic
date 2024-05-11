@@ -15,7 +15,8 @@
    (java.time.format DateTimeFormatter DateTimeFormatterBuilder ResolverStyle)
    (java.util Locale)
    (java.net URLDecoder URLEncoder)
-   (java.security SecureRandom)))
+   (java.security SecureRandom)
+   (java.net URLEncoder)))
 
 (defn url-encode [v]
   (URLEncoder/encode v "UTF-8"))
@@ -312,6 +313,14 @@
      (catch Exception e
        (tap> [:error (format "''%s'' is not a recognizable number" s) :ex e])
        nil))))
+
+(defn content-disposition-filename
+  "Format a filename for use in a Content-Disposition header. The filename is URL-encoded and prefixed with either 'inline' or 'attachment' depending on the value of inline?"
+  ([name]
+   (content-disposition-filename name true))
+  ([name inline?]
+   (let [prefix (if inline? "inline" "attachment")]
+     (format "%s; filename*=UTF-8''%s" prefix (URLEncoder/encode name "UTF-8")))))
 
 (comment
   (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])

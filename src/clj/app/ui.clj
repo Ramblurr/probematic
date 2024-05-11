@@ -1,9 +1,12 @@
 (ns app.ui
   (:refer-clojure :exclude [time])
   (:import
+
    (java.text DecimalFormat NumberFormat)
    (java.util Locale))
   (:require
+   [ring.middleware.not-modified :as not-modified]
+   [ring.util.time :as ring.util]
    [hiccup2.core :refer [html]]
    [app.humanize :as humanize]
    [app.i18n :as i18n]
@@ -122,6 +125,16 @@
                 (j/write-value-as-string {trigger-name data})
                 trigger-name)}
     :body (ctmx.render/html body)}))
+
+(defn file-response [req file-name stream & {:keys [size mime-type last-modified inline? etag] :or {inline? true}}]
+  (not-modified/not-modified-response
+   {:status 200
+    :headers (-> {"Content-Disposition" (util/content-disposition-filename file-name inline?)}
+                 (m/assoc-some "Last-Modified" (ring.util/format-date last-modified))
+                 (m/assoc-some "Content-Type" mime-type)
+                 (m/assoc-some "ETag" etag))
+    :body stream}
+   req))
 
 (defn multi-response
   "Return HTML has a response with multiple to-level HTML elements.

@@ -144,13 +144,27 @@
              :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
                           :path [:map [:instrument-id :uuid]]}
              :handler (fn [req] (view/image-upload-handler req))}}]
+
+    ["/instrument-image-local/{instrument-id}"
+     {:post {:summary "Upload an image for an instrument"
+             :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
+                          :path [:map [:instrument-id :uuid]]}
+             :handler (fn [req] (view/image-upload-handler-local req))}}]
+
     ["/instrument-image/{instrument-id}/{filename}"
      {:get {:summary "Get instrument images"
             :parameters {:path [:map
                                 [:instrument-id :uuid]
                                 [:filename :string]]}
             :handler (fn [req]
-                       (view/image-fetch-handler req))}}]]
+                       (view/image-fetch-handler req))}}]
+    ["/instrument-image-local/{instrument-id}/{image-id}"
+     {:get {:summary "Get instrument images"
+            :parameters {:path [:map
+                                [:instrument-id :uuid]
+                                [:image-id :string]]}
+            :handler (fn [req]
+                       (view/image-fetch-handler-local req))}}]]
 
    ["" {:app.route/name :app/insurance2
         :interceptors [policy-interceptor instrument-interceptor]}

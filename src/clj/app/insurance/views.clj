@@ -1047,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 (def history-field-exclusions #{:instrument.coverage/coverage-id :instrument/instrument-id})
 (defn change-value [tr k v]
-  (tap> [:k k :v v])
+  ;; (tap> [:k k :v v])
   (condp = k
     :instrument/category (str (:instrument.category/name v))
     :instrument.coverage/value (ui/money v :EUR)
@@ -1180,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', function() {
             coverage-types (:insurance.policy/coverage-types policy)
             coverage (first (domain/enrich-coverages policy coverage-types [coverage]))
             {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
-            photos (controller/list-image-uris req instrument-id)]
+            photos (controller/list-image-uris req instrument)]
         (assert coverage)
         [:div {:id id}
          (breadcrumb-coverage tr policy coverage)
@@ -1250,6 +1250,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                  (controller/instrument-image-remote-path req instrument-id filename)
                                  true)))
 
+(defn image-fetch-handler-local [{:keys [parameters headers] :as req}]
+  (let [{:keys [instrument-id image-id]} (:path parameters)
+        img-resp (controller/load-instrument-image req instrument-id image-id)]
+    (ui/file-response req (:file-name img-resp) (:stream img-resp) img-resp)))
+
 (defn image-upload-handler [{:keys [webdav parameters] :as req}]
   (let [instrument-id (-> parameters :path :instrument-id)
         file (->  parameters :multipart :file)]
@@ -1257,6 +1262,10 @@ document.addEventListener('DOMContentLoaded', function() {
     (sardine/upload webdav
                     (controller/instrument-image-remote-path req instrument-id)
                     file))
+  {:status 201})
+
+(defn image-upload-handler-local [req]
+  (controller/upload-instrument-image! req)
   {:status 201})
 
 (ctmx/defcomponent ^:endpoint image-upload [{:keys [tr] :as req}]

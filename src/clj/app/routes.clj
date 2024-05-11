@@ -27,6 +27,7 @@
                                       [(auth/session-interceptor system)
                                        (interceptors/system-interceptor system)
                                        (interceptors/datomic-interceptor system)
+                                       (interceptors/filestore-interceptor system)
                                        (interceptors/current-user-interceptor system)]))}
 
    (auth/routes system)

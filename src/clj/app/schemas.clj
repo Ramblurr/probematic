@@ -84,6 +84,8 @@
 (defn enum-from [values]
   (into [:enum] values))
 
+(def DatomicRefOrTempid [:or ::non-blank-string ::datomic-ref])
+
 (comment
   (require '[malli.error :as me]
            '[malli.core :as m]

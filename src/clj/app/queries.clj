@@ -1,6 +1,7 @@
 (ns app.queries
   (:require
    [app.datomic :as d]
+   [app.filestore.domain :as filestore.domain]
    [app.gigs.domain :as gig.domain]
    [app.insurance.domain :as insurance.domain]
    [app.ledger.domain :as ledger.domain]
@@ -12,6 +13,24 @@
    [tick.core :as t]
    [clojure.java.io :as io]
    [app.debug :as debug]))
+
+(def file-pattern [:filestore.file/file-id
+                   :filestore.file/atime
+                   :filestore.file/mtime
+                   :filestore.file/ctime
+                   :filestore.file/hash
+                   :filestore.file/size
+                   :filestore.file/mime-type
+                   :filestore.file/file-name])
+
+(def image-pattern [:image/image-id
+                    {:image/source-file file-pattern}
+                    :image/width
+                    :image/height
+                    :image/filter-spec])
+
+(def image-pattern-with-renditions
+  (conj image-pattern {:image/renditions image-pattern}))
 
 (def section-pattern [:section/name :section/default? :section/position :section/active?])
 
@@ -110,6 +129,7 @@
      :instrument/description
      :instrument/serial-number
      :instrument/build-year
+     {:instrument/images image-pattern-with-renditions}
      {:instrument/owner [:member/name :member/member-id]}
      {:instrument/category [:instrument.category/category-id
                             :instrument.category/code
@@ -1037,6 +1057,22 @@
 (defn retrieve-survey [db survey-id]
   (insurance.domain/db->survey
    (d/find-by db :insurance.survey/survey-id survey-id insurance-survey-pattern)))
+
+(defn retrieve-file [db file-id]
+  (d/find-by db :filestore.file/file-id file-id file-pattern))
+
+(defn retrieve-image
+  "Fetches the image-id"
+  [db image-id]
+  (-> (d/find-by db :image/image-id image-id image-pattern)
+      (filestore.domain/db->image)))
+
+(defn retrieve-image-renditions
+  "Fetches the image-id with its renditions"
+  [db image-id]
+  (->
+   (d/find-by db :image/image-id image-id image-pattern-with-renditions)
+   (filestore.domain/db->image)))
 
 ;;;; END
 (comment

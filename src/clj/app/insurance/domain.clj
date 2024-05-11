@@ -1,6 +1,6 @@
 (ns app.insurance.domain
   (:require
-
+   [clojure.set :as set]
    [com.yetanalytics.squuid :as sq]
    [taoensso.nippy :as nippy]
    [app.schemas :as s]
@@ -81,8 +81,6 @@
                          coverage-types))))
         coverages))
 
-(def DatomicRefOrTempid [:or ::s/non-blank-string ::s/datomic-ref])
-
 (def SurveyReportEntity
   (s/schema
    [:map {:name :app.entity/insurance.survey.report}
@@ -96,7 +94,7 @@
     [:insurance.survey.response/response-id :uuid]
     [:insurance.survey.response/member ::s/datomic-ref]
     [:insurance.survey.response/completed-at {:optional true} ::s/inst]
-    [:insurance.survey.response/coverage-reports {:optional true} [:sequential DatomicRefOrTempid]]]))
+    [:insurance.survey.response/coverage-reports {:optional true} [:sequential s/DatomicRefOrTempid]]]))
 
 (def SurveyEntity
   (s/schema
@@ -107,7 +105,7 @@
     [:insurance.survey/created-at ::s/inst]
     [:insurance.survey/closes-at ::s/inst]
     [:insurance.survey/closed-at {:optional true} ::s/inst]
-    [:insurance.survey/responses {:optional true} [:sequential DatomicRefOrTempid]]]))
+    [:insurance.survey/responses {:optional true} [:sequential s/DatomicRefOrTempid]]]))
 
 (defn new-survey-report-datom [tempid coverage-id]
   (assert tempid "Tempid must be non-nil")
@@ -161,7 +159,7 @@
 
 (defn db->survey-report [m]
   (-> (s/decode-datomic SurveyReportEntity m)
-      (clojure.set/rename-keys {:insurance.survey.response/_coverage-reports :response})
+      (set/rename-keys {:insurance.survey.response/_coverage-reports :response})
       (m/update-existing :insurance.survey.report/coverage (fn [coverage]
                                                              (let [policy (:insurance.policy/_covered-instruments coverage)
                                                                    coverage-types (:insurance.policy/coverage-types policy)]
@@ -265,3 +263,6 @@
    [{:insurance.policy/policy-id policy-id
      :insurance.policy/status    :insurance.policy.status/active}]
    (mapcat txns-confirm-and-activate-policy-coverages covered-instruments)))
+
+(defn txs-add-instrument-image [instrument-id image-ref]
+  [[:db/add [:instrument/instrument-id instrument-id] :instrument/images image-ref]])

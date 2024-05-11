@@ -1,6 +1,7 @@
 (ns app.insurance.controller
   (:require
    [clojure.set :as set]
+   [app.filestore.controller :as filestore]
    [app.insurance.domain :as domain]
    [app.auth :as auth]
    [app.email :as email]
@@ -295,9 +296,9 @@
    (config/nextcloud-url (-> req :system :env))
    (instrument-image-remote-path req instrument-id)))
 
-(defn list-image-uris [{:keys [system webdav] :as req} instrument-id]
-  (->> (sardine/list-photos webdav (instrument-image-remote-path req instrument-id))
-       (map #(urls/absolute-link-instrument-image (:env system) instrument-id  %))))
+(defn list-image-uris [{:keys [system webdav] :as req} {:instrument/keys [images instrument-id]}]
+  (map (fn [{:image/keys [image-id]}]
+         (urls/absolute-link-instrument-image-local (:env system) instrument-id  image-id)) images))
 
 (defn add-instrument-coverage! [conn {:keys [instrument-id policy-id private? value coverage-type-ids]}]
   (datomic/transact conn {:tx-data [{:db/id "covered_instrument"
@@ -859,12 +860,29 @@
         result (d/transact-wrapper! req {:tx-data txs})]
     (q/retrieve-survey-response (:db-after result) response-id)))
 
+(defn upload-instrument-image! [{:keys [db parameters] :as req}]
+  (let [instrument-id (util/ensure-uuid! (-> parameters :path :instrument-id))
+        ;; file is a reitit.ring.malli/temp-file-part
+        {:keys [filename _size tempfile content-type]} (->  parameters :multipart :file)
+        _ (tap> [:filename filename :content-type content-type])
+        {:keys [image-tempid tx-data]} (filestore/store-image! req {:file-name filename :data tempfile :mime-type content-type})
+        _ (tap> [:image-tempid image-tempid :tx-data tx-data])
+        instr-txs (domain/txs-add-instrument-image instrument-id image-tempid)
+        txs (concat tx-data instr-txs)
+        _ (tap> [:txs txs])]
+    (d/transact-wrapper! req {:tx-data txs})))
+
+(defn load-instrument-image [req instrument-id image-id]
+  (filestore/load-image req image-id))
+
 (comment
   (do
     (require '[integrant.repl.state :as state])
     (require '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  (datomic/transact conn {:tx-data [[:db/retractEntity [:image/image-id #uuid "018f670f-96ef-8a29-a183-cf2d713b3f26"]]]})
 
   (members-for-policy-survey db (q/retrieve-policy db #uuid "018e15c2-ddbe-8b4f-b814-bddd26f8aec2"))
   (new-survey-datoms db

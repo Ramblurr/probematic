@@ -60,7 +60,7 @@
 (defn link-coverage-create3 [policy-id instrument-id] (str "/insurance-coverage-create3/" policy-id "/" instrument-id "/"))
 
 (defn link-instrument-image-upload [instrument-id]
-  (format "/instrument-image/%s"  instrument-id))
+  (format "/instrument-image-local/%s"  instrument-id))
 
 (defn link-file-download [path]
   (str "/nextcloud-fetch?path=" (url-encode path)))
@@ -100,6 +100,9 @@
 
 (defn absolute-link-instrument-image [env instrument-id filename]
   (format "%s/instrument-image/%s/%s" (config/app-base-url env) instrument-id filename))
+
+(defn absolute-link-instrument-image-local [env instrument-id image-id]
+  (format "%s/instrument-image-local/%s/%s" (config/app-base-url env) instrument-id image-id))
 
 (defn absolute-link-song-image [env song-id filename]
   (format "%s/song-media/%s/%s" (config/app-base-url env) song-id filename))

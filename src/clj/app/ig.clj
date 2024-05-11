@@ -6,7 +6,7 @@
    [app.auth :as auth]
    [app.config :as config]
    [nrepl.server :as nrepl]
-   [app.datomic :as datomic]
+   [app.filestore :as filestore]
    [app.datomic-migrations :as datomic.migrations]
    [app.email.email-worker :as email-worker]
    [app.i18n :as i18n]
@@ -207,3 +207,11 @@
 (defmethod ig/init-key ::calendar
   [_ {:keys [env] :as system}]
   (caldav/init-calendar env))
+
+(defmethod ig/init-key ::filestore
+  [_ {:keys [env] :as system}]
+  (filestore/start! (:filestore env)))
+
+(defmethod ig/halt-key! ::filestore
+  [_ store]
+  (filestore/halt! store))

@@ -607,6 +607,12 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
 
+   {:db/ident :instrument/images
+    :db/doc "Images of the instrument"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/isComponent true}
+
 ;;;; Insurance - Coverage Type
 
    {:db/ident :insurance.coverage.type/type-id
@@ -1078,7 +1084,71 @@
    {:db/ident :insurance.survey.report/coverage
     :db/doc "The coverage this report is for"
     :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one}]
+    :db/cardinality :db.cardinality/one}
+
+;;;;  File Store
+   {:db/ident :filestore.file/file-id
+    :db/doc "The id of the file"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :filestore.file/file-name
+    :db/doc "The name of the file"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :filestore.file/hash
+    :db/doc "Hash of the file contents"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :filestore.file/mime-type
+    :db/doc "MIME type of a file"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :filestore.file/size
+    :db/doc "The number of bytes in the content"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident       :filestore.file/ctime
+    :db/doc         "Creation time"
+    :db/valueType   :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident       :filestore.file/mtime
+    :db/doc         "File last modification time"
+    :db/valueType   :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident       :filestore.file/atime
+    :db/doc         "File last access time"
+    :db/valueType   :db.type/instant
+    :db/cardinality :db.cardinality/one}
+
+;;;; Images
+   {:db/ident :image/image-id
+    :db/doc "The id of the image"
+    :db/valueType :db.type/uuid
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :image/source-file
+    :db/doc "The filestore ref"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :image/width
+    :db/doc "The width of the image"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :image/height
+    :db/doc "The height of the image"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :image/renditions
+    :db/doc "The renditions of the image (thumbnails, etc)"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/isComponent true}
+   {:db/ident :image/filter-spec
+    :db/doc "An opaque string that describes the filter used to generate the rendition"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   ]
 
 ;;
 

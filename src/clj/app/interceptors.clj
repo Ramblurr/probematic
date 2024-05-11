@@ -64,6 +64,17 @@
                   (assoc-in  [:request :db] (d/db conn))
                   (assoc-in  [:request :datomic-conn] conn))))})
 
+(defn filestore-interceptor
+  "Attaches the filestore to the request map"
+  [system]
+  (assert system)
+  (assert (:filestore system) "Filestore not available")
+  {:name ::filestore--interceptor
+   :enter (fn [ctx]
+            (let [filestore (:filestore system)]
+              (-> ctx
+                  (assoc-in  [:request :filestore] filestore))))})
+
 (def service-error-handler
   (error-int/error-dispatch [ctx ex]
 
