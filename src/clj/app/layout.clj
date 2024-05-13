@@ -45,7 +45,7 @@
 
 (defn app-container
   [req member body]
-  [:div {:class "flex flex-col lg:pl-64"}
+  [:div {:id "app-container" :class "flex flex-col lg:pl-64 transition-all"}
    [:div {:class "sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white lg:hidden"}
     [:button {:type "button" :class "border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"
               :data-flyout-trigger "#mobile-flyout-menu"}
@@ -71,11 +71,14 @@
 
 (defn user-account-actions
   [req member]
-  [:div {:class "relative inline-block px-3 text-left"}
-   [:div
+  [:div {:class "relative inline-block px-2 text-left"}
+   (ui/avatar-img member :class "h-8 w-8 mt-2 rounded-full bg-gray-300 lg:hidden sidebar-collapse")
+   [:div {:class "sidebar-collapse opacity-1 transition-opacity duration-100"}
     [:button {:type "button"
               :data-action-menu-trigger "#desktop-user-menu"
-              :class "group w-full rounded-md bg-gray-100 px-3.5 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100" :id "options-menu-button" :aria-expanded "false" :aria-haspopup "true"}
+              :class (ui/cs
+                      "group w-full rounded-md bg-gray-100 px-3.5 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100")
+              :id "options-menu-button" :aria-expanded "false" :aria-haspopup "true"}
      [:span {:class "flex w-full items-center justify-between"}
       [:span {:class "flex min-w-0 items-center justify-between space-x-3"}
        (ui/avatar-img member :class "h-10 w-10 flex-shrink-0 rounded-full bg-gray-300")
@@ -111,7 +114,8 @@
   (let [active? (= route-name (-> req :reitit.core/match :data  :app.route/name))]
     [:a {:href href
          :class
-         (ui/cs "flex items-center px-2 py-2 text-sm font-medium rounded-md group cursor-pointer"
+         (ui/cs "flex items-center px-2 py-2 text-sm"
+                #_"-center px-2 py-2 text-sm font-medium rounded-md group cursor-pointer"
                 (if active?
                   "bg-gray-200 text-gray-900"
                   "text-gray-700 hover:text-gray-900 hover:bg-gray-50"))}
@@ -121,26 +125,54 @@
                    (if active?
                      "text-gray-500"
                      "text-gray-400 group-hover:text-gray-500"))})
-     label]))
-
-(defn sidebar-navigation
-  [req]
-  [:nav {:class "mt-6 px-3"}
-   [:div {:class "space-y-1" :hx-boost "true"}
-    (map (partial nav-item req) (navigation (i18n/tr-from-req req)))]
-   ;; (secondary-navigation)
-   ])
+     [:span {:class "sidebar-collapse"} label]]))
 
 (defn desktop-menu
   [req member]
-  [:div {:id "desktop-sidebar-menu" :class "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"}
-   [:div {:class "flex flex-shrink-0 items-center px-6"}
-    [:a {:href "/"}
-     (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark"})]]
+;; then toggle .translate-x-0 on #desktop-sidebar-menu
+;; then toggle .-translate-x-40 on #desktop-sidebar-menu
+  (let [script
+        "
+on click toggle .sidebar-expanded on <body/>
+then toggle .lg:hidden on .sidebar-collapse
+then toggle .opacity-0  on .sidebar-collapse-fade
+then toggle .opacity-1 on .sidebar-collapse-fade
+then toggle .lg:w-64 on #desktop-sidebar-menu
+then toggle .lg:w-12 on #desktop-sidebar-menu
+then toggle .px-3 on <#desktop-sidebar-menu nav />
+then toggle .mt-10 on <#desktop-sidebar-menu nav />
+then toggle .mt-6 on <#desktop-sidebar-menu nav />
+then toggle .rotate-180 on .sidebar-open-close-button
+then toggle .rotate-0 on .sidebar-open-close-button
+then toggle .px-6 on .sidebar-logo-container
+then toggle .pl-2 on .sidebar-logo-container
+then toggle .lg:pl-64 on #app-container
+then toggle .lg:pl-12 on #app-container
+"]
 
-   [:div {:class "mt-5 flex h-0 flex-1 flex-col overflow-y-auto pt-1"}
-    (user-account-actions req member)
-    (sidebar-navigation req)]])
+;;
+    [:div {:id "desktop-sidebar-menu" :class
+           (ui/cs
+            "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"
+            "lg:translate-x-0"
+            "no-scrollbar"
+            "shrink-0 border-r border-gray-200 sm:translate-x-0 transition-all duration-200")}
+
+     [:div {:class "flex flex-shrink-0 items-center px-6 sidebar-logo-container"}
+      [:a {:href "/" :class ""}
+       (icon/snoman {:class "h-8 w-auto text-green-500 logotype-dark lg:hidden sidebar-collapse"})
+       (icon/logotype {:class "h-8 w-auto text-green-500 logotype-dark  sidebar-collapse"})]]
+
+     [:div {:class "mt-5 flex h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pt-1 sidebar-scroll-container"}
+      (user-account-actions req member)
+      [:nav {:class "mt-6 px-3 text-nowrap"}
+       [:div {:class "space-y-1" :hx-boost "true"}
+        (map (partial nav-item req) (navigation (i18n/tr-from-req req)))]
+       ;; (secondary-navigation)
+       ]
+      [:div {:class "flex items-end justify-end"}
+       [:button {:class "px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md" :_ script}
+        (icon/arrow-small-left {:class "w-6 h-6 hidden lg:block rotate-0 sidebar-open-close-button"})]]]]))
 
 (defn mobile-menu
   [req]
