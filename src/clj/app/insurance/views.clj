@@ -1,8 +1,8 @@
 (ns app.insurance.views
   (:require
-   [clojure.string :as str]
-   [app.email :as email]
    [app.auth :as auth]
+   [app.config :as config]
+   [app.email :as email]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.insurance.controller :as controller]
@@ -13,6 +13,7 @@
    [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
+   [clojure.string :as str]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
    [ctmx.rt :as rt]
@@ -192,10 +193,10 @@
           (response/hx-redirect (urls/link-policy policy-id))
           (response/redirect (urls/link-policy policy-id)))))))
 
-(ctmx/defcomponent ^:endpoint insurance-policy-changes-review [{:keys [db tr] :as req}]
+(ctmx/defcomponent ^:endpoint insurance-policy-changes-review [{:keys [db tr system] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
         policy (q/retrieve-policy db policy-id)
-        {:keys [recipient-name recipient-title recipient-email policy-number]} (-> req :system :env :insurance)
+        {:keys [recipient-name recipient-title recipient-email policy-number]} (config/external-insurance-policy (:env system))
         member (auth/get-current-member req)
         sender (:member/name member)
         subject (format "Aktualisierung %s" policy-number)
@@ -946,7 +947,7 @@ function initUpload() {
     Dropzone.options.imageUpload = {
       %s
       paramName: 'file',
-      acceptedFiles: '.jpeg,.jpg,.png,.gif',
+      acceptedFiles: '.jpeg,.jpg,.png,.gif,.heic,.heif',
       maxFileSize: 10, //MB
   //    addRemoveLinks: true,
     };
@@ -1046,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function() {
                [:dd {:class "whitespace-nowrap text-gray-900"} (ui/money (:instrument.coverage/cost coverage) :EUR)]]]]))
 
 (def history-field-exclusions #{:instrument.coverage/coverage-id :instrument/instrument-id})
-(defn change-value [tr k v]
+(defn change-value [{:keys [tr] :as req} coverage k v]
   ;; (tap> [:k k :v v])
   (condp = k
     :instrument/category (str (:instrument.category/name v))
@@ -1055,6 +1056,8 @@ document.addEventListener('DOMContentLoaded', function() {
     :instrument.coverage/instrument (:instrument/name v)
     :instrument.coverage/types (:insurance.coverage.type/name v)
     :instrument.coverage/private? (band-or-private tr v)
+    :instrument/images (if-let [uri (controller/build-image-uri req (:instrument.coverage/instrument coverage) v)] [:img {:class "object-contain h-20 w-20" :src (:thumbnail uri)}]
+                               "Image deleted.")
     (if (keyword? v)
       (tr [v])
       (str v))))
@@ -1087,7 +1090,8 @@ document.addEventListener('DOMContentLoaded', function() {
                      (assoc f 1 {:before nil :after v :action action}))) field-change))))
 
 (defn coverage-changes-panel [{:keys [tr] :as req} coverage policy]
-  (let [history (controller/instrument-coverage-history req coverage)]
+  (let [history (controller/instrument-coverage-history req coverage)
+        fn-change-value (partial change-value req coverage)]
     ;; (tap> [:history history])
     (ui/panel {:title (tr [:history/title])
                :subtitle (tr [:history/subtitle-coverage])}
@@ -1113,8 +1117,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     {:field-key k
                                                      :field-label (tr [k])
                                                      :action action
-                                                     :before (when-let [before before] (change-value tr k before))
-                                                     :after (change-value tr k after)}))
+                                                     :before (when-let [before before] (fn-change-value  k before))
+                                                     :after (fn-change-value  k after)}))
 
                                              (remove #(history-field-exclusions (:field-key %)))
                                              (sort-by :field-label))
@@ -1180,7 +1184,7 @@ document.addEventListener('DOMContentLoaded', function() {
             coverage-types (:insurance.policy/coverage-types policy)
             coverage (first (domain/enrich-coverages policy coverage-types [coverage]))
             {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
-            photos (controller/list-image-uris req instrument)]
+            photo-uris (controller/build-image-uris req instrument)]
         (assert coverage)
         [:div {:id id}
          (breadcrumb-coverage tr policy coverage)
@@ -1205,16 +1209,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                 (:instrument/build-year instrument))
                     (ui/dl-item (tr [:instrument/description])
                                 (:instrument/description instrument) "sm:col-span-2")
-                    (ui/dl-item (tr [:instrument/images-share-url])
-                                (when-let [link (:instrument/images-share-url instrument)]
-                                  [:p (tr [:instrument/images-share-url-hint]) ": "
-                                   [:a {:href link :target "_blank" :class "link-blue"} link]]))
-                    (ui/dl-item (tr [:instrument/images-internal-url])
-                                (when-let [link (controller/internal-instrument-image-url req instrument)]
-                                  [:p (tr [:instrument/images-internal-url-hint]) ": "
-                                   [:a {:href link  :target "_blank" :class "link-blue"}
-                                    link]])))
-                   (ui/photo-grid photos))
+                    #_(ui/dl-item (tr [:instrument/images-share-url])
+                                  (when-let [link (:instrument/images-share-url instrument)]
+                                    [:p (tr [:instrument/images-share-url-hint]) ": "
+                                     [:a {:href link :target "_blank" :class "link-blue"} link]]))
+                    #_(ui/dl-item (tr [:instrument/images-internal-url])
+                                  (when-let [link (controller/internal-instrument-image-url req instrument)]
+                                    [:p (tr [:instrument/images-internal-url-hint]) ": "
+                                     [:a {:href link  :target "_blank" :class "link-blue"}
+                                      link]])))
+                   (ui/photo-grid photo-uris))
          (coverage-panel tr coverage policy)
          (coverage-changes-panel req coverage policy)]))))
 
@@ -1244,27 +1248,13 @@ document.addEventListener('DOMContentLoaded', function() {
                      (list
                       (ui/button {:label (tr [:action/save]) :priority :primary-orange})))])]))))
 
-(defn image-fetch-handler [{:keys [parameters] :as req}]
-  (let [{:keys [filename instrument-id]} (:path parameters)]
-    (sardine/fetch-file-response req
-                                 (controller/instrument-image-remote-path req instrument-id filename)
-                                 true)))
-
-(defn image-fetch-handler-local [{:keys [parameters headers] :as req}]
+(defn image-fetch-handler [{:keys [parameters headers] :as req}]
   (let [{:keys [instrument-id image-id]} (:path parameters)
-        img-resp (controller/load-instrument-image req instrument-id image-id)]
+        {:keys [mode]} (:query parameters)
+        img-resp (controller/load-instrument-image req instrument-id image-id mode)]
     (ui/file-response req (:file-name img-resp) (:stream img-resp) img-resp)))
 
-(defn image-upload-handler [{:keys [webdav parameters] :as req}]
-  (let [instrument-id (-> parameters :path :instrument-id)
-        file (->  parameters :multipart :file)]
-    (assert instrument-id)
-    (sardine/upload webdav
-                    (controller/instrument-image-remote-path req instrument-id)
-                    file))
-  {:status 201})
-
-(defn image-upload-handler-local [req]
+(defn image-upload-handler [req]
   (controller/upload-instrument-image! req)
   {:status 201})
 

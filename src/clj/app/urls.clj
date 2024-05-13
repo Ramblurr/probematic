@@ -98,11 +98,11 @@
 (defn absolute-link-new-user-invite [env invite-code]
   (str (config/app-base-url env) "/invite-accept?code=" invite-code))
 
-(defn absolute-link-instrument-image [env instrument-id filename]
-  (format "%s/instrument-image/%s/%s" (config/app-base-url env) instrument-id filename))
+(defn absolute-link-instrument-image-full [env instrument-id image-id]
+  (format "%s/instrument-image/%s/%s?mode=full" (config/app-base-url env) instrument-id image-id))
 
-(defn absolute-link-instrument-image-local [env instrument-id image-id]
-  (format "%s/instrument-image-local/%s/%s" (config/app-base-url env) instrument-id image-id))
+(defn absolute-link-instrument-image-thumbnail [env instrument-id image-id]
+  (format "%s/instrument-image/%s/%s?mode=thumbnail" (config/app-base-url env) instrument-id image-id))
 
 (defn absolute-link-song-image [env song-id filename]
   (format "%s/song-media/%s/%s" (config/app-base-url env) song-id filename))

@@ -201,6 +201,7 @@
               :description "Description"
               :description-hint "Z.B. farbe, material"
               :make "Make"
+              :images "Photos"
               :model "Model"
               :name "Instrument Name"
               :serial-number "Serial Number"

@@ -5,14 +5,12 @@
    [app.datomic :as d]
    [app.email :as email]
    [app.errors :as errors]
-   [app.file-utils :as fu]
+   [app.file-utils :as fs]
    [app.filestore.controller :as filestore]
    [app.insurance.domain :as domain]
    [app.insurance.excel :as excel]
    [app.ledger.domain :as ledger.domain]
-   [app.nextcloud :as nextcloud]
    [app.queries :as q]
-   [app.sardine :as sardine]
    [app.schemas :as s]
    [app.urls :as urls]
    [app.util :as util]
@@ -29,13 +27,11 @@
    [java.io ByteArrayOutputStream]
    [java.net URLEncoder]))
 
-(def NEXTCLOUD_SHARE_LABEL "snorga-bot-insurance")
-
 (def str->instrument-coverage-status (zipmap (map name domain/instrument-coverage-statuses) domain/instrument-coverage-statuses))
 (def str->policy-status (zipmap (map name domain/policy-statuses) domain/policy-statuses))
 (def str->instrument-coverage-change (zipmap (map name domain/instrument-coverage-changes) domain/instrument-coverage-changes))
 
-(defn policy-editable? [{:insurance.policy/keys [status]}]
+(defn policy-editable? [{:insurance.policy/keys [status] :as p}]
   (= status :insurance.policy.status/draft))
 
 (defn create-policy-txs [{:keys [name effective-at effective-until
@@ -272,33 +268,20 @@
                      (assoc :instrument-id instrument-id))]
       (upsert-instrument! datomic-conn params)))
 
-(defn upsert-instrument-nextcloud-share!
-  "Creates a public read-only share for the instrument images, returns the public url"
-  [req remote-path]
-  (let [nc-config (config/nextcloud-api-config (-> req :system :env))
-        shares (nextcloud/get-shares-with-label nc-config remote-path NEXTCLOUD_SHARE_LABEL)]
-    (if (= (count shares) 0)
-      (:url  (nextcloud/share-folder-public-ro nc-config remote-path NEXTCLOUD_SHARE_LABEL))
-      (:url (first shares)))))
+#_(defn build-image-uris [{:keys [system webdav] :as req} {:instrument/keys [images instrument-id]}]
+    (let [{:keys [thumbnail-opts full-opts]} (config/insurance-image-settings (:env system))]
+      {:thumbnail-uris
+       (let [thumbnail-opts]
+         (map (fn [{:image/keys [image-id]}] (urls/absolute-link-instrument-image-local-thumbnail (:env system) instrument-id  image-id thumbnail-opts)) images))
+       :full-uris (map (fn [{:image/keys [image-id]}] (urls/absolute-link-instrument-image-local-full (:env system) instrument-id  image-id)) images)}))
 
-(defn instrument-image-remote-path
-  "Return the remote nextcloud path for the image upload dir or a specific file"
-  ([req instrument-id]
-   (fu/path-join (config/nextcloud-path-insurance-upload (-> req :system :env)) "instrument" (str instrument-id)))
-  ([req instrument-id filename]
-   (let [base-path (instrument-image-remote-path req instrument-id)
-         path (fu/path-join base-path filename)]
-     (fu/validate-base-path! base-path path)
-     path)))
+(defn build-image-uri [{:keys [system]} {:instrument/keys [instrument-id]} {:image/keys [image-id]}]
+  (when image-id
+    {:thumbnail (urls/absolute-link-instrument-image-thumbnail (:env system) instrument-id  image-id)
+     :full (urls/absolute-link-instrument-image-full (:env system) instrument-id  image-id)}))
 
-(defn internal-instrument-image-url [req {:instrument/keys [instrument-id]}]
-  (nextcloud/format-internal-url
-   (config/nextcloud-url (-> req :system :env))
-   (instrument-image-remote-path req instrument-id)))
-
-(defn list-image-uris [{:keys [system webdav] :as req} {:instrument/keys [images instrument-id]}]
-  (map (fn [{:image/keys [image-id]}]
-         (urls/absolute-link-instrument-image-local (:env system) instrument-id  image-id)) images))
+(defn build-image-uris [req {:instrument/keys [images] :as instrument}]
+  (map #(build-image-uri req instrument %) images))
 
 (defn add-instrument-coverage! [conn {:keys [instrument-id policy-id private? value coverage-type-ids]}]
   (datomic/transact conn {:tx-data [{:db/id "covered_instrument"
@@ -428,16 +411,6 @@
    :instrument/owner [:member/member-id owner-member-id]
    :instrument/category [:instrument.category/category-id category-id]})
 
-(defn try-create-instrument-nextcloud-share! [{:keys [webdav] :as req} instrument-id]
-  (let [remote-path (instrument-image-remote-path req instrument-id)]
-    (try
-      (sardine/mkdirs webdav remote-path)
-      (upsert-instrument-nextcloud-share! req remote-path)
-      (catch Exception e
-        (tap> e)
-        (errors/report-error! e)
-        nil))))
-
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]
     (if (s/valid? UpdateInstrument decoded)
@@ -448,10 +421,9 @@
             instr-tx (if creating?
                        (assoc instr-tx :db/id tempid)
                        instr-tx)
-            share-url (try-create-instrument-nextcloud-share! req instrument-id)
             txs [instr-tx]
-            txs (if share-url (conj txs [:db/add (if creating? tempid [:instrument/instrument-id instrument-id]) :instrument/images-share-url share-url])
-                    txs)
+            #_#_txs (if share-url (conj txs [:db/add (if creating? tempid [:instrument/instrument-id instrument-id]) :instrument/images-share-url share-url])
+                        txs)
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:instrument (q/retrieve-instrument db-after instrument-id)})
       {:error (s/explain-human UpdateInstrument decoded)})))
@@ -498,9 +470,9 @@
             owner-changed? (not= new-owner-member-id old-owner-member-id)
             txs (concat (update-coverage-txs decoded coverage owner-changed?)
                         [(update-instrument-tx decoded instrument-id)])
-            share-url (try-create-instrument-nextcloud-share! req instrument-id)
-            txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
-                    txs)
+            #_#_share-url (try-create-instrument-nextcloud-share! req instrument-id)
+            #_#_txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
+                        txs)
             ;; _ (tap> {:tx txs})
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after (:policy-id decoded))})
@@ -827,11 +799,9 @@
     (d/transact-wrapper! req {:tx-data txs})))
 
 (defn close-survey! [{:keys [db] :as req}]
-  (let [policy (:policy req)
-        {:keys [survey-id] :as p} (util.http/unwrap-params req)
+  (let [{:keys [survey-id]} (util.http/unwrap-params req)
         survey-id (util/ensure-uuid! survey-id)
         txs [[:db/add [:insurance.survey/survey-id survey-id] :insurance.survey/closed-at (t/inst)]]]
-    ;; (tap> [:params p :tx txs])
     (d/transact-wrapper! req {:tx-data txs})))
 
 (defn members-to-email-about-survey [{:insurance.survey/keys [responses] :as survey}]
@@ -860,20 +830,23 @@
         result (d/transact-wrapper! req {:tx-data txs})]
     (q/retrieve-survey-response (:db-after result) response-id)))
 
-(defn upload-instrument-image! [{:keys [db parameters] :as req}]
+(defn upload-instrument-image! [{:keys [parameters] :as req}]
   (let [instrument-id (util/ensure-uuid! (-> parameters :path :instrument-id))
         ;; file is a reitit.ring.malli/temp-file-part
         {:keys [filename _size tempfile content-type]} (->  parameters :multipart :file)
-        _ (tap> [:filename filename :content-type content-type])
-        {:keys [image-tempid tx-data]} (filestore/store-image! req {:file-name filename :data tempfile :mime-type content-type})
-        _ (tap> [:image-tempid image-tempid :tx-data tx-data])
+        {:keys [image-tempid tx-data]} (filestore/store-image! req {:file-name filename :file tempfile :mime-type content-type})
         instr-txs (domain/txs-add-instrument-image instrument-id image-tempid)
-        txs (concat tx-data instr-txs)
-        _ (tap> [:txs txs])]
-    (d/transact-wrapper! req {:tx-data txs})))
+        txs (concat tx-data instr-txs)]
+    (try
+      (d/transact-wrapper! req {:tx-data txs})
+      (finally
+        (fs/delete-if-exists tempfile)))))
 
-(defn load-instrument-image [req instrument-id image-id]
-  (filestore/load-image req image-id))
+(defn load-instrument-image [{:keys [system] :as req} instrument-id image-id mode]
+  (let [{:keys [thumbnail-opts full-opts] :as opts} (config/insurance-image-settings (:env system))]
+    (if (= mode "thumbnail")
+      (filestore/load-image-rendition req image-id thumbnail-opts)
+      (filestore/load-image-rendition req image-id full-opts))))
 
 (comment
   (do

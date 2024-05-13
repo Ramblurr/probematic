@@ -1,8 +1,10 @@
 (ns app.file-utils
-  (:import [java.io File])
   (:require
    [clojure.string :as str]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io])
+  (:import [java.io File]
+           [java.nio.file Path Paths]
+           [java.nio.file Files]))
 
 (defn-  file
   ^File [& args]
@@ -79,10 +81,69 @@
     (throw (ex-info "Path traversal attack detected" {:base-path base-path
                                                       :full-path full-path}))))
 
+(defn create-tempfile
+  "Low level tempfile create function. Use tempfile instead."
+  [& {:keys [prefix suffix]}]
+  (File/createTempFile prefix suffix))
+
+(defn delete-on-exit!
+  [path]
+  (.deleteOnExit ^File (file path)))
+
+(defn tempfile
+  "Create a temporary file."
+  [& {:keys [suffix prefix]
+      :or {prefix "probematic."
+           suffix ".tmp"}}]
+  (let [path (create-tempfile
+              :suffix suffix
+              :prefix prefix)]
+    (delete-on-exit! path)
+    path))
+
+(defn to-path [v]
+  (cond
+    (string? v) (Paths/get v (into-array String []))
+    (instance? java.nio.file.Path v) v
+    (instance? java.io.File v) (.toPath v)
+    :else (throw (ex-info "Unsupported type" {:type (type v)}))))
+
+(defn size
+  "Return the file size."
+  [path]
+  (-> path (to-path) (Files/size)))
+
+(defn split-ext
+  "Returns a vector of `[^String name ^String extension]`."
+  [path]
+  (let [^Path path (to-path path)
+        ^String path-str (.toString path)
+        i (.lastIndexOf path-str ".")]
+    (if (pos? i)
+      [(subs path-str 0 i)
+       (subs path-str i)]
+      [path-str nil])))
+
+(defn ext
+  "Return the extension part of a file."
+  [path]
+  (some-> (last (split-ext path))
+          (subs 1)))
+
+(defn base
+  "Return the base part of a file (without the extension)"
+  [path]
+  (first (split-ext path)))
+
+(defn delete-if-exists [f]
+  (tap> [:deleting f :path (to-path f)])
+  (Files/deleteIfExists (to-path f)))
+
 (comment
   (= true (validate-base-path "/" "/foo/bar"))
   (= true (validate-base-path "/foo/bar" "/foo/bar"))
   (= false (validate-base-path "/foo/bar/baz" "/foo/bar"))
+  (ext "foobar")
 
   ;;
   )

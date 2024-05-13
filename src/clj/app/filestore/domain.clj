@@ -1,9 +1,8 @@
 (ns app.filestore.domain
   (:require
-   [taoensso.nippy :as nippy]
-   [medley.core :as m]
    [app.schemas :as s]
    [com.yetanalytics.squuid :as sq]
+   [medley.core :as m]
    [tick.core :as t]))
 
 (def FileStoreEntity
@@ -53,16 +52,16 @@
 
 (defn encode-filter-spec [filter-spec]
   (when filter-spec
-    (nippy/freeze filter-spec)))
+    (pr-str filter-spec)))
 
-(defn decode-filter-spec [filter-spec]
-  (when filter-spec
-    (nippy/thaw filter-spec)))
+(defn decode-filter-spec [filter-spec-encoded]
+  (when filter-spec-encoded
+    (read-string filter-spec-encoded)))
 
-(defn txs-new-rendition [tempid {:keys [image-id] :as parent-image} file-tempid width height filter-spec]
+(defn txs-new-rendition [rendition-id tempid file-tempid {:image/keys [image-id] :as parent-image} width height filter-spec]
   [[:db/add [:image/image-id image-id] :image/renditions tempid]
    (-> {:db/id tempid
-        :image/image-id (sq/generate-squuid)
+        :image/image-id rendition-id
         :image/source-file file-tempid
         :image/width width
         :image/height height}
@@ -85,3 +84,7 @@
       (m/update-existing :image/source-file file->db)
       (m/update-existing :image/filter-spec encode-filter-spec)
       (m/update-existing :image/renditions #(map image->db %))))
+(comment
+
+;;
+  )

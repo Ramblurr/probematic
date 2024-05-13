@@ -1,9 +1,8 @@
 (ns app.insurance.routes
   (:require
-   [app.queries :as q]
-   [app.insurance.controller :as controller]
    [app.insurance.views :as view]
    [app.layout :as layout]
+   [app.queries :as q]
    [ctmx.core :as ctmx]
    [datomic.client.api :as d]
    [reitit.ring.malli :as reitit.ring.malli]))
@@ -145,26 +144,12 @@
                           :path [:map [:instrument-id :uuid]]}
              :handler (fn [req] (view/image-upload-handler req))}}]
 
-    ["/instrument-image-local/{instrument-id}"
-     {:post {:summary "Upload an image for an instrument"
-             :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
-                          :path [:map [:instrument-id :uuid]]}
-             :handler (fn [req] (view/image-upload-handler-local req))}}]
-
-    ["/instrument-image/{instrument-id}/{filename}"
+    ["/instrument-image/{instrument-id}/{image-id}"
      {:get {:summary "Get instrument images"
-            :parameters {:path [:map
-                                [:instrument-id :uuid]
-                                [:filename :string]]}
+            :parameters {:path [:map [:instrument-id :uuid] [:image-id :string]]
+                         :query [:map [:mode {:optional true} [:enum "full" "thumbnail"]]]}
             :handler (fn [req]
-                       (view/image-fetch-handler req))}}]
-    ["/instrument-image-local/{instrument-id}/{image-id}"
-     {:get {:summary "Get instrument images"
-            :parameters {:path [:map
-                                [:instrument-id :uuid]
-                                [:image-id :string]]}
-            :handler (fn [req]
-                       (view/image-fetch-handler-local req))}}]]
+                       (view/image-fetch-handler req))}}]]
 
    ["" {:app.route/name :app/insurance2
         :interceptors [policy-interceptor instrument-interceptor]}

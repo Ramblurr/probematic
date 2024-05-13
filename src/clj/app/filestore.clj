@@ -1,12 +1,10 @@
 (ns app.filestore
-  (:import
-   [java.io ByteArrayInputStream ByteArrayOutputStream])
   (:require
-   [mikera.image.core :as imgz]
-   [multiformats.hash :as mhash]
+   [app.filestore.image :as im]
    [blocks.core :as block]
    [blocks.store.file :as blocks.store.file]
-   [com.stuartsierra.component :as component]))
+   [com.stuartsierra.component :as component]
+   [multiformats.hash :as mhash]))
 
 (defn start! [{:keys [store-path]}]
   (-> store-path
@@ -21,6 +19,12 @@
   prepared-source is the result of calling prepare on the source."
   [filestore prepared-source]
   (block/put! filestore (:block prepared-source)))
+
+(defn put-sync!
+  "Stores the file in the filestore.
+  prepared-source is the result of calling prepare on the source."
+  [filestore prepared-source]
+  @(put! filestore prepared-source))
 
 (defn get-block [filestore hash]
   @(block/get filestore hash))
@@ -42,13 +46,17 @@
      :block block
      :size size}))
 
-(defn prepare-image [source]
-  (let [img (imgz/load-image source)
-        {:keys [id size] :as block} (block/read! source)
-        width (imgz/width img)
-        height (imgz/height img)]
+(defn prepare-image!
+  "Strips metadata from the image (in place!) and returns a map with the hash, size, width, height, format, and mime-type."
+  [file]
+  (im/strip-metadata-in-place! {:input {:path file}})
+  (let [{:keys [width height format mime-type] :as info} (im/identify-detailed file)
+        _ (tap> info)
+        {:keys [id size] :as block} (block/read! file)]
     {:hash (mhash/hex id)
      :block block
+     :format format
+     :mime-type mime-type
      :size size
      :width width
      :height height}))

@@ -1067,12 +1067,26 @@
   (-> (d/find-by db :image/image-id image-id image-pattern)
       (filestore.domain/db->image)))
 
-(defn retrieve-image-renditions
-  "Fetches the image-id with its renditions"
-  [db image-id]
-  (->
-   (d/find-by db :image/image-id image-id image-pattern-with-renditions)
-   (filestore.domain/db->image)))
+#_(defn retrieve-image-renditions
+    "Fetches the image-id with its renditions"
+    [db image-id]
+    (->
+     (d/find-by db :image/image-id image-id image-pattern-with-renditions)
+     (filestore.domain/db->image)))
+
+(defn retrieve-renditions-for
+  "Fetches the image-id and renditions with the given filter-spec"
+  [db image-id filter-spec-encoded]
+  (->>
+   (datomic/q '[:find (pull ?rendition pattern)
+                :in $ ?image-id ?filter-spec pattern
+                :where
+                [?parent-image :image/image-id ?image-id]
+                [?parent-image :image/renditions ?rendition]
+                [?rendition :image/filter-spec ?filter-spec]]
+              db image-id filter-spec-encoded image-pattern-with-renditions)
+   (map first)
+   (map filestore.domain/db->image)))
 
 ;;;; END
 (comment

@@ -87,3 +87,9 @@
 
 (defn band-smtp [env]
   (-> env :smtp-sno))
+
+(defn external-insurance-policy [env]
+  (-> env :insurance :insurance-policy))
+
+(defn insurance-image-settings [env]
+  (-> env :insurance :images))
