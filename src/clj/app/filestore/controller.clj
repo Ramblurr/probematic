@@ -64,7 +64,7 @@ So here we provide functions to store the content and generate datoms for use in
      :etag hash
      :last-modified mtime
      :size size
-     :content-thunk (fn [] (filestore/load filestore hash))}))
+     :content-thunk (fn [] (filestore/load-as-stream filestore hash))}))
 
 (defn load-image
   "Load the image from the store

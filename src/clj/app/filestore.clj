@@ -26,16 +26,16 @@
   [filestore prepared-source]
   @(put! filestore prepared-source))
 
-(defn get-block [filestore hash]
+(defn get-block-sync [filestore hash]
   @(block/get filestore hash))
 
 (defn as-input-stream ^java.io.InputStream [b]
   (block/open b))
 
-(defn load
+(defn load-as-stream
   "Loads the block from the filestore and returns an input stream."
   [filestore hash]
-  (as-input-stream (get-block filestore (mhash/parse hash))))
+  (as-input-stream (get-block-sync filestore (mhash/parse hash))))
 
 (defn prepare
   "Prepare the source for storage in the filestore.
