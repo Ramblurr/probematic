@@ -210,7 +210,7 @@
               :create-title "New Instrument"
               :create-subtitle "Enter details for the Instrument"
               :photo-upload "Photo Upload"
-              :photo-upload-title "Upload Instrument PHotos"
+              :photo-upload-title "Upload Instrument Photos"
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."
               :images-share-url "Photos Public Link"
               :images-share-url-hint "Use this link when sharing outside the band"}

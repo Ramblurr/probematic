@@ -426,8 +426,6 @@
                  :db/id "covered_instrument"}
                 [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
 
-
-
 (defn update-instrument-tx [{:keys [description build-year serial-number make instrument-name owner-member-id model category-id] :as decoded} instrument-id]
   {:instrument/instrument-id instrument-id
    :instrument/description description
@@ -438,8 +436,6 @@
    :instrument/name instrument-name
    :instrument/owner [:member/member-id owner-member-id]
    :instrument/category [:instrument.category/category-id category-id]})
-
-
 
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]

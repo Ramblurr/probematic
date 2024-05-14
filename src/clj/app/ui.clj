@@ -528,8 +528,9 @@
     (:section/name section)
     "No Section"))
 
-(defn member-select [& {:keys [id value label members variant with-empty-opt? error]
+(defn member-select [& {:keys [id value label members variant with-empty-opt? error full-names?]
                         :or {label "Member"
+                             full-names? false
                              variant :inline
                              with-empty-opt? false}}]
   (let [options
@@ -537,7 +538,10 @@
          (if with-empty-opt?
            [{:value "" :label " - "}] [])
          (->> members
-              (map (fn [m] {:value (:member/member-id m) :label (member-nick m)}))
+              (map (fn [m] {:value (:member/member-id m)
+                            :label (if full-names?
+                                     (:member/name m)
+                                     (member-nick m))}))
               (util/isort-by :label)))]
     (condp = variant
       :inline (select :id id
@@ -600,14 +604,18 @@
                          :value value
                          :options options))))
 
-(defn instrument-category-select [& {:keys [id value label categories :variant]
+(defn instrument-category-select [& {:keys [id value label categories variant with-empty-opt?]
                                      :or {label "Instrument Category"
+                                          with-empty-opt? true
                                           variant :inline}}]
   (let [options
-        (map (fn [c]
-               {:value (:instrument.category/category-id c)
-                :label (:instrument.category/name c)})
-             categories)]
+        (concat
+         (if with-empty-opt?
+           [{:value "" :label " - "}] [])
+         (map (fn [c]
+                {:value (:instrument.category/category-id c)
+                 :label (:instrument.category/name c)})
+              categories))]
     (condp = variant
       :inline
       (select :id id

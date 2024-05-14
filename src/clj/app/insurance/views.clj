@@ -541,14 +541,29 @@ Mit freundlichen Grüßen,
    (instrument-form req error instrument {}))
   ([{:keys [tr db] :as req} error {:instrument/keys [name owner make model build-year serial-number description category] :as instrument} {:keys [hide-owner?] :as opts}]
 
-   (let [owner-id (if (:member/member-id owner)
+   (let [current-member (auth/get-current-member req)
+         ;; the logic here is that when creating a new instrument, if the creator is an insurance
+         ;; team member, we don't want to default the owner to themselves (because it happens that
+         ;; they add the instrument to themselves when they probably want to add it to someone else)
+         ;; but if its a normal-member then we do (to make it easier for them)
+         insurance-team-member? (q/insurance-team-member? db current-member)
+         owner-id (if (:member/member-id owner)
                     (:member/member-id owner)
-                    (:member/member-id (auth/get-current-member req)))]
+                    (if insurance-team-member?
+                      nil
+                      (:member/member-id current-member)))]
 
      (list
       (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error)
       (when-not hide-owner?
-        (ui/member-select :variant :left :label (tr [:instrument/owner]) :id "owner-member-id" :value owner-id :members (q/members-for-select db) :error error))
+        (ui/member-select :with-empty-opt? insurance-team-member?
+                          :full-names? true
+                          :variant :left
+                          :label (tr [:instrument/owner])
+                          :id "owner-member-id"
+                          :value owner-id
+                          :members (q/members-for-select db)
+                          :error error))
       (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :value (:instrument.category/category-id category) :categories (controller/instrument-categories db) :error error)
       (ui/text-left :label (tr [:instrument/make]) :id  "make" :value make  :error error)
       (ui/text-left :label (tr [:instrument/model]) :hint (tr [:instrument/if-available]) :id  "model" :value model :required? false :error error)
@@ -608,7 +623,7 @@ Mit freundlichen Grüßen,
                   (tr [:insurance/confirm-mark-as] [%])
                   (tr [:insurance/confirm-mark-as-button])
                   (tr [:action/cancel]))
-        common-attrs {:hx-post endpoint-mark-as :hx-target hx-target :hx-include "input.mark-coverage-as-data" }]
+        common-attrs {:hx-post endpoint-mark-as :hx-target hx-target :hx-include "input.mark-coverage-as-data"}]
     (ui/action-menu
      :label (tr [:action/mark-as])
      :sections [{:label "Workflow Status"
