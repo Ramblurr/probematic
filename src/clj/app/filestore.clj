@@ -1,12 +1,26 @@
 (ns app.filestore
   (:require
+   [app.file-utils :as fs]
    [app.filestore.image :as im]
    [blocks.core :as block]
    [blocks.store.file :as blocks.store.file]
    [com.stuartsierra.component :as component]
    [multiformats.hash :as mhash]))
 
+(defn system-check! [store-path]
+  (when-not (fs/exists? store-path)
+    (throw (ex-info "Filestore path does not exist" {:store-path store-path})))
+  (when-not (fs/writeable? store-path)
+    (throw (ex-info "Filestore path is not writeable" {:store-path store-path})))
+  (when-not (fs/program-exists? "convert")
+    (throw (ex-info "ImageMagick convert program not found in PATH" {})))
+  (when-not (fs/program-exists? "mogrify")
+    (throw (ex-info "ImageMagick mogrify program not found in PATH" {})))
+  (when-not (fs/program-exists? "identify")
+    (throw (ex-info "ImageMagick identify program not found in PATH" {}))))
+
 (defn start! [{:keys [store-path]}]
+  (system-check! store-path)
   (-> store-path
       (blocks.store.file/file-block-store)
       (component/start)))
