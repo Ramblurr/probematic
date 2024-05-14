@@ -845,24 +845,25 @@ Mit freundlichen Grüßen,
         number "text-right"
         number-total "border-double border-t-4 border-gray-300"]
     [:div {:id id
-           :class "instrgrid border-collapse overflow-hidden m-w-full"}
+           :class "instrgrid border-collapse m-w-full"}
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
-     [:table {:class "table-auto ml-3 sm:ml-4" :id "coverages-table"}
-      [:tr
-       [:td]
-       [:td [:span  {:class (ui/cs "py-2 flex px-2")}
-             (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed " " (tr [:instrument.coverage.change/changed])]]
-       [:td [:span  {:class "flex px-2"}
-             (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed " " (tr [:instrument.coverage.change/removed])]]
-       [:td [:span  {:class "flex px-2"}
-             (coverage-change-icon-span tr :instrument.coverage.change/new) total-new " " (tr [:instrument.coverage.change/new])]]
-       [:td [:span  {:class "flex px-2"}
-             (coverage-change-icon-span tr :instrument.coverage.change/none) total-no-changes " " (tr [:instrument.coverage.change/none])]]]
-      [:tr
-       [:td
-        [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
-         [:input {:type "checkbox" :id "instr-select-all"
-                  :_ (format "on checkboxChanged
+     [:div {:class "overflow-x-auto"}
+      [:table {:class "table-auto ml-3 sm:ml-4" :id "coverages-table-legend"}
+       [:tr
+        [:td]
+        [:td [:span  {:class (ui/cs "py-2 flex px-2")}
+              (coverage-change-icon-span tr :instrument.coverage.change/changed) total-changed " " (tr [:instrument.coverage.change/changed])]]
+        [:td [:span  {:class "flex px-2"}
+              (coverage-change-icon-span tr :instrument.coverage.change/removed) total-removed " " (tr [:instrument.coverage.change/removed])]]
+        [:td [:span  {:class "flex px-2"}
+              (coverage-change-icon-span tr :instrument.coverage.change/new) total-new " " (tr [:instrument.coverage.change/new])]]
+        [:td [:span  {:class "flex px-2"}
+              (coverage-change-icon-span tr :instrument.coverage.change/none) total-no-changes " " (tr [:instrument.coverage.change/none])]]]
+       [:tr
+        [:td
+         [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
+          [:input {:type "checkbox" :id "instr-select-all"
+                   :_ (format "on checkboxChanged
                      if length of <div.instrgrid--body input[type=checkbox]:checked/> > 0
                        set .status-selected.innerHTML to `${length of <div.instrgrid--body input[type=checkbox]:checked/>} %s`
                        then add .hidden to .status-totals
@@ -887,21 +888,21 @@ Mit freundlichen Grüßen,
                             end
                        then trigger checkboxChanged on me" (tr [:selected]))
 
-                  :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]]
+                   :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]]
 
-       [:td {:class "actions-selected hidden flex" :colspan 2}
-        [:div {:class (ui/cs col-all "flex gap-4  ml-4 pb-4 sm:pb-1")}
-         (mark-coverage-as-menu req endpoint-mark-as (hash "."))]
-        [:div {:class (ui/cs  "status-selected hidden py-2 pl-2")}]]
-       [:td {:class "status-totals"}
-        [:span  {:class (ui/cs "py-2 flex px-2" (when (> total-needs-review 0) "font-medium"))}
-         (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]]
-       [:td {:class "status-totals"} [:span  {:class "flex px-2"}
-                                      (coverage-status-icon-span tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]]
-       [:td {:class "status-totals"} [:span  {:class "flex px-2"}
-                                      (coverage-status-icon-span tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]]
+        [:td {:class "actions-selected hidden flex" :colspan 2}
+         [:div {:class (ui/cs col-all "flex gap-4  ml-4 pb-4 sm:pb-1")}
+          (mark-coverage-as-menu req endpoint-mark-as (hash "."))]
+         [:div {:class (ui/cs  "status-selected hidden py-2 pl-2")}]]
+        [:td {:class "status-totals"}
+         [:span  {:class (ui/cs "py-2 flex px-2" (when (> total-needs-review 0) "font-medium"))}
+          (coverage-status-icon-span tr :instrument.coverage.status/needs-review) total-needs-review " Todo"]]
+        [:td {:class "status-totals"} [:span  {:class "flex px-2"}
+                                       (coverage-status-icon-span tr :instrument.coverage.status/reviewed) total-reviewed " Reviewed"]]
+        [:td {:class "status-totals"} [:span  {:class "flex px-2"}
+                                       (coverage-status-icon-span tr :instrument.coverage.status/coverage-active) total-coverage-active " Active"]]]]]
 
-     [:div {:class (ui/cs "instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
+     [:div {:class (ui/cs "overflow-hidden instrgrid--header min-w-full bg-gray-100 border-b-4 text-sm truncate gap-1 " grid-class spacing)}
       [:div {:class (ui/cs col-all center-all)}]
 
       [:div {:class (ui/cs col-all)}
@@ -919,7 +920,7 @@ Mit freundlichen Grüßen,
       [:div {:class (ui/cs col-sm number)} [:span {:title (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
       (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
       [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
-     [:div {:class "instrgrid--body divide-y"}
+     [:div {:class "overflow-hidden instrgrid--body divide-y"}
       (map-indexed (fn [member-idx {:member/keys [name member-id] :keys [coverages total] :as member}]
                      [:div {:class "instrgrid--group"}
                       [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
@@ -964,7 +965,7 @@ Mit freundlichen Grüßen,
                        [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
 
                    grouped-by-owner)]
-     [:div {:class "instragrid--footer"}
+     [:div {:class "overflow-hidden instragrid--footer"}
       [:div {:class (ui/cs grid-class "min-w-full bg-gray-100  text-sm gap-1" spacing)}
        [:div {:class (ui/cs col-all)}]
        [:div {:class (ui/cs col-all)}]
@@ -1444,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 (ui/link-button :label (tr [:action/add]) :priority :white :class "" :icon icon/plus :centered? true
                                 :attr {:href (urls/link-coverage-create policy-id)})))]]
            [:div {:class "border-t border-gray-200 py-5"}
-            [:div {:class "overflow-hidden md:mx-0 md:rounded-lg"}
+            [:div {:class "md:mx-0 md:rounded-lg"}
              (insurance-instrument-coverage-table req)]]]]]]
 
        (when (empty? instrument-coverages)
