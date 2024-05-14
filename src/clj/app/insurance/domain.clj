@@ -1,5 +1,6 @@
 (ns app.insurance.domain
   (:require
+   [app.urls :as urls]
    [app.schemas :as s]
    [clojure.set :as set]
    [com.yetanalytics.squuid :as sq]
@@ -263,5 +264,14 @@
      :insurance.policy/status    :insurance.policy.status/active}]
    (mapcat txs-confirm-and-activate-policy-coverages covered-instruments)))
 
-(defn txs-add-instrument-image [instrument-id image-ref]
-  [[:db/add [:instrument/instrument-id instrument-id] :instrument/images image-ref]])
+(defn public-instrument-url [req instrument-id]
+  (urls/absolute-link-instrument-public (-> req :system :env) instrument-id))
+
+(defn txs-instrument-share-link [req ref instrument-id]
+  [[:db/add ref :instrument/images-share-url (public-instrument-url req instrument-id)]])
+
+(defn txs-add-instrument-image [req instrument-id image-ref]
+  (let [ref [:instrument/instrument-id instrument-id]]
+    (concat
+     [[:db/add ref :instrument/images image-ref]]
+     (txs-instrument-share-link req ref instrument-id))))

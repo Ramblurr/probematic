@@ -426,8 +426,7 @@
                  :db/id "covered_instrument"}
                 [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
 
-(defn public-instrument-url [req instrument-id]
-  (urls/absolute-link-instrument-public (-> req :system :env) instrument-id))
+
 
 (defn update-instrument-tx [{:keys [description build-year serial-number make instrument-name owner-member-id model category-id] :as decoded} instrument-id]
   {:instrument/instrument-id instrument-id
@@ -440,8 +439,7 @@
    :instrument/owner [:member/member-id owner-member-id]
    :instrument/category [:instrument.category/category-id category-id]})
 
-(defn txs-instrument-share-link [req ref instrument-id]
-  [[:db/add ref :instrument/images-share-url (public-instrument-url req instrument-id)]])
+
 
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]
@@ -454,7 +452,7 @@
                        (assoc instr-tx :db/id tempid)
                        instr-tx)
             txs (concat [instr-tx]
-                        (txs-instrument-share-link req (if creating? tempid [:instrument/instrument-id instrument-id]) instrument-id))
+                        (domain/txs-instrument-share-link req (if creating? tempid [:instrument/instrument-id instrument-id]) instrument-id))
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:instrument (q/retrieve-instrument db-after instrument-id)})
       {:error (s/explain-human UpdateInstrument decoded)})))
@@ -501,7 +499,7 @@
             owner-changed? (not= new-owner-member-id old-owner-member-id)
             txs (concat (update-coverage-txs decoded coverage owner-changed?)
                         [(update-instrument-tx decoded instrument-id)]
-                        (txs-instrument-share-link req [:instrument/instrument-id instrument-id] instrument-id))
+                        (domain/txs-instrument-share-link req [:instrument/instrument-id instrument-id] instrument-id))
             ;; _ (tap> {:tx txs})
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after (:policy-id decoded))})
@@ -861,7 +859,7 @@
 
 (defn -upload-instrument-image! [req  instrument-id {:keys [filename _size tempfile content-type]}]
   (let [{:keys [image-tempid tx-data]} (filestore/store-image! req {:file-name filename :file tempfile :mime-type content-type})
-        instr-txs (domain/txs-add-instrument-image instrument-id image-tempid)
+        instr-txs (domain/txs-add-instrument-image req instrument-id image-tempid)
         txs (concat tx-data instr-txs)]
     (try
       (d/transact-wrapper! req {:tx-data txs})
@@ -881,7 +879,7 @@
                            files))
         txs (mapcat (fn [{:keys [image-tempid tx-data]}]
                       (concat tx-data
-                              (domain/txs-add-instrument-image instrument-id image-tempid))) images)]
+                              (domain/txs-add-instrument-image req instrument-id image-tempid))) images)]
     (try
       (d/transact-wrapper! req {:tx-data txs})
       (finally
