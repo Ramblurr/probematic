@@ -3,16 +3,19 @@
    [app.auth :as auth]
    [app.config :as config]
    [app.email :as email]
+   [app.filestore.image :as filestore.image]
    [app.i18n :as i18n]
    [app.icons :as icon]
    [app.insurance.controller :as controller]
    [app.insurance.domain :as domain]
+   [app.layout :as layout]
    [app.queries :as q]
-   [app.sardine :as sardine]
+   [app.render :as render]
    [app.ui :as ui]
    [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
+   [clojure.set :as set]
    [clojure.string :as str]
    [ctmx.core :as ctmx]
    [ctmx.response :as response]
@@ -768,6 +771,54 @@ Mit freundlichen Grüßen,
                     (map (partial survey-response-table-row req)
                          responses)]]]))]))
 
+(declare instrument-image-upload-button)
+
+(defn validate-accepted-mime-types
+  "Given a list of accepted mime types and a list of actual mime types, this function returns a set of invalid mime types."
+  [accepted actual]
+  (let [actual-set (set actual)
+        accepted-set (set accepted)
+        invalid (set/difference actual-set accepted-set)]
+    invalid))
+
+(defn instrument-image-upload-button-handler [{:keys [db] :as req}]
+  (let [{:keys [instrument-id files]} (-> req :parameters :multipart)
+        invalid-types (validate-accepted-mime-types filestore.image/supported-mime-types (map :content-type files))]
+    (tap> invalid-types)
+    (if (empty? invalid-types)
+      (let [{:keys [db-after]} (controller/upload-instrument-images! req instrument-id files)
+            instrument (q/retrieve-instrument db-after instrument-id)]
+        (render/snippet-response
+         (instrument-image-upload-button instrument)))
+      (let [instrument (q/retrieve-instrument db instrument-id)]
+        (render/snippet-response
+         (instrument-image-upload-button instrument (str "Invalid image types: " (str/join ", " (map #(second (str/split % #"/")) invalid-types)))))))))
+
+(defn instrument-image-upload-button
+  ([instrument]
+   (instrument-image-upload-button instrument nil))
+  ([{:instrument/keys [instrument-id images]} error]
+   (let [formId  (str "imageUpload-" instrument-id)
+         inputId  (str "imageUploadInput-" instrument-id)]
+     [:form
+      {:hx-encoding "multipart/form-data"
+       :id formId
+       :hx-target (util/hash formId)
+       :hx-post "/instrument-image-button/"
+       :_ "on htmx:xhr:progress(loaded, total) set (the first <progress/> in me)'s value to (loaded/total)*100 then remove .hidden from the first <progress/> in me"}
+      [:label {:for inputId}
+       (if images
+         (icon/images {:class (ui/cs "w-5 h-5" "text-gray-400 cursor-pointer hover:text-gray-900")})
+         (icon/images-solid {:class (ui/cs "w-5 h-5" "text-red-500 cursor-pointer hover:text-red-800")}))
+       [:input {:type :hidden :name "instrument-id" :value (str instrument-id)}]
+       [:input
+        {:id inputId :type "file" :name "files" :class "hidden" :multiple true
+         :accept (str/join "," filestore.image/supported-extensions)
+         :_ "on change trigger submit on the closest parent <form/>"}]]
+      [:progress {:class "hidden progress-filled:transition-all progress-unfilled:duration-500 progress-filled:rounded-sm progress-unfilled:rounded-md progress-unfilled:bg-[#F2F2F2] progress-filled:bg-sno-green-500" :value "50" :max "100"}]
+      (when error
+        [:p {:class "text-red-500"} error])])))
+
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [tr] :as req}]
   insurance-instrument-coverage-table-mark-as
   (let [policy (:policy req)
@@ -793,8 +844,8 @@ Mit freundlichen Grüßen,
         center-all "flex items-center justify-center"
         number "text-right"
         number-total "border-double border-t-4 border-gray-300"]
-    [:form {:id id
-            :class "instrgrid border-collapse overflow-hidden m-w-full"}
+    [:div {:id id
+           :class "instrgrid border-collapse overflow-hidden m-w-full"}
      [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
      [:table {:class "table-auto ml-3 sm:ml-4" :id "coverages-table"}
       [:tr
@@ -861,52 +912,58 @@ Mit freundlichen Grüßen,
        ;; change icon
        ""]
       [:div {:class (ui/cs col-all "truncate")} (tr [:instrument/instrument])]
+      [:div {:class (ui/cs col-sm)} (icon/images {:class "w-5 h-5 text-gray-500"})]
+      [:div {:class (ui/cs col-sm)} "Category"]
       [:div {:class (ui/cs col-all)} "Band?"]
       [:div {:class (ui/cs col-sm number)} (tr [:insurance/item-count])]
       [:div {:class (ui/cs col-sm number)} [:span {:title (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
       (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
       [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
      [:div {:class "instrgrid--body divide-y"}
-      (map (fn [{:member/keys [name member-id] :keys [coverages total] :as member}]
-             [:div {:class "instrgrid--group"}
-              [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
-               [:span {:id (str "coverages-" member-id)} [:a {:href (urls/link-member member-id) :class "link-blue"} name]]
-               [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
-              [:div {:class "divide-y"}
-               (map-indexed (fn [idx {:instrument.coverage/keys [coverage-id change status private? value item-count instrument cost] :keys [types] :as coverage}]
-                              [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
-                               [:div {:class (ui/cs col-all center-all)}
-                                [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
-                                 [:input {:type "checkbox" :id id :name "coverage-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
-                                          :value (str coverage-id)
-                                          :_ "on click trigger checkboxChanged on #instr-select-all"}]]]
-                               [:div {:class (ui/cs col-all)}
-                                (coverage-status-icon-span tr status)]
-                               [:div {:class (ui/cs col-all)}
-                                (coverage-change-icon-span tr change)]
+      (map-indexed (fn [member-idx {:member/keys [name member-id] :keys [coverages total] :as member}]
+                     [:div {:class "instrgrid--group"}
+                      [:div {:class (ui/cs  "instrgrid--group-header gap-2 flex bg-white font-medium text-lg " spacing)}
+                       [:span {:id (str "coverages-" member-id)} [:a {:href (urls/link-member member-id) :class "link-blue"} name]]
+                       [:span {:class "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"} (count coverages)]]
+                      [:div {:class "divide-y"}
+                       (map-indexed (fn [instr-idx {:instrument.coverage/keys [coverage-id change status private? value item-count instrument cost] :keys [types] :as coverage}]
+                                      (let [{:instrument/keys [category] instrument-name :instrument/name} instrument]
+                                        [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
+                                         [:div {:class (ui/cs col-all center-all)}
+                                          [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
+                                           [:input {:type "checkbox" :id id :name "coverage-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+                                                    :value (str coverage-id)
+                                                    :_ "on click trigger checkboxChanged on #instr-select-all"}]]]
+                                         [:div {:class (ui/cs col-all)}
+                                          (coverage-status-icon-span tr status)]
+                                         [:div {:class (ui/cs col-all)}
+                                          (coverage-change-icon-span tr change)]
 
-                               [:div {:class (ui/cs col-all "truncate")}
-                                [:a {:href (urls/link-coverage coverage) :class "text-medium"}
-                                 (:instrument/name instrument)]]
-                               [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
-                               [:div {:class (ui/cs col-sm number)} item-count]
-                               [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
-                               (map (fn [ct] [:div {:class (ui/cs col-sm number)}
-                                              (when ct (ui/money  (:insurance.coverage.type/cost ct) :EUR))]) types)
-                               [:div {:class (ui/cs col-all number)} (ui/money cost :EUR)]])
+                                         [:div {:class (ui/cs col-all "truncate")}
+                                          [:a {:href (urls/link-coverage coverage) :class "text-medium"}
+                                           instrument-name]]
+                                         [:div {:class (ui/cs col-sm)}
+                                          (instrument-image-upload-button instrument)]
+                                         [:div {:class (ui/cs col-sm "truncate")} (-> category :instrument.category/name)]
+                                         [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
+                                         [:div {:class (ui/cs col-sm number)} item-count]
+                                         [:div {:class (ui/cs col-sm number)}  (ui/money value :EUR)]
+                                         (map (fn [ct] [:div {:class (ui/cs col-sm number)}
+                                                        (when ct (ui/money  (:insurance.coverage.type/cost ct) :EUR))]) types)
+                                         [:div {:class (ui/cs col-all number)} (ui/money cost :EUR)]]))
 
-                            coverages)]
-              [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
-               [:div {:class (ui/cs col-all)}]
-               [:div {:class (ui/cs col-all)}]
-               [:div {:class (ui/cs col-all)}]
-               [:div {:class (ui/cs col-all)}]
-               [:div {:class (ui/cs col-sm)}]
-               [:div {:class (ui/cs col-sm)}]
-               (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
-               [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
+                                    coverages)]
+                      [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
+                       [:div {:class (ui/cs col-all)}]
+                       [:div {:class (ui/cs col-all)}]
+                       [:div {:class (ui/cs col-all)}]
+                       [:div {:class (ui/cs col-all)}]
+                       [:div {:class (ui/cs col-sm)}]
+                       [:div {:class (ui/cs col-sm)}]
+                       (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
+                       [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
 
-           grouped-by-owner)]
+                   grouped-by-owner)]
      [:div {:class "instragrid--footer"}
       [:div {:class (ui/cs grid-class "min-w-full bg-gray-100  text-sm gap-1" spacing)}
        [:div {:class (ui/cs col-all)}]
@@ -921,6 +978,30 @@ Mit freundlichen Grüßen,
 (ctmx/defcomponent ^:endpoint insurance-coverage-delete [{:keys [db tr] :as req}]
   (when (and (q/insurance-team-member? db (auth/get-current-member req)) (util/delete? req))
     (response/hx-redirect (urls/link-policy (:policy (controller/delete-coverage! req))))))
+
+(defn photo-upload-script [id url]
+  [:script
+   (hiccup.util/raw-string
+    (format "
+function initUpload() {
+  try {
+    Dropzone.options.%s = {
+      %s
+      paramName: 'file',
+      acceptedFiles: '.jpeg,.jpg,.png,.gif,.heic,.heif',
+      maxFileSize: 10, //MB
+  //    addRemoveLinks: true,
+    };
+  } catch (e) {
+    console.error(e);
+  }
+}
+initUpload();
+document.addEventListener('DOMContentLoaded', function() {
+  initUpload();
+}); "
+            id
+            (if url (format "url: \"%s\"," url) "")))])
 
 (defn photo-upload-widget
   "Renders photo upload dropzone. Must be used inside a div/form with the dropzone class and an id of imageUpload"
@@ -939,27 +1020,7 @@ Mit freundlichen Grüßen,
         [:p {:class "pl-1 hidden md:block"} "or drag and drop"]]
        [:p {:class "text-xs text-gray-500"} "PNG, JPG, GIF up to 10MB"]]]]
 
-    [:script
-     (hiccup.util/raw-string
-      (format "
-function initUpload() {
-  try {
-    Dropzone.options.imageUpload = {
-      %s
-      paramName: 'file',
-      acceptedFiles: '.jpeg,.jpg,.png,.gif,.heic,.heif',
-      maxFileSize: 10, //MB
-  //    addRemoveLinks: true,
-    };
-  } catch (e) {
-    console.error(e);
-  }
-}
-initUpload();
-document.addEventListener('DOMContentLoaded', function() {
-  initUpload();
-}); "
-              (if url (format "url: \"%s\"," url) "")))]]))
+    (photo-upload-script "imageUpload" url)]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-detail-page-rw [{:keys [db tr] :as req}]
   insurance-coverage-delete
@@ -1023,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', function() {
              :subtitle (tr [:insurance/coverage-for] [(:insurance.policy/name policy)])
              :buttons (list
                        (when (controller/policy-editable? policy)
-                         (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
+                         (ui/link-button :hx-boost "true" :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
             (ui/dl
              (ui/dl-item (tr [:insurance/item-count])
                          (:instrument.coverage/item-count coverage))
@@ -1183,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', function() {
             policy (:insurance.policy/_covered-instruments coverage)
             coverage-types (:insurance.policy/coverage-types policy)
             coverage (first (domain/enrich-coverages policy coverage-types [coverage]))
-            {:instrument/keys [instrument-id] :as  instrument} (:instrument.coverage/instrument coverage)
+            {:instrument/keys [instrument-id images-share-url] :as  instrument} (:instrument.coverage/instrument coverage)
             photo-uris (controller/build-image-uris req instrument)]
         (assert coverage)
         [:div {:id id}
@@ -1191,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', function() {
          (ui/panel {:title (:instrument/name instrument)
                     :buttons (when (controller/policy-editable? policy)
                                (list
-                                (ui/link-button :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
+                                (ui/link-button :hx-boost true :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
                    (ui/dl
                     (ui/dl-item (tr [:instrument/owner])
                                 (ui/member (:instrument/owner instrument)))
@@ -1209,18 +1270,69 @@ document.addEventListener('DOMContentLoaded', function() {
                                 (:instrument/build-year instrument))
                     (ui/dl-item (tr [:instrument/description])
                                 (:instrument/description instrument) "sm:col-span-2")
-                    #_(ui/dl-item (tr [:instrument/images-share-url])
-                                  (when-let [link (:instrument/images-share-url instrument)]
-                                    [:p (tr [:instrument/images-share-url-hint]) ": "
-                                     [:a {:href link :target "_blank" :class "link-blue"} link]]))
-                    #_(ui/dl-item (tr [:instrument/images-internal-url])
-                                  (when-let [link (controller/internal-instrument-image-url req instrument)]
-                                    [:p (tr [:instrument/images-internal-url-hint]) ": "
-                                     [:a {:href link  :target "_blank" :class "link-blue"}
-                                      link]])))
+                    (ui/dl-item (tr [:instrument/images-share-url])
+                                [:p (tr [:instrument/images-share-url-hint]) ": "
+                                 [:a {:href images-share-url :target "_blank" :class "link-blue"} images-share-url]]))
                    (ui/photo-grid photo-uris))
          (coverage-panel tr coverage policy)
          (coverage-changes-panel req coverage policy)]))))
+
+(defn instrument-public-page-download-all [req instrument-id]
+  (controller/get-all-images-as-input-stream! req instrument-id))
+
+(defn instrument-public-page [{:keys [tr db] :as req} instrument-id]
+  (let [{:instrument/keys [name category model build-year make serial-number description] :as instrument} (q/retrieve-instrument db instrument-id)
+        photo-uris (controller/build-image-uris req instrument)]
+    (layout/centered-content-lg req
+                                [:div
+                                 [:div
+                                  {:class "px-4 sm:px-0"}
+                                  [:h3
+                                   {:class "text-base font-semibold leading-7 text-gray-900"}   name]
+                                  #_[:p {:class "mt-1 max-w-2xl text-sm leading-6 text-gray-500"} "Personal details and application."]]
+                                 [:div
+                                  {:class "mt-6 border-t border-gray-100"}
+                                  [:dl
+                                   {:class "divide-y divide-gray-100"}
+                                   [:div
+                                    {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                    [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/category])]
+                                    [:dd {:class "mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0"} (:instrument.category/name category)]]
+                                   (when-not (str/blank? make)
+                                     [:div
+                                      {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                      [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/make])]
+                                      [:dd {:class "mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0"} (or make "-")]])
+                                   (when-not (str/blank? model)
+                                     [:div {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                      [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/model])]
+                                      [:dd {:class "mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0"} (or model "-")]])
+                                   (when-not (str/blank? description)
+                                     [:div
+                                      {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                      [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/description])]
+                                      [:dd {:class "mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0"} (or description "-")]])
+                                   (when-not (str/blank? serial-number)
+                                     [:div
+                                      {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                      [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/serial-number])]
+                                      [:dd {:class "mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0"} (or serial-number "-")]])
+                                   (when-not (str/blank? build-year)
+                                     [:div
+                                      {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                      [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/build-year])]
+                                      [:dd {:class "mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0"} (or build-year "-")]])
+                                   [:div
+                                    {:class "px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0"}
+                                    [:dt {:class "text-sm font-medium leading-6 text-gray-900"} (tr [:instrument/images])]
+                                    [:dd {:class "mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0"}
+                                     (if (seq photo-uris)
+                                       (list
+                                        [:div
+                                         (ui/link-button :href (str instrument-id "/download-zip") :icon icon/download :label "Download All" :priority :primary)]
+                                        [:div {:class "-ml-5"}
+                                         (ui/photo-grid photo-uris)])
+                                       "No Photos")]]]]])))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page3 [{:keys [db tr] :as req}]
   (let [post? (util/post? req)
@@ -1252,7 +1364,10 @@ document.addEventListener('DOMContentLoaded', function() {
   (let [{:keys [instrument-id image-id]} (:path parameters)
         {:keys [mode]} (:query parameters)
         img-resp (controller/load-instrument-image req instrument-id image-id mode)]
-    (ui/file-response req (:file-name img-resp) (:stream img-resp) img-resp)))
+    (ui/file-response req
+                      (:file-name img-resp)
+                      ((:content-thunk img-resp))
+                      img-resp)))
 
 (defn image-upload-handler [req]
   (controller/upload-instrument-image! req)
@@ -1695,23 +1810,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 [:dt {:class "text-gray-500"} label]
                 [:dd {:class "text-gray-700 text-right"}
                  value]]))
-           details)]
-     #_[:div
-        {:class "-mt-px flex divide-x divide-gray-200"}
-        [:div
-         {:class "flex w-0 flex-1"}
-         [:button
-          {:class "relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-700  hover:bg-sno-orange-200 focus:bg-sno-orange-500 focus:text-white"}
-          (icon/pencil {:class "h-5 w-5"})
-          "Change"]]
-        [:div
-         {:class "-ml-px flex w-0 flex-1"}
-         [:button
-          {:class "relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-700 hover:bg-sno-green-200 focus:bg-sno-green-600 focus:text-white"}
-          (icon/checkmark {:class "h-5 w-5"})
-          "Approve"]]]]))
-
-;; (instrument-card nil nil nil)
+           details)]]))
 
 (defn build-survey-flow [req]
   {:start-flow        :used

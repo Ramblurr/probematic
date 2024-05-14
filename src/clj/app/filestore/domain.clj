@@ -1,6 +1,7 @@
 (ns app.filestore.domain
   (:require
    [app.schemas :as s]
+   [app.util :as util]
    [com.yetanalytics.squuid :as sq]
    [medley.core :as m]
    [tick.core :as t]))
@@ -35,7 +36,7 @@
   (let [stime (t/inst)]
     [(-> {:db/id tempid
           :filestore.file/file-id (sq/generate-squuid)
-          :filestore.file/file-name file-name
+          :filestore.file/file-name (util/sanitize-filename file-name)
           :filestore.file/atime stime
           :filestore.file/mtime stime
           :filestore.file/ctime stime

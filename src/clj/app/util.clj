@@ -1,22 +1,24 @@
 (ns app.util
   (:refer-clojure :exclude [hash])
   (:require
+   [app.util.sanitize-filename :as sanitize-filename]
    [clojure.pprint :as pprint]
    [clojure.string :as str]
    [clojure.walk :as walk]
    [ctmx.form :as form]
+   [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]
-   [datomic.client.api :as datomic])
+   [ring.util.codec :as codec]
+   [tick.core :as t])
 
   (:import
+   (java.net URLDecoder URLEncoder)
+   (java.net URLEncoder)
+   (java.security SecureRandom)
    (java.text NumberFormat ParsePosition)
    (java.time LocalDate)
    (java.time.format DateTimeFormatter DateTimeFormatterBuilder ResolverStyle)
-   (java.util Locale)
-   (java.net URLDecoder URLEncoder)
-   (java.security SecureRandom)
-   (java.net URLEncoder)))
+   (java.util Locale)))
 
 (defn url-encode [v]
   (URLEncoder/encode v "UTF-8"))
@@ -314,13 +316,20 @@
        (tap> [:error (format "''%s'' is not a recognizable number" s) :ex e])
        nil))))
 
+(defn sanitize-filename [s]
+  (sanitize-filename/sanitize s))
+
 (defn content-disposition-filename
   "Format a filename for use in a Content-Disposition header. The filename is URL-encoded and prefixed with either 'inline' or 'attachment' depending on the value of inline?"
   ([name]
    (content-disposition-filename name true))
   ([name inline?]
    (let [prefix (if inline? "inline" "attachment")]
-     (format "%s; filename*=UTF-8''%s" prefix (URLEncoder/encode name "UTF-8")))))
+     (format "%s; filename*=UTF-8''%s" prefix (codec/url-encode (sanitize-filename name) "utf-8")))))
+
+(defn last-n [n ^String s]
+  (when s
+    (apply str (take-last n s))))
 
 (comment
   (index-sort-by [3 2 1] :id [{:id 1} {:id 2} {:id 3}])

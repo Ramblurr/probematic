@@ -148,10 +148,12 @@ then toggle .px-6 on .sidebar-logo-container
 then toggle .pl-2 on .sidebar-logo-container
 then toggle .lg:pl-64 on #app-container
 then toggle .lg:pl-12 on #app-container
+then trigger appSidebarToggled on <body/>
 "]
 
 ;;
-    [:div {:id "desktop-sidebar-menu" :class
+    [:div {:id "desktop-sidebar-menu"
+           :class
            (ui/cs
             "hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-gray-100 lg:pt-5 lg:pb-4"
             "lg:translate-x-0"
@@ -171,8 +173,8 @@ then toggle .lg:pl-12 on #app-container
        ;; (secondary-navigation)
        ]
       [:div {:class "flex items-end justify-end"}
-       [:button {:class "px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md" :_ script}
-        (icon/arrow-small-left {:class "w-6 h-6 hidden lg:block rotate-0 sidebar-open-close-button"})]]]]))
+       [:button {:class "px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md sidebar-open-close-button rotate-0 " :_ script}
+        (icon/arrow-small-left {:class "w-6 h-6 hidden lg:block"})]]]]))
 
 (defn mobile-menu
   [req]
@@ -307,6 +309,18 @@ then toggle .lg:pl-12 on #app-container
                                       [:div {:class "sm:mx-auto sm:w-full sm:max-w-md"}
                                        (icon/logotype {:class "h-8 mx-auto h-12 w-auto text-green-500 logotype-dark"})]
                                       [:div {:class "mt-8 sm:mx-auto sm:w-full sm:max-w-md"}
+                                       [:div {:class "bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"}
+                                        body]]]])))
+(defn centered-content-lg
+  [req body]
+  (let [uri-prefix (config/app-base-url (-> req :system :env))]
+    (render/html5-response-absolute {:title "SNOrga"
+                                     :uri-prefix uri-prefix}
+                                    [:div {:class "h-full bg-gray-50"}
+                                     [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
+                                      [:div {:class "sm:mx-auto sm:w-full sm:max-w-5xl"}
+                                       (icon/logotype {:class "h-8 mx-auto h-12 w-auto text-green-500 logotype-dark"})]
+                                      [:div {:class "mt-8 sm:mx-auto sm:w-full sm:max-w-5xl"}
                                        [:div {:class "bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"}
                                         body]]]])))
 

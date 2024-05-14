@@ -32,6 +32,7 @@
 
    (auth/routes system)
    (gigs/unauthenticated-routes)
+   (insurance/unauthenticated-routes)
    (members/unauthenticated-routes)
 
    ["" {:interceptors [(interceptors/webdav-interceptor system)]}

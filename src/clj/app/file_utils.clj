@@ -136,7 +136,6 @@
   (first (split-ext path)))
 
 (defn delete-if-exists [f]
-  (tap> [:deleting f :path (to-path f)])
   (Files/deleteIfExists (to-path f)))
 
 (comment

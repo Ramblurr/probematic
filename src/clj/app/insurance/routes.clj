@@ -144,12 +144,12 @@
                           :path [:map [:instrument-id :uuid]]}
              :handler (fn [req] (view/image-upload-handler req))}}]
 
-    ["/instrument-image/{instrument-id}/{image-id}"
-     {:get {:summary "Get instrument images"
-            :parameters {:path [:map [:instrument-id :uuid] [:image-id :string]]
-                         :query [:map [:mode {:optional true} [:enum "full" "thumbnail"]]]}
-            :handler (fn [req]
-                       (view/image-fetch-handler req))}}]]
+    ["/instrument-image-button/"
+     {:post {:summary "Upload an image for an instrument from a single button"
+             :parameters {:multipart [:map
+                                      [:files [:vector {:decode/string (fn [v] (if (vector? v) v [v]))} reitit.ring.malli/temp-file-part]]
+                                      [:instrument-id :uuid]]}
+             :handler (fn [req] (view/instrument-image-upload-button-handler req))}}]]
 
    ["" {:app.route/name :app/insurance2
         :interceptors [policy-interceptor instrument-interceptor]}
@@ -168,3 +168,22 @@
     (insurance-notification)
     (instrument-detail)
     (instrument-create)]])
+
+(defn unauthenticated-routes []
+  [""
+   ["/instrument-public/{instrument-id}"
+    [""
+     {:get {:summary "The public page for an instrument"
+            :parameters {:path [:map [:instrument-id :uuid]]}
+            :handler (fn [req]
+                       (view/instrument-public-page req (-> req :parameters :path :instrument-id)))}}]
+    ["/download-zip" {:get {:summary "Download all photos for an instrument"
+                            :parameters {:path [:map [:instrument-id :uuid]]}
+                            :handler (fn [req]
+                                       (view/instrument-public-page-download-all req (-> req :parameters :path :instrument-id)))}}]]
+   ["/instrument-image/{instrument-id}/{image-id}"
+    {:get {:summary "Get instrument images"
+           :parameters {:path [:map [:instrument-id :uuid] [:image-id :string]]
+                        :query [:map [:mode {:optional true} [:enum "full" "thumbnail"]]]}
+           :handler (fn [req]
+                      (view/image-fetch-handler req))}}]])

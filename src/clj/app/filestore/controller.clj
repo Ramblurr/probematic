@@ -58,16 +58,18 @@ So here we provide functions to store the content and generate datoms for use in
 
 (defn -load-image
   [filestore {:image/keys [source-file] :as image}]
-  (let [{:filestore.file/keys [size hash mime-type file-name mtime]} source-file
-        stream (filestore/load filestore hash)]
+  (let [{:filestore.file/keys [size hash mime-type file-name mtime]} source-file]
     {:mime-type mime-type
      :file-name file-name
      :etag hash
      :last-modified mtime
      :size size
-     :stream stream}))
+     :content-thunk (fn [] (filestore/load filestore hash))}))
+
 (defn load-image
-  "Load the image from the store"
+  "Load the image from the store
+  The image content can be lazily loaded by calling the content-thunk function.
+  "
   [{:keys [db filestore] :as req} image-id]
   (let [image (q/retrieve-image db (util/ensure-uuid! image-id))]
     (-load-image filestore image)))
@@ -81,8 +83,7 @@ So here we provide functions to store the content and generate datoms for use in
   (assert parent-image "parent-image required")
   (let [rendition-tempid                              (d/tempid)
         rendition-file-tempid                         (d/tempid)
-        parent-image-stream                           (:stream (-load-image filestore parent-image))
-        {:keys [out-file ext mime-type]}              (img/process-thumbnail (assoc filter-spec :input {:stream parent-image-stream}))
+        {:keys [out-file ext mime-type]}              (img/process-thumbnail (assoc filter-spec :input (-load-image filestore parent-image)))
         _ (assert mime-type "mime-type required")
         rendition-filename                            (build-rendition-filename parent-image filter-spec ext)
         {:keys [size hash width height] :as prepared} (filestore/prepare-image! out-file)

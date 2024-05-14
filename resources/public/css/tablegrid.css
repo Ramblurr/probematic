@@ -17,8 +17,10 @@
             22px /* status icon */
             22px /* change icon */
             minmax(150px, 1fr) /* name */
+            22px /* photos? */
+            minmax(96px, 1fr) /* category */
             15px /* band/private */
-            minmax(20px, 1fr) /* count */
+            minmax(10px, 1fr) /* count */
             minmax(75px, 1fr) /* value */
             repeat(auto-fit, minmax(0, 1fr));
     }
@@ -31,8 +33,10 @@
             22px /* status icon */
             22px /* change icon */
             minmax(150px, 1fr) /*name*/
+            22px /* photos? */
+            minmax(96px, 1fr) /* category */
             15px /* band/private */
-            minmax(20px, 1fr) /* count */
+            minmax(10px, 1fr) /* count */
             minmax(75px, 1fr) /*value*/
             repeat(auto-fit, minmax(0, 1fr));
     }

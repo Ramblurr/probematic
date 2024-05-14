@@ -15,7 +15,9 @@
    [app.urls :as urls]
    [app.util :as util]
    [app.util.http :as util.http]
+   [app.util.zip :as zip]
    [clojure.data :as clojure.data]
+   [clojure.java.io :as io]
    [clojure.set :as set]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
@@ -283,6 +285,30 @@
 (defn build-image-uris [req {:instrument/keys [images] :as instrument}]
   (map #(build-image-uri req instrument %) images))
 
+(defn- append-images-to-zip! [zip  attachments file-name-prefix]
+  (doseq [{:keys [content file-name]} attachments]
+    (when (and content file-name)
+      (zip/open-and-append! zip (str file-name-prefix "_" file-name) content))))
+
+(defn get-all-images-as-input-stream! [{:keys [db] :as req} instrument-id]
+  (let [{:instrument/keys [name images]} (q/retrieve-instrument db
+                                                                instrument-id
+                                                                [:instrument/name
+                                                                 {:instrument/images [:image/image-id {:image/source-file [:filestore.file/file-id :filestore.file/hash :filestore.file/filename]}]}])
+        file-name                        (str name ".zip")
+        attachments                      (->> images
+                                              (map :image/image-id)
+                                              (map (partial filestore/load-image req))
+                                              (map (fn [{:keys [content-thunk file-name]}]
+                                                     {:content   content-thunk
+                                                      :file-name file-name})))]
+    {:status  200
+     :headers {"Content-Type"        "application/octet-stream"
+               "Content-Disposition" (util/content-disposition-filename file-name false)}
+     :body    (zip/piped-zip-input-stream
+               (fn [zip]
+                 (append-images-to-zip! zip  attachments  "instrument")))}))
+
 (defn add-instrument-coverage! [conn {:keys [instrument-id policy-id private? value coverage-type-ids]}]
   (datomic/transact conn {:tx-data [{:db/id "covered_instrument"
                                      :instrument.coverage/coverage-id (sq/generate-squuid)
@@ -400,6 +426,9 @@
                  :db/id "covered_instrument"}
                 [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
 
+(defn public-instrument-url [req instrument-id]
+  (urls/absolute-link-instrument-public (-> req :system :env) instrument-id))
+
 (defn update-instrument-tx [{:keys [description build-year serial-number make instrument-name owner-member-id model category-id] :as decoded} instrument-id]
   {:instrument/instrument-id instrument-id
    :instrument/description description
@@ -411,6 +440,9 @@
    :instrument/owner [:member/member-id owner-member-id]
    :instrument/category [:instrument.category/category-id category-id]})
 
+(defn txs-instrument-share-link [req ref instrument-id]
+  [[:db/add ref :instrument/images-share-url (public-instrument-url req instrument-id)]])
+
 (defn upsert-instrument! [req]
   (let [decoded (util/remove-nils (s/decode UpdateInstrument (util.http/unwrap-params req)))]
     (if (s/valid? UpdateInstrument decoded)
@@ -421,9 +453,8 @@
             instr-tx (if creating?
                        (assoc instr-tx :db/id tempid)
                        instr-tx)
-            txs [instr-tx]
-            #_#_txs (if share-url (conj txs [:db/add (if creating? tempid [:instrument/instrument-id instrument-id]) :instrument/images-share-url share-url])
-                        txs)
+            txs (concat [instr-tx]
+                        (txs-instrument-share-link req (if creating? tempid [:instrument/instrument-id instrument-id]) instrument-id))
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:instrument (q/retrieve-instrument db-after instrument-id)})
       {:error (s/explain-human UpdateInstrument decoded)})))
@@ -469,10 +500,8 @@
             old-owner-member-id (-> (q/retrieve-instrument db instrument-id) :instrument/owner :member/member-id)
             owner-changed? (not= new-owner-member-id old-owner-member-id)
             txs (concat (update-coverage-txs decoded coverage owner-changed?)
-                        [(update-instrument-tx decoded instrument-id)])
-            #_#_share-url (try-create-instrument-nextcloud-share! req instrument-id)
-            #_#_txs (if share-url (conj txs [:db/add [:instrument/instrument-id instrument-id] :instrument/images-share-url share-url])
-                        txs)
+                        [(update-instrument-tx decoded instrument-id)]
+                        (txs-instrument-share-link req [:instrument/instrument-id instrument-id] instrument-id))
             ;; _ (tap> {:tx txs})
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after (:policy-id decoded))})
@@ -830,17 +859,34 @@
         result (d/transact-wrapper! req {:tx-data txs})]
     (q/retrieve-survey-response (:db-after result) response-id)))
 
-(defn upload-instrument-image! [{:keys [parameters] :as req}]
-  (let [instrument-id (util/ensure-uuid! (-> parameters :path :instrument-id))
-        ;; file is a reitit.ring.malli/temp-file-part
-        {:keys [filename _size tempfile content-type]} (->  parameters :multipart :file)
-        {:keys [image-tempid tx-data]} (filestore/store-image! req {:file-name filename :file tempfile :mime-type content-type})
+(defn -upload-instrument-image! [req  instrument-id {:keys [filename _size tempfile content-type]}]
+  (let [{:keys [image-tempid tx-data]} (filestore/store-image! req {:file-name filename :file tempfile :mime-type content-type})
         instr-txs (domain/txs-add-instrument-image instrument-id image-tempid)
         txs (concat tx-data instr-txs)]
     (try
       (d/transact-wrapper! req {:tx-data txs})
       (finally
         (fs/delete-if-exists tempfile)))))
+(defn upload-instrument-image! [{:keys [parameters] :as req}]
+  (let [instrument-id (util/ensure-uuid! (-> parameters :path :instrument-id))
+        ;; file is a reitit.ring.malli/temp-file-part
+        file (-> parameters :multipart :file)]
+    (-upload-instrument-image! req instrument-id file)))
+
+(defn upload-instrument-images! [req instrument-id files]
+  (assert instrument-id "instrument-id is required")
+  (let [;; files is a vec of reitit.ring.malli/temp-file-part
+        images (doall (map (fn [{:keys [filename _size tempfile content-type]}]
+                             (filestore/store-image! req {:file-name filename :file tempfile :mime-type content-type}))
+                           files))
+        txs (mapcat (fn [{:keys [image-tempid tx-data]}]
+                      (concat tx-data
+                              (domain/txs-add-instrument-image instrument-id image-tempid))) images)]
+    (try
+      (d/transact-wrapper! req {:tx-data txs})
+      (finally
+        (doseq [{:keys [tempfile]} files]
+          (fs/delete-if-exists tempfile))))))
 
 (defn load-instrument-image [{:keys [system] :as req} instrument-id image-id mode]
   (let [{:keys [thumbnail-opts full-opts] :as opts} (config/insurance-image-settings (:env system))]

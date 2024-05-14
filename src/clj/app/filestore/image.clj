@@ -2,8 +2,7 @@
   (:require
    [app.file-utils :as fs]
    [clojure.string :as str]
-   [medley.core :as m]
-   [mikera.image.core :as imgz])
+   [medley.core :as m])
   (:import
    [java.io File PrintWriter StringWriter]
    [java.util Properties]
@@ -27,6 +26,9 @@
 (def format->mime #(or (-> % format-lookup :mime-type) "application/octet-stream"))
 (def im-tag->format #(-> % im-tag-lookup :format))
 
+(def supported-extensions (set (map :ext supported-formats)))
+(def supported-mime-types (set (map :mime-type supported-formats)))
+
 #_(defn mime->extension [mime-type]
     (case mime-type
       "application/pdf"    ".pdf"
@@ -47,10 +49,11 @@
     (.createScript cmd pw operation (Properties.))
     (.toString sw)))
 
-(defn- prepare-input [{:keys [path stream]}]
+(defn- prepare-input [{:keys [path content-thunk]}]
   (if path
     [path nil]
-    (let [tmp (fs/tempfile)]
+    (let [tmp (fs/tempfile)
+          stream (content-thunk)]
       (with-open [os (java.io.FileOutputStream. tmp)]
         (org.apache.commons.io.IOUtils/copy stream os))
       [(.getPath ^File tmp) tmp])))

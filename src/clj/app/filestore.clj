@@ -51,7 +51,6 @@
   [file]
   (im/strip-metadata-in-place! {:input {:path file}})
   (let [{:keys [width height format mime-type] :as info} (im/identify-detailed file)
-        _ (tap> info)
         {:keys [id size] :as block} (block/read! file)]
     {:hash (mhash/hex id)
      :block block

@@ -213,9 +213,7 @@
               :photo-upload-title "Upload Instrument PHotos"
               :photo-upload-subtitle "Upload a couple photos showing the instrument/item from several angles."
               :images-share-url "Photos Public Link"
-              :images-share-url-hint "Use this link when sharing outside the band"
-              :images-internal-url "Photos Internal Link"
-              :images-internal-url-hint "Use this link to delete/rename photos in Nextcloud"}
+              :images-share-url-hint "Use this link when sharing outside the band"}
  :nav {:home "Home"
        :polls "Polls"
        :stats "Stats"

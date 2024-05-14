@@ -217,3 +217,23 @@ function InitializeMarkdownEditors(target) {
     document.querySelectorAll(".markdown-editor").forEach(MarkdownEditor);
   }
 }
+
+function toggleSidebar() {
+  // store the sidebar state in local storage
+  // read the value, invert it, and set it again
+  const appSidebarCollapsed = localStorage.getItem("appSidebarCollapsed");
+  const newState =
+    !appSidebarCollapsed || appSidebarCollapsed === "true" ? "false" : "true";
+  localStorage.setItem("appSidebarCollapsed", newState);
+}
+
+document.addEventListener("DOMContentLoaded", function (evt) {
+  // initialize appSidebarCollapsed
+  if (localStorage.getItem("appSidebarCollapsed") === null) {
+    localStorage.setItem("appSidebarCollapsed", "false");
+  }
+});
+document.addEventListener("appSidebarToggled", function (evt) {
+  console.log("sidebar toggled");
+  toggleSidebar();
+});

@@ -1,13 +1,6 @@
 (ns app.ui
   (:refer-clojure :exclude [time])
-  (:import
-
-   (java.text DecimalFormat NumberFormat)
-   (java.util Locale))
   (:require
-   [ring.middleware.not-modified :as not-modified]
-   [ring.util.time :as ring.util]
-   [hiccup2.core :refer [html]]
    [app.humanize :as humanize]
    [app.i18n :as i18n]
    [app.icons :as icon]
@@ -15,9 +8,15 @@
    [app.util :as util]
    [clojure.string :as str]
    [ctmx.render :as ctmx.render]
+   [hiccup2.core :refer [html]]
    [jsonista.core :as j]
    [medley.core :as m]
-   [tick.core :as t]))
+   [ring.middleware.not-modified :as not-modified]
+   [ring.util.time :as ring.util]
+   [tick.core :as t])
+  (:import
+   (java.text DecimalFormat NumberFormat)
+   (java.util Locale)))
 
 (defn cs [& names]
   (clojure.string/join " " (filter identity names)))
@@ -1409,7 +1408,7 @@
 
 (defn photo-grid [photos]
   [:section {:class "overflow-hidden text-neutral-700"}
-   [:div {:class "container mx-auto px-5 py-2 lg:px-32 lg:pt-12"}
+   [:div {:class "container mx-auto px-5 py-2"}
     [:div {:class "-m-1 flex flex-wrap md:-m-2"}
      (map (fn [{:keys [thumbnail full]}]
             [:div {:class "flex w-1/3 flex-wrap"}

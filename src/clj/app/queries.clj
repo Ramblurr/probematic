@@ -8,11 +8,10 @@
    [app.poll.domain :as poll.domain]
    [app.settings.domain :as settings.domain]
    [app.util :as util]
+   [clojure.java.io :as io]
    [datomic.client.api :as datomic]
    [medley.core :as m]
-   [tick.core :as t]
-   [clojure.java.io :as io]
-   [app.debug :as debug]))
+   [tick.core :as t]))
 
 (def file-pattern [:filestore.file/file-id
                    :filestore.file/atime
@@ -175,6 +174,7 @@
                         [:instrument/name
                          :instrument/instrument-id
                          :instrument/images-share-url
+                         :instrument/images
                          :instrument/make
                          :instrument/model
                          :instrument/description
@@ -201,6 +201,7 @@
 (def instrument-pattern [:instrument/name
                          :instrument/instrument-id
                          :instrument/images-share-url
+                         :instrument/images
                          {:instrument/owner [:member/name :member/member-id]}
                          {:instrument/category [:instrument.category/category-id
                                                 :instrument.category/code
@@ -211,6 +212,7 @@
                                 :instrument/images-share-url
                                 :instrument/make
                                 :instrument/model
+                                {:instrument/images [:image/image-id]}
                                 :instrument/description
                                 :instrument/build-year
                                 :instrument/serial-number
@@ -473,8 +475,11 @@
        (mapv #(->instrument (first %)))
        (sort-by (juxt #(get-in % [:instrument/owner :member/name]) :instrument/name))))
 
-(defn retrieve-instrument [db instrument-id]
-  (->instrument (d/find-by db :instrument/instrument-id instrument-id instrument-detail-pattern)))
+(defn retrieve-instrument
+  ([db instrument-id]
+   (retrieve-instrument db instrument-id instrument-detail-pattern))
+  ([db instrument-id pattern]
+   (->instrument (d/find-by db :instrument/instrument-id instrument-id pattern))))
 
 (defn retrieve-coverage [db coverage-id]
   (d/find-by db :instrument.coverage/coverage-id coverage-id instrument-coverage-detail-pattern))
