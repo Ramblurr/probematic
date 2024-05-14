@@ -813,7 +813,7 @@ Mit freundlichen Grüßen,
        [:input {:type :hidden :name "instrument-id" :value (str instrument-id)}]
        [:input
         {:id inputId :type "file" :name "files" :class "hidden" :multiple true
-         :accept (str/join "," filestore.image/supported-extensions)
+         :accept (str/join "," filestore.image/supported-mime-types)
          :_ "on change trigger submit on the closest parent <form/>"}]]
       [:progress {:class "hidden progress-filled:transition-all progress-unfilled:duration-500 progress-filled:rounded-sm progress-unfilled:rounded-md progress-unfilled:bg-[#F2F2F2] progress-filled:bg-sno-green-500" :value "50" :max "100"}]
       (when error

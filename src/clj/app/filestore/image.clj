@@ -26,7 +26,6 @@
 (def format->mime #(or (-> % format-lookup :mime-type) "application/octet-stream"))
 (def im-tag->format #(-> % im-tag-lookup :format))
 
-(def supported-extensions (set (map :ext supported-formats)))
 (def supported-mime-types (set (map :mime-type supported-formats)))
 
 #_(defn mime->extension [mime-type]
