@@ -1,7 +1,8 @@
 (ns app.insurance.domain
   (:require
-   [app.urls :as urls]
    [app.schemas :as s]
+   [app.urls :as urls]
+   [clojure.data :as clojure.data]
    [clojure.set :as set]
    [com.yetanalytics.squuid :as sq]
    [medley.core :as m]
@@ -26,6 +27,13 @@
     (->> ms
          (map k)
          (reduce + 0))))
+
+(defn reconcile-coverage-types [eid existing-type-ids new-type-ids]
+  (let [[added removed] (clojure.data/diff (set existing-type-ids)  (set new-type-ids))
+        ;; _ (tap> {:added added :removed removed})
+        add-tx (map #(-> [:db/add eid :instrument.coverage/types [:insurance.coverage.type/type-id  %]]) (filter some? added))
+        remove-tx (map #(-> [:db/retract eid :instrument.coverage/types [:insurance.coverage.type/type-id  %]]) (filter some? removed))]
+    (concat add-tx remove-tx)))
 
 (defn make-category-factor-lookup
   "Given a policy, create a map where the keys are the category ids and the values are the category factors"
@@ -219,8 +227,25 @@
   (when (= :instrument.coverage.change/removed (:instrument.coverage/change coverage))
     [[:db/add (coverage-ref coverage) :instrument.coverage/change :instrument.coverage.change/changed]]))
 
+(defn txs-band-instrument-coverage-types [policy coverage]
+  (let [cov-types (:insurance.policy/coverage-types policy)
+        before-type-ids (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
+        after-type-ids  (mapv :insurance.coverage.type/type-id cov-types)]
+    (reconcile-coverage-types (coverage-ref coverage)
+                              after-type-ids
+                              before-type-ids)))
+
+(defn txs-private-instrument-coverage-types [coverage selected-coverage-type-ids]
+  (let [before-type-ids (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))]
+    (reconcile-coverage-types (coverage-ref coverage)
+                              selected-coverage-type-ids
+                              before-type-ids)))
+
 (defn txs-confirm-band [{:insurance.survey.report/keys [coverage]}]
-  [[:db/add (coverage-ref coverage) :instrument.coverage/private? false]])
+  (let [policy (:insurance.policy/_covered-instruments coverage)]
+    (concat
+     (txs-band-instrument-coverage-types policy coverage)
+     [[:db/add (coverage-ref coverage) :instrument.coverage/private? false]])))
 
 (defn txs-confirm-not-band [{:insurance.survey.report/keys [coverage]}]
   [[:db/add (coverage-ref coverage) :instrument.coverage/private? true]])
@@ -284,3 +309,41 @@
     (concat
      [[:db/add ref :instrument/images image-ref]]
      (txs-instrument-share-link req ref instrument-id))))
+
+(comment
+  (do
+    (require '[integrant.repl.state :as state])
+    (require '[datomic.client.api :as datomic])
+    (require '[app.queries :as q])
+    (def conn (-> state/system :app.ig/datomic-db :conn))
+    (def db (datomic/db conn)))
+
+  (def me (q/retrieve-member db #uuid "01860c2a-2929-8727-af1a-5545941b1111"))
+
+  (q/open-survey-for-member db me)
+
+  (def report (q/retrieve-survey-report db #uuid  "018f76e0-7959-8168-809b-418f21041371"))
+
+  (let [coverage (:insurance.survey.report/coverage report)
+        policy (:insurance.policy/_covered-instruments coverage)
+        cov-types (:insurance.policy/coverage-types policy)
+        before-type-ids (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
+        after-type-ids  (mapv :insurance.coverage.type/type-id cov-types)]
+    (reconcile-coverage-types  (coverage-ref coverage)
+                               after-type-ids
+                               before-type-ids))
+
+  (let [coverage (:insurance.survey.report/coverage report)
+        policy (:insurance.policy/_covered-instruments coverage)
+        cov-types (:insurance.policy/coverage-types policy)
+        before-type-ids (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
+        after-type-ids  (mapv :insurance.coverage.type/type-id cov-types)
+        after-type-ids before-type-ids]
+    (reconcile-coverage-types  (coverage-ref coverage)
+                               after-type-ids
+                               before-type-ids))
+
+  (txs-confirm-band report)
+
+  ;;
+  )

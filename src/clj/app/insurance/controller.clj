@@ -16,8 +16,6 @@
    [app.util :as util]
    [app.util.http :as util.http]
    [app.util.zip :as zip]
-   [clojure.data :as clojure.data]
-   [clojure.java.io :as io]
    [clojure.set :as set]
    [clojure.string :as str]
    [com.yetanalytics.squuid :as sq]
@@ -339,13 +337,6 @@
         result (datomic/transact datomic-conn {:tx-data tx-data})]
     {:policy (q/retrieve-policy (:db-after result) policy-id)}))
 
-(defn reconcile-coverage-types [eid existing-types new-types]
-  (let [[added removed] (clojure.data/diff (set existing-types)  (set new-types))
-        ;; _ (tap> {:added added :removed removed})
-        add-tx (map #(-> [:db/add eid :instrument.coverage/types [:insurance.coverage.type/type-id  %]]) (filter some? added))
-        remove-tx (map #(-> [:db/retract eid :instrument.coverage/types [:insurance.coverage.type/type-id  %]]) (filter some? removed))]
-    (concat add-tx remove-tx)))
-
 (def UpdateInstrument
   "This schema describes the http post we receive when updating an instrument"
   (s/schema
@@ -376,12 +367,15 @@
   "This schema describes the http post we receive when updating an instrument and coverage "
   (mu/merge UpdateInstrument UpdateCoverage))
 
-(defn update-coverage-txs [{:keys [value coverage-types item-count private-band] :as decoded} coverage owner-changed? category-changed?]
+(defn update-coverage-txs [policy {:keys [value coverage-types item-count private-band] :as decoded} coverage owner-changed? category-changed?]
   (let [coverage-ref (d/ref coverage)
-        before-types (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
-        after-types (util/remove-dummy-uuid (mapv util.http/ensure-uuid (util/ensure-coll coverage-types)))
-        coverage-changes (reconcile-coverage-types coverage-ref after-types before-types)
+        selected-coverage-type-ids (util/remove-dummy-uuid (mapv util.http/ensure-uuid (util/ensure-coll coverage-types)))
         private? (= "private" private-band)
+        txs-coverage-changes  (if private?
+                                (domain/txs-private-instrument-coverage-types coverage selected-coverage-type-ids)
+                                ;; band instruments get all coverage types
+                                (domain/txs-band-instrument-coverage-types policy coverage))
+        has-coverage-changes? (boolean (seq txs-coverage-changes))
         ;; if these things have changed then we need to ensure the changes get marked so we can send them upstream to the provider
         has-upstream-change? (domain/has-upstream-change? coverage
                                                           owner-changed?
@@ -389,7 +383,7 @@
                                                           value
                                                           item-count
                                                           private?
-                                                          (boolean (seq coverage-changes)))
+                                                          has-coverage-changes?)
         current-change-status (get coverage :instrument.coverage/change :instrument.coverage.change/none)
         is-new? (= :instrument.coverage.change/new current-change-status)
         change-status-value (cond
@@ -406,7 +400,7 @@
                      :covchanged (not-empty coverage-changes)
                      :has-upstream-change? has-upstream-change?})]
 
-    (concat coverage-changes
+    (concat txs-coverage-changes
             [[:db/add coverage-ref :instrument.coverage/value (bigdec value)]
              [:db/add coverage-ref :instrument.coverage/status (if has-upstream-change? :instrument.coverage.status/needs-review (:instrument.coverage/status coverage))]
              [:db/add coverage-ref :instrument.coverage/change change-status-value]
@@ -468,7 +462,7 @@
       valid-change?
       (let [txs (if coverage-id
                   ;; upsert
-                  (update-coverage-txs decoded (q/retrieve-coverage db coverage-id) false)
+                  (update-coverage-txs policy decoded (q/retrieve-coverage db coverage-id) false false)
                   ;; create
                   (create-coverage-txs decoded))
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
@@ -498,7 +492,7 @@
             new-category-id (:category-id decoded)
             old-category-id  (-> old-instrument :instrument/category :instrument.category/category-id)
             category-changed? (not= new-category-id old-category-id)
-            txs (concat (update-coverage-txs decoded coverage owner-changed? category-changed?)
+            txs (concat (update-coverage-txs policy decoded coverage owner-changed? category-changed?)
                         [(update-instrument-tx decoded instrument-id)]
                         (domain/txs-instrument-share-link req [:instrument/instrument-id instrument-id] instrument-id))
             ;; _ (tap> {:tx txs})
