@@ -1,10 +1,12 @@
 (ns app.file-utils
   (:require
-   [clojure.string :as str]
-   [clojure.java.io :as io])
-  (:import [java.io File]
-           [java.nio.file Path Paths]
-           [java.nio.file Files]))
+   [clojure.java.io :as io]
+   [clojure.java.shell :refer [sh]]
+   [clojure.string :as str])
+  (:import
+   [java.io File]
+   [java.nio.file Path Paths]
+   [java.nio.file Files]))
 
 (defn-  file
   ^File [& args]
@@ -137,6 +139,24 @@
 
 (defn delete-if-exists [f]
   (Files/deleteIfExists (to-path f)))
+
+(defn exists?
+  "Checks for the existence of file/directory.  File can be a path or a File object."
+  [file] (.exists (io/file file)))
+
+(defn writeable?
+  "Checks if the file is writeable.  File can be a path or a File object."
+  [file]
+  (.canWrite (io/file file)))
+
+(defn program-exists?
+  "Checks if the program exists in the PATH."
+  [program]
+  (let [cmd "which"]
+    (try
+      (= 0 (:exit (sh cmd program)))
+      (catch Exception e ;in the unlikely event where which is unavailable
+        (throw (ex-info (format "Unable to determine whether '%s' exists. Notifications may not work." program) {}))))))
 
 (comment
   (= true (validate-base-path "/" "/foo/bar"))
