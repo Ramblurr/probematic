@@ -205,6 +205,15 @@
 (defn response-ref [{:insurance.survey.response/keys [response-id]}]
   [:insurance.survey.response/response-id response-id])
 
+(defn has-upstream-change? [old-coverage owner-changed? category-changed? new-value new-item-count new-private? coverage-changes?]
+  (or
+   owner-changed?
+   category-changed?
+   (not (== (:instrument.coverage/value old-coverage) new-value))
+   (not (== (:instrument.coverage/item-count old-coverage 1) new-item-count))
+   (not (= (:instrument.coverage/private? old-coverage) new-private?))
+   coverage-changes?))
+
 (defn txs-confirm-keep-insured [{:insurance.survey.report/keys [coverage]}]
   ;; member wants to keep insurance, so if it was marked for removal, unremove it
   (when (= :instrument.coverage.change/removed (:instrument.coverage/change coverage))

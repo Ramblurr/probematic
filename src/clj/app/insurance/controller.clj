@@ -376,19 +376,20 @@
   "This schema describes the http post we receive when updating an instrument and coverage "
   (mu/merge UpdateInstrument UpdateCoverage))
 
-(defn update-coverage-txs [{:keys [value coverage-types item-count private-band] :as decoded} coverage owner-changed?]
+(defn update-coverage-txs [{:keys [value coverage-types item-count private-band] :as decoded} coverage owner-changed? category-changed?]
   (let [coverage-ref (d/ref coverage)
         before-types (mapv :insurance.coverage.type/type-id (:instrument.coverage/types coverage))
         after-types (util/remove-dummy-uuid (mapv util.http/ensure-uuid (util/ensure-coll coverage-types)))
         coverage-changes (reconcile-coverage-types coverage-ref after-types before-types)
         private? (= "private" private-band)
-        ;; if these things have changed then we need to ensure the changes get marked so we can send them upstream
-        has-upstream-change? (or
-                              owner-changed?
-                              (not (== (:instrument.coverage/value coverage) value))
-                              (not (== (:instrument.coverage/item-count coverage 1) item-count))
-                              (not (= (:instrument.coverage/private? coverage) private?))
-                              (boolean (seq coverage-changes)))
+        ;; if these things have changed then we need to ensure the changes get marked so we can send them upstream to the provider
+        has-upstream-change? (domain/has-upstream-change? coverage
+                                                          owner-changed?
+                                                          category-changed?
+                                                          value
+                                                          item-count
+                                                          private?
+                                                          (boolean (seq coverage-changes)))
         current-change-status (get coverage :instrument.coverage/change :instrument.coverage.change/none)
         is-new? (= :instrument.coverage.change/new current-change-status)
         change-status-value (cond
@@ -490,10 +491,14 @@
       (let [coverage (q/retrieve-coverage db (util.http/ensure-uuid (:coverage-id decoded)))
             _ (assert coverage)
             instrument-id (:instrument-id decoded)
+            old-instrument (q/retrieve-instrument db instrument-id)
             new-owner-member-id (:owner-member-id decoded)
-            old-owner-member-id (-> (q/retrieve-instrument db instrument-id) :instrument/owner :member/member-id)
+            old-owner-member-id (-> old-instrument  :instrument/owner :member/member-id)
             owner-changed? (not= new-owner-member-id old-owner-member-id)
-            txs (concat (update-coverage-txs decoded coverage owner-changed?)
+            new-category-id (:category-id decoded)
+            old-category-id  (-> old-instrument :instrument/category :instrument.category/category-id)
+            category-changed? (not= new-category-id old-category-id)
+            txs (concat (update-coverage-txs decoded coverage owner-changed? category-changed?)
                         [(update-instrument-tx decoded instrument-id)]
                         (domain/txs-instrument-share-link req [:instrument/instrument-id instrument-id] instrument-id))
             ;; _ (tap> {:tx txs})

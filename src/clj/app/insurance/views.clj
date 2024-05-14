@@ -1155,11 +1155,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 (assoc f 1 {:before v :after nil :action action}))))
     2 (let [updated? (= #{:retracted :added} (set (map #(nth % 2) field-change)))]
         (if updated?
-          (conj acc
-                (-> (first field-change)
-                    (assoc 2 :updated)
-                    (assoc 1 {:before (second (first field-change))
-                              :after  (second (second field-change))})))
+          (let [added (m/find-first #(= :added (nth % 2)) field-change)
+                retracted (m/find-first #(= :retracted (nth % 2)) field-change)]
+            (conj acc
+                  (-> (first field-change)
+                      (assoc 2 :updated)
+                      (assoc 1 {:before (second retracted)
+                                :after  (second added)}))))
           (concat acc
                   (map (fn [[k v action :as f]]
                          (if (= :retracted action)
