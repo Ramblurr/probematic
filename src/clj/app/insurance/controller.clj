@@ -407,19 +407,30 @@
              [:db/add coverage-ref :instrument.coverage/private? private?]
              [:db/add coverage-ref :instrument.coverage/item-count item-count]])))
 
-(defn create-coverage-txs [{:keys [value coverage-types item-count private-band policy-id instrument-id] :as decoded}]
-  (->> (mapv (fn [coverage-type-id]
-               [:db/add "covered_instrument" :instrument.coverage/types [:insurance.coverage.type/type-id coverage-type-id]])
-             (util/remove-dummy-uuid coverage-types))
-       (concat [{:instrument.coverage/coverage-id (sq/generate-squuid)
-                 :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
-                 :instrument.coverage/value (bigdec value)
-                 :instrument.coverage/item-count item-count
-                 :instrument.coverage/status :instrument.coverage.status/needs-review
-                 :instrument.coverage/change :instrument.coverage.change/new
-                 :instrument.coverage/private? (= "private" private-band)
-                 :db/id "covered_instrument"}
-                [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
+(defn create-coverage-txs [policy {:keys [value coverage-types item-count private-band policy-id instrument-id] :as decoded}]
+  (let [private? (= "private" private-band)
+        txs-coverage-changes  (if private?
+                                ;; private instruments get selection
+                                (->> (util/remove-dummy-uuid coverage-types)
+                                     (mapv (fn [coverage-type-id]
+                                             [:db/add "covered_instrument" :instrument.coverage/types [:insurance.coverage.type/type-id coverage-type-id]])))
+                                ;; band instruments get all coverage types
+                                (->> (:insurance.policy/coverage-types policy)
+                                     (map :insurance.coverage.type/type-id)
+                                     (mapv (fn [type-id]
+                                             [:db/add "covered_instrument" :instrument.coverage/types [:insurance.coverage.type/type-id type-id]]))))]
+
+    (concat
+     txs-coverage-changes
+     [{:instrument.coverage/coverage-id (sq/generate-squuid)
+       :instrument.coverage/instrument [:instrument/instrument-id instrument-id]
+       :instrument.coverage/value (bigdec value)
+       :instrument.coverage/item-count item-count
+       :instrument.coverage/status :instrument.coverage.status/needs-review
+       :instrument.coverage/change :instrument.coverage.change/new
+       :instrument.coverage/private? private?
+       :db/id "covered_instrument"}
+      [:db/add [:insurance.policy/policy-id policy-id] :insurance.policy/covered-instruments "covered_instrument"]])))
 
 (defn update-instrument-tx [{:keys [description build-year serial-number make instrument-name owner-member-id model category-id] :as decoded} instrument-id]
   {:instrument/instrument-id instrument-id
@@ -464,7 +475,7 @@
                   ;; upsert
                   (update-coverage-txs policy decoded (q/retrieve-coverage db coverage-id) false false)
                   ;; create
-                  (create-coverage-txs decoded))
+                  (create-coverage-txs policy decoded))
             {:keys [db-after]} (d/transact-wrapper! req {:tx-data txs})]
         {:policy (q/retrieve-policy db-after policy-id)})
       :else
