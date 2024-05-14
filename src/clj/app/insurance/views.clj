@@ -608,7 +608,7 @@ Mit freundlichen Grüßen,
                   (tr [:insurance/confirm-mark-as] [%])
                   (tr [:insurance/confirm-mark-as-button])
                   (tr [:action/cancel]))
-        common-attrs {:hx-post endpoint-mark-as :hx-target hx-target}]
+        common-attrs {:hx-post endpoint-mark-as :hx-target hx-target :hx-include "input.mark-coverage-as-data" }]
     (ui/action-menu
      :label (tr [:action/mark-as])
      :sections [{:label "Workflow Status"
@@ -846,7 +846,7 @@ Mit freundlichen Grüßen,
         number-total "border-double border-t-4 border-gray-300"]
     [:div {:id id
            :class "instrgrid border-collapse m-w-full"}
-     [:input {:type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
+     [:input {:class "mark-coverage-as-data" :type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
      [:div {:class "overflow-x-auto"}
       [:table {:class "table-auto ml-3 sm:ml-4" :id "coverages-table-legend"}
        [:tr
@@ -932,7 +932,8 @@ Mit freundlichen Grüßen,
                                         [:div {:class (ui/cs "instrgrid--row bg-white py-2  text-sm truncate gap-1 hover:bg-gray-300" grid-class spacing)}
                                          [:div {:class (ui/cs col-all center-all)}
                                           [:div {:class (ui/cs (when-not (controller/policy-editable? policy) "hidden"))}
-                                           [:input {:type "checkbox" :id id :name "coverage-ids" :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
+                                           [:input {:type "checkbox" :id id :name "coverage-ids"
+                                                    :class "mark-coverage-as-data h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"
                                                     :value (str coverage-id)
                                                     :_ "on click trigger checkboxChanged on #instr-select-all"}]]]
                                          [:div {:class (ui/cs col-all)}
