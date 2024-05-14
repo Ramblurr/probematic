@@ -928,11 +928,13 @@ Mit freundlichen Grüßen,
        ;; change icon
        ""]
       [:div {:class (ui/cs col-all "truncate")} (tr [:instrument/instrument])]
-      [:div {:class (ui/cs col-sm)} (icon/images {:class "w-5 h-5 text-gray-500"})]
+      [:div {:class (ui/cs col-all)}
+       [:div {:class "tooltip" :data-tooltip "Has photos? Red means it doesn't have any photos, gray means it does."}
+        (icon/images {:class "w-5 h-5 text-gray-500"})]]
       [:div {:class (ui/cs col-sm)} "Category"]
       [:div {:class (ui/cs col-all)} "Band?"]
       [:div {:class (ui/cs col-sm number)} (tr [:insurance/item-count])]
-      [:div {:class (ui/cs col-sm number)} [:span {:title (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
+      [:div {:class (ui/cs col-sm number)} [:span {:class "tooltip" :data-tooltip (tr [:insurance/value])} (tr [:insurance/value-abbrev])]]
       (map (fn [ct] [:div {:class (ui/cs col-sm number)} (:insurance.coverage.type/name ct)]) coverage-types)
       [:div {:class (ui/cs col-all number)} (tr [:insurance/total])]]
      [:div {:class "overflow-hidden instrgrid--body divide-y"}
@@ -959,7 +961,7 @@ Mit freundlichen Grüßen,
                                          [:div {:class (ui/cs col-all "truncate")}
                                           [:a {:href (urls/link-coverage coverage) :class "text-medium"}
                                            instrument-name]]
-                                         [:div {:class (ui/cs col-sm)}
+                                         [:div {:class (ui/cs col-all)}
                                           (instrument-image-upload-button instrument)]
                                          [:div {:class (ui/cs col-sm "truncate")} (-> category :instrument.category/name)]
                                          [:div {:class (ui/cs col-all)} (band-or-private tr private?)]
@@ -971,12 +973,15 @@ Mit freundlichen Grüßen,
 
                                     coverages)]
                       [:div {:class (ui/cs grid-class "min-w-full  text-sm gap-1" spacing)}
-                       [:div {:class (ui/cs col-all)}]
-                       [:div {:class (ui/cs col-all)}]
-                       [:div {:class (ui/cs col-all)}]
-                       [:div {:class (ui/cs col-all)}]
-                       [:div {:class (ui/cs col-sm)}]
-                       [:div {:class (ui/cs col-sm)}]
+                       [:div {:class (ui/cs col-all)}] ;; checkbox
+                       [:div {:class (ui/cs col-all)}] ;; status icon
+                       [:div {:class (ui/cs col-all)}] ;; change icon
+                       [:div {:class (ui/cs col-all)}] ;; name
+                       [:div {:class (ui/cs col-all)}] ;; photos
+                       [:div {:class (ui/cs col-sm)}]  ;; category
+                       [:div {:class (ui/cs col-all)}] ;; band/private
+                       [:div {:class (ui/cs col-sm)}]  ;; count
+                       [:div {:class (ui/cs col-sm)}]  ;; value
                        (map (fn [ct] [:div {:class (ui/cs col-md)}]) coverage-types)
                        [:div {:class (ui/cs col-all number number-total)} (ui/money total :EUR)]]])
 

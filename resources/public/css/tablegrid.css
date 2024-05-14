@@ -6,6 +6,7 @@
         22px /* status icon */
         22px /* change icon */
         minmax(150px, 1fr) /* name */
+        22px /* photos? */
         15px /* band/private */
         minmax(75px, 1fr) /* total */;
 }
