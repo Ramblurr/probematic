@@ -617,40 +617,76 @@ Mit freundlichen Grüßen,
         (send-notifications-button req policy true)
         (send-changes-button new-req policy true)]))))
 
+(defn mark-coverage-workflow [{:keys [tr]}  endpoint-mark-as hx-target policy-id coverage-id current-workflow-status]
+  (let [confirm #(ui/confirm-modal-script
+                  (tr [:insurance/confirm-mark-as-title] [%])
+                  (tr [:insurance/confirm-mark-as] [%])
+                  (tr [:insurance/confirm-mark-as-button])
+                  (tr [:action/cancel]))
+        hx-vals {"policy-id" (str policy-id) "coverage-ids" (str coverage-id)}
+        make-item (fn [k]
+                    {:label (tr [k]) :active? false
+                     :icon (coverage-status-icon k)
+                     :tag :button
+                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-vals (merge hx-vals {"workflow-status" (name k) :_ (confirm (tr [k]))})}})]
+
+    (ui/action-menu
+     :id (str "coverage-mark-workflow-status-" coverage-id)
+     :minimal? true
+     :label (coverage-status-icon-span tr current-workflow-status)
+     :sections [{:label "Mark Workflow Status"
+                 :items [(make-item :instrument.coverage.status/needs-review)
+                         (make-item :instrument.coverage.status/reviewed)
+                         (make-item :instrument.coverage.status/coverage-active)]}])))
+
+(defn mark-coverage-change [{:keys [tr]}  endpoint-mark-as hx-target policy-id coverage-id current-change-status]
+  (let [confirm #(ui/confirm-modal-script
+                  (tr [:insurance/confirm-mark-as-title] [%])
+                  (tr [:insurance/confirm-mark-as] [%])
+                  (tr [:insurance/confirm-mark-as-button])
+                  (tr [:action/cancel]))
+        hx-vals {"policy-id" (str policy-id) "coverage-ids" (str coverage-id)}
+        make-item (fn [k]
+                    {:label (tr [k]) :active? false
+                     :icon (coverage-change-icon k)
+                     :tag :button
+                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-vals (merge hx-vals {"change-status" (name k) :_ (confirm (tr [k]))})}})]
+
+    (ui/action-menu
+     :id (str "coverage-mark-change-status-" coverage-id)
+     :minimal? true
+     :label (coverage-change-icon-span tr current-change-status)
+     :sections [{:label "Mark Change Status"
+                 :items [(make-item :instrument.coverage.change/removed)
+                         (make-item :instrument.coverage.change/new)
+                         (make-item :instrument.coverage.change/changed)
+                         (make-item :instrument.coverage.change/none)]}])))
+
 (defn mark-coverage-as-menu [{:keys [tr]} endpoint-mark-as hx-target]
   (let [confirm #(ui/confirm-modal-script
                   (tr [:insurance/confirm-mark-as-title] [%])
                   (tr [:insurance/confirm-mark-as] [%])
                   (tr [:insurance/confirm-mark-as-button])
                   (tr [:action/cancel]))
-        common-attrs {:hx-post endpoint-mark-as :hx-target hx-target :hx-include "input.mark-coverage-as-data"}]
+        make-item (fn [icon-fn val-k k]
+                    {:label (tr [k]) :active? false
+                     :icon  (icon-fn k)
+                     :tag   :button
+                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-include "input.mark-coverage-as-data" :hx-vals {val-k (name k) :_ (confirm (tr [k]))}}})
+        make-workflow (partial make-item coverage-status-icon "workflow-status")
+        make-change (partial make-item coverage-change-icon "change-status")]
     (ui/action-menu
+     :id "coverage-mark-as-actions"
      :label (tr [:action/mark-as])
-     :sections [{:label "Workflow Status"
-                 :items [{:label (tr [:instrument.coverage.status/needs-review]) :active? false
-                          :icon (coverage-status-icon :instrument.coverage.status/needs-review)
-                          :tag :button
-                          :attr (merge common-attrs {:hx-vals {"workflow-status" "needs-review"} :_ (confirm (tr [:instrument.coverage.status/needs-review]))})}
-                         {:label (tr [:instrument.coverage.status/reviewed]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/reviewed)
-                          :tag :button
-                          :attr (merge common-attrs {:hx-vals {"workflow-status" "reviewed"} :_ (confirm (tr [:instrument.coverage.status/reviewed]))})}]}
-                {:label "Change Status"
-                 :items [{:label (tr [:instrument.coverage.change/removed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/removed)
-                          :tag :button
-                          :attr (merge common-attrs {:hx-vals {"change-status" "removed"}})}
-                         {:label (tr [:instrument.coverage.change/new]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/new)
-                          :tag :button
-                          :attr (merge common-attrs {:hx-vals {"change-status" "new"}})}
-                         {:label (tr [:instrument.coverage.change/changed]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/changed)
-                          :tag :button
-                          :attr (merge common-attrs {:hx-vals {"change-status" "changed"}})}
-                         {:label (tr [:instrument.coverage.change/none]) :href "" :active? false :icon (coverage-change-icon :instrument.coverage.change/none)
-                          :tag :button
-                          :attr (merge common-attrs {:hx-vals {"change-status" "none"}})}
-                         #_{:label  (tr [:instrument.coverage.status/coverage-active]) :href "foo" :active? false :icon (coverage-status-icon :instrument.coverage.status/coverage-active)
-                            :tag :button
-                            :attr {:hx-vals {"mark-as" "coverage-active"} :hx-post endpoint-mark-as :hx-target (hash ".")}}]}]
-     :id "coverage-mark-as-actions")))
+     :sections [{:label (tr [:instrument.coverage/status])
+                 :items [(make-workflow :instrument.coverage.status/needs-review)
+                         (make-workflow :instrument.coverage.status/reviewed)
+                         (make-workflow :instrument.coverage.status/coverage-active)]}
+                {:label (tr [:instrument.coverage/change])
+                 :items [(make-change :instrument.coverage.change/removed)
+                         (make-change :instrument.coverage.change/new)
+                         (make-change :instrument.coverage.change/changed)
+                         (make-change :instrument.coverage.change/none)]}])))
 
 (declare insurance-survey-table)
 (declare survey-response-table-row)
@@ -836,7 +872,7 @@ Mit freundlichen Grüßen,
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage-table [{:keys [tr] :as req}]
   insurance-instrument-coverage-table-mark-as
-  (let [policy (:policy req)
+  (let [{:insurance.policy/keys [policy-id] :as policy} (:policy req)
         endpoint-mark-as (util/endpoint-path insurance-instrument-coverage-table-mark-as)
         coverage-types (:insurance.policy/coverage-types policy)
         grouped-by-owner (controller/coverages-grouped-by-owner policy)
@@ -861,7 +897,7 @@ Mit freundlichen Grüßen,
         number-total "border-double border-t-4 border-gray-300"]
     [:div {:id id
            :class "instrgrid border-collapse m-w-full"}
-     [:input {:class "mark-coverage-as-data" :type :hidden :name "policy-id" :value (str (:insurance.policy/policy-id policy))}]
+     [:input {:class "mark-coverage-as-data" :type :hidden :name "policy-id" :value (str policy-id)}]
      [:div {:class "overflow-x-auto"}
       [:table {:class "table-auto ml-3 sm:ml-4" :id "coverages-table-legend"}
        [:tr
@@ -954,9 +990,9 @@ Mit freundlichen Grüßen,
                                                     :value (str coverage-id)
                                                     :_ "on click trigger checkboxChanged on #instr-select-all"}]]]
                                          [:div {:class (ui/cs col-all)}
-                                          (coverage-status-icon-span tr status)]
+                                          (mark-coverage-workflow req endpoint-mark-as (hash ".") policy-id coverage-id status)]
                                          [:div {:class (ui/cs col-all)}
-                                          (coverage-change-icon-span tr change)]
+                                          (mark-coverage-change req endpoint-mark-as (hash ".") policy-id coverage-id change)]
 
                                          [:div {:class (ui/cs col-all "truncate")}
                                           [:a {:href (urls/link-coverage coverage) :class "text-medium"}
