@@ -69,12 +69,13 @@
     (when end-time
       [:li (tr [:gig/end-time]) ": " (ui/format-time end-time)])
     (when location
-      [:li (tr [:gig/location]) ": " location])
+      [:li (tr [:gig/location]) ": " (markdown/render-one-line location)])
     (when-not (str/blank? pay-deal)
       [:li (tr [:gig/pay-deal]) ": " pay-deal])]
 
    (when more-details
-     [:p (tr [:gig/more-details]) ": " [:br] more-details])])
+     [:p (tr [:gig/more-details]) ": " [:br]
+      (markdown/render more-details)])])
 
 (defn template-snippet-gig-details-plain [{:keys [tr env]} {:gig/keys [date end-date title set-time call-time end-time status location more-details pay-deal gig-type]}]
   (selmer/render
