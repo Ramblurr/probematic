@@ -1753,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', function() {
                        [:ol
                         [:li "über die Höhe von Prämien-Selbstbehalten"]
                         [:li "in strittigen Fällen über die Höhe des zu versichernden Wertes."]
-                        [:li "ob Instrumente ausgeschiedener Mitspielerinnen weiter versichert werden können"]
+                        [:li "ob Instrumente ausgeschiedener Mitglieder weiter versichert werden können"]
                         [:li "über die Möglichkeit der Versicherung von außerhalb der Band verwendeter Instrumente der Mitglieder"]
                         [:li "über Wechsel des Versicherers oder Kündigung des Versicherungsvertrags."]
                         [:li "über die Versicherung bandeigener Instrumente."]]]]]))
@@ -1762,7 +1762,7 @@ document.addEventListener('DOMContentLoaded', function() {
   (faq-item
    :id "faq3"
    :question [:span {:class "text-sno-green-600"} "Wie kann ich meine Instrumente versichern?"]
-   :answer (faq-p [:span "Sie können Ihre Instrumente (oder Zubehör wie Mundstücke, Gigbags usw.) versichern, indem Sie " [:a {:href form-link :class "link-blue"} "dieses Formular ausfüllen."]])))
+   :answer (faq-p [:span "Du kannst deine Instrumente (oder Zubehör wie Mundstücke, Gigbags usw.) versichern, indem " [:a {:href form-link :class "link-blue"} "du dieses Formular ausfüllst."]])))
 
 (defn faq4 []
   (faq-item
@@ -1778,13 +1778,13 @@ document.addEventListener('DOMContentLoaded', function() {
             (faq-p [:span [:strong "Grundschutz"] " - Die Grundschutzversicherung bietet umfassenden Schutz für Ihr Musikinstrument gegen Diebstahl, Beschädigung und Verlust. (Keine Deckung über Nacht in unbewachten Autos oder Gebäuden). Diese Deckung ist obligatorisch und immer enthalten."])
             (faq-p [:span [:strong "Nachzeit im Auto"] " - Diese Zusatzversicherung deckt den Artikel über Nacht (22 - 06 Uhr) in einem unbewachten Auto ab. Kostet zusätzlich +25%."])
             (faq-p [:span [:strong "Proberaum"] " - Diese Zusatzversicherung deckt den Gegenstand über Nacht (22 - 06 Uhr) in einem unbewachten Gebäude ab. Kostet zusätzlich +20%."])
-            (faq-p "Für Band-Instrumente sind alle drei Deckungsarten (Grundschutz, Nachzeit im Auto, Proberaum) enthalten und werden von der Band bezahlt. Für private Instrumente kann das Mitglied die zusätzlichen Deckungsarten wählen, die es möchte (Grundschutz ist immer enthalten).")]))
+            (faq-p "Für Band-Instrumente sind alle drei Deckungsarten (Grundschutz, Nachzeit im Auto, Proberaum) enthalten und werden von der Band bezahlt. Für private Instrumente kannst du die zusätzlichen Deckungsarten wählen, die du möchtest (Grundschutz ist immer enthalten).")]))
 
 (defn faq6 []
   (faq-item
    :id "faq6"
    :question "Welche Arten von Gegenständen kann ich versichern?"
-   :answer "Obwohl wir die versicherten Gegenstände üblicherweise als \"Instrumente\" bezeichnen, können Sie jeden Artikel im Zusammenhang mit SNO-Auftritten versichern: Instrumente, Gigbags, Mundstücke, Mikrofone und andere elektrische Geräte usw."))
+   :answer "Obwohl wir die versicherten Gegenstände üblicherweise als \"Instrumente\" bezeichnen, kannst du jeden Artikel im Zusammenhang mit SNO-Auftritten versichern: Instrumente, Gigbags, Mundstücke, Mikrofone und andere elektrische Geräte usw."))
 
 (defn faq7 [form-link company-email broker-email band-email policy-number]
   (faq-item :id "faq7"
@@ -1828,7 +1828,7 @@ document.addEventListener('DOMContentLoaded', function() {
   (faq-item :id "faq10"
             :question "Wer ist im SNO-Versicherungsteam?"
             :answer (faq-p [:div
-                            (faq-p "Die folgenden Personen sind für die SNO-Versicherung zuständig. Sie können bei Fragen kontaktiert werden.")
+                            (faq-p "Die folgenden Personen sind für die SNO-Versicherung zuständig. Du kannst sie bei Fragen kontaktieren.")
                             [:ul
                              (map (fn [{:member/keys [name email] :as member}]
                                     [:li [:a {:href (urls/link-member member) :class "link-blue"} name]
@@ -1849,12 +1849,12 @@ document.addEventListener('DOMContentLoaded', function() {
        (faq7 damages-form-link company-email broker-email band-email policy-number)
        (faq3 form-link)
        (faq1)
-       (faq2)
        (faq4)
        (faq5)
        (faq6)
        (faq8)
        (faq9 coverages-link (:member/name member))
+       (faq2)
        (faq10 team-members)]]]))
 
 (ctmx/defcomponent ^:endpoint  insurance-index-page [{:keys [db] :as req}]
