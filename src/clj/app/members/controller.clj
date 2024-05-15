@@ -187,7 +187,8 @@
 (defn member-current-insurance-info [{:keys [db] :as req} member]
   (let [policy (q/insurance-policy-effective-as-of db (t/inst) q/policy-pattern)
         coverages (q/instruments-for-member-covered-by db  member policy q/instrument-coverage-detail-pattern)]
-    coverages))
+    {:coverages coverages
+     :policy policy}))
 
 (defn fetch-invite-code [system invite-code]
   (let [key (str "invite:" invite-code)]

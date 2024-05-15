@@ -1793,7 +1793,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 (defn dashboard-survey-widget [{:keys [tr db] :as req} survey-response dismiss-endpoint-path dismiss-target]
   (let [{:member/keys [name] :as member} (:insurance.survey.response/member survey-response)
-        {:insurance.policy/keys [policy-id] :as policy} (-> survey-response :survey :insurance.survey/policy )
+        {:insurance.policy/keys [policy-id] :as policy} (-> survey-response :survey :insurance.survey/policy)
         open-items (q/open-survey-for-member-items db member policy)
         has-open-items? (not= 0 open-items)
         time-dur (java.lang.String/format java.util.Locale/GERMAN "%.2f" (to-array [(float (* open-items 0.75))]))]
@@ -1811,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function() {
       [:div {:class "mt-2 flex items-center space-x-4"}
        (if has-open-items?
          (ui/link-button
-           :href (urls/link-insurance-survey-start policy-id)
+          :href (urls/link-insurance-survey-start policy-id)
           :label (tr [:insurance.survey/start-button]) :priority :primary :icon icon/arrow-right)
          (ui/link-button
           :href (urls/link-insurance-add-coverage (-> survey-response :survey :insurance.survey/policy :insurance.policy/policy-id))

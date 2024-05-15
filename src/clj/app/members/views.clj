@@ -201,7 +201,7 @@
                      :else
                      (:member req))
         {:member/keys [member-id name nick email username phone active? section keycloak-id]} member
-        coverages (controller/member-current-insurance-info req member)
+        {:keys [coverages policy]} (controller/member-current-insurance-info req member)
         private-instruments (filter :instrument.coverage/private? coverages)
         band-instruments (filter #(not (:instrument.coverage/private? %)) coverages)
         sections (controller/sections db)
@@ -280,10 +280,14 @@
 
       (ledger/member-ledger-panel req member)
 
-      (ui/panel {:title
-                 (tr [:member/insurance-title])
-                 :subtitle
-                 (tr [:member/insurance-subtitle])}
+      (ui/panel {:title (tr [:member/insurance-title])
+                 :subtitle (tr [:member/insurance-subtitle])
+                 :buttons (list
+                           (ui/link-button :href (url/link-coverage-create (:insurance.policy/policy-id policy))
+                                           :label (tr [:instrument.coverage/create-button])
+                                           :priority :primary
+                                           :icon icon/plus))}
+
                 (ui/dl
 
                  (ui/dl-item (tr [:band-instruments])  (count band-instruments))
