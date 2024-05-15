@@ -222,7 +222,7 @@
 
 (defn attendance-dropdown [& {:keys [member-id gig-id value tr]
                               :or {value "no-response"}}]
-  (let [{:keys [opts default]} (attendance-opts tr :large)
+  (let [{:keys [opts default]} (attendance-opts tr :small)
         current-opt (or (m/find-first #(= value (:value %)) (:opts (attendance-opts tr :small))) default)
         button-size-class-normal "px-4 py-2 text-sm "
         button-size-class-small "px-2 py-1 text-xs "]
