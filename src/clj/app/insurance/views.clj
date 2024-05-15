@@ -1793,7 +1793,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 (defn dashboard-survey-widget [{:keys [tr db] :as req} survey-response dismiss-endpoint-path dismiss-target]
   (let [{:member/keys [name] :as member} (:insurance.survey.response/member survey-response)
-        open-items (q/open-survey-for-member-items db member)
+        {:insurance.policy/keys [policy-id] :as policy} (-> survey-response :survey :insurance.survey/policy )
+        open-items (q/open-survey-for-member-items db member policy)
         has-open-items? (not= 0 open-items)
         time-dur (java.lang.String/format java.util.Locale/GERMAN "%.2f" (to-array [(float (* open-items 0.75))]))]
     [:div {:class "flex items-center justify-center space-x-4"}
@@ -1810,13 +1811,13 @@ document.addEventListener('DOMContentLoaded', function() {
       [:div {:class "mt-2 flex items-center space-x-4"}
        (if has-open-items?
          (ui/link-button
-          :href (urls/link-insurance-survey-start "123")
+           :href (urls/link-insurance-survey-start policy-id)
           :label (tr [:insurance.survey/start-button]) :priority :primary :icon icon/arrow-right)
          (ui/link-button
           :href (urls/link-insurance-add-coverage (-> survey-response :survey :insurance.survey/policy :insurance.policy/policy-id))
           :label (tr [:instrument.coverage/create-button]) :priority :primary))
        (when-not has-open-items?
-         (ui/button :label (tr [:action/im-finished]) :priority :white :hx-post dismiss-endpoint-path :hx-target dismiss-target))]]]))
+         (ui/button :label (tr [:action/im-finished]) :priority :white :hx-post dismiss-endpoint-path :hx-target dismiss-target :hx-vals {:policy-id policy-id}))]]]))
 
 (defn band-or-private-bubble [tr private?]
   (ui/bool-bubble (not private?) {true "Band" false "Privat"}))
@@ -1934,8 +1935,8 @@ document.addEventListener('DOMContentLoaded', function() {
 (defn survey-flow-invalid-transition []
   [:div "That isn't allowed"])
 
-(defn prepare-next-active-report [{:keys [db] :as req}]
-  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)
+(defn prepare-next-active-report [{:keys [db] :as req} policy]
+  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req policy)
         todo-reports (filter #(nil? (:insurance.survey.report/completed-at %)) coverage-reports)]
     {:active-report (first todo-reports)
      :todo-reports todo-reports
@@ -1953,9 +1954,9 @@ document.addEventListener('DOMContentLoaded', function() {
         (not= current-idx (dec total-todo)))))
 
 (defn survey-report-interstitial [{:keys [tr] :as req}]
-  (let [{:keys [active-report todo-reports total-reports total-todo current-idx]} (prepare-next-active-report req)
+  (let [{:keys [active-report todo-reports total-reports total-todo current-idx]} (prepare-next-active-report req (:policy req))
         total-completed (- total-reports total-todo)
-        {:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)]
+        {:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req (:policy req))]
     (if (= 0 total-todo)
       [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
        [:div {:data-celebrate "true"}]
@@ -2093,7 +2094,7 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
                       :hx-swap      "outerHTML swap:0.6s"})))
 
 (defn survey-question-page [{:keys [tr] :as req} flow decisions active-report current-flow-key]
-  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req)
+  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req (:policy req))
         transitioning? (:transitioning? req)
         todo-reports                                                                   (filter #(nil? (:insurance.survey.report/completed-at %)) coverage-reports)
         text-params {:tr tr :active-report active-report}
@@ -2125,7 +2126,8 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
 (ctmx/defcomponent ^:endpoint survey-start-page [{:keys [db tr] :as req}]
   survey-flow-progress
   survey-edit-instrument-handler
-  (let [{:as data :keys [active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req)
+  (let [policy (:policy req)
+        {:as data :keys [active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req policy)
         {:keys [start-flow] :as flow} (build-survey-flow req)]
     (if (= 0 total-todo)
       (survey-report-interstitial (util/make-get-request req {:transitioning? true}))

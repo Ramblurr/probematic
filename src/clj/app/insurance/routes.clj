@@ -124,10 +124,9 @@
 
 (defn routes []
   [""
-   [""
-    (insurance-survey)]
    ["" {:app.route/name :app/insurance1
         :interceptors [policy-interceptor]}
+    (insurance-survey)
     (insurance-coverage-create)
     (insurance-coverage-create2)
     (insurance-coverage-create3)

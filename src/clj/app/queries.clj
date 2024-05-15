@@ -1019,22 +1019,39 @@
    (map first)
    (map insurance.domain/db->survey)))
 
-(defn open-survey-for-member-items [db member]
+(defn open-survey-for-member-items [db member policy]
   (or
    (->>
     (datomic/q '[:find (count ?report)
-                 :in $ ?member
+                 :in $ ?member ?policy
                  :where
                  [?response :insurance.survey.response/member ?member]
                  [?survey :insurance.survey/responses ?response]
+                 [?survey :insurance.survey/policy ?policy]
                  [(missing? $ ?survey :insurance.survey/closed-at)]
                  [(missing? $ ?response :insurance.survey.response/completed-at)]
                  [?response :insurance.survey.response/coverage-reports ?report]
                  [(missing? $ ?report :insurance.survey.report/completed-at)]]
-               db (d/ref member))
+               db (d/ref member) (d/ref policy))
     (map first)
     first)
    0))
+
+(defn open-survey-for-member-policy
+  "Returns the response for the member for the first open survey"
+  [db member policy]
+  (->>
+   (datomic/q '[:find (pull ?response pattern)
+                :in $ ?member ?policy pattern
+                :where
+                [?response :insurance.survey.response/member ?member]
+                [?survey :insurance.survey/responses ?response]
+                [?survey :insurance.survey/policy ?policy]
+                [(missing? $ ?survey :insurance.survey/closed-at)]]
+              db (d/ref member) (d/ref policy) insurance-survey-response-pattern-backwards)
+   (map first)
+   (map insurance.domain/db->survey-response)
+   first))
 
 (defn open-survey-for-member
   "Returns the response for the member for the first open survey"

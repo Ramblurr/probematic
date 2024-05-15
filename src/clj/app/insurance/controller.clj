@@ -760,8 +760,8 @@
       report
       (throw (ex-info "Report does not belong to current user" {:report-id report-id})))))
 
-(defn survey-response-for-member [{:keys [db] :as req}]
-  (let [response (q/open-survey-for-member db (auth/get-current-member req))]
+(defn survey-response-for-member [{:keys [db] :as req} policy]
+  (let [response (q/open-survey-for-member-policy db (auth/get-current-member req) policy)]
     response))
 
 (defn survey-table-items [{:keys [db] :as req}]
@@ -774,11 +774,11 @@
 (defn complete-member-survey-response [db response member]
   [:db/add (d/ref response) :insurance.survey.response/completed-at (t/inst)])
 
-(defn dismiss-insurance-widget! [{:keys [db] :as req}]
+(defn dismiss-insurance-widget! [{:keys [db] :as req} policy]
   (let [member (auth/get-current-member req)
-        open-items (q/open-survey-for-member-items db member)]
+        open-items (q/open-survey-for-member-items db member policy)]
     (when (= 0 open-items)
-      (let [response (q/open-survey-for-member db member)
+      (let [response (q/open-survey-for-member-policy db member policy)
             tx (complete-member-survey-response db response member)]
         (d/transact-wrapper! req {:tx-data [tx]})))))
 
@@ -786,12 +786,9 @@
   (let [txs (->> decisions
                  (mapcat #(domain/txs-for-decision active-report %))
                  (concat (domain/txs-complete-survey-report active-report))
-                 (concat (domain/txs-maybe-survey-response-complete active-report (q/open-survey-for-member db (-> active-report :response :insurance.survey.response/member)))))]
+                 (concat (domain/txs-maybe-survey-response-complete active-report (q/open-survey-for-member-policy db (-> active-report :response :insurance.survey.response/member) (:policy req)))))]
     ;; (tap> {:report active-report :deci decisions :txs txs})
     (d/transact-wrapper! req {:tx-data txs})))
-
-(defn open-survey-for-member [{:keys [db] :as req} member]
-  (q/open-survey-for-member db member))
 
 (defn members-for-policy-survey
   "Returns a list of members that are covered by the policy and active members that are not covered.

@@ -543,7 +543,7 @@
  :good-job  "Good Job!"
  :time-left "Time Remaining"
  :youve-completed-sing "You completed one item! %1 left to go!"
- :youve-completed-plural "You've completed %1 item! %2 left to go!"
+ :youve-completed-plural "You've completed %1 items! %2 left to go!"
 
 ;;
  }
