@@ -1696,30 +1696,182 @@ document.addEventListener('DOMContentLoaded', function() {
                 (ui/text :label "" :name (path "serial-number") :value serial-number  :required? false)
                 serial-number)]]]]]])))
 
+(defn faq-p [text]
+  [:p {:class "text-base leading-7 text-gray-600"} text])
+(defn faq-item [& {:keys [id question answer]}]
+  (let [aria-id (str id "-aria")]
+    [:div {:id id :class "pt-6"}
+     [:dt
+      [:button
+       {:type "button",
+        :class "flex w-full items-start justify-between text-left text-gray-900" :aria-controls aria-id :aria-expanded "false"
+        :_ (str/replace  "on click toggle .hidden on <#$id .faq-toggle/>" "$id" id)}
+       [:span {:class "text-base font-semibold leading-7"} question]
+       [:span {:class "ml-6 flex h-7 items-center"}
+        (icon/plus-thin {:class "faq-toggle h-6 w-6"})
+        (icon/minus-thin {:class "faq-toggle hidden h-6 w-6"})]]]
+     [:dd {:class "faq-toggle hidden mt-2 pr-12 prose" :id aria-id}
+      answer]]))
+
+(defn faq1 []
+  (faq-item
+   :id "faq1"
+   :question "Warum bietet das Streetnoise Orchestra eine Instrumentenversicherung für seine Mitglieder an?"
+   :answer [:div
+            (faq-p "Das Streetnoise Orchestra bietet seinen Mitspielerinnen eine Instrumentenversicherung an und übernimmtdie Prämienzahlungen dafür ganz oder teilweise.")
+            (faq-p "Die Gründe dafür sind folgende: ")
+            [:ol
+             [:li "Vermeidung von Diskussionen über die Kostenübernahme durch den Verein, falls im Zuge von Proben, Auftritten Schadensfälle auftreten"]
+             [:li "Motivation auch gute und wertvolle Instrumente einzusetzen, durch Risikoübernahme"]
+             [:li "Förderung Instrumente innerhalb der Band zu verleihen"]
+             [:li "Ausgleich dafür dass die Mitspielerinnen die Instrumente selbst stellen. Weiters solidarischer Ausgleich für die stark unterschiedlichen Kosten/Risiko. Die derzeitige Versicherung umfasst einen Schutz gegen Beschädigung und Verlust weltweit und 24h, also auch die Verwendung ausserhalb SNO ist versichert, das begründet auch einen möglichen Selbstbehalt bei der Prämienzahlung."]]
+            (faq-p "Die Versicherung von Instrumenten ist nur für Mitglieder des Vereins SNO vorgesehe")]))
+
+(defn faq2 []
+  (faq-item :id "faq2"
+            :question "Welche Regeln gelten für die SNO-Instrumentenversicherung?"
+            :answer [:div
+                     [:p "Vereinbarung für alle Mitglieder des Vereins SNO:"]
+                     [:ol
+                      [:li "Durch die Möglichkeit der kostenlosen bzw. kostengünstigen Instrumentenversicherung verzichten alle Mitglieder auf Versuche den Verein SNO zur, auch nur teilweisen, Kostenübernahme von Schadensfällen zu bewegen, bzw. wird der Verein keine diesbezüglichen Überlegungen anstellen."]
+                      [:li "Das gilt auch für den Fall, dass die Versicherung einen Schaden nicht übernimmt."
+                       [:ol
+                        [:li "weil ein besonderes Risiko (z.B. Nachts im unbewachten Autos oder Gebäuden) nicht abgedeckt ist"]
+                        [:li "weil die Versicherung grobe Fahrlässigkeit geltend macht"]
+                        [:li "wenn die Versicherung aus anderen Gründen die Zahlung verweigert"]]]
+                      [:li [:strong "Mitwirkung der Mitglieder:"]
+                       [:ol
+                        [:li "Die Mitglieder sind selbst für die Richtigkeit der Versicherungssumme, und Zusatzvereinbarungen (z.B. Nachtklauseln) zuständig."]
+                        [:li "Selbstbehalte und Prämien für private Instrumente werden sofort an den Verein bezahlt."]
+                        [:li "Die MitspielerInnen liefern eine ausreichende Beschreibung der Instrumente und werden Schadensereignisse bestmöglich dokumentieren."]]]
+                      [:li [:strong "Vorstand"] ": Die Versicherung schließt der Verein SNO ab, somit ist der Vorstand zuständig für die Anmeldung der Instrumente, alle Formalitäten und Bearbeitung von Schadensfällen. Der Vorstand bemüht sich nach Kräften um die Schadloshaltung der Mitglieder, wird aber jeden Versuch zurückweisen, unrechtmäßige Vorteile herauszuschlagen."
+                       [:ol
+                        [:li "Der Vorstand kann die Bearbeitung von unzureichend dokumentierten oder fragwürdigen Schadensereignissen ablehnen."]
+                        [:li "Der Vorstand kann die Versicherung unzureichend beschriebener Instrumente ablehnen."]
+                        [:li "Der Vorstand kündigt die Versicherung von Instrumenten, für die von den Mitgliedern vereinbarungsgemäß zu leistenden Zahlungen ausbleiben."]]]
+                      [:li [:strong "Die Generalversammlung"] " entscheidet, soweit sinnvoll auf Grund einer vorläufigen Entscheidung bzw. einer Empfehlung der Probenversammlung:"
+                       [:ol
+                        [:li "über die Höhe von Prämien-Selbstbehalten"]
+                        [:li "in strittigen Fällen über die Höhe des zu versichernden Wertes."]
+                        [:li "ob Instrumente ausgeschiedener Mitspielerinnen weiter versichert werden können"]
+                        [:li "über die Möglichkeit der Versicherung von außerhalb der Band verwendeter Instrumente der Mitglieder"]
+                        [:li "über Wechsel des Versicherers oder Kündigung des Versicherungsvertrags."]
+                        [:li "über die Versicherung bandeigener Instrumente."]]]]]))
+
+(defn faq3 [form-link]
+  (faq-item
+   :id "faq3"
+   :question [:span {:class "text-sno-green-600"} "Wie kann ich meine Instrumente versichern?"]
+   :answer (faq-p [:span "Sie können Ihre Instrumente (oder Zubehör wie Mundstücke, Gigbags usw.) versichern, indem Sie " [:a {:href form-link :class "link-blue"} "dieses Formular ausfüllen."]])))
+
+(defn faq4 []
+  (faq-item
+   :id "faq4"
+   :question "Was ist der Unterschied zwischen einem Band-Instrument und einem privaten Instrument?"
+   :answer (faq-p "Ein Band-Instrument ist ein Instrument/Gegenstand, der im letzten Jahr bei einem Auftritt von SNO gespielt oder verwendet wurde. SNO übernimmt die Kosten für Band-Instrumente. Alle anderen Instrumente/Gegenstände gelten als privat, und das Mitglied, dem sie gehören, ist für die Zahlung der Versicherungsprämie verantwortlich.")))
+
+(defn faq5 []
+  (faq-item
+   :id "faq5"
+   :question "Welche verschiedenen Arten von Versicherungsdeckungen gibt es?"
+   :answer [:div
+            (faq-p [:span [:strong "Grundschutz"] " - Die Grundschutzversicherung bietet umfassenden Schutz für Ihr Musikinstrument gegen Diebstahl, Beschädigung und Verlust. (Keine Deckung über Nacht in unbewachten Autos oder Gebäuden). Diese Deckung ist obligatorisch und immer enthalten."])
+            (faq-p [:span [:strong "Nachzeit im Auto"] " - Diese Zusatzversicherung deckt den Artikel über Nacht (22 - 06 Uhr) in einem unbewachten Auto ab. Kostet zusätzlich +25%."])
+            (faq-p [:span [:strong "Proberaum"] " - Diese Zusatzversicherung deckt den Gegenstand über Nacht (22 - 06 Uhr) in einem unbewachten Gebäude ab. Kostet zusätzlich +20%."])
+            (faq-p "Für Band-Instrumente sind alle drei Deckungsarten (Grundschutz, Nachzeit im Auto, Proberaum) enthalten und werden von der Band bezahlt. Für private Instrumente kann das Mitglied die zusätzlichen Deckungsarten wählen, die es möchte (Grundschutz ist immer enthalten).")]))
+
+(defn faq6 []
+  (faq-item
+   :id "faq6"
+   :question "Welche Arten von Gegenständen kann ich versichern?"
+   :answer "Obwohl wir die versicherten Gegenstände üblicherweise als \"Instrumente\" bezeichnen, können Sie jeden Artikel im Zusammenhang mit SNO-Auftritten versichern: Instrumente, Gigbags, Mundstücke, Mikrofone und andere elektrische Geräte usw."))
+
+(defn faq7 [form-link company-email broker-email band-email policy-number]
+  (faq-item :id "faq7"
+            :question [:span {:class "text-red-600"} "Was tun beim Schadensfall?"]
+            :answer [:div
+                     (faq-p "Dein Instrument ist beschädigt oder gestohlen worden?")
+                     (faq-p [:span
+                             "Für eine schnelle Rückerstattung von Schadens- und Reparaturkosten wird "
+                             [:a {:class "link-blue" :href form-link} "das Schadenanzeigeformular ausgefüllt"]
+                             " und so bald wie möglich an die Versicherung gesendet. "
+                             [:span "Unsere Policenummer lautet " [:strong policy-number] "."]])
+                     (faq-p "Achte darauf, dass der Schaden anhand von Fotos und Beschreibung bestmöglich nachvollziehbar für die Versicherung ist.")
+                     (faq-p "Zudem braucht die Versicherung einen Kostenvoranschlag.")
+                     (faq-p "Die Reparatur sollte erst nach Abklärung mit der Versicherung erfolgen.")
+                     (faq-p
+                      [:span
+                       "Das ausgefüllte Dokument schickst du an die Adressen der Versicherung, ("
+                       [:a {:href (str "mailto:" company-email) :class "link-blue"} company-email]
+                       "), unseres Versicherungsmarklers ("
+                       [:a {:href (str "mailto:" broker-email) :class "link-blue"} broker-email]
+                       ") und an uns ("
+                       [:a {:href (str "mailto:" band-email) :class "link-blue"} band-email]
+                       ")"])
+                     (faq-p "Schreib uns, falls du noch Fragen zum Ablauf hast. Wir sind für dich da. Und für dein Instrument.")]))
+
+(defn faq8 []
+  (faq-item :id "faq8"
+            :question "Sind gewöhnliche Abnutzung und Verschleiß durch die Versicherung gedeckt?"
+            :answer (faq-p "Gewöhnliche Abnutzung und Verschleiß sind nicht versichert. Der Verein unterstützt keine „Umgehungen“ dieser Regelung. Mitglieder sollten sich bewusst sein, dass solche Fälle nicht als versicherte Schadensfälle gelten und daher keine Erstattung erfolgt.")))
+
+(defn faq9 [link-coverages member-name]
+  (faq-item :id "faq9"
+            :question "Was ist der aktuelle Status meiner Versicherung?"
+            :answer (faq-p
+                     (if link-coverages
+                       [:span [:a {:class "link-blue" :href link-coverages} "Hier klicken" " um die aktuell versicherten Instrumente anzusehen."]]
+                       [:span
+                        "Du (" member-name ") hast keine versicherten Instrumente!"]))))
+
+(defn insurance-faq [{:keys [db system] :as req} active-policy]
+  (let [member (auth/get-current-member req)
+        form-link (urls/link-coverage-create (:insurance.policy/policy-id active-policy))
+        damage-form-link "#"
+        coverages (q/instruments-for-member-covered-by db member active-policy q/instrument-coverage-detail-pattern)
+        coverages-link (when (seq coverages) (urls/link-policy-table-member active-policy member))
+        {:keys [policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))]
+    [:div
+     {:class "px-4 py-4 sm:px-6 sm:py-6"}
+     [:div {:class "max-w-4xl divide-y divide-gray-900/10"}
+      [:h2 {:class "text-2xl font-bold leading-10 tracking-tight text-gray-900"} "Instrumentenversicherung: Was? Warum? Wie?"]
+      [:dl {:class "mt-6 space-y-6 divide-y divide-gray-900/10"}
+       (faq7 damage-form-link company-email broker-email band-email policy-number)
+       (faq3 form-link)
+       (faq1)
+       (faq2)
+       (faq4)
+       (faq5)
+       (faq6)
+       (faq8)
+       (faq9 coverages-link (:member/name member))]]]))
+
 (ctmx/defcomponent ^:endpoint  insurance-index-page [{:keys [db] :as req}]
   insurance-policy-duplicate
   insurance-policy-delete
-  (let [tr (i18n/tr-from-req req)]
+  (let [tr (i18n/tr-from-req req)
+        policies (q/policies db)
+        active-policy (q/insurance-policy-effective-as-of db (t/inst) q/policy-pattern)]
     [:div
      (ui/page-header :title (tr [:insurance/title]))
-
      (breadcrumb-index tr)
-
-     (let [policies (q/policies db)]
-       [:div {:class "mt-6 sm:px-6 lg:px-8"}
-        (ui/divider-left (tr [:insurance/policies])
-                         (ui/link-button :label (tr [:insurance/insurance-policy])
-                                         :priority :white-rounded
-                                         :centered? true
-                                         :attr {:href "/insurance-new/"} :icon icon/plus))
-        [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"
-               :id "songs-list"}
-         (if (empty? policies)
-           "No Policies"
-           [:ul {:role "list", :class "divide-y divide-gray-200"}
-            (map (fn [policy]
-                   [:li
-                    (policy-row tr policy)]) policies)])]])]))
+     [:div {:class "mt-6 sm:px-6 lg:px-8"}
+      #_(ui/divider-left (tr [:insurance/policies]))
+      [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"}
+       (insurance-faq req active-policy)]]
+     [:div {:class "mt-6 sm:px-6 lg:px-8"}
+      (ui/divider-left (tr [:insurance/policies])
+                       (ui/link-button :label (tr [:insurance/insurance-policy])
+                                       :priority :white-rounded
+                                       :centered? true
+                                       :attr {:href "/insurance-new/"} :icon icon/plus))
+      [:div {:class "overflow-hidden bg-white shadow sm:rounded-md mb-8"}
+       (if (empty? policies)
+         "No Policies"
+         [:ul {:role "list", :class "divide-y divide-gray-200"}
+          (map (fn [policy]
+                 [:li
+                  (policy-row tr policy)]) policies)])]]]))
 
 (ctmx/defcomponent ^:endpoint insurance-send-notifications [{:keys [db tr] :as req}]
   (let [{:keys [error count-sent policy]} (controller/send-notifications! req)]
