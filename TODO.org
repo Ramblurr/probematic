@@ -1,13 +1,18 @@
 #+title: Todo List for the Probematic
 
-* Features
-** Probenplan
-** Logout
-** User Profile/Settings Page
-** Optionally notify members on gig creation
-** Gig creation confirmation page
-** Delete gig
-** Insurance edit coverage value
+* 2024-05
 
-* Production Checklist
-** Brotli compression for css/js (see https://github.com/RutledgePaulV/ring-compression/)
+** DONE mark as  change doesnt ask for confirm
+** DONE create *band* instrument should get all coverages
+** DONE coverage type description field
+** DONE executing mark as results in page in which you cant mark as again
+** DONE feature: mark as single instruments, like gigs
+** DONE mobile sidebar flyout
+** DONE mobile tooltips
+** DONE add instrument friendly
+** DONE remove survey/123/
+** DONE LOGS EVENTS
+** DONE should show changes in the "Is everything OK?"
+** TODO exclude removed instruments from total
+** TODO remove images
+** TODO save excel to filestore for download again
