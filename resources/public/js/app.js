@@ -1,11 +1,11 @@
 import { $, listen } from "./utils.js";
-import { Dropdown, DropdownAll } from "./widgets/attendance-dropdown.js";
+import { Dropdown, DiscoverDropdowns } from "./widgets/attendance-dropdown.js";
 import {
   ActionMenu2All,
   ActionMenu,
   Flyout,
 } from "./widgets/action-menu.js?v2";
-import { discoverTooltips } from "./widgets/tooltip.js";
+import { DiscoverTooltips } from "./widgets/tooltip.js";
 
 //// SETUP
 htmx.onLoad(function (content) {
@@ -14,18 +14,19 @@ htmx.onLoad(function (content) {
 });
 
 function initWidgets(evt) {
-  if (evt) {
-    if (evt.target.querySelector(".dropdown")) {
-      DropdownAll(evt.target);
-    }
+  if (evt && evt.target) {
+    DiscoverDropdowns(evt.target);
     InitializeMarkdownEditors(evt.target);
+    ActionMenu2All(evt.target);
+    DiscoverTooltips(evt.target);
   } else {
-    DropdownAll();
+    DiscoverDropdowns();
+    ActionMenu2All();
     InitializeMarkdownEditors();
     listen("click", "[data-flyout-trigger]", Flyout);
+    DiscoverTooltips();
   }
 
-  ActionMenu2All();
   listen("click", "[data-action-menu-trigger]", ActionMenu);
   AutoSizeTextAreas();
   try {
@@ -33,7 +34,6 @@ function initWidgets(evt) {
   } catch (e) {
     console.error("Dropzone not found");
   }
-  discoverTooltips();
 }
 
 document.body.addEventListener("htmx:beforeSwap", function (evt) {
@@ -53,6 +53,7 @@ document.body.addEventListener("htmx:beforeSwap", function (evt) {
 });
 
 document.body.addEventListener("htmx:beforeRequest", function (evt) {
+  //console.log("before request", evt);
   NProgress.start();
 });
 
@@ -60,10 +61,23 @@ document.body.addEventListener("htmx:beforeSwap", function (evt) {
   NProgress.inc(0.9);
 });
 
-document.body.addEventListener("htmx:afterSettle", function (evt) {
+document.body.addEventListener("htmx:afterRequest", function (evt) {
+  //console.log("htmx:afterRequest init", evt);
   NProgress.done();
   setTimeout(() => NProgress.remove(), 1000);
-  initWidgets(evt);
+});
+
+document.body.addEventListener("htmx:afterSwap", function (evt) {
+  //console.log("after swap", evt);
+});
+
+document.body.addEventListener("htmx:afterSettle", function (evt) {
+  try {
+    //console.log("htmx:afterSettle init", evt);
+    initWidgets(evt);
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 document.body.addEventListener("htmx:responseError", function (evt) {
@@ -91,7 +105,7 @@ function checkboxLimitReached(event) {
   if (checkedChecks.length == 0) return false;
   const maximum = parseInt(checkedChecks[0].getAttribute("data-maximum"));
   if (checkedChecks.length >= maximum + 1) {
-    console.log("max reached");
+    // console.log("max reached");
     return true;
   }
   return false;
@@ -139,6 +153,7 @@ function MarkdownEditor(target) {
   const maxSizeB = 1024 * 1024 * maxSizeMB;
   const easyMDE = new EasyMDE({
     element: target,
+    spellChecker: false,
     forceSync: true,
     promptURLs: true,
     uploadImage: hasUpload,
@@ -189,7 +204,7 @@ function MarkdownEditor(target) {
 
       xhr.onreadystatechange = function () {
         if (xhr.readyState !== 4) return;
-        console.log(xhr);
+        // console.log(xhr);
         if (xhr.status === 201) {
           const response = JSON.parse(xhr.responseText);
           onSuccess(response["file-url"]);
@@ -234,6 +249,6 @@ document.addEventListener("DOMContentLoaded", function (evt) {
   }
 });
 document.addEventListener("appSidebarToggled", function (evt) {
-  console.log("sidebar toggled");
+  // console.log("sidebar toggled");
   toggleSidebar();
 });

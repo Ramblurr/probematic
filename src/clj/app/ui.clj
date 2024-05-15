@@ -406,20 +406,13 @@
                               "border-transparent bg-orange-600 text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-100"
                               :white-rounded "rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50"})
 
-(def spinner-priority-classes {:secondary
-                               "text-sno-orange-900"
-                               :success
-                               "text-sno-green-700"
-                               :white
-                               "text-sno-green-700"
-                               :white-destructive
-                               "text-sno-orange-900"
-                               :primary
-                               "text-white"
-                               :primary-orange
-                               "text-white"
-                               :white-rounded
-                               "text-sno-orange-900"})
+(def spinner-priority-classes {:secondary  "text-sno-orange-900"
+                               :success "text-sno-green-700"
+                               :white  "text-sno-green-700"
+                               :white-destructive  "text-sno-orange-900"
+                               :primary "text-white"
+                               :primary-orange "text-white"
+                               :white-rounded "text-sno-orange-900"})
 
 (def button-sizes-classes {:2xsmall "px-1.5 py-0.5 text-xs"
                            :xsmall "px-2.5 py-1.5 text-xs"
@@ -1299,18 +1292,21 @@
           [:div {:class "flex flex-shrink-0 justify-end px-4 py-4 space-x-3"}
            buttons])]]]]]])
 
-(defn action-menu-item [id idx {:keys [label href attr active? icon tag]
+(defn action-menu-item [id idx {:keys [label href attr active? icon tag spinner?]
                                 :or {attr {}
                                      tag :a}}]
   [tag (merge {:href href :class
                (cs
                 "text-gray-700 hover:bg-gray-100 hover:text-gray-900 block px-4 py-2 text-sm w-full text-left"
+                (when spinner? "button-spinner")
                 (when icon "flex gap-1")
                 (when active? "font-medium bg-gray-100 text-gray-900 ")) :role "menuitem" :tabindex "-1" :id (str id "-" idx)}
               attr)
-   (when icon
-     icon)
-   label])
+   (when icon icon)
+   [:span {:class "button-label"} label]
+   (when spinner? (icon/spinner {:class (cs "spinner"
+                                            "h-5 w-5"
+                                            "text-sno-green-500")}))])
 
 (defn action-menu-section [idx id section]
   [:div {:class

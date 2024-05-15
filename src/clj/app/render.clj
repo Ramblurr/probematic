@@ -72,6 +72,7 @@
   (list
    (script relative-prefix "hyperscript.org@0.9.12.js")
    (script relative-prefix "htmx.org@1.9.12.js")
+   ;; (script relative-prefix "htmx.org.dev@1.9.12.js")
    (script relative-prefix "class-tools@1.9.12.js")
    (script relative-prefix "nprogress.js")
    (script relative-prefix "popperjs@2-dev.js")

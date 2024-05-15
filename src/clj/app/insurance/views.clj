@@ -628,7 +628,10 @@ Mit freundlichen Grüßen,
                     {:label (tr [k]) :active? false
                      :icon (coverage-status-icon k)
                      :tag :button
-                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-vals (merge hx-vals {"workflow-status" (name k) :_ (confirm (tr [k]))})}})]
+                     :spinner? true
+                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-vals (merge hx-vals {"workflow-status" (name k)})
+                             ;; :_ (confirm (tr [k]))
+                             }})]
 
     (ui/action-menu
      :id (str "coverage-mark-workflow-status-" coverage-id)
@@ -650,7 +653,10 @@ Mit freundlichen Grüßen,
                     {:label (tr [k]) :active? false
                      :icon (coverage-change-icon k)
                      :tag :button
-                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-vals (merge hx-vals {"change-status" (name k) :_ (confirm (tr [k]))})}})]
+                     :spinner? true
+                     :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-vals (merge hx-vals {"change-status" (name k)})
+                             ;; :_ (confirm (tr [k]))
+                             }})]
 
     (ui/action-menu
      :id (str "coverage-mark-change-status-" coverage-id)
@@ -672,6 +678,7 @@ Mit freundlichen Grüßen,
                     {:label (tr [k]) :active? false
                      :icon  (icon-fn k)
                      :tag   :button
+                     :spinner? true
                      :attr  {:hx-post endpoint-mark-as :hx-target hx-target :hx-include "input.mark-coverage-as-data" :hx-vals {val-k (name k) :_ (confirm (tr [k]))}}})
         make-workflow (partial make-item coverage-status-icon "workflow-status")
         make-change (partial make-item coverage-change-icon "change-status")]
