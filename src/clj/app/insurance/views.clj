@@ -1826,18 +1826,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 (tr [k]))
      :value v}))
 
-(defn instrument-card [{:keys [tr]} {:insurance.survey.report/keys [coverage]}]
+(defn instrument-card [{:keys [tr]} {:insurance.survey.report/keys [coverage]} decisions]
   (let [{:instrument.coverage/keys [instrument private? value item-count cost types]} coverage
         {:instrument/keys [name build-year description make model serial-number category]} instrument
         _ (assert instrument "Instrument is required")
         _ (assert coverage "Coverage is required")
+        chose-private? ((set decisions) "confirm-not-band")
+        chose-band? (boolean ((set decisions) "confirm-band"))
+        private? (cond
+                   chose-private? true
+                   chose-band? false
+                   :else private?)
         item-image nil ;; TODO "/img/tuba-robot-boat-1000.jpg"
         make-detail (partial instrument-card-detail-data tr)
         ;; _ (tap> {:coverage coverage :value value :cost cost :instrument instrument})
         details [(make-detail :instrument/description description)
                  (make-detail :instrument/category (:instrument.category/name category))
                  (make-detail :instrument.coverage/private? (band-or-private-bubble tr private?))
-                 (when (and private?)
+                 (when private?
                    (make-detail :instrument.coverage/cost
                                 (if private?
                                   [:span  {:class "text-red-600 tooltip underline decoration-dashed" :data-tooltip (tr [:instrument.coverage/cost-hint-direct])} (ui/money-format cost :EUR)]
@@ -2107,7 +2113,7 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
         (map (partial survey-answer-button decisions (util/endpoint-path survey-flow-progress)) answers)]
        [:div {:class "htmx-indicator pulsate text-center text-gray-500 mt-2"} (tr [:updating])]]
       [:ul {:role "list" :class "grid grid-cols-1 gap-x-6 gap-y-8 mb-2"}
-       (instrument-card req active-report)]]]))
+       (instrument-card req active-report decisions)]]]))
 
 (ctmx/defcomponent ^:endpoint survey-start-page [{:keys [db tr] :as req}]
   survey-flow-progress
