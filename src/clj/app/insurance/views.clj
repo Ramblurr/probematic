@@ -1824,13 +1824,24 @@ document.addEventListener('DOMContentLoaded', function() {
                        [:span
                         "Du (" member-name ") hast keine versicherten Instrumente!"]))))
 
+(defn faq10 [team-members]
+  (faq-item :id "faq10"
+            :question "Wer ist im SNO-Versicherungsteam?"
+            :answer (faq-p [:div
+                            (faq-p "Die folgenden Personen sind für die SNO-Versicherung zuständig. Sie können bei Fragen kontaktiert werden.")
+                            [:ul
+                             (map (fn [{:member/keys [name email] :as member}]
+                                    [:li [:a {:href (urls/link-member member) :class "link-blue"} name]
+                                     " (" [:a {:href (str "mailto:" email) :class "link-blue"} email] ")"]) team-members)]])))
+
 (defn insurance-faq [{:keys [db system] :as req} active-policy]
   (let [member (auth/get-current-member req)
         form-link (urls/link-coverage-create (:insurance.policy/policy-id active-policy))
         damage-form-link "#"
         coverages (q/instruments-for-member-covered-by db member active-policy q/instrument-coverage-detail-pattern)
         coverages-link (when (seq coverages) (urls/link-policy-table-member active-policy member))
-        {:keys [policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))]
+        {:keys [policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))
+        {team-members :team/members}  (q/retrieve-team-type db :team.type/insurance)]
     [:div
      {:class "px-4 py-4 sm:px-6 sm:py-6"}
      [:div {:class "max-w-4xl divide-y divide-gray-900/10"}
@@ -1844,7 +1855,8 @@ document.addEventListener('DOMContentLoaded', function() {
        (faq5)
        (faq6)
        (faq8)
-       (faq9 coverages-link (:member/name member))]]]))
+       (faq9 coverages-link (:member/name member))
+       (faq10 team-members)]]]))
 
 (ctmx/defcomponent ^:endpoint  insurance-index-page [{:keys [db] :as req}]
   insurance-policy-duplicate

@@ -904,6 +904,10 @@
 (defn retrieve-team [db team-id]
   (d/find-by db :team/team-id team-id team-pattern))
 
+(defn retrieve-team-type [db team-type]
+  (->> (retrieve-all-teams db)
+       (m/find-first #(= team-type (:team/team-type %)))))
+
 (defn member-of-team? [db team-type member-id]
   (= 1
      (count
@@ -1117,6 +1121,9 @@
     (require  '[datomic.client.api :as datomic])
     (def conn (-> state/system :app.ig/datomic-db :conn))
     (def db (datomic/db conn))) ;; rcf
+
+  (->> (retrieve-all-teams db)
+       (m/find-first #(= :team.type/insurance (:team/team-type %))))
 
   :insurance.survey.response/response-id
   (def my-response-id
