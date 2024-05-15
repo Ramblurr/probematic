@@ -1837,17 +1837,16 @@ document.addEventListener('DOMContentLoaded', function() {
 (defn insurance-faq [{:keys [db system] :as req} active-policy]
   (let [member (auth/get-current-member req)
         form-link (urls/link-coverage-create (:insurance.policy/policy-id active-policy))
-        damage-form-link "#"
         coverages (q/instruments-for-member-covered-by db member active-policy q/instrument-coverage-detail-pattern)
         coverages-link (when (seq coverages) (urls/link-policy-table-member active-policy member))
-        {:keys [policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))
+        {:keys [damages-form-link policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))
         {team-members :team/members}  (q/retrieve-team-type db :team.type/insurance)]
     [:div
      {:class "px-4 py-4 sm:px-6 sm:py-6"}
      [:div {:class "max-w-4xl divide-y divide-gray-900/10"}
       [:h2 {:class "text-2xl font-bold leading-10 tracking-tight text-gray-900"} "Instrumentenversicherung: Was? Warum? Wie?"]
       [:dl {:class "mt-6 space-y-6 divide-y divide-gray-900/10"}
-       (faq7 damage-form-link company-email broker-email band-email policy-number)
+       (faq7 damages-form-link company-email broker-email band-email policy-number)
        (faq3 form-link)
        (faq1)
        (faq2)
