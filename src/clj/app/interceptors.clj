@@ -299,33 +299,33 @@
 (def hash-len 8)
 
 #_(defn unhash-path [path]
-  (let [components (str/split path  #"/")
-        root-dir (second components)
-        file-name (last components)]
-    (if (and
-          root-dir
-          file-name
-          (contains? #{"js" "img" "font" "css"} root-dir)
-          (str/starts-with? file-name "hash-"))
-      (let [new-file-name (subs file-name (+ hash-prefix-len hash-len))
-            new-full-path (str/join "/" (concat  (butlast components) [new-file-name]))]
+    (let [components (str/split path  #"/")
+          root-dir (second components)
+          file-name (last components)]
+      (if (and
+           root-dir
+           file-name
+           (contains? #{"js" "img" "font" "css"} root-dir)
+           (str/starts-with? file-name "hash-"))
+        (let [new-file-name (subs file-name (+ hash-prefix-len hash-len))
+              new-full-path (str/join "/" (concat  (butlast components) [new-file-name]))]
         ;; (tap> [:asset-hash-rewrite-interceptor-enter components  path  root-dir remaining new-file-name new-full-path])
-        new-full-path)
-      path)))
+          new-full-path)
+        path)))
 
 #_(defn  asset-hash-rewrite-interceptor-enter [ctx]
-  (let [old-path (get-in ctx [:request :path-info])
-        new-path (-> old-path unhash-path)]
-    (if (= old-path new-path)
-      ctx
-      (-> ctx
-          (assoc-in  [:request :uri] new-path)
-          (assoc-in  [:request :path-info] new-path)))))
+    (let [old-path (get-in ctx [:request :path-info])
+          new-path (-> old-path unhash-path)]
+      (if (= old-path new-path)
+        ctx
+        (-> ctx
+            (assoc-in  [:request :uri] new-path)
+            (assoc-in  [:request :path-info] new-path)))))
 
 #_(def asset-hash-rewrite-interceptor
-  (interceptor/interceptor
-   {:name  ::cache-control
-    :enter (fn [ctx] (asset-hash-rewrite-interceptor-enter ctx))}))
+    (interceptor/interceptor
+     {:name  ::cache-control
+      :enter (fn [ctx] (asset-hash-rewrite-interceptor-enter ctx))}))
 
 (def cache-control-interceptor
   (interceptor/interceptor

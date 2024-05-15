@@ -1834,12 +1834,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                     [:li [:a {:href (urls/link-member member) :class "link-blue"} name]
                                      " (" [:a {:href (str "mailto:" email) :class "link-blue"} email] ")"]) team-members)]])))
 
+(defn faq11 [policy-terms-link]
+  (faq-item :id "faq11"
+            :question "Was sind die tatsächlichen Allgemeinen Geschäftsbedingungen (AGB) der Versicherung?"
+            :answer (faq-p [:span "Die Bedingungen der Versicherung sind in diesem Dokument erklärt: " [:a {:href policy-terms-link :class "link-blue"} policy-terms-link]])))
+
 (defn insurance-faq [{:keys [db system] :as req} active-policy]
   (let [member (auth/get-current-member req)
         form-link (urls/link-coverage-create (:insurance.policy/policy-id active-policy))
         coverages (q/instruments-for-member-covered-by db member active-policy q/instrument-coverage-detail-pattern)
         coverages-link (when (seq coverages) (urls/link-policy-table-member active-policy member))
-        {:keys [damages-form-link policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))
+        {:keys [policy-terms-link damages-form-link policy-number band-email company-email broker-email]} (config/external-insurance-policy (:env system))
         {team-members :team/members}  (q/retrieve-team-type db :team.type/insurance)]
     [:div
      {:class "px-4 py-4 sm:px-6 sm:py-6"}
@@ -1855,6 +1860,7 @@ document.addEventListener('DOMContentLoaded', function() {
        (faq8)
        (faq9 coverages-link (:member/name member))
        (faq2)
+       (faq11 policy-terms-link)
        (faq10 team-members)]]]))
 
 (ctmx/defcomponent ^:endpoint  insurance-index-page [{:keys [db] :as req}]
