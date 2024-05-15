@@ -55,7 +55,6 @@
 
 (defn make-airtable-job [{:keys [env gigo]}]
   (fn [{:job/keys [frequency initial-delay]}]
-    (tap> "register airtable job")
     (jobs/make-repeating-job (partial #'airtable-job gigo (:airtable env)) frequency initial-delay)))
 
 (comment
