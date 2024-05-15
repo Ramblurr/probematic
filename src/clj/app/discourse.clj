@@ -1,21 +1,20 @@
 (ns app.discourse
   (:require
-   [org.httpkit.client :as client]
-   [selmer.parser :as selmer]
+   [app.config :as config]
    [app.datomic :as d]
+   [app.gigs.domain :as domain]
+   [app.queries :as q]
+   [app.ui :as ui]
+   [app.urls :as url]
    [clojure.set :as set]
    [clojure.string :as str]
    [datomic.client.api :as datomic]
-   [integrant.repl.state :as state]
    [jsonista.core :as j]
    [martian.core :as martian]
    [martian.httpkit :as martian-http]
-   [app.urls :as url]
-   [app.ui :as ui]
-   [app.queries :as q]
    [medley.core :as m]
-   [app.gigs.domain :as domain]
-   [app.config :as config]))
+   [org.httpkit.client :as client]
+   [selmer.parser :as selmer]))
 
 (defn add-authentication-header [api-key username]
   {:name ::add-authentication-header

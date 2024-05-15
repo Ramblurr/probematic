@@ -3,9 +3,8 @@
    [app.util :as util]
    [buddy.core.codecs :as codecs]
    [buddy.core.hash :as digest]
-   [com.yetanalytics.squuid :as sq]
-   [taoensso.nippy :as nippy]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [taoensso.nippy :as nippy]))
 
 (defn bytes->b64u
   "Convert byte array into a URL safe base64 encoded string"
@@ -52,8 +51,7 @@
          (-> resource
              io/input-stream
              digest/sha384
-             codecs/bytes->b64
-             codecs/bytes->str))
+             (codecs/bytes->b64-str true)))
     (throw (ex-info "Cannot load resource %s from classpath" {:path path}))))
 
 (comment

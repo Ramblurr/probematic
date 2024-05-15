@@ -42,11 +42,11 @@
       "text/plain"         ".txt"
       nil))
 
-(defn- debug-cmd [cmd operation props]
-  (let [sw (StringWriter.)
-        pw (PrintWriter. sw)]
-    (.createScript cmd pw operation (Properties.))
-    (.toString sw)))
+#_(defn- debug-cmd [cmd operation props]
+    (let [sw (StringWriter.)
+          pw (PrintWriter. sw)]
+      (.createScript cmd pw operation (Properties.))
+      (.toString sw)))
 
 (defn- prepare-input [{:keys [path content-thunk]}]
   (if path

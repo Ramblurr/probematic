@@ -7,28 +7,28 @@
 
 (defn unauthorized-error [req ex]
   (error.util/log-error! req ex)
-  (error.util/send-sentry! req ex)
+  (error.util/send-event! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 401)
     (ui/error-page-response ex req 401)))
 
 (defn validation-error [req ex]
   (error.util/log-error! req ex)
-  (error.util/send-sentry! req ex)
+  (error.util/send-event! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 400)
     (ui/error-page-response ex req 400)))
 
 (defn not-found-error [req ex]
   (error.util/log-error! req ex)
-  (error.util/send-sentry! req ex)
+  (error.util/send-event! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 404)
     (ui/error-page-response ex req 404)))
 
 (defn unknown-error [req ex]
   (error.util/log-error! req ex)
-  (error.util/send-sentry! req ex)
+  (error.util/send-event! req ex)
   (if (:htmx? req)
     (ui/error-page-response-fragment ex req 500)
     (ui/error-page-response ex req 500)))

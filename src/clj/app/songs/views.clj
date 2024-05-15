@@ -250,10 +250,7 @@
 (ctmx/defcomponent ^:endpoint song-new [req]
   (let [tr (i18n/tr-from-req req)]
     (if (util/post? req)
-      (do
-
-        (response/hx-redirect (url/link-song
-                               (controller/create-song! req))))
+      (response/hx-redirect (url/link-song (controller/create-song! req)))
       [:div
        (ui/page-header :title (tr [:song/create-title])
                        :subtitle (tr [:song/create-subtitle]))

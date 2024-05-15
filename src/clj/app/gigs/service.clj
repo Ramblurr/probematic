@@ -185,9 +185,7 @@
       (do
         (gig.events/trigger-gig-edited req gig-id :attendance)
         {:attendance (get-attendance (:db-after result) gig+member)})
-      (do
-        ;; (tap> result)
-        result))))
+      result)))
 
 (defn update-attendance-plan-tx [attendance plan]
   [:db/add (d/ref attendance) :attendance/plan plan])
@@ -353,7 +351,7 @@
 
 (defn can-edit-gig?! [req]
   (when-not (can-edit-gig? req)
-    (throw "Not allowed to edit gig")))
+    (throw (ex-info "Not allowed to edit gig" {:gig (:gig req)}))))
 
 (defn update-gig! [{:keys [datomic-conn] :as req}]
   (can-edit-gig?! req)

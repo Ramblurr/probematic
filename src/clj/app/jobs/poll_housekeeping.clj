@@ -1,6 +1,6 @@
 (ns app.jobs.poll-housekeeping
   (:require
-   [clojure.tools.logging :as log]
+   [com.brunobonacci.mulog :as μ]
    [app.datomic :as d]
    [app.errors :as errors]
    [app.queries :as q]
@@ -20,12 +20,12 @@
                                      (t/< closes-at now))) open-polls)
           polls-to-close-txns (mapcat #(into [] %)
                                       (map (fn [poll]
-                                             (log/info "Going to close poll"
-                                                       :poll-id (:poll/poll-id poll)
-                                                       :poll-title (:poll/title poll)
-                                                       :poll-closes-at (:poll/closes-at poll)
-                                                       :poll-closes-at-inst (domain/closes-at-instant (:poll/closes-at poll))
-                                                       :now now)
+                                             (μ/log ::closing-poll
+                                                    :poll-id (:poll/poll-id poll)
+                                                    :poll-title (:poll/title poll)
+                                                    :poll-closes-at (:poll/closes-at poll)
+                                                    :poll-closes-at-inst (domain/closes-at-instant (:poll/closes-at poll))
+                                                    :now now)
                                              [[:db/add (d/ref poll) :poll/poll-status :poll.status/closed]
                                               [:db/add (d/ref poll) :poll/closes-at (domain/closes-at-inst (t/date-time))]]) polls-to-close))]
 

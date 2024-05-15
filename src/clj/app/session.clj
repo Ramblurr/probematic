@@ -3,11 +3,10 @@
 ;; Copyright © 2016-2018 Clojure-Aided Enrichment Center
 ;; Distributed under the Eclipse Public License, the same as Clojure.
 (ns app.session (:require
-                 [app.util :as util]
-                 [clojure.tools.logging :as log]
                  [ring.middleware.session.store :as api]
                  [taoensso.carmine :as redis])
-    (:import [java.util UUID]))
+    (:import
+     [java.util UUID]))
 
 (defn new-session-key [prefix]
   (str prefix ":" (str (UUID/randomUUID))))
@@ -21,8 +20,6 @@
   [this session-key]
   (let [conn (:redis-conn this)]
     (when session-key
-      (log/debug "In read-session ...")
-      (log/debug "\tsession-key:" session-key)
       (when-let [data (redis/wcar conn (redis/get session-key))]
         (let [read-handler (:read-handler this)]
           (when (and (:expiration this) (:reset-on-read this))
@@ -35,9 +32,6 @@
   (let [conn (:redis-conn this)
         session-key (or old-session-key (new-session-key (:prefix this)))
         expiri (:expiration this)]
-    (log/debug "In write-redis-session ...")
-    (log/debug "\tsession-key:" session-key)
-    (log/debug "\tdata:" (util/log-pprint data))
     (let [write-handler (:write-handler this)]
       (if expiri
         (redis/wcar conn (redis/setex session-key expiri (write-handler data)))
@@ -75,5 +69,4 @@
                      read-handler identity
                      write-handler identity
                      reset-on-read false}}]
-   (log/debug "Creating Redis store ...")
    (->RedisStore redis-conn prefix expire-secs reset-on-read read-handler write-handler)))

@@ -1,7 +1,5 @@
 (ns app.email
   (:require
-   [app.markdown :as markdown]
-   [app.debug :as debug]
    [app.email.email-worker :as email-worker]
    [app.email.templates :as tmpl]
    [app.i18n :as i18n]
@@ -9,7 +7,6 @@
    [app.ui :as ui]
    [app.urls :as url]
    [app.util :as util]
-   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [tick.core :as t]))
@@ -157,7 +154,6 @@
     (queue-email! sys  (build-new-poll-opened (sys-from-req req) poll members))))
 
 (defn send-new-user-email! [req new-member invite-code]
-  (log/info (format "new user email to %s code=%s" (:member/email new-member) invite-code))
   (queue-email! (sys-from-req req)
                 (build-new-user-invite (sys-from-req req) new-member invite-code)))
 
@@ -281,13 +277,6 @@
         (->
          (build-new-poll-opened sys (assoc poll :poll/description "") [member])
          :email/body-html))
-
-  (spit "plain-email.txt"
-        (str
-         "\n++++\n"
-         (tmpl/gig-created-email-plain sys gig)
-         "\n++++\n"
-         (tmpl/gig-created-email-plain sys gig2)))
 
   (spit "plain-email.txt"
         (str

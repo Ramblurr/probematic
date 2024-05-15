@@ -1,21 +1,20 @@
 (ns app.routes
   (:require
-   [app.routes.errors :as errors]
    [app.auth :as auth]
    [app.dashboard.routes :as dashboard]
    [app.file-browser.routes :as file-browser]
    [app.gigs.routes :as gigs]
-   [app.stats.routes :as stats]
    [app.insurance.routes :as insurance]
    [app.interceptors :as interceptors]
    [app.members.routes :as members]
-   [app.poll.routes :as polls]
-   [app.settings.routes :as settings]
    [app.nextcloud :as nextcloud]
+   [app.poll.routes :as polls]
    [app.probeplan.routes :as probeplan]
+   [app.routes.errors :as errors]
    [app.routes.pedestal-reitit :as pedestal-reitit]
+   [app.settings.routes :as settings]
    [app.songs.routes :as songs]
-   [integrant.repl.state :as state]
+   [app.stats.routes :as stats]
    [reitit.ring :as ring]))
 
 (pedestal-reitit/nop)

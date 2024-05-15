@@ -100,10 +100,10 @@
           (.close pos))))
     is))
 
-(defn- append-attachments-to-zip! [zip  attachments file-name-prefix]
-  (doseq [{:keys [content file-name]} attachments]
-    (when (and content file-name)
-      (open-and-append! zip (str file-name-prefix "_" file-name) content))))
+#_(defn- append-attachments-to-zip! [zip  attachments file-name-prefix]
+    (doseq [{:keys [content file-name]} attachments]
+      (when (and content file-name)
+        (open-and-append! zip (str file-name-prefix "_" file-name) content))))
 
 (comment
 

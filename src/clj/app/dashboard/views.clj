@@ -197,7 +197,8 @@ put '%s' into .copy-link in me"
 
 (ctmx/defcomponent ^:endpoint dismiss-insurance-widget [{:keys [db] :as req}]
   (when (util/post? req)
-    (insurance.controller/dismiss-insurance-widget! req)
+    (let [policy-id (-> req util/unwrap-params :policy-id util/ensure-uuid!)]
+      (insurance.controller/dismiss-insurance-widget! req policy-id))
     (dashboard-page (util/make-get-request req))))
 
 (ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db tr system] :as req}]

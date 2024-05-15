@@ -2,14 +2,8 @@
   (:refer-clojure :exclude [ref])
   (:require
    [app.auth :as auth]
-   [app.config :as config]
-   [app.demo :as demo]
-   [clojure.edn :as edn]
-   [clojure.java.io :as io]
-   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as d]
-   [integrant.repl.state :as state]
    [medley.core :as m])
   (:import
    [java.util UUID]))
@@ -103,11 +97,7 @@
   (contains? result :error))
 
 (defn db-ok? [result]
-  (let [ok? (not (db-error? result))]
-    (if ok? true
-        (do
-          ;; (tap> result)
-          false))))
+  (not (db-error? result)))
 
 (defn pull-many
   "Warning: can result in many requests if the peer is remote"

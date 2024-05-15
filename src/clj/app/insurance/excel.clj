@@ -1,6 +1,5 @@
 (ns app.insurance.excel
   (:require
-   [app.queries :as q]
    [dk.ative.docjure.spreadsheet :as excel]
    [tarayo.core :as tarayo]
    [tick.core :as t])

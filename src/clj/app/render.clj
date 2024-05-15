@@ -1,9 +1,10 @@
 (ns app.render
   (:require
+   [app.config :as config]
    [app.secret-box :as secret-box]
+   [app.util :as util]
    [clojure.java.io :as io]
    [ctmx.render :as ctmx.render]
-   [ctmx.response :as response]
    [hiccup.page :as hiccup.page]
    [hiccup.util :as hiccup.util]
    [hiccup2.core :refer [html]]))
@@ -39,87 +40,95 @@
                                         ;:body (pretty-print-html body)
     :body  body}))
 
-;; (def sha384-resource (memoize secret-box/sha384-resource))
-(def sha384-resource secret-box/sha384-resource)
+(def memoed-sha384-resource (memoize secret-box/sha384-resource))
 
-(defn script [relative-prefix path & extra]
-  (let [sri-hash (sha384-resource (str "public/js/" path))
+(defn sha384-resource [{:keys [system]} v]
+  (util/url-encode
+   (if (config/prod-mode? (:env system))
+     (memoed-sha384-resource v)
+     (secret-box/sha384-resource v))))
+
+(defn script [req relative-prefix path & extra]
+  (let [sri-hash (sha384-resource req (str "public/js/" path))
         cache-buster (subs sri-hash  (- 71 8))]
     [:script (merge {:src (str relative-prefix "/js/" path "?v=" cache-buster)
                      :integrity  sri-hash}
                     (apply hash-map extra))]))
 
-(defn stylesheet [relative-prefix path & extra]
-  (let [sri-hash (sha384-resource (str "public/" path))
+;; hashed-path (str dir "/hash-" cache-buster path)
+(defn stylesheet [req relative-prefix dir path & extra]
+  (let [full-path (str "public/" dir "/" path)
+        sri-hash (sha384-resource req full-path)
         cache-buster (subs sri-hash (- 71 8))]
     [:link (merge {:rel "stylesheet"
-                   :href (str relative-prefix "/" path "?v=" cache-buster)
+                   :href (str relative-prefix "/" dir "/" path "?v=" cache-buster)
                    :integrity sri-hash}
                   (apply hash-map extra))]))
 
-(defn head [title relative-prefix]
+(defn head [req title relative-prefix]
   [:head
    [:meta {:charset "utf-8"}]
-   [:meta {:name "viewport"
+   [:meta {:name    "viewport"
            :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
+   [:link {:rel "shortcut icon" :href "/img/megaphone-icon.png"}]
    [:title (or title "SNOrga")]
-   (stylesheet relative-prefix "css/easymde.min@2.18.0.css")
-   (stylesheet relative-prefix "font/inter/inter.css")
-   (stylesheet relative-prefix "css/fa.css")
-   (stylesheet relative-prefix "css/compiled/main.css")])
+   (stylesheet req relative-prefix "css" "easymde.min@2.18.0.css")
+   (stylesheet req relative-prefix "font/inter" "inter.css")
+   (stylesheet req relative-prefix "css" "fa.css")
+   (stylesheet req relative-prefix "css/compiled" "main.css")])
 
-(defn body-end [relative-prefix]
+(defn body-end [req relative-prefix]
   (list
-   (script relative-prefix "hyperscript.org@0.9.12.js")
-   (script relative-prefix "htmx.org@1.9.12.js")
-   ;; (script relative-prefix "htmx.org.dev@1.9.12.js")
-   (script relative-prefix "class-tools@1.9.12.js")
-   (script relative-prefix "nprogress.js")
-   (script relative-prefix "popperjs@2-dev.js")
-   (script relative-prefix "tippy@6-dev.js")
-   (script relative-prefix "sweetalert2.all@11.7.5.js")
-   (script relative-prefix "dropzone@6.0.0-beta.2.min.js")
-   (script relative-prefix "easymde.min@2.18.0.js")
-   (script relative-prefix "app.js" :type :module)))
+   (script req relative-prefix "hyperscript.org@0.9.12.js")
+   (script req relative-prefix "htmx.org@1.9.12.js")
+   ;; (script req relative-prefix "htmx.org.dev@1.9.12.js")
+   (script req relative-prefix "class-tools@1.9.12.js")
+   (script req relative-prefix "nprogress.js")
+   (script req relative-prefix "popperjs@2-dev.js")
+   (script req relative-prefix "tippy@6-dev.js")
+   (script req relative-prefix "sweetalert2.all@11.7.5.js")
+   (script req relative-prefix "dropzone@6.0.0-beta.2.min.js")
+   (script req relative-prefix "easymde.min@2.18.0.js")
+   (script req relative-prefix "app.js" :type :module)))
 
-(defn chart-poll-scripts []
+(defn chart-poll-scripts [req]
   (list
-   (script nil "chart@4.4.0.js")
-   (script nil "chartjs-plugin-datalabels.min.js")
-   (script nil "widgets/poll-chart.js")))
+   (script req nil "chart@4.4.0.js")
+   (script req nil "chartjs-plugin-datalabels.min.js")
+   (script req nil "widgets/poll-chart.js")))
 
-(defn chart-stat-scripts []
+(defn chart-stat-scripts [req]
   (list
-   (script nil "chart@4.4.0.js")
-   (script nil "chartjs-plugin-datalabels.min.js")
-   (script nil "widgets/stats-chart.js")))
+   (script req nil "chart@4.4.0.js")
+   (script req nil "chartjs-plugin-datalabels.min.js")
+   (script req nil "widgets/stats-chart.js")))
 
-(defn sortable-scripts []
+(defn sortable-scripts [req]
   (list
-   (script nil "widgets/sortable.js")
-   (script nil "sortable@1.14.0.js")))
+   (script req nil "widgets/sortable.js")
+   (script req nil "sortable@1.14.0.js")))
 
 (defn html5-response
-  ([body] (html5-response nil body))
-  ([{:keys [js extra-scripts title]} body]
+  ([req body] (html5-response req nil body))
+  ([req {:keys [js extra-scripts title]} body]
    (html-response
     (html5-safe
-     (head title nil)
+     (head req title nil)
      [:body (ctmx.render/walk-attrs body)
       (conj
-       (body-end nil)
+       (body-end req nil)
        (when extra-scripts
          (map #(apply script %) extra-scripts))
        (when js (map (partial script nil) js)))]))))
 
 (defn html5-response-absolute
-  ([{:keys [js title
-            uri-prefix]} body]
+  ([req {:keys [js title
+                uri-prefix]} body]
    (html-response
     (html5-safe
-     (head title uri-prefix)
+     (head req title uri-prefix)
      [:body (ctmx.render/walk-attrs body)
-      (body-end uri-prefix)]
+      (body-end req uri-prefix)]
      (when js [:script {:src (str uri-prefix "/js" js)}])))))
 
 (defn snippet-response [body]

@@ -1,15 +1,14 @@
 (ns app.poll.controller
   (:require
-   [app.email :as email]
    [app.auth :as auth]
    [app.datomic :as d]
+   [app.email :as email]
    [app.poll.domain :as domain]
    [app.queries :as q]
    [app.schemas :as s]
    [app.util :as util]
    [app.util.http :as common]
    [com.yetanalytics.squuid :as sq]
-   [datomic.client.api :as datomic]
    [malli.util :as mu]
    [tick.core :as t]))
 

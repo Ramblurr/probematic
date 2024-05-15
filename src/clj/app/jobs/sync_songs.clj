@@ -1,7 +1,6 @@
 (ns app.jobs.sync-songs
   (:require
    [app.cms :as cms]
-   [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]))
 
 (defn song-sync-job [system _]

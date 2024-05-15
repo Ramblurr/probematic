@@ -1,25 +1,23 @@
 (ns app.email.email-worker
   (:require
+   [com.brunobonacci.mulog :as μ]
    [tarayo.core :as tarayo]
-   [clojure.tools.logging :as log]
    [app.config :as config]
    [app.email.domain :refer [QueuedEmailMessage]]
    [app.email.mailgun :as mailgun]
    [app.schemas :as s]
-   [sentry-clj.core :as sentry]
    [taoensso.carmine :as car]
    [taoensso.carmine.message-queue :as car-mq]))
 
 (def email-queue-name "email-send-queue")
 
 (defn track-email-error!  [email attempt result throwable]
-  (sentry/send-event
-   (doto
-    {:message (or (:message result) (ex-message throwable) "Error occured in email-worker")
-     :extra {:email email
-             :attempt attempt
-             :result result}
-     :throwable throwable} tap>)))
+  (μ/log ::email-error
+         :message (or (:message result) (ex-message throwable) "Error occured in email-worker")
+         :extra {:email email
+                 :attempt attempt
+                 :result result}
+         :ex throwable))
 
 (defn mailgun-handler [sys message]
   (if (:email/batch? message)
@@ -81,7 +79,7 @@
       {:status :error})))
 
 (defn start! [{:keys [redis] :as sys}]
-  (log/info "Starting email worker")
+  (μ/log ::email-worker-starting)
   (car-mq/worker redis email-queue-name
                  {:handler (fn [{:keys [message attempt]}] (handler sys message attempt))
                   :eoq-backoff-ms 50

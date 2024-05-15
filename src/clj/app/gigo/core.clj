@@ -1,19 +1,17 @@
 (ns app.gigo.core
   (:require
-   [app.util :refer [namespace-keys] :as u]
-   ;[sno.gigo-sms.metrics :as metrics]
-   [org.httpkit.sni-client :as sni-client]
-   [org.httpkit.client :as client]
+   [clojure.set :as set]
+   [clojure.string :as clojure.string]
+   [com.brunobonacci.mulog :as μ]
    [jsonista.core :as j]
    [medley.core :as m]
-   [clojure.tools.logging :as log]
-   [tick.core :as t]
+   [org.httpkit.client :as client]
+   [org.httpkit.sni-client :as sni-client]
    [tick.alpha.interval :as t.i]
-   [clojure.string :as clojure.string]
-   [integrant.repl.state :as state]
-   [clojure.set :as set])
-  (:import (java.time.format DateTimeParseException)
-           (java.time DayOfWeek)))
+   [tick.core :as t])
+  (:import
+   (java.time DayOfWeek)
+   (java.time.format DateTimeParseException)))
 
 (alter-var-root #'org.httpkit.client/*default-client* (fn [_] sni-client/default-client))
 
@@ -294,8 +292,7 @@
     (case (:status resp)
       200 :ok
       401 (handle-401)
-      (do (log/info "Failed to set gig attendance" resp)
-          (throw (ex-info "Gigo API Error" {:resp resp}))))))
+      (throw (ex-info "Gigo API Error" {:resp resp})))))
 
 (defn set-gig-attendance!
   "Updates the attendance value for member for the given gig."
@@ -306,7 +303,7 @@
         plan-id (get-in a [:the_plan :id])
         _ (assert plan-id (format "There must be a plan! gig=%s member=%s" gig-id member-key))
         new-value (attendance-kw->plan attendance-kw)]
-    (log/info (format "setting attendance member=%s attendance=%s gig=%s" member-key attendance-kw gig-id))
+    (μ/log ::set-attendance :member member-key :attendance-kw attendance-kw :gig gig-id)
     ;(metrics/inc-metric :metrics/attendance-changes)
     (set-plan-value! config plan-id new-value)))
 
@@ -411,83 +408,83 @@
     (when (not-empty gigs)
       (reset! gigs-cache gigs))))
 
-(comment
-  (do
-    (require '[integrant.repl.state :as state])
-    (require '[tick.core :as t])
-    (def env (:app.ig/env state/system))
-    (def _config (:app.ig/gigo-client state/system))) ;; rcf
-  (find-gig-closest-to @gigs-cache (t/zoned-date-time "2022-03-12T12:00:00+01:00"))
-  @gigs-cache
-  (filter wednesday-probe? @gigs-cache)
-  (mapv :status @gigs-cache)
-  (update-cache! _config)
-  (get-all-gigs! _config)
+#_(comment
+    (do
+      (require '[integrant.repl.state :as state])
+      (require '[tick.core :as t])
+      (def env (:app.ig/env state/system))
+      (def _config (:app.ig/gigo-client state/system))) ;; rcf
+    (find-gig-closest-to @gigs-cache (t/zoned-date-time "2022-03-12T12:00:00+01:00"))
+    @gigs-cache
+    (filter wednesday-probe? @gigs-cache)
+    (mapv :status @gigs-cache)
+    (update-cache! _config)
+    (get-all-gigs! _config)
 
-  (gigs-in-week @gigs-cache (t/zoned-date-time))
-  (gigs-in-range @gigs-cache
-                 (t/zoned-date-time "2022-02-13T00:00:00+01:00")
-                 (t/zoned-date-time "2022-02-19T23:59:59+01:00"))
-  (update-cache! _config)
-  (auth (:username config) (:password config))
-  @(:cookie-atom config)
-  (def agenda (get-agenda! config))
+    (gigs-in-week @gigs-cache (t/zoned-date-time))
+    (gigs-in-range @gigs-cache
+                   (t/zoned-date-time "2022-02-13T00:00:00+01:00")
+                   (t/zoned-date-time "2022-02-19T23:59:59+01:00"))
+    (update-cache! _config)
+    (auth (:username config) (:password config))
+    @(:cookie-atom config)
+    (def agenda (get-agenda! config))
 
-  (def gig1 (get-next-gig! config))
+    (def gig1 (get-next-gig! config))
 
-  (def attendance (get-gig-attendance! config (:id gig1)))
+    (def attendance (get-gig-attendance! config (:id gig1)))
 
-  (def casey-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")
-  (attendance-for (:attendance gig1) "Casey")
-  (attendance-response (:attendance gig1) "Casey")
-  (set-gig-attendance! config "Casey" (:id gig1) :plan/definitely-not)
-  (attendance-kw->plan :plan/probably)
+    (def casey-key "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICA2NP7ggoM")
+  ;; (attendance-for (:attendance gig1) "Casey")
+  ;; (attendance-response (:attendance gig1) "Casey")
+    (set-gig-attendance! config "Casey" (:id gig1) :plan/definitely-not)
+    (attendance-kw->plan :plan/probably)
 
-  (clojure.string/join "\n" (map first (summarize-attendance attendance)))
+    (clojure.string/join "\n" (map first (summarize-attendance attendance)))
 
-  (def just-gigs (get-all-gigs! config))
+    (def just-gigs (get-all-gigs! config))
 
-  (get-gig-attendance! config (first (mapv :gig/gig-id all-gigs)))
+    (get-gig-attendance! config (first (mapv :gig/gig-id all-gigs)))
 
-  (def all-gigs (with-attendances! config just-gigs))
-  (def id->gig (reduce (fn [all m] (assoc all (:id m) m)) {} all-gigs))
-  (def member-names->member-keys (members-from-attendance (:attendance (first all-gigs))))
+    (def all-gigs (with-attendances! config just-gigs))
+    (def id->gig (reduce (fn [all m] (assoc all (:id m) m)) {} all-gigs))
+    (def member-names->member-keys (members-from-attendance (:attendance (first all-gigs))))
 
-  all-gigs
-  (def gig1 (first all-gigs))
+    all-gigs
+    (def gig1 (first all-gigs))
 
-  (:plan/unknown (group-by-attendance gig1))
+    (:plan/unknown (group-by-attendance gig1))
 
-  (def gig-id->no-responses
-    (reduce (fn [all g] (assoc all (:id g) (members-with-no-response g))) {} all-gigs))
+    (def gig-id->no-responses
+      (reduce (fn [all g] (assoc all (:id g) (members-with-no-response g))) {} all-gigs))
 
-  (attendance-value gig1 "Casey")
+    (attendance-value gig1 "Casey")
 
                                         ; find the first gig that member has no response for
-  (m/find-first (fn [g] (= :plan/unknown (attendance-response g "Felix"))) all-gigs)
+    (m/find-first (fn [g] (= :plan/unknown (attendance-response g "Felix"))) all-gigs)
 
                                         ; name->gig id
-  (need-reminding all-gigs (keys member-names->member-keys))
+    (need-reminding all-gigs (keys member-names->member-keys))
 
-  (def gigs (get-all-gigs-with-attendance! config))
-  (first gigs)
+    (def gigs (get-all-gigs-with-attendance! config))
+    (first gigs)
 
-  (find-gig-closest-to gigs (t/zoned-date-time))
+    (find-gig-closest-to gigs (t/zoned-date-time))
 
-  (require 'sc.api)
-  (next-gig-for! config casey-key)
-  (next-gig-needing-reply-from! config casey-key)
-  (first-gig-with-no-response-by-key gigs casey-key)
-  (attendance-response-for-by-key (first gigs) casey-key)
+    (require 'sc.api)
+    (next-gig-for! config casey-key)
+    (next-gig-needing-reply-from! config casey-key)
+    (first-gig-with-no-response-by-key gigs casey-key)
+    (attendance-response-for-by-key (first gigs) casey-key)
 
-  (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
-  (get-band-info! _config sno)
+    (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
+    (get-band-info! _config sno)
 
-  (get-sections! _config sno)
-  (map (fn [{:keys [id display_name]}]
-         [:db/add [:member/gigo-key id] :member/nick display_name])
-       (get-band-members! _config sno))
+    (get-sections! _config sno)
+    (map (fn [{:keys [id display_name]}]
+           [:db/add [:member/gigo-key id] :member/nick display_name])
+         (get-band-members! _config sno))
 
-  (get-band-member! _config "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICAwITUhAoM")
+    (get-band-member! _config "ag1zfmdpZy1vLW1hdGljchMLEgZNZW1iZXIYgICAwITUhAoM")
                                         ;
-  )
+    )

@@ -1,14 +1,12 @@
 (ns app.schemas
-  (:require [malli.util :as mu]
-            [medley.core :as medley]
-            [app.schema-helpers :as schemas]
-            [malli.core :as m]
-            [malli.error :as me]
-            [tick.core :as t]
-            [malli.registry :as mr]
-            [malli.transform :as mt]
-            [app.schemas.domain :as domain]
-            [app.schemas.http-api :as http-api]))
+  (:require
+   [app.schema-helpers :as schemas]
+   [app.schemas.domain :as domain]
+   [app.schemas.http-api :as http-api]
+   [malli.core :as m]
+   [malli.error :as me]
+   [malli.registry :as mr]
+   [malli.transform :as mt]))
 
 (def registry
   (mr/composite-registry
@@ -111,18 +109,6 @@
   (valid? ::instant (t/now))
   (explain-human ::email-address "foo@foo.com")
 
-  ([:map
-    [:items       [:vector {:vectorize true} :string]]
-    [:more-items  [:vector {:vectorize true} :string]]
-    [:other-items [:vector :string]]]
-   {:items "a"
-    :more-items ["a" "b"]
-    :other-items "a"} vectorize-transformer)
-
-  (m/decode [:map
-             [:mark-as [:enum {:kw-namespace true} :instrument.coverage.status/needs-review :instrument.coverage.status/reviewed :instrument.coverage.status/coverage-active]]]
-            {:mark-as "needs-review"}
-            (mt/transformer mt/string-transformer mt/strip-extra-keys-transformer vectorize-transformer namespace-enum-transformer)) ;; rcf
   (decode schemas/TimeSchema "13:00")
 
 ;;

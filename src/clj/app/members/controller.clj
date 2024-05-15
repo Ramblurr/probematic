@@ -1,5 +1,6 @@
 (ns app.members.controller
   (:require
+   [com.brunobonacci.mulog :as μ]
    [app.ledger.domain :as ledger.domain]
    [app.auth :as auth]
    [app.datomic :as d]
@@ -14,7 +15,6 @@
    [app.util :as util]
    [app.util.http :as http.util]
    [clojure.string :as str]
-   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [ctmx.rt :as rt]
    [datomic.client.api :as datomic]
@@ -229,7 +229,7 @@
 
 (defn resend-invitation! [req]
   (let [{:keys [member invite-code] :as data} (load-invite req)]
-    (log/info "resending email invitation" data)
+    (μ/log ::resend-member-invite)
     (email/send-new-user-email! req member invite-code)))
 
 (defn setup-account [{:keys [system params db] :as req}]

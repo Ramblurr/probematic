@@ -195,7 +195,7 @@ set its @name to optName
    [:dd {:class "text-xs font-medium text-gray-700"} ""]
    [:dd {:class "w-full flex-none text-lg lg:text-3xl font-medium leading-4 lg:leading-10 tracking-tight text-gray-900"} value]])
 
-(defn poll-results [{:keys [tr]} {:poll/keys [closes-at poll-status votes] :as poll}]
+(defn poll-results [{:keys [tr] :as req} {:poll/keys [closes-at poll-status votes] :as poll}]
   (let [total-voters (count (distinct (map #(get-in % [:poll.vote/author :member/member-id]) votes)))
         graph-data (->> votes
                         (map :poll.vote/poll-option)
@@ -217,7 +217,7 @@ set its @name to optName
         total-votes (count votes)]
     (tap> {:poll poll :graph-data graph-data})
     [:div {:class "mt-4"}
-     (render/chart-poll-scripts)
+     (render/chart-poll-scripts req)
      [:h2 {:class "text-lg"} (tr [:poll/results])]
      [:script {:type "application/json" :id "poll-labels"}
       (hiccup.util/raw-string (j/write-value-as-string y-labels))]

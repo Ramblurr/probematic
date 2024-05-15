@@ -120,7 +120,7 @@
          :as stats} (controller/stats-for db then now (util.http/sort-param req query-param-field-mapping))]
 
     [:main {:class "bg-white"}
-     (render/chart-stat-scripts)
+     (render/chart-stat-scripts req)
      [:div {:class "relative isolate overflow-hidden"}
       [:header {:class "pb-4 pt-6 sm:pb-6"}
 

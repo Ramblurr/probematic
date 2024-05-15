@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [time])
   (:require
    [app.humanize :as humanize]
-   [app.i18n :as i18n]
    [app.icons :as icon]
    [app.render :as render]
    [app.util :as util]
@@ -41,7 +40,7 @@
   ;; it breaks tailwind classes with colons in them: i.e., sm:flex
   )
 
-(defn error-common [tr code title message human-id]
+(defn error-common [{:keys [tr] :as req} code title message human-id]
   [:body {:class "h-full"}
    [:div {:class "min-h-full bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8"}
     [:div {:class "mx-auto max-w-max"}
@@ -76,16 +75,16 @@
        [:div {:class "mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6 text-sno-orange-600"
               :id "notification-confirmation"}]]]]]
 
-   (render/body-end nil)])
+   (render/body-end req nil)])
 
-(defn unauthorized-error-body [{:keys [tr human-id]}]
-  (error-common tr "401" (tr [:error/unauthorized-title]) (tr [:error/unauthorized-message]) human-id))
+(defn unauthorized-error-body [{:keys [tr human-id] :as req}]
+  (error-common req "401" (tr [:error/unauthorized-title]) (tr [:error/unauthorized-message]) human-id))
 
-(defn not-found-error-body [{:keys [tr human-id]}]
-  (error-common tr "404" (tr [:error/not-found-title]) (tr [:error/not-found-message]) human-id))
+(defn not-found-error-body [{:keys [tr human-id] :as req}]
+  (error-common req "404" (tr [:error/not-found-title]) (tr [:error/not-found-message]) human-id))
 
-(defn unknown-error-body [{:keys [tr human-id]}]
-  (error-common tr nil (tr [:error/unknown-title]) (tr [:error/unknown-message]) human-id))
+(defn unknown-error-body [{:keys [tr human-id] :as req}]
+  (error-common req nil (tr [:error/unknown-title]) (tr [:error/unknown-message]) human-id))
 
 (defn error-page-response-fragment [cause req status]
   (render/html-status-response (or status 404)
@@ -99,6 +98,7 @@
                                  [:meta {:charset "utf-8"}]
                                  [:meta {:name "viewport"
                                          :content "width=device-width, initial-scale=1, shrink-to-fit=no"}]
+                                 [:link {:rel "shortcut icon" :href "/img/megaphone-icon.png"}]
                                  [:link {:rel "stylesheet" :href "/css/compiled/main.css"}]]
                                 (ctmx.render/walk-attrs
                                  (condp = status

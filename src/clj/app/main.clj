@@ -4,7 +4,7 @@
    ol.system
    [app.ig]
    [signal.handler :as signal]
-   [clojure.tools.logging :as log]
+   [com.brunobonacci.mulog :as μ]
    [integrant.core :as ig]))
 
 (def system nil)
@@ -19,7 +19,7 @@
 
 (defn -main [& args]
   (let [profile (profile)
-        _ (log/info (format "Starting probematic with profile %s" profile))
+        _ (μ/log ::pre-start :profile profile)
         system-config (ol.system/system-config {:profile profile})
         sys (ig/init system-config)]
     (.addShutdownHook
@@ -31,6 +31,6 @@
   @(promise))
 
 (signal/with-handler :term
-  (log/info "caught SIGTERM, quitting")
+  (μ/log ::caught-signal :signal :term)
   (stop-system!)
-  (log/info "all components shut down"))
+  (μ/log ::shutdown-complete))

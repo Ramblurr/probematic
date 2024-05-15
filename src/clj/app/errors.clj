@@ -1,10 +1,10 @@
 (ns app.errors
   (:require
+   [medley.core :as m]
+   [com.brunobonacci.mulog :as μ]
    [app.config :as config]
    [app.util :as util]
-   [clojure.set :as set]
-   [clojure.tools.logging :as log]
-   [sentry-clj.core :as sentry]))
+   [clojure.set :as set]))
 
 (def dangerous-keys
   #{:datomic-conn
@@ -42,11 +42,10 @@
         v (->> v
                (util/remove-deep dangerous-keys)
                (util/replace-deep redact-keys "<REDACTED>"))]
-    (tap> {:u user-email :m member-id :v v})
     (if (map? v)
       (-> v
-          (assoc :user-email user-email)
-          (assoc :member-id (str member-id)))
+          (m/assoc-some :user-email user-email)
+          (m/assoc-some :member-id (str member-id)))
       v)))
 
 (defn unwrap-ex [ex]
@@ -58,7 +57,7 @@
      ex)))
 
 (defn format-req
-  "Given a pedestal request map, returns a smaller map designed for sentry consumption"
+  "Given a pedestal request map, returns a smaller map designed for s entry consumption"
   [req]
   (-> req
       (update :params (fn [params]
@@ -72,29 +71,30 @@
       (select-keys   [:uri :query-string :request-method :headers :params :member-id :user-email])
       (set/rename-keys  {:request-method :method :params :data :uri :url})))
 
-(defn send-sentry!
-  "Sends a sentry event asynchronously"
+(defn send-event!
+  "Sends a telemetry event asynchronously"
   ([req ex]
-   (send-sentry! (or (ex-message ex) "no message") req ex))
+   (send-event! (or (ex-message ex) "no message") req ex))
   ([msg req ex]
-   (let [event-data {:message msg
+   (let [event-data {:msg msg
                      :extra {:human-id (:human-id req)}
-                     :request (-> req sanitize format-req)
-                     :throwable (unwrap-ex ex)}]
-     (tap> event-data)
-     (sentry/send-event event-data))))
+                     :request (-> req sanitize format-req)}]
+     (μ/with-context event-data
+       (μ/log ::error :ex (unwrap-ex ex))))))
 
 (defn log-error! [req ex]
   (when (config/prod-mode? (-> req :system :env))
-    (log/error ex)))
+    (μ/log ::error :ex ex)))
 
 (defn report-error!
   "Report an exception outside the normal request/response lifecycle"
   ([ex]
    (report-error! ex nil))
   ([ex extra]
-   (log/error ex)
-   (let [event-data {:message (ex-message ex)
-                     :extra extra
-                     :throwable (unwrap-ex ex)}]
-     (sentry/send-event event-data))))
+   (μ/with-context {:msg (ex-message ex)
+                    :extra extra}
+     (μ/log ::error :ex (unwrap-ex ex)))))
+
+(defn redact-mulog-events [events]
+  (->> events
+       (map sanitize)))

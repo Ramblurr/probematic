@@ -1,25 +1,14 @@
 (ns app.ledger.views
   (:require
-   [app.auth :as auth]
    [app.config :as config]
-   [app.i18n :as i18n]
    [app.icons :as icon]
    [app.ledger.controller :as controller]
-   [app.ledger.domain :as domain]
    [app.qrcode :as qr]
    [app.queries :as q]
    [app.ui :as ui]
    [app.urls :as urls]
    [app.util :as util]
-   [app.util.http :as util.http]
-   [clojure.set :as cset]
-   [clojure.string :as str]
-   [ctmx.core :as ctmx]
-   [ctmx.response :as response]
-   [ctmx.rt :as rt]
-   [hiccup.util :as hiccup.util]
-   [medley.core :as m]
-   [tick.core :as t]))
+   [ctmx.core :as ctmx]))
 
 (defn payment-direction-button [{:keys [label direction type]}]
   (ui/button :label label

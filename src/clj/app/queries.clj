@@ -1129,10 +1129,7 @@
   (def my-response-id
     #uuid "018f5861-30d2-896f-a4f6-9fb26e50b6b2")
 
-  (open-survey-for-member-items db {:member/member-id #uuid "01860c2a-2929-8727-af1a-5545941b1111"})
   (open-survey-for-member db {:member/member-id #uuid "01860c2a-2929-8727-af1a-5545941b1111"})
-
-  (open-survey-for-member-items db {:member/member-id #uuid "01860c2a-292b-8545-a6b4-a4783be6e8c6"})
   (open-survey-for-member db {:member/member-id #uuid "01860c2a-292b-8545-a6b4-a4783be6e8c6"})
 
   (surveys-for-policy db #uuid "018f1059-4acd-86c1-8f55-4b3e5eb856e0")

@@ -4,7 +4,6 @@
    [app.gigs.domain :as domain]
    [app.errors :as errors]
    [app.queries :as q]
-   [clojure.tools.logging :as log]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
    [tick.core :as t]))
@@ -62,7 +61,6 @@
   ([system _]
    (send-reminders! system (t/instant) _))
   ([{:keys [datomic] :as system} as-of _]
-   (log/info "sending reminders")
    (try
      (let [datomic-conn (:conn datomic)
            _ (assert datomic-conn)

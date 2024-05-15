@@ -45,8 +45,8 @@
         org.ehcache/ehcache               {:mvn/version "3.10.8"
                                            :exclusions  [org.glassfish.jaxb/jaxb-runtime]}
         ;; Error reporting & Logging
-        io.sentry/sentry-clj              {:mvn/version "7.6.215"}
         ch.qos.logback/logback-classic    {:mvn/version "1.5.6"}
+        com.brunobonacci/mulog            {:mvn/version "0.9.0"}
         ;; i18n
         com.taoensso/tempura              {:mvn/version "1.5.3"}
         ;; Database

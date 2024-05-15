@@ -12,10 +12,8 @@
    [app.util :as util]
    [clojure.set :as set]
    [clojure.string :as s]
-   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
-   [integrant.repl.state :as state]
    [ol.jobs-util :as jobs]
    [tick.core :as t])
   (:import
@@ -247,7 +245,6 @@
 (defn- sync-gigs [env conn gigo etc _]
   (try
     (when (f/feature? :feat/sync-gigs)
-      (log/info :job-syncing-gigs-start)
       ;; update the cache  - the cache is stored in memory only
       (gigo/update-cache! gigo)
       ;; update the gig list in the db
@@ -256,7 +253,6 @@
       (update-gigs-attendance-db! conn @gigo/gigs-cache)
       ;; update discourse avatars too
       (discourse/sync-avatars! {:env env :conn conn})
-      (log/info :job-syncing-gigs-done)
       :done
 
                                         ; create new gigs in dialogflow

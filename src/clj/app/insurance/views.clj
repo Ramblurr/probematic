@@ -1929,9 +1929,9 @@ document.addEventListener('DOMContentLoaded', function() {
                        then if length of <tbody.instrgrid--body input[type=checkbox]:checked/> == length of <tbody.instrgrid--body input[type=checkbox]/>
                             set my.checked to true
                             end
-                       then trigger checkboxChanged on me" (tr [:selected]))
-
+                       then trigger checkboxChanged on me")
                             :class "h-4 w-4 rounded border-gray-300 text-sno-orange-600 focus:ring-sno-orange-500"}]]
+
                   [:th {:class "text-left px-2"} "Member"]
                   [:th {:class "text-right px-2 max-w-32 text-pretty"} (str "# " (tr [:private-instruments]))]
                   [:th {:class "text-right"} (tr [:total])]]

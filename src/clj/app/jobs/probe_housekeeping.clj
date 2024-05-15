@@ -2,18 +2,22 @@
   (:require
    [app.datomic :as d]
    [app.email :as email]
+   [app.errors :as errors]
    [app.gigs.domain :as domain]
    [app.probeplan :as probeplan]
    [app.queries :as q]
-   [app.errors :as errors]
    [chime.core :as chime]
-   [clojure.tools.logging :as log]
    [com.yetanalytics.squuid :as sq]
    [datomic.client.api :as datomic]
    [ol.jobs-util :as jobs]
    [tick.core :as t])
   (:import
-   (java.time DayOfWeek LocalTime Period ZonedDateTime ZoneId)))
+   (java.time
+    DayOfWeek
+    LocalTime
+    Period
+    ZoneId
+    ZonedDateTime)))
 
 (def minimum-gigs 4)
 (def maximum-create 4)
@@ -82,15 +86,12 @@
     (let [conn (:conn datomic)
           db (datomic/db conn)
           next-probe (q/next-probe db)]
-      (log/info (format  "notifying rehearsal leaders! for probe %s" (str (:gig/date next-probe))))
       (if (= (:gig/date next-probe) (t/date))
         (do
           (when (:gig/rehearsal-leader1 next-probe)
-            (email/send-rehearsal-leader-email! system next-probe (:gig/rehearsal-leader1 next-probe))
-            (log/info (format "notified rehearsal leader %s" (-> next-probe :gig/rehearsal-leader1 :member/nick))))
+            (email/send-rehearsal-leader-email! system next-probe (:gig/rehearsal-leader1 next-probe)))
           (when (:gig/rehearsal-leader2 next-probe)
-            (email/send-rehearsal-leader-email! system next-probe (:gig/rehearsal-leader2 next-probe))
-            (log/info (format "notified rehearsal leader %s" (-> next-probe :gig/rehearsal-leader2 :member/nick)))))
+            (email/send-rehearsal-leader-email! system next-probe (:gig/rehearsal-leader2 next-probe))))
         (throw (ex-info  "notify rehearsal leaders condition failed!"
                          {:probe-date (:gig/date next-probe)
                           :current-date (t/date)}))))
@@ -106,7 +107,6 @@
                                       (map #(.atZone % (ZoneId/of "Europe/Berlin")))
                                       (filter (comp #{DayOfWeek/WEDNESDAY}
                                                     #(.getDayOfWeek %))))]
-    (log/info "starting rehearsal-leader-notify-job next trigger at " (str (first next-wednesdays-at-10-pm)))
     (chime/chime-at next-wednesdays-at-10-pm
                     (fn [_] (notify-rehearsal-leader! system)))))
 

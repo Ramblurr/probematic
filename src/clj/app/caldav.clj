@@ -103,7 +103,5 @@
      (q/gigs-after db (q/date-midnight-today!))
      11))
 
-  (event-from-gig env gig)
-
 ;;
   )

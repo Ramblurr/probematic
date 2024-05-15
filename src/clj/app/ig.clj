@@ -1,31 +1,31 @@
 (ns app.ig
   "This namespace contains our application's integrant system implementations"
   (:require
-   [app.migrations.core :as migrations]
-   [app.caldav :as caldav]
    [app.auth :as auth]
+   [app.caldav :as caldav]
    [app.config :as config]
-   [nrepl.server :as nrepl]
-   [app.filestore :as filestore]
    [app.datomic-migrations :as datomic.migrations]
    [app.email.email-worker :as email-worker]
+   [app.errors :as error]
+   [app.filestore :as filestore]
    [app.i18n :as i18n]
    [app.interceptors :as interceptors]
    [app.jobs :as jobs]
    [app.keycloak :as keycloak]
+   [app.migrations.core :as migrations]
    [app.routes :as routes]
    [app.sardine :as sardine]
-   [clojure.tools.logging :as log]
+   [com.brunobonacci.mulog :as μ]
    [ctmx.render :as ctmx.render]
    [datomic.client.api :as d]
    [datomic.local :as dl]
    [hiccup2.core :as hiccup2]
    [integrant.core :as ig]
    [io.pedestal.http :as server]
-   [ol.system :as system]
+   [nrepl.server :as nrepl]
    [ol.jobs.ig]
+   [ol.system :as system]
    [reitit.http :as http]
-   [sentry-clj.core :as sentry]
    [taoensso.carmine :as car]))
 
 ;; Ensure ctmx is using the XSS safe hiccup render function
@@ -100,9 +100,7 @@
 
     (assert port)
     (assert host)
-    ;; (tap> routes)
-    (tap> start-msg)
-    (log/info start-msg)
+    (μ/log ::init-http :msg start-msg)
     (-> service-map
         (with-container-opts env)
         (with-cors env)
@@ -126,7 +124,7 @@
 
 (defmethod ig/init-key ::datomic-db
   [_ config]
-  (log/info "Started Datomic DB")
+  (μ/log ::init-datomic)
   (let [db-name (select-keys config [:db-name])
         client (d/client (select-keys config [:server-type :system :storage-dir]))
         _ (d/create-database client db-name)
@@ -136,18 +134,12 @@
 
 (defmethod ig/halt-key! ::datomic-db
   [_ config]
-  (log/info "Stopping Datomic DB")
+  (μ/log ::halt-datomic)
   (dl/release-db (select-keys config [:system :db-name])))
 
 (defmethod ig/init-key ::i18n-langs
   [_ _]
   (i18n/read-langs))
-
-(defmethod ig/init-key ::sentry
-  [_ {:keys [env]}]
-  (when-not (config/demo-mode? env)
-    (sentry/init! (-> env :sentry :dsn)
-                  {:environment (-> env :profile)})))
 
 (defmethod ig/init-key ::webdav-sardine
   [_ {:keys [env]}]
@@ -192,17 +184,18 @@
       (let [server (nrepl/start-server :port port
                                        :bind bind
                                        :ack-port ack-port)]
-        (log/info "nREPL server started on port:" port)
+
+        (μ/log ::init-nrepl :msg "nREPL server started" :port port)
         (assoc config ::server server))
       (catch Exception e
-        (log/error "failed to start the nREPL server on port:" port)
+        (μ/log ::error-nrepl :ex e :msg "failed to start the nREPL server on port:" :port port)
         (throw e)))))
 
 (defmethod ig/halt-key! ::nrepl-server
   [_ {::keys [server]}]
   (when server
     (nrepl/stop-server server))
-  (log/info "nREPL server stopped"))
+  (μ/log ::halt-nrepl))
 
 (defmethod ig/init-key ::calendar
   [_ {:keys [env] :as system}]
@@ -215,3 +208,14 @@
 (defmethod ig/halt-key! ::filestore
   [_ store]
   (filestore/halt! store))
+
+(defmethod ig/init-key ::console-logging
+  [_ {:keys [pretty?]}]
+  (μ/start-publisher!
+   {:type :console
+    :pretty? pretty?
+    :transform error/redact-mulog-events}))
+
+(defmethod ig/halt-key! ::console-logging
+  [_ pub]
+  (pub))

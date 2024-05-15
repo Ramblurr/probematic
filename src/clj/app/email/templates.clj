@@ -7,7 +7,6 @@
    [app.urls :as url]
    [app.util :as util]
    [clojure.string :as str]
-   [hiccup.util :as hiccup.util]
    [hiccup2.core :refer [html]]
    [selmer.parser :as selmer]
    [selmer.util :as selmer.util]

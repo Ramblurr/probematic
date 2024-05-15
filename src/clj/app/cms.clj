@@ -2,7 +2,6 @@
   (:require
    [app.errors :as errors]
    [app.queries :as q]
-   [clojure.tools.logging :as log]
    [datomic.client.api :as datomic]
    [jsonista.core :as j]
    [org.httpkit.client :as client]
@@ -33,8 +32,6 @@
           resp @(client/request (->> song
                                      song->wagtail
                                      (update-cms-req cms-url token)))]
-      (log/info (str "synced with cms song-id=" song-id))
-      (log/info resp)
       resp)
     (catch Exception e
       (errors/report-error! e))))

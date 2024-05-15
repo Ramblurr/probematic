@@ -13,8 +13,9 @@
 (comment
   (debug-in-prod)
   (keys main/system)
-  (require '[clojure.tools.logging :as log])
-  (log/info "hello")
+
+  (require '[com.brunobonacci.mulog :as μ])
+  (μ/log ::hello )
 
   (require '[app.dashboard.routes :as dashboard.routes])
   (dashboard.routes/routes)

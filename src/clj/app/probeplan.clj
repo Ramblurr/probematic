@@ -1,9 +1,8 @@
 (ns app.probeplan
   (:require
-   [tick.core :as t]
-   [tick.alpha.interval :as t.i]
    [app.datomic :as d]
-   [app.queries :as q]))
+   [app.queries :as q]
+   [tick.core :as t]))
 
 (defn next-wednesday [from]
   (if (= t/WEDNESDAY (t/day-of-week from))

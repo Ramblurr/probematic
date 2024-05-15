@@ -1,9 +1,8 @@
 (ns app.datomic-migrations
   (:require
-   [clojure.tools.logging :as log]
    [clojure.edn :as edn]
-   [com.yetanalytics.squuid :as sq]
    [clojure.java.io :as io]
+   [com.brunobonacci.mulog :as μ]
    [datomic.client.api :as d]))
 
 (defn ident-has-attr?
@@ -16,7 +15,7 @@
         tx #(d/transact conn {:tx-data %})]
     (tx (-> (io/resource "schema.edn") slurp edn/read-string))
     (when-not (ident-has-attr? db :member/name :db/ident)
-      (log/info "Loading db schema")
+      (μ/log ::datomic-migrate-load-schema)
       ;; (tx (map uuid-for-seed (-> (io/resource "seeds.edn") slurp edn/read-string)))
       (tx (-> (io/resource "seeds.edn") slurp edn/read-string)))
     ;; (when-not (ident-has-attr? db :account/account-id :db.attr/preds)
@@ -29,7 +28,7 @@
         (when (= 0 (count-all (d/db conn) :gig/gig-id))
           (demo/seed-gigs! conn)))
     (when (seq migrate-fns)
-      (log/info "Running migrations")
+      (μ/log ::datomic-migrate-start-migrations)
       (doseq [f migrate-fns]
         (when-let [tx-data (f conn)]
           (tx tx-data)))))

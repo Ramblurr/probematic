@@ -164,7 +164,7 @@
                                    (config/oauth2-known-roles env))
              {"oauth2" (expire-oauth2-cookie env)} post-login-uri)))))
     (catch Throwable e
-      (errors/send-sentry! request e)
+      (errors/send-event! request e)
       (restart-login env))))
 
 (defn routes [system]

@@ -1,11 +1,14 @@
-import { $, listen } from "./utils.js";
-import { Dropdown, DiscoverDropdowns } from "./widgets/attendance-dropdown.js";
+import { $, listen } from "./utils.js?v3";
+import {
+  Dropdown,
+  DiscoverDropdowns,
+} from "./widgets/attendance-dropdown.js?v3";
 import {
   ActionMenu2All,
   ActionMenu,
   Flyout,
-} from "./widgets/action-menu.js?v2";
-import { DiscoverTooltips } from "./widgets/tooltip.js";
+} from "./widgets/action-menu.js?v3";
+import { DiscoverTooltips } from "./widgets/tooltip.js?v3";
 
 //// SETUP
 htmx.onLoad(function (content) {

@@ -1,4 +1,6 @@
 (ns app.interceptors
+   ;; [clojure.data :as diff]
+   ;; [io.pedestal.interceptor.chain :as chain]
   (:require
    [app.auth :as auth]
    [app.config :as config]
@@ -8,15 +10,13 @@
    [app.routes.errors :as errors]
    [app.routes.pedestal-prone :as pedestal-prone]
    [app.schemas :as schemas]
-   [clojure.data :as diff]
    [clojure.string :as str]
-   [clojure.tools.logging :as log]
    [co.deps.ring-etag-middleware :as etag]
+   [com.brunobonacci.mulog :as μ]
    [datomic.client.api :as d]
    [io.pedestal.http :as http]
    [io.pedestal.http.ring-middlewares :as middlewares]
    [io.pedestal.interceptor :as interceptor]
-   [io.pedestal.interceptor.chain :as chain]
    [io.pedestal.interceptor.error :as error-int]
    [luminus-transit.time :as time]
    [muuntaja.core :as m]
@@ -161,14 +161,15 @@
                   user-email (auth/get-current-email req)
                   finish (System/currentTimeMillis)
                   total (- finish start-time)]
-              (log/info :msg "request completed"
-                        :method (str/upper-case (name request-method))
-                        :uri uri
-                        :human-id human-id
-                        :user-email user-email
-                        :query-string  query-string
-                        :status (:status (:response ctx))
-                        :response-time total)
+
+              (μ/log :http/request :msg "request completed"
+                     :method (str/upper-case (name request-method))
+                     :uri uri
+                     :human-id human-id
+                     :user-email user-email
+                     :query-string  query-string
+                     :status (:status (:response ctx))
+                     :response-time total)
               ctx))})
 
 (defn query-string-lang [query-string]
@@ -253,37 +254,6 @@
   (doto (HttpConfiguration.)
     (.setRequestHeaderSize max-size)))
 
-(defn log-diffs [previous current]
-  (let [[deleted added] (diff/diff (dissoc previous ::chain/queue ::chain/stack ::previous-ctx)
-                                   (dissoc current ::chain/queue ::chain/stack ::previous-ctx))]
-    (when deleted (log/debug :deleted deleted))
-    (when added (log/debug :added added))))
-
-(defn handle-debug [ctx]
-  (log-diffs (::previous-ctx ctx) ctx)
-  (assoc ctx ::previous-ctx ctx))
-
-(def debug-interceptor
-  {:name :debug
-   :enter handle-debug
-   :leave handle-debug})
-
-(def inject-debug-interceptor
-  {:name :inject-debug
-   :enter
-   (fn [ctx]
-     (assoc
-      ctx
-      ::previous-ctx
-      ctx
-      ::chain/queue
-      (into clojure.lang.PersistentQueue/EMPTY
-            (cons debug-interceptor
-                  (-> ctx
-                      ::chain/queue
-                      seq
-                      (interleave (repeat debug-interceptor)))))))})
-
 (defn default-reitit-interceptors [system]
   (into [] (remove nil?
                    [;; inject-debug-interceptor
@@ -325,6 +295,38 @@
             (fn [request _opts]
               (etag/add-file-etag request false)))}))
 
+(def hash-prefix-len (count "hash-"))
+(def hash-len 8)
+
+#_(defn unhash-path [path]
+  (let [components (str/split path  #"/")
+        root-dir (second components)
+        file-name (last components)]
+    (if (and
+          root-dir
+          file-name
+          (contains? #{"js" "img" "font" "css"} root-dir)
+          (str/starts-with? file-name "hash-"))
+      (let [new-file-name (subs file-name (+ hash-prefix-len hash-len))
+            new-full-path (str/join "/" (concat  (butlast components) [new-file-name]))]
+        ;; (tap> [:asset-hash-rewrite-interceptor-enter components  path  root-dir remaining new-file-name new-full-path])
+        new-full-path)
+      path)))
+
+#_(defn  asset-hash-rewrite-interceptor-enter [ctx]
+  (let [old-path (get-in ctx [:request :path-info])
+        new-path (-> old-path unhash-path)]
+    (if (= old-path new-path)
+      ctx
+      (-> ctx
+          (assoc-in  [:request :uri] new-path)
+          (assoc-in  [:request :path-info] new-path)))))
+
+#_(def asset-hash-rewrite-interceptor
+  (interceptor/interceptor
+   {:name  ::cache-control
+    :enter (fn [ctx] (asset-hash-rewrite-interceptor-enter ctx))}))
+
 (def cache-control-interceptor
   (interceptor/interceptor
    {:name  ::cache-control
@@ -345,6 +347,7 @@
                  :io.pedestal.http.route/path-params-decoder
                  :io.pedestal.http/log-request
                  :io.pedestal.http.route/router})
+
 (defn with-our-pedestal-interceptors [service system router handler]
   (-> service
       (update ::http/interceptors conj
@@ -352,6 +355,7 @@
               middlewares/cookies
               etag-interceptor
               cache-control-interceptor
+              #_asset-hash-rewrite-interceptor
               ;; this should be last!
               (pedestal/routing-interceptor router handler))
       ;; remove the pedestal default handler, because now we use the reitit one

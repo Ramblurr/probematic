@@ -4,7 +4,6 @@
    [com.github.javafaker Faker])
   (:require [clojure.string :as str]
             [datomic.client.api :as d]
-            [clojure.tools.logging :as log]
             [tick.core :as t]
             [app.gigs.domain :as domain]
             [com.yetanalytics.squuid :as sq]))
@@ -57,8 +56,6 @@
   (flatten (repeatedly amt rand-member-txs)))
 
 (defn seed-random-members! [conn]
-  (log/info "Seeding random members")
-
   (d/transact conn {:tx-data [{:member/member-id "admin"
                                :member/name "Admin Nimda"
                                :member/nick "admin"
@@ -69,7 +66,6 @@
   (d/transact conn {:tx-data (rand-members-txs 30)}))
 
 (defn seed-gigs! [conn]
-  (log/info "Seeding gigs")
   (d/transact conn {:tx-data
                     (map domain/gig->db
                          [{:gig/gig-id (member-id)

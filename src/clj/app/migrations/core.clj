@@ -1,12 +1,10 @@
 (ns app.migrations.core
   (:require
-   [com.yetanalytics.squuid :as sq]
-   [app.util :as util]
-   [clojure.tools.logging :as log]
    [app.datomic :as d]
-   [datomic.client.api :as datomic]
+   [app.ledger.domain :as ledger.domain]
    [app.queries :as q]
-   [app.ledger.domain :as ledger.domain]))
+   [com.yetanalytics.squuid :as sq]
+   [datomic.client.api :as datomic]))
 
 (defn all-members [db]
   (->> (d/find-all db :member/member-id q/member-pattern)
@@ -18,7 +16,6 @@
     (mapcat (fn [{:member/keys [member-id name] :as member}]
               (let [ledger (q/retrieve-ledger db member-id)]
                 (when (nil? ledger)
-                  (log/info "Creating ledger for member" name)
                   (ledger.domain/txs-new-member-ledger (str member-id) (sq/generate-squuid) (d/ref member)))))
             members)))
 

@@ -90,7 +90,7 @@
         (sequential? m)
         (remove #(nil? %) m)
         :else
-        (throw "remove-nils: Not implemented")))
+        (throw (ex-info "remove-nils: Not implemented" {:type (type m)}))))
 
 (defn blank->nil
   "If arg is an empty string, returns nil. Otherwise returns arg."

@@ -1,6 +1,6 @@
 (ns app.jobs.ping
-  (:require [ol.jobs-util :as jobs]
-            [tick.core :as t]))
+  (:require
+   [ol.jobs-util :as jobs]))
 
 (defn- ping [time]
   (println "ping" time))

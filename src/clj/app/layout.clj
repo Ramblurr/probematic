@@ -286,7 +286,7 @@ then trigger appSidebarToggled on <body/>
    (app-shell req body nil))
   ([req body opts]
    (let [member (auth/get-current-member req)]
-     (render/html5-response (merge {:title "SNOrga"} opts)
+     (render/html5-response req (merge {:title "SNOrga"} opts)
                             [:div {:class "min-h-full"}
                              (mobile-menu req)
                              (desktop-menu req member)
@@ -302,8 +302,8 @@ then trigger appSidebarToggled on <body/>
 (defn centered-content
   [req body]
   (let [uri-prefix (config/app-base-url (-> req :system :env))]
-    (render/html5-response-absolute {:title "SNOrga"
-                                     :uri-prefix uri-prefix}
+    (render/html5-response-absolute req {:title "SNOrga"
+                                         :uri-prefix uri-prefix}
                                     [:div {:class "h-full bg-gray-50"}
                                      [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
                                       [:div {:class "sm:mx-auto sm:w-full sm:max-w-md"}
@@ -314,8 +314,8 @@ then trigger appSidebarToggled on <body/>
 (defn centered-content-lg
   [req body]
   (let [uri-prefix (config/app-base-url (-> req :system :env))]
-    (render/html5-response-absolute {:title "SNOrga"
-                                     :uri-prefix uri-prefix}
+    (render/html5-response-absolute req {:title "SNOrga"
+                                         :uri-prefix uri-prefix}
                                     [:div {:class "h-full bg-gray-50"}
                                      [:div {:class "flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8"}
                                       [:div {:class "sm:mx-auto sm:w-full sm:max-w-5xl"}
