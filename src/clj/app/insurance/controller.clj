@@ -822,17 +822,21 @@
     (conj response-txs survey-tx)))
 
 (defn create-survey! [{:keys [db] :as req}]
-  (let [policy (:policy req)
+  (let [insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
+        policy (:policy req)
         {:keys [survey-name closes-at] :as p} (util.http/unwrap-params req)
         txs (txs-new-survey db survey-name (t/date-time closes-at) policy)]
     ;; (tap> [:params p :tx txs])
-    (d/transact-wrapper! req {:tx-data txs})))
+    (when insurance-team-member?
+      (d/transact-wrapper! req {:tx-data txs}))))
 
 (defn close-survey! [{:keys [db] :as req}]
-  (let [{:keys [survey-id]} (util.http/unwrap-params req)
+  (let [insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
+        {:keys [survey-id]} (util.http/unwrap-params req)
         survey-id (util/ensure-uuid! survey-id)
         txs [[:db/add [:insurance.survey/survey-id survey-id] :insurance.survey/closed-at (t/inst)]]]
-    (d/transact-wrapper! req {:tx-data txs})))
+    (when insurance-team-member?
+      (d/transact-wrapper! req {:tx-data txs}))))
 
 (defn members-to-email-about-survey [{:insurance.survey/keys [responses] :as survey}]
   ;; return a list of members who have not completed the survey

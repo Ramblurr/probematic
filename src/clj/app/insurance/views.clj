@@ -281,11 +281,12 @@ Mit freundlichen Grüßen,
                               "Yes, send the email and confirm changes."
                               (tr [:action/cancel]))})]]]]))
 
-(defn send-changes-button [{:keys [tr] :as req} {:insurance.policy/keys [status] :as policy} oob?]
+(defn send-changes-button [{:keys [tr db] :as req} {:insurance.policy/keys [status] :as policy} oob?]
   (let [policy-draft? (= status :insurance.policy.status/draft)
         {:keys [total-needs-review]} (controller/policy-totals policy)
-        has-todos? (> total-needs-review 0)]
-    (when policy-draft?
+        has-todos? (> total-needs-review 0)
+        insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))]
+    (when (and insurance-team-member? policy-draft?)
       [:div {:id "send-changes-button" :hx-swap-oob (when oob? "true")
              :class "tooltip" :data-tooltip (tr [:insurance/send-changes-disabled-hint])}
        (ui/link-button :label (tr [:insurance/send-changes])
@@ -722,8 +723,9 @@ Mit freundlichen Grüßen,
                          :$no-mobile-col "hidden sm:table-cell py-2 text-right px-2"
                          :$action-col    "relative py-2 pl-2 pr-0 text-right h-12 w-28"})
 
-(defn survey-response-table-row [{:keys [tr policy]} {:insurance.survey.response/keys [member response-id coverage-reports completed-at] :as r}]
+(defn survey-response-table-row [{:keys [db tr policy] :as req} {:insurance.survey.response/keys [member response-id coverage-reports completed-at] :as r}]
   (let [{:member/keys [name member-id] :keys [total]} member
+        insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
         {:keys [open completed finished?] :as summary} (domain/summarize-member-reports coverage-reports)
         row-id (str "response-row-" response-id)
         {:keys [$no-mobile-col $mobile-col $action-col $first-col]} survey-col-classes]
@@ -742,16 +744,18 @@ Mit freundlichen Grüßen,
         (icon/checkmark {:class "w-5 h-6 text-sno-green-600 inline"})
         (icon/xmark {:class "w-5 h-6 text-red-600 inline"}))]
      [:td {:class $action-col}
-      (ui/button :label (if completed-at "Uncomplete" "Complete") :priority :link :size :small
-                 :hx-target (str "#" row-id)
-                 :spinner? true
-                 :hx-vals {:response-id (str response-id)}
-                 :hx-post (util/endpoint-path toggle-survey-response-completion-handler))]]))
+      (when insurance-team-member?
+        (ui/button :label (if completed-at "Uncomplete" "Complete") :priority :link :size :small
+                   :hx-target (str "#" row-id)
+                   :spinner? true
+                   :hx-vals {:response-id (str response-id)}
+                   :hx-post (util/endpoint-path toggle-survey-response-completion-handler)))]]))
 
 (defn insurance-survey-table [{:keys [tr db] :as req}]
   (let [policy (:policy req)
         {:keys [open-surveys closed-surveys]} (controller/survey-table-items req)
         has-open-surveys? (seq open-surveys)
+        insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
         {:insurance.survey/keys [survey-name closes-at responses survey-id] :as active-survey} (first open-surveys)
         end-date (t/>> (t/instant) (t/new-period 4 :weeks))
         toggle-rw-script "on click toggle .hidden on .survey-ro then toggle .hidden on .survey-rw"
@@ -760,7 +764,7 @@ Mit freundlichen Grüßen,
      (ui/panel {:title  (tr [:insurance.survey/admin-title])
                 :subtitle (tr [:insurance.survey/admin-subtitle])
                 :buttons (list
-                          (when-not has-open-surveys?
+                          (when (and insurance-team-member? (not has-open-surveys?))
                             (ui/button :label (tr [:insurance.survey/start-survey]) :priority :primary
                                        :attr {:_ "on click add .hidden to me then remove .hidden from .create-survey-form then add .hidden to .no-surveys"})))}
 
@@ -794,18 +798,20 @@ Mit freundlichen Grüßen,
                                          (ui/button :label (tr [:action/save]) :priority :primary)]))]]
 
                    [:div {:class "mt-4 sm:ml-16 sm:mt-0 flex sm:flex-none space-x-4"}
-                    (ui/button :label (tr [:insurance.survey/edit-survey]) :priority :white
-                               :class "survey-ro"
-                               :attr {:_ toggle-rw-script})
-                    (ui/button :label (tr [:insurance.survey/close-survey]) :priority :white
-                               :class "survey-ro"
-                               :hx-post (util/endpoint-path close-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)
-                               :hx-vals {:survey-id (str survey-id)}
-                               :attr {:_ (ui/confirm-modal-script
-                                          (tr [:insurance.survey/confirm-close-title])
-                                          (tr [:insurance.survey/confirm-close])
-                                          (tr [:insurance.survey/close-survey])
-                                          (tr [:action/cancel]))})
+                    (when insurance-team-member?
+                      (list
+                       (ui/button :label (tr [:insurance.survey/edit-survey]) :priority :white
+                                  :class "survey-ro"
+                                  :attr {:_ toggle-rw-script})
+                       (ui/button :label (tr [:insurance.survey/close-survey]) :priority :white
+                                  :class "survey-ro"
+                                  :hx-post (util/endpoint-path close-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)
+                                  :hx-vals {:survey-id (str survey-id)}
+                                  :attr {:_ (ui/confirm-modal-script
+                                             (tr [:insurance.survey/confirm-close-title])
+                                             (tr [:insurance.survey/confirm-close])
+                                             (tr [:insurance.survey/close-survey])
+                                             (tr [:action/cancel]))})))
                     (ui/button :label (tr [:insurance.survey/send-notifications]) :priority :primary
                                :class "survey-ro"
                                :icon icon/envelope
