@@ -40,7 +40,7 @@
     (μ/set-global-context! {:app-name (:name env)
                             :git-hash (:git-hash env)
                             :build-date  (:build-date env)
-                            :env (-> env :ig/system :app.ig/profile)})
+                            :stage (-> env :ig/system :app.ig/profile)})
     env))
 
 (defmethod ig/init-key ::handler [_ system]
