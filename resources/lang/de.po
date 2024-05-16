@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2024-05-16 16:13+0200\n"
-"PO-Revision-Date: 2024-05-16 14:05+0000\n"
+"PO-Revision-Date: 2024-05-16 14:25+0000\n"
 "Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
@@ -678,7 +678,7 @@ msgstr "Instrument"
 #, ycp-format
 msgctxt ":instrument/images"
 msgid "Photos"
-msgstr ""
+msgstr "Fotos"
 
 #: :instrument/name
 #, ycp-format
@@ -702,7 +702,7 @@ msgstr "Z.B. farbe, material"
 #, ycp-format
 msgctxt ":instrument/photo-upload-title"
 msgid "Upload Instrument Photos"
-msgstr ""
+msgstr "Lade Instrumentenfotos hoch"
 
 #: :instrument/images-share-url-hint
 #, ycp-format
@@ -1112,13 +1112,13 @@ msgstr "Umfrage bearbeiten"
 #, ycp-format
 msgctxt ":insurance.survey/contact-insurance-team"
 msgid "Please contact the insurance team"
-msgstr ""
+msgstr "Bitte kontaktiere das Versicherungsteam"
 
 #: :insurance.survey/no-stop
 #, ycp-format
 msgctxt ":insurance.survey/no-stop"
 msgid "No, stop insurance"
-msgstr ""
+msgstr "Nein, Versicherung entfernen"
 
 #: :insurance.survey/confirm-close
 #, ycp-format
@@ -1150,7 +1150,7 @@ msgstr ""
 #, ycp-format
 msgctxt ":insurance.survey/yes"
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #: :insurance.survey/closes-at-hint
 #, ycp-format
@@ -1190,7 +1190,7 @@ msgstr ""
 #, ycp-format
 msgctxt ":insurance.survey/used-in-last-year"
 msgid "Was this used at a SNO gig in the past year?"
-msgstr ""
+msgstr "Wurde das im letzten Jahr bei einem SNO-Gig verwendet?"
 
 #: :insurance.survey/cta-p2-none
 #, ycp-format
@@ -1230,7 +1230,7 @@ msgstr "Schließt um"
 #, ycp-format
 msgctxt ":insurance.survey/already-closed-hint"
 msgid "This insurance survey is already closed :("
-msgstr ""
+msgstr "Diese Versicherungsumfrage ist bereits geschlossen :("
 
 #: :insurance.survey/start-button
 #, ycp-format
@@ -1255,13 +1255,14 @@ msgstr "Es ist Zeit, deine versicherten Instrumente/Gegenstände zu überprüfen
 #, ycp-format
 msgctxt ":insurance.survey/yes-pay"
 msgid "Yes, I'll pay"
-msgstr ""
+msgstr "Ja, ich werde zahlen"
 
 #: :insurance.survey/pay-cost-confirm
 #, ycp-format
 msgctxt ":insurance.survey/pay-cost-confirm"
 msgid "You will have to pay about %1€ per year for this item. Is that OK?"
 msgstr ""
+"Du musst etwa %1€ pro Jahr für diesen Artikel bezahlen. Ist das in Ordnung?"
 
 #: :insurance.survey/admin-title
 #, ycp-format
@@ -1276,12 +1277,14 @@ msgid ""
 "Since this wasn't used at a gig in the last year you the band can no longer "
 "pay for it."
 msgstr ""
+"Da dies im letzten Jahr nicht bei einem Auftritt verwendet wurde, kann die "
+"Band nicht mehr dafür bezahlen."
 
 #: :insurance.survey/already-closed
 #, ycp-format
 msgctxt ":insurance.survey/already-closed"
 msgid "Already Closed"
-msgstr ""
+msgstr "Bereits geschlossen"
 
 #: :insurance.survey/survey-name
 #, ycp-format
@@ -1293,7 +1296,7 @@ msgstr "Umfragebezeichnung"
 #, ycp-format
 msgctxt ":insurance.survey/keep-insured-pay"
 msgid "Do you want to pay to keep it insured?"
-msgstr ""
+msgstr "Willst du zahlen, um es versichert zu halten?"
 
 #: :insurance.survey/keep-insured-private-cost
 #, ycp-format
@@ -1302,6 +1305,8 @@ msgid ""
 "If you want the item to stay insured, you'll have to pay for it yourself. "
 "This will cost about %1€ per year for this item."
 msgstr ""
+"Wenn du möchtest, dass der Artikel versichert bleibt, musst du selbst dafür "
+"bezahlen. Das wird etwa %1€ pro Jahr für diesen Artikel kosten."
 
 #: :insurance.survey/close-survey
 #, ycp-format
@@ -1327,6 +1332,8 @@ msgctxt ":insurance.survey/confirm-remove-band-hint"
 msgid ""
 "The band pays for the cost of the insurance since it is a band instrument."
 msgstr ""
+"Die Band übernimmt die Kosten für die Versicherung, da es ein Instrument der "
+"Band ist."
 
 #: :insurance.survey/data-correct-hint
 #, ycp-format
@@ -1335,18 +1342,20 @@ msgid ""
 "You might want to change the insured value if the market value has change or "
 "if you want to change the type of coverage."
 msgstr ""
+"Du möchtest vielleicht den versicherten Wert ändern, wenn sich der Marktwert "
+"verändert hat oder wenn du die Art der Deckung ändern willst."
 
 #: :insurance.survey/no-keep
 #, ycp-format
 msgctxt ":insurance.survey/no-keep"
 msgid "No, keep the insurance"
-msgstr ""
+msgstr "Nein, behalte die Versicherung"
 
 #: :insurance.survey/confirm-remove
 #, ycp-format
 msgctxt ":insurance.survey/confirm-remove"
 msgid "Are you sure you want to remove the insurance?"
-msgstr ""
+msgstr "Bist du sicher, dass du die Versicherung entfernen möchtest?"
 
 #: :insurance.survey/email-title
 #, ycp-format
@@ -1358,25 +1367,25 @@ msgstr "SNO-Versicherungszeit!"
 #, ycp-format
 msgctxt ":insurance.survey/data-correct"
 msgid "Is all the data shown still correct?"
-msgstr ""
+msgstr "Sind alle unten angezeigten Infos noch korrekt?"
 
 #: :insurance.survey/keep-insured
 #, ycp-format
 msgctxt ":insurance.survey/keep-insured"
 msgid "Do you want to keep this instrument insured?"
-msgstr ""
+msgstr "Willst du dieses Instrument weiterhin versichert halten?"
 
 #: :insurance.survey/yes-remove
 #, ycp-format
 msgctxt ":insurance.survey/yes-remove"
 msgid "Yes, remove it"
-msgstr ""
+msgstr "Ja, entferne es"
 
 #: :insurance.survey/no
 #, ycp-format
 msgctxt ":insurance.survey/no"
 msgid "No"
-msgstr ""
+msgstr "Nein"
 
 #: :login
 #, ycp-format
@@ -1841,7 +1850,7 @@ msgstr "Gesamt"
 #, ycp-format
 msgctxt ":youve-completed-plural"
 msgid "You've completed %1 items! %2 left to go!"
-msgstr ""
+msgstr "Du hast %1 Aufgaben erledigt! Noch %2 übrig!"
 
 #: :Phone
 #, ycp-format
@@ -2341,6 +2350,9 @@ msgid ""
 "The thing you were looking for wasn't found. If you think it should exist, "
 "please contact Casey and tell him this error code:"
 msgstr ""
+"Das, wonach du gesucht hast, wurde nicht gefunden. Wenn du denkst, dass es "
+"existieren sollte, bitte kontaktiere Casey und teile ihm diesen Fehlercode "
+"mit:"
 
 #: :error/member-unique-phone
 #, ycp-format
@@ -3535,8 +3547,6 @@ msgstr "Repertoire"
 #~ "Fehlercode mit:"
 
 #, fuzzy, ycp-format
-#~| msgctxt ":member/filter-active"
-#~| msgid "Active Members"
 #~ msgctxt ":stats/mean-active-members"
 #~ msgid "Average Active Members"
 #~ msgstr "Durchschnitt aktive Mitglieder"
