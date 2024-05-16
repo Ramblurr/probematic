@@ -161,9 +161,8 @@
                   user-email (auth/get-current-email req)
                   finish (System/currentTimeMillis)
                   total (- finish start-time)]
-
               (μ/log :http/request :msg "request completed"
-                     :method (str/upper-case (name request-method))
+                     :request-method request-method
                      :uri uri
                      :human-id human-id
                      :user-email user-email

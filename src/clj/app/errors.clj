@@ -1,10 +1,9 @@
 (ns app.errors
   (:require
-   [medley.core :as m]
-   [com.brunobonacci.mulog :as μ]
    [app.config :as config]
    [app.util :as util]
-   [clojure.set :as set]))
+   [com.brunobonacci.mulog :as μ]
+   [medley.core :as m]))
 
 (def dangerous-keys
   #{:datomic-conn
@@ -67,9 +66,10 @@
                             (assoc :will-change-lang (:will-change-lang req))
                             (assoc :form-params (:form-params req))
                             (assoc :path-params (:path-params req)))))
-      (update :request-method name)
+      ;; (update :request-method name)
       (select-keys   [:uri :query-string :request-method :headers :params :member-id :user-email])
-      (set/rename-keys  {:request-method :method :params :data :uri :url})))
+      ;; (set/rename-keys  {:request-method :method :params :data :uri :url})
+      ))
 
 (defn send-event!
   "Sends a telemetry event asynchronously"

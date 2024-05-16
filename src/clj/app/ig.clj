@@ -36,7 +36,12 @@
   profile)
 
 (defmethod ig/init-key ::env [_ profile]
-  (system/config profile))
+  (let [env (system/config profile)]
+    (μ/set-global-context! {:app-name (:name env)
+                            :git-hash (:git-hash env)
+                            :build-date  (:build-date env)
+                            :env (-> env :ig/system :app.ig/profile)})
+    env))
 
 (defmethod ig/init-key ::handler [_ system]
   (routes/default-handler system))

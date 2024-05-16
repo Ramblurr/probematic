@@ -1,4 +1,6 @@
 {:name            "SNOrga"
+ :git-hash        #or [#env GIT_HASH "unknown"]
+ :build-date      #or [#env BUILD_DATE "unknown"]
  :secrets         #include #or [#env APP_SECRETS_FILE "../secrets.edn"]
  :admin-email     #ref [:secrets :admin-email]
  :app-base-url    #ref [:secrets :app-base-url]
