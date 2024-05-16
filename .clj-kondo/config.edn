@@ -2,4 +2,4 @@
  :linters {:unused-value {:level :off}
            :unused-binding {:level :off}
            :unused-import {:level :off}
-           :unresolved-var {:exclude [taoensso.carmine org.httpkit.client]}}}
+           :unresolved-var {:exclude [taoensso.carmine org.httpkit.client ol.app.dev.dev-extras]}}}

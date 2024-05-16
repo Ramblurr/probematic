@@ -32,14 +32,6 @@
                    :username  #ref [:secrets :discourse :username]
                    :forum-url "https://forum.streetnoise.at"}
  :nextcloud       #ref [:secrets :nextcloud]
- :airtable        {:token                    #ref [:secrets :airtable :token]
-                   :base                     #ref [:secrets :airtable :base]
-                   :all-people-table         {:name "People" :view "All People"}
-                   :gigo-linked-people-table {:name "People" :view "Gigo Linked"}
-                   :gigo-table               {:name "Gigo" :view "All"}
-                   :instruments-table        {:name "Instruments" :view "All Instruments"}}
- :gigo            {:username #ref [:secrets :gigo :username]
-                   :password #ref [:secrets :gigo :password]}
  :twilio          {:bot-number     #ref [:secrets :twilio :bot-number]
                    :twilio-account #ref [:secrets :twilio :twilio-account]
                    :twilio-token   #ref [:secrets :twilio :twilio-token]}
@@ -127,13 +119,7 @@
                                              :redis      #ig/ref :app.ig/redis
                                              :calendar   #ig/ref :app.ig/calendar
                                              :filestore  #ig/ref :app.ig/filestore}}
- :jobs            {#_#_:job/sync-gigs      {:job/frequency     [60 :minutes]
-                                            :job/initial-delay [2 :minutes]}
-                   #_#_:job/sync-members   {:job/frequency     [8 :hours]
-                                            :job/initial-delay [3 :minutes]}
-                   #_#_:job/sync-songs     {:job/frequency     [60 :minutes]
-                                            :job/initial-delay [2 :minutes]}
-                   :job/update-airtable    {:job/frequency     [1 :hours]
+ :jobs            {#_#_:job/sync-songs     {:job/frequency     [60 :minutes]
                                             :job/initial-delay [2 :minutes]}
                    :job/probe-housekeeping {:job/frequency     [10 :minutes]
                                             :job/initial-delay [2 :minutes]}

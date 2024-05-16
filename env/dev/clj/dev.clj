@@ -1,21 +1,8 @@
 (ns dev
   (:require
    [app.ig]
-   [app.schemas :as schemas]
    [browser :as browser]
-   [clojure.string :as str]
-   [clojure.tools.namespace.repl :as repl]
-   [datomic.client.api :as d]
-   [integrant.repl.state :as state]
-   [jsonista.core :as j]
-   [malli.dev :as md]
-   [ol.app.dev.dev-extras :as dev-extra]
-   [ol.system :as system]
-   [app.queries :as q]
-   [jsonista.core :as json]
-   [com.yetanalytics.squuid :as sq]
-   [app.keycloak :as keycloak]
-   [datomic.client.api :as datomic]))
+   [ol.app.dev.dev-extras :as dev-extra]))
 
 ;; (repl/disable-reload! (find-ns 'browser))
 ;; (repl/disable-reload! *ns*)
@@ -84,39 +71,6 @@
 ;;; REAL  SEEDS
 ;;; only run this if you have access to the external systems
 ;;; DO NOT run this in demo mode
-
-  (do
-    (require '[app.gigo.core :as gigo])
-    (require '[app.jobs.sync-gigs :as sync-gigs])
-    (require '[app.jobs.sync-members :as sync-members])
-    (require '[app.keycloak :as keycloak])
-    (def gigoc (:app.ig/gigo-client state/system))
-    (def sno "ag1zfmdpZy1vLW1hdGljciMLEgRCYW5kIghiYW5kX2tleQwLEgRCYW5kGICAgMD9ycwLDA")
-    (let [members (j/read-value (slurp "/var/home/ramblurr/src/sno/probematic/gigo-members.json") j/keyword-keys-object-mapper)
-          tx-data (map (fn [{:keys [gigo_key email nick name section occ]}]
-                         {:member/gigo-key (str/trim gigo_key)
-                          :member/member-id (sq/generate-squuid)
-                          :member/email (str/trim email)
-                          :member/nick (str/trim nick)
-                          :member/name (str/trim name)
-                          :member/section [:section/name (str/trim section)]
-                          :member/active? (not occ)}) members)]
-      (d/transact conn {:tx-data tx-data}))
-    (sync-members/update-member-data! conn (sync-members/fetch-people-data! (:airtable env)))
-    (gigo/update-cache! gigoc)
-    (sync-gigs/update-gigs-db! conn @gigo/gigs-cache)
-    (sync-gigs/update-gigs-attendance-db! conn @gigo/gigs-cache)
-    (filter  #(= ""  (get-in % [:the_plan :feedback_value]))
-             (:attendance
-              (first @gigo/gigs-cache)))
-    (d/transact conn {:tx-data
-                      (map (fn [{:keys [id display_name]}]
-                             [:db/add [:member/gigo-key id] :member/nick display_name])
-                           (gigo/get-band-members! gigoc sno))})
-
-    (keycloak/match-members-to-keycloak! {:db (datomic/db conn) :kc kc :datomic-conn conn})
-    :seed-done) ;; END SEEDS
-  1
 
 ;;;; Scratch pad
   ;;  everything below is notes/scratch

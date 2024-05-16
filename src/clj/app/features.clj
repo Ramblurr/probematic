@@ -2,12 +2,9 @@
   (:require [clojure.set :as set]
             [clojure.string :as str]))
 
-(def available #{:feat/sync-members
-                 :feat/sync-airtable
-                 :feat/sync-gigs
-                 :feat/reminders})
+(def available #{:feat/reminders})
 
-(def features (atom #{#_:feat/sync-gigs}))
+(def features (atom #{}))
 
 (defn feature?
   [kw]
