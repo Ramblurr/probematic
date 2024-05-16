@@ -84,10 +84,10 @@
   (str (absolute-link-member env member-id) "#member-ledger-table"))
 
 (defn absolute-link-insurance-policy-table [env policy-id]
-  (format "%s/%s" (config/app-base-url env) (link-policy policy-id "/#coverages-table")))
+  (str (config/app-base-url env) (link-policy policy-id "/#coverages-table")))
 
 (defn absolute-link-insurance-survey-start [env policy-id]
-  (format "%s/%s" (config/app-base-url env) (link-insurance-survey-start policy-id)))
+  (str (config/app-base-url env) (link-insurance-survey-start policy-id)))
 
 (defn absolute-gig-answer-link-base [env]
   (str (config/app-base-url env) "/answer-link"))
