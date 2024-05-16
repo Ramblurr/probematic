@@ -227,6 +227,11 @@
 
 (defmethod ig/init-key ::openobserve
   [_ {:keys [url user password data-stream]}]
+  (μ/log ::openobserve-publisher :data-stream data-stream)
+  (assert url "url is required")
+  (assert user "user is required")
+  (assert password "password is required")
+  (assert data-stream "data-stream is required")
   (μ/start-publisher!
    {:type :elasticsearch
     :url url
