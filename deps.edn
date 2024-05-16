@@ -27,7 +27,7 @@
                                                                                 ;; using newer version of hiccup
                                                                                 hiccup/hiccup
                                                                                 ;; exclude these fat cljs deps
-                                                                                org.clojure/clojurescript
+                                                                                ;; org.clojure/clojurescript
                                                                                 machhiato/hiccups]}
         ;; for Discourse integration
         clj-commons/clj-yaml                 {:mvn/version "1.0.27"}
