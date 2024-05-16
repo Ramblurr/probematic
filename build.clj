@@ -7,7 +7,6 @@
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn" :user :standard}))
 
-
 (defn- uber-opts [opts]
   (assoc opts
          :lib lib
@@ -30,17 +29,16 @@
 ;;       (assoc :lib lib :version version :main main)
 ;;       (bb/clean)))
 
-
 (defn clean [_]
   (b/delete {:path "target"}))
 
-
-(defn compile-dev [_]
+(defn compile-java-dev [_]
   (b/javac {:src-dirs ["src/java"]
             :class-dir "src/java-classes"
             :basis basis
             :javac-opts ["-source" "17" "-target" "17"]}))
-(defn compile [_]
+
+(defn compile-java-prod [_]
   (b/javac {:src-dirs ["src/java"]
             :class-dir class-dir
             :basis basis
@@ -49,12 +47,12 @@
 (defn uberjar "build the uberjar" [_]
   (let [opts (uber-opts {})]
     (clean nil)
-    (compile nil)
-      (b/write-pom {:class-dir class-dir
-                    :lib lib
-                    :version version
-                    :basis basis
-                    :src-dirs ["src"]})
+    (compile-java-prod nil)
+    (b/write-pom {:class-dir class-dir
+                  :lib lib
+                  :version version
+                  :basis basis
+                  :src-dirs ["src"]})
     (b/copy-dir {:src-dirs ["src" "resources"]
                  :target-dir class-dir})
     (b/compile-clj {:basis basis

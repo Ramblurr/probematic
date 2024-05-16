@@ -61,7 +61,7 @@
 (defn login-page-handler [env {:keys [openid-config client-id callback-uri]} request]
   (let [next          (get-in request [:params :next] false)
         login_hint    (get-in request [:params :login_hint] false)
-        state         (codecs/bytes->str (codecs/bytes->b64u (util/random-bytes 16)))
+        state         (codecs/bytes->b64-str (util/random-bytes 16) true)
         scope         (str/join " " ["openid" "email" "profile"])
         authorize-uri (str (:authorization_endpoint openid-config)
                            "?response_type=code"

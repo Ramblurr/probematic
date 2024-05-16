@@ -1147,8 +1147,7 @@
    {:db/ident :image/filter-spec
     :db/doc "An opaque string that describes the filter used to generate the rendition"
     :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one}
-   ]
+    :db/cardinality :db.cardinality/one}]
 
 ;;
 

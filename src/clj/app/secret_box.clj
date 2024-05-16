@@ -6,19 +6,6 @@
    [clojure.java.io :as io]
    [taoensso.nippy :as nippy]))
 
-(defn bytes->b64u
-  "Convert byte array into a URL safe base64 encoded string"
-  [bytes]
-  (-> bytes
-      (codecs/bytes->b64u)
-      (codecs/bytes->str)))
-
-(defn b64u->bytes
-  "Convert a URL safe base64 encoded string into a byte array" [str]
-  (-> str
-      (codecs/str->bytes)
-      (codecs/b64u->bytes)))
-
 (defn encrypt-bytes
   "Warning: this uses the :cached password form from nippy. Be sure you know what that means.
   source: http://ptaoussanis.github.io/nippy/taoensso.nippy.encryption.html#var-aes128-gcm-encryptor"
@@ -29,18 +16,18 @@
   "Warning: this uses the :cached password form from nippy. Be sure you know what that means.
   source: http://ptaoussanis.github.io/nippy/taoensso.nippy.encryption.html#var-aes128-gcm-encryptor"
   [plaintext password]
-  (bytes->b64u
-   (encrypt-bytes plaintext password)))
+  (codecs/bytes->b64-str
+   (encrypt-bytes plaintext password) true))
 
 (defn decrypt-bytes [ciphertext password]
   (nippy/thaw ciphertext {:password [:cached password]}))
 
 (defn decrypt [ciphertext password]
   (when (and ciphertext password)
-    (decrypt-bytes (b64u->bytes ciphertext) password)))
+    (decrypt-bytes (codecs/b64->bytes ciphertext true) password)))
 
 (defn random-str [len]
-  (bytes->b64u (util/random-bytes len)))
+  (codecs/bytes->b64-str (util/random-bytes len) true))
 
 (defn sha1-str [in]
   (codecs/bytes->hex (digest/sha1 in)))
@@ -61,6 +48,7 @@
   ;; => "TlBZDokS_z1NfL6Z4T45dipuFQ28AC4nJ_JtnWqPtA3FrBJy2gby2bBCSiT9"
 
   (decrypt "TlBZDokS_z1NfL6Z4T45dipuFQ28AC4nJ_JtnWqPtA3FrBJy2gby2bBCSiT9" "hunter2")
+  (decrypt "TlBZDokS_z1NfL6Z4T45dipuFQ28AC4nJ_JtnWqPtA3FrBJy2gby2bBCSiT9" "hunter2")
   ;; => "hello world"
 
   (encrypt {:member-id "7a0affc7-9436-4667-b57a-f622e8fb82e4"
@@ -71,6 +59,5 @@
       (decrypt "hunter2")) ;; rcf
 
   (sha384-resource "public/js/app.js") ;; rcf
-
   ;;
   )

@@ -15,6 +15,23 @@ exclude: |
   )$
 
 repos:
+  - repo: local
+    hooks:
+      - id: clj-kondo linting
+        name: clj-kondo linting
+        entry: clj-kondo --lint
+        language: system
+        types: [clojure]
+        require_serial: true
+
+      - id: cljfmt
+        name: cljfmt formatter
+        description: Run formatting rules with cljfmt
+        types: [clojure]
+        entry: cljfmt check
+        language: system
+        require_serial: true
+
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.33.0
     hooks:

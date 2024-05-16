@@ -1,6 +1,6 @@
 (ns app.env
   (:require
-    [app.dev-middleware :refer [wrap-dev]]))
+   [app.dev-middleware :refer [wrap-dev]]))
 
 (def defaults
   {:init       (fn []

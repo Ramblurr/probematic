@@ -183,7 +183,7 @@
 
 (defn build-insurance-debt-notification-emails [{:keys [tr] :as sys} sender-name time-range member-data]
   (assert tr)
-  (map (fn [{:keys [member private-cost-total count-private private-coverages] :as member}]
+  (map (fn [{:keys [member private-cost-total count-private private-coverages]}]
          (assert private-cost-total)
          (assert time-range)
          (assert (:member/email member))
