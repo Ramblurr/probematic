@@ -20,10 +20,6 @@
   [env]
   (= :test (profile env)))
 
-(defn non-prod?
-  [env]
-  (some?  (#{"qa" "dev" "test"} (-> env :environment))))
-
 (defn app-secret-key
   [env]
   (assert env)
