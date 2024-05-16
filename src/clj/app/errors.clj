@@ -55,8 +55,8 @@
        ex)
      ex)))
 
-(defn format-req
-  "Given a pedestal request map, returns a smaller map designed for s entry consumption"
+(defn prepare-req
+  "Given a pedestal request map, returns a smaller sanitized map designed for event logging consumption"
   [req]
   (-> req
       (update :params (fn [params]
@@ -69,7 +69,7 @@
       ;; (update :request-method name)
       (select-keys   [:uri :query-string :request-method :headers :params :member-id :user-email])
       ;; (set/rename-keys  {:request-method :method :params :data :uri :url})
-      ))
+      sanitize))
 
 (defn send-event!
   "Sends a telemetry event asynchronously"
@@ -78,13 +78,15 @@
   ([msg req ex]
    (let [event-data {:msg msg
                      :extra {:human-id (:human-id req)}
-                     :request (-> req sanitize format-req)}]
+                     :request (prepare-req req)}]
      (μ/with-context event-data
        (μ/log ::error :ex (unwrap-ex ex))))))
 
 (defn log-error! [req ex]
   (when (config/prod-mode? (-> req :system :env))
-    (μ/log ::error :ex ex)))
+    (μ/log ::error
+           :ex ex
+           :request (prepare-req req))))
 
 (defn report-error!
   "Report an exception outside the normal request/response lifecycle"
@@ -92,7 +94,8 @@
    (report-error! ex nil))
   ([ex extra]
    (μ/with-context {:msg (ex-message ex)
-                    :extra extra}
+                    :extra extra
+                    :reported? true}
      (μ/log ::error :ex (unwrap-ex ex)))))
 
 (defn redact-mulog-events [events]

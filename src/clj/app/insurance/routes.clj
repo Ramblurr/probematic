@@ -126,50 +126,48 @@
                                           instrument-id (assoc-in  [:request :instrument] (q/retrieve-instrument db (parse-uuid instrument-id))))))})
 
 (defn routes []
-  [""
-   ["" {:app.route/name :app/insurance1
-        :interceptors [policy-interceptor]}
+  ["" {:app.route/name :app/insurance}
+   (insurance-index)
+   ["/instrument-image/{instrument-id}"
+    {:post {:summary "Upload an image for an instrument"
+            :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
+                         :path [:map [:instrument-id :uuid]]}
+            :handler (fn [req] (view/image-upload-handler req))}}]
+   ["/instrument-image-button/"
+    {:post {:summary "Upload an image for an instrument from a single button"
+            :parameters {:multipart [:map
+                                     [:files [:vector {:decode/string (fn [v] (if (vector? v) v [v]))} reitit.ring.malli/temp-file-part]]
+                                     [:instrument-id :uuid]]}
+            :handler (fn [req] (view/instrument-image-upload-button-handler req))}}]
+
+   ["" {:interceptors [policy-interceptor]}
     (insurance-survey)
     (insurance-coverage-create)
-    (insurance-coverage-create2)
-    (insurance-coverage-create3)
+    (insurance-generate-changes)
+    (insurance-detail)
+    (insurance-notification)
 
     ["/insurance-changes-excel/{policy-id}/"
      {:post {:summary "Get the changes excel file"
              :parameters {}
              :handler (fn [req]
-                        (view/insurance-policy-changes-file req))}}]
+                        (view/insurance-policy-changes-file req))}}]]
 
-    ["/instrument-image/{instrument-id}"
-     {:post {:summary "Upload an image for an instrument"
-             :parameters {:multipart [:map [:file reitit.ring.malli/temp-file-part]]
-                          :path [:map [:instrument-id :uuid]]}
-             :handler (fn [req] (view/image-upload-handler req))}}]
+   ["" {:interceptors [policy-interceptor instrument-interceptor]}
+    (insurance-coverage-create2)
+    (insurance-coverage-create3)]
 
-    ["/instrument-image-button/"
-     {:post {:summary "Upload an image for an instrument from a single button"
-             :parameters {:multipart [:map
-                                      [:files [:vector {:decode/string (fn [v] (if (vector? v) v [v]))} reitit.ring.malli/temp-file-part]]
-                                      [:instrument-id :uuid]]}
-             :handler (fn [req] (view/instrument-image-upload-button-handler req))}}]]
+   ["" {:app.route/name :app/instrument.coverage
+        :interceptors [coverage-interceptor]}
+    (insurance-coverage-detail)
+    (insurance-coverage-detail-edit)]
 
-   (insurance-index)
+   (insurance-create)
+   (instrument-create)
    ["" {:app.route/name :app/insurance2
-        :interceptors [policy-interceptor instrument-interceptor]}
-    ;; (ctmx/make-routes
-    ;;  "/insurance-policy-duplicate/"
-    ;;  (fn [req]
-    ;;    (view/insurance-policy-duplicate req)))
-    ["" {:app.route/name :app/instrument.coverage
-         :interceptors [coverage-interceptor]}
-     (insurance-coverage-detail)
-     (insurance-coverage-detail-edit)]
-    (insurance-create)
-    (insurance-generate-changes)
-    (insurance-detail)
-    (insurance-notification)
-    (instrument-detail)
-    (instrument-create)]])
+        :interceptors [instrument-interceptor]}
+
+    (instrument-detail)]])
 
 (defn unauthenticated-routes []
   [""
