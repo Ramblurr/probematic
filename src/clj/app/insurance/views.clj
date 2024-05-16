@@ -2061,40 +2061,39 @@ document.addEventListener('DOMContentLoaded', function() {
                  value]]))
            details)]]))
 
-(defn build-survey-flow [req]
+(defn build-survey-flow [{:keys [tr]}]
   {:start-flow        :used
-   :used          {:question {:primary "Was this used at a SNO gig in the past year?"}
-                   :answers  [{:label "No" :icon icon/xmark  :next-flow-key :go-private :vals {:decisions [:confirm-not-band]}}
-                              {:label "Yes" :icon icon/checkmark :next-flow-key :keep-insured :vals {:decisions [:confirm-band]}}]}
-   :keep-insured {:question {:primary "Do you want to keep this instrument insured?"}
-                  :answers  [{:label "No" :icon icon/xmark  :next-flow-key :confirm-band-removal}
-                             {:label "Yes" :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
-   :confirm-band-removal {:question {:primary "Are you sure you want to remove the insurance?"
-                                     :secondaries ["The band pays for the cost of the insurance since it is a band instrument."]}
-                          :answers [{:label "No, keep the insurance" :next-flow-key :data-check}
-                                    {:label "Yes, remove it" :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
-   :confirm-private-removal {:question {:primary "Are you sure you want to remove the insurance?"}
-                             :answers [{:label "No, keep the insurance" :next-flow-key :confirm-go-private}
-                                       {:label "Yes, remove it" :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
-   :go-private {:question {:primary "Do you want to pay to keep it insured?"
-                           :secondaries ["Since this wasn't used at a gig in the last year you the band can no longer pay for it."
+   :used          {:question {:primary  (tr [:insurance.survey/used-in-last-year])}
+                   :answers  [{:label (tr [:insurance.survey/no]) :icon icon/xmark  :next-flow-key :go-private :vals {:decisions [:confirm-not-band]}}
+                              {:label (tr [:insurance.survey/yes]) :icon icon/checkmark :next-flow-key :keep-insured :vals {:decisions [:confirm-band]}}]}
+   :keep-insured {:question {:primary (tr [:insurance.survey/keep-insured])}
+                  :answers  [{:label (tr [:insurance.survey/no]) :icon icon/xmark  :next-flow-key :confirm-band-removal}
+                             {:label (tr [:insurance.survey/yes]) :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
+   :confirm-band-removal {:question {:primary (tr [:insurance.survey/confirm-remove])
+                                     :secondaries [(tr [:insurance.survey/confirm-remove-band-hint])]}
+                          :answers [{:label (tr [:insurance.survey/no-keep]) :next-flow-key :data-check}
+                                    {:label (tr [:insurance.survey/yes-remove]) :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
+   :confirm-private-removal {:question {:primary (tr [:insurance.survey/confirm-remove])}
+                             :answers [{:label (tr [:insurance.survey/no-keep]) :next-flow-key :confirm-go-private}
+                                       {:label (tr [:insurance.survey/yes-remove]) :next-flow-key :complete :vals {:decisions [:remove-coverage]}}]}
+   :go-private {:question {:primary (tr [:insurance.survey/keep-insured-pay])
+                           :secondaries [(tr [:insurance.survey/keep-insured-private-hint])
                                          (fn [{:keys [active-report]}]
                                            (let [coverage (:insurance.survey.report/coverage active-report)
                                                  cost (:instrument.coverage/cost coverage)]
-                                             (format  "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about %s€ per year for this item."
-                                                      (ui/money-format cost :EUR))))]}
-                :answers [{:label "No, stop insurance" :icon icon/xmark :next-flow-key :confirm-private-removal}
-                          {:label "Yes, I'll pay" :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
+                                             (tr [:insurance.survey/keep-insured-private-cost] [(ui/money-format cost :EUR)])))]}
+                :answers [{:label (tr [:insurance.survey/no-stop]) :icon icon/xmark :next-flow-key :confirm-private-removal}
+                          {:label (tr [:insurance.survey/yes-pay]) :icon icon/checkmark :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
    :confirm-go-private {:question {:primary (fn [{:keys [active-report]}]
                                               (let [coverage (:insurance.survey.report/coverage active-report)
                                                     cost (:instrument.coverage/cost coverage)]
-                                                (format  "You will have to pay about %s€ per year for this item. Is that OK?"
-                                                         (ui/money-format cost :EUR))))}
-                        :answers [{:label "No" :next-flow-key :go-private}
-                                  {:label "Yes, I'll pay it" :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
-   :data-check {:question {:primary "Is all the data shown still correct?" :secondaries ["You might want to change the insured value if the market value has change or if you want to change the type of coverage."]}
-                :answers  [{:label "No" :icon icon/xmark  :next-flow-key :data-edit}
-                           {:label "Yes" :icon icon/checkmark  :next-flow-key :complete :vals {:decisions [:confirm-data-ok]}}]}
+                                                (tr [:insurance.survey/pay-cost-confirm] [(ui/money-format cost :EUR)])))}
+                        :answers [{:label (tr [:insurance.survey/no]) :next-flow-key :go-private}
+                                  {:label (tr [:insurance.survey/yes-pay]) :next-flow-key :data-check :vals {:decisions [:confirm-keep-insured]}}]}
+   :data-check {:question {:primary  (tr [:insurance.survey/data-correct])
+                           :secondaries [(tr [:insurance.survey/data-correct-hint])]}
+                :answers  [{:label (tr [:insurance.survey/no]) :icon icon/xmark  :next-flow-key :data-edit}
+                           {:label (tr [:insurance.survey/yes]) :icon icon/checkmark  :next-flow-key :complete :vals {:decisions [:confirm-data-ok]}}]}
    :data-edit {:next-flow-key :complete}})
 
 (defn valid-survey-flow-transition? [flow current-key next-key]
