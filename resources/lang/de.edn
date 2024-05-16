@@ -128,8 +128,8 @@
   :if-available "wenn verfügbar",
   :make "Marke",
   :instrument "Instrument",
+  :images "Fotos",
   :name "Instrumentenname",
-  :images-internal-url "Fotos interner Link",
   :create-title "Neues Instrument",
   :description-hint "Z.B. farbe, material",
   :photo-upload-title "Lade Instrumentenfotos hoch",
@@ -139,8 +139,6 @@
   :create-subtitle "Details zum Instrument",
   :owner "Inhaber:in",
   :photo-upload "Foto-Upload",
-  :images-internal-url-hint
-  "Verwende diesen Link, um Fotos in Nextcloud zu löschen/umbenennen.",
   :model "Modell"},
  :selected "ausgewählt",
  :play-log
@@ -216,12 +214,15 @@
  :Active "Aktiv?",
  :insurance.survey
  {:edit-survey "Umfrage bearbeiten",
+  :contact-insurance-team "Bitte kontaktiere das Versicherungsteam",
+  :no-stop "Nein, Versicherung entfernen",
   :confirm-close "Das wird die Umfrage für alle Mitglieder schließen.",
   :email-p3
   "Du hast bis %1 Zeit, um die Umfrage auszufüllen (das sind nur noch %2 Tage!).",
   :all-done "Alles erledigt!",
   :cta-p1
   "%1, es ist Zeit, deine versicherten Instrumente/Gegenstände zu überprüfen.",
+  :yes "Ja",
   :closes-at-hint
   "Das Datum und die Uhrzeit, wann die Versicherungsumfrage keine Antworten mehr annimmt.",
   :send-notifications "Benachrichtigungen senden",
@@ -229,23 +230,48 @@
   "Du hast %1 Artikel zu überprüfen, das sollte ungefähr %2 Minuten dauern. Bereit loszulegen?",
   :email-p2-many
   "Oder füge neue hinzu! Es dauert nur ein paar Minuten (es sei denn, du bist %1, der %2 zum Überprüfen hat!)",
+  :used-in-last-year
+  "Wurde das im letzten Jahr bei einem SNO-Gig verwendet?",
   :cta-p2-none
   "Du hast keine versicherten Instrumente zu überprüfen. Aber du solltest neue hinzufügen!",
   :start-survey "Umfrage starten",
   :completed-count "%1 von %2 abgeschlossen",
   :no-surveys "Keine offenen Umfragen",
   :closes-at "Schließt um",
+  :already-closed-hint
+  "Diese Versicherungsumfrage ist bereits geschlossen :(",
   :start-button "Überprüfung starten",
   :admin-subtitle
   "Lass die ganze Band ihre versicherten Instrumente überprüfen/kontrollieren.",
   :email-p1
   "Es ist Zeit, deine versicherten Instrumente/Gegenstände zu überprüfen.",
+  :yes-pay "Ja, ich werde zahlen",
+  :pay-cost-confirm
+  "Du musst etwa %1€ pro Jahr für diesen Artikel bezahlen. Ist das in Ordnung?",
   :admin-title "Bandversicherungsumfrage",
+  :keep-insured-private-hint
+  "Da dies im letzten Jahr nicht bei einem Auftritt verwendet wurde, kann die Band nicht mehr dafür bezahlen.",
+  :already-closed "Bereits geschlossen",
   :survey-name "Umfragebezeichnung",
+  :keep-insured-pay "Willst du zahlen, um es versichert zu halten?",
+  :keep-insured-private-cost
+  "Wenn du möchtest, dass der Artikel versichert bleibt, musst du selbst dafür bezahlen. Das wird etwa %1€ pro Jahr für diesen Artikel kosten.",
   :close-survey "Umfrage schließen",
   :email-p2 "Oder füge neue hinzu! Es dauert nur ein paar Minuten.",
   :confirm-close-title "Umfrage schließen?",
-  :email-title "SNO-Versicherungszeit!"},
+  :confirm-remove-band-hint
+  "Die Band übernimmt die Kosten für die Versicherung, da es ein Instrument der Band ist.",
+  :data-correct-hint
+  "Du möchtest vielleicht den versicherten Wert ändern, wenn sich der Marktwert verändert hat oder wenn du die Art der Deckung ändern willst.",
+  :no-keep "Nein, behalte die Versicherung",
+  :confirm-remove
+  "Bist du sicher, dass du die Versicherung entfernen möchtest?",
+  :email-title "SNO-Versicherungszeit!",
+  :data-correct "Sind alle unten angezeigten Infos noch korrekt?",
+  :keep-insured
+  "Willst du dieses Instrument weiterhin versichert halten?",
+  :yes-remove "Ja, entferne es",
+  :no "Nein"},
  :login "Anmelden",
  :poll
  {:description "Beschreibung der Umfrage",
@@ -338,7 +364,7 @@
  :good-job "Good Job!",
  :total "Gesamt",
  :youve-completed-plural
- "Du hast %1 Artikel fertiggestellt! Noch %2 übrig!",
+ "Du hast %1 Aufgaben erledigt! Noch %2 übrig!",
  :Phone "Telefon",
  :team
  {:name "Teamname",
@@ -437,7 +463,7 @@
   "Tut mir leid! Es ist nicht deine Schuld. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode mit:",
   :not-found-title "Nicht gefunden",
   :not-found-message
-  "Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen Fehlercode mit:",
+  "Das, wonach du gesucht hast, wurde nicht gefunden. Wenn du denkst, dass es existieren sollte, bitte kontaktiere Casey und teile ihm diesen Fehlercode mit:",
   :member-unique-phone "Ein Mitglied hat diese Telefonnummer bereits",
   :notify "Click to notify Casey",
   :member-unique-username
