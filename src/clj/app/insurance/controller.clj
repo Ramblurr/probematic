@@ -774,8 +774,9 @@
 (defn complete-member-survey-response [db response member]
   [:db/add (d/ref response) :insurance.survey.response/completed-at (t/inst)])
 
-(defn dismiss-insurance-widget! [{:keys [db] :as req} policy]
+(defn dismiss-insurance-widget! [{:keys [db] :as req} policy-id]
   (let [member (auth/get-current-member req)
+        policy (q/retrieve-policy db policy-id)
         open-items (q/open-survey-for-member-items db member policy)]
     (when (= 0 open-items)
       (let [response (q/open-survey-for-member-policy db member policy)
