@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-05-10 15:03+0200\n"
+"POT-Creation-Date: 2024-05-16 16:13+0200\n"
 "PO-Revision-Date: 2024-05-16 14:05+0000\n"
 "Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
@@ -674,17 +674,17 @@ msgctxt ":instrument/instrument"
 msgid "Instrument"
 msgstr "Instrument"
 
+#: :instrument/images
+#, ycp-format
+msgctxt ":instrument/images"
+msgid "Photos"
+msgstr ""
+
 #: :instrument/name
 #, ycp-format
 msgctxt ":instrument/name"
 msgid "Instrument Name"
 msgstr "Instrumentenname"
-
-#: :instrument/images-internal-url
-#, ycp-format
-msgctxt ":instrument/images-internal-url"
-msgid "Photos Internal Link"
-msgstr "Fotos interner Link"
 
 #: :instrument/create-title
 #, ycp-format
@@ -701,8 +701,8 @@ msgstr "Z.B. farbe, material"
 #: :instrument/photo-upload-title
 #, ycp-format
 msgctxt ":instrument/photo-upload-title"
-msgid "Upload Instrument PHotos"
-msgstr "Lade Instrumentenfotos hoch"
+msgid "Upload Instrument Photos"
+msgstr ""
 
 #: :instrument/images-share-url-hint
 #, ycp-format
@@ -733,12 +733,6 @@ msgstr "Inhaber:in"
 msgctxt ":instrument/photo-upload"
 msgid "Photo Upload"
 msgstr "Foto-Upload"
-
-#: :instrument/images-internal-url-hint
-#, ycp-format
-msgctxt ":instrument/images-internal-url-hint"
-msgid "Use this link to delete/rename photos in Nextcloud"
-msgstr "Verwende diesen Link, um Fotos in Nextcloud zu löschen/umbenennen."
 
 #: :instrument/model
 #, ycp-format
@@ -1114,6 +1108,18 @@ msgctxt ":insurance.survey/edit-survey"
 msgid "Edit Survey"
 msgstr "Umfrage bearbeiten"
 
+#: :insurance.survey/contact-insurance-team
+#, ycp-format
+msgctxt ":insurance.survey/contact-insurance-team"
+msgid "Please contact the insurance team"
+msgstr ""
+
+#: :insurance.survey/no-stop
+#, ycp-format
+msgctxt ":insurance.survey/no-stop"
+msgid "No, stop insurance"
+msgstr ""
+
 #: :insurance.survey/confirm-close
 #, ycp-format
 msgctxt ":insurance.survey/confirm-close"
@@ -1139,6 +1145,12 @@ msgctxt ":insurance.survey/cta-p1"
 msgid "%1, it's time to review your insured instruments/items."
 msgstr ""
 "%1, es ist Zeit, deine versicherten Instrumente/Gegenstände zu überprüfen."
+
+#: :insurance.survey/yes
+#, ycp-format
+msgctxt ":insurance.survey/yes"
+msgid "Yes"
+msgstr ""
 
 #: :insurance.survey/closes-at-hint
 #, ycp-format
@@ -1174,6 +1186,12 @@ msgstr ""
 "Oder füge neue hinzu! Es dauert nur ein paar Minuten (es sei denn, du bist "
 "%1, der %2 zum Überprüfen hat!)"
 
+#: :insurance.survey/used-in-last-year
+#, ycp-format
+msgctxt ":insurance.survey/used-in-last-year"
+msgid "Was this used at a SNO gig in the past year?"
+msgstr ""
+
 #: :insurance.survey/cta-p2-none
 #, ycp-format
 msgctxt ":insurance.survey/cta-p2-none"
@@ -1208,6 +1226,12 @@ msgctxt ":insurance.survey/closes-at"
 msgid "Closes At"
 msgstr "Schließt um"
 
+#: :insurance.survey/already-closed-hint
+#, ycp-format
+msgctxt ":insurance.survey/already-closed-hint"
+msgid "This insurance survey is already closed :("
+msgstr ""
+
 #: :insurance.survey/start-button
 #, ycp-format
 msgctxt ":insurance.survey/start-button"
@@ -1227,17 +1251,57 @@ msgctxt ":insurance.survey/email-p1"
 msgid "It's time to review your insured instruments/items."
 msgstr "Es ist Zeit, deine versicherten Instrumente/Gegenstände zu überprüfen."
 
+#: :insurance.survey/yes-pay
+#, ycp-format
+msgctxt ":insurance.survey/yes-pay"
+msgid "Yes, I'll pay"
+msgstr ""
+
+#: :insurance.survey/pay-cost-confirm
+#, ycp-format
+msgctxt ":insurance.survey/pay-cost-confirm"
+msgid "You will have to pay about %1€ per year for this item. Is that OK?"
+msgstr ""
+
 #: :insurance.survey/admin-title
 #, ycp-format
 msgctxt ":insurance.survey/admin-title"
 msgid "Band Insurance Survey"
 msgstr "Bandversicherungsumfrage"
 
+#: :insurance.survey/keep-insured-private-hint
+#, ycp-format
+msgctxt ":insurance.survey/keep-insured-private-hint"
+msgid ""
+"Since this wasn't used at a gig in the last year you the band can no longer "
+"pay for it."
+msgstr ""
+
+#: :insurance.survey/already-closed
+#, ycp-format
+msgctxt ":insurance.survey/already-closed"
+msgid "Already Closed"
+msgstr ""
+
 #: :insurance.survey/survey-name
 #, ycp-format
 msgctxt ":insurance.survey/survey-name"
 msgid "Survey Name"
 msgstr "Umfragebezeichnung"
+
+#: :insurance.survey/keep-insured-pay
+#, ycp-format
+msgctxt ":insurance.survey/keep-insured-pay"
+msgid "Do you want to pay to keep it insured?"
+msgstr ""
+
+#: :insurance.survey/keep-insured-private-cost
+#, ycp-format
+msgctxt ":insurance.survey/keep-insured-private-cost"
+msgid ""
+"If you want the item to stay insured, you'll have to pay for it yourself. "
+"This will cost about %1€ per year for this item."
+msgstr ""
 
 #: :insurance.survey/close-survey
 #, ycp-format
@@ -1257,11 +1321,62 @@ msgctxt ":insurance.survey/confirm-close-title"
 msgid "Close Survey?"
 msgstr "Umfrage schließen?"
 
+#: :insurance.survey/confirm-remove-band-hint
+#, ycp-format
+msgctxt ":insurance.survey/confirm-remove-band-hint"
+msgid ""
+"The band pays for the cost of the insurance since it is a band instrument."
+msgstr ""
+
+#: :insurance.survey/data-correct-hint
+#, ycp-format
+msgctxt ":insurance.survey/data-correct-hint"
+msgid ""
+"You might want to change the insured value if the market value has change or "
+"if you want to change the type of coverage."
+msgstr ""
+
+#: :insurance.survey/no-keep
+#, ycp-format
+msgctxt ":insurance.survey/no-keep"
+msgid "No, keep the insurance"
+msgstr ""
+
+#: :insurance.survey/confirm-remove
+#, ycp-format
+msgctxt ":insurance.survey/confirm-remove"
+msgid "Are you sure you want to remove the insurance?"
+msgstr ""
+
 #: :insurance.survey/email-title
 #, ycp-format
 msgctxt ":insurance.survey/email-title"
 msgid "SNO Insurance Time!"
 msgstr "SNO-Versicherungszeit!"
+
+#: :insurance.survey/data-correct
+#, ycp-format
+msgctxt ":insurance.survey/data-correct"
+msgid "Is all the data shown still correct?"
+msgstr ""
+
+#: :insurance.survey/keep-insured
+#, ycp-format
+msgctxt ":insurance.survey/keep-insured"
+msgid "Do you want to keep this instrument insured?"
+msgstr ""
+
+#: :insurance.survey/yes-remove
+#, ycp-format
+msgctxt ":insurance.survey/yes-remove"
+msgid "Yes, remove it"
+msgstr ""
+
+#: :insurance.survey/no
+#, ycp-format
+msgctxt ":insurance.survey/no"
+msgid "No"
+msgstr ""
 
 #: :login
 #, ycp-format
@@ -1725,8 +1840,8 @@ msgstr "Gesamt"
 #: :youve-completed-plural
 #, ycp-format
 msgctxt ":youve-completed-plural"
-msgid "You've completed %1 item! %2 left to go!"
-msgstr "Du hast %1 Artikel fertiggestellt! Noch %2 übrig!"
+msgid "You've completed %1 items! %2 left to go!"
+msgstr ""
 
 #: :Phone
 #, ycp-format
@@ -2224,11 +2339,8 @@ msgstr "Nicht gefunden"
 msgctxt ":error/not-found-message"
 msgid ""
 "The thing you were looking for wasn't found. If you think it should exist, "
-"please contact and tell him this error code:"
+"please contact Casey and tell him this error code:"
 msgstr ""
-"Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es "
-"existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen "
-"Fehlercode mit:"
 
 #: :error/member-unique-phone
 #, ycp-format
@@ -3391,6 +3503,36 @@ msgstr "Hintergrund"
 msgctxt ":song/list-title"
 msgid "Repertoire"
 msgstr "Repertoire"
+
+#, ycp-format
+#~ msgctxt ":instrument/images-internal-url"
+#~ msgid "Photos Internal Link"
+#~ msgstr "Fotos interner Link"
+
+#, ycp-format
+#~ msgctxt ":instrument/photo-upload-title"
+#~ msgid "Upload Instrument PHotos"
+#~ msgstr "Lade Instrumentenfotos hoch"
+
+#, ycp-format
+#~ msgctxt ":instrument/images-internal-url-hint"
+#~ msgid "Use this link to delete/rename photos in Nextcloud"
+#~ msgstr "Verwende diesen Link, um Fotos in Nextcloud zu löschen/umbenennen."
+
+#, ycp-format
+#~ msgctxt ":youve-completed-plural"
+#~ msgid "You've completed %1 item! %2 left to go!"
+#~ msgstr "Du hast %1 Artikel fertiggestellt! Noch %2 übrig!"
+
+#, ycp-format
+#~ msgctxt ":error/not-found-message"
+#~ msgid ""
+#~ "The thing you were looking for wasn't found. If you think it should "
+#~ "exist, please contact and tell him this error code:"
+#~ msgstr ""
+#~ "Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es "
+#~ "existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen "
+#~ "Fehlercode mit:"
 
 #, fuzzy, ycp-format
 #~| msgctxt ":member/filter-active"
