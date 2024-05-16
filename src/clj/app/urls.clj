@@ -53,6 +53,8 @@
 (defn link-insurance-survey-start [policy-id]
   (str "/insurance-survey/" policy-id "/"))
 
+(defn link-faq-insurance-team [] "/insurance/#faq10")
+
 (defn link-insurance-add-coverage [policy-id]
   (str "/insurance-coverage-create/" policy-id "/"))
 

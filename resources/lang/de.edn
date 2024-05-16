@@ -312,7 +312,7 @@
   "Tut mir leid! Es ist nicht deine Schuld. Bitte kontaktieren Sie Casey und teilen Sie ihm diesen Fehlercode mit:",
   :not-found-title "Nicht gefunden",
   :not-found-message
-  "Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es existieren sollte, wenden Sie sich bitte an ihn und teilen Sie ihm diesen Fehlercode mit:",
+  "Das Gesuchte wurde nicht gefunden. Wenn Sie der Meinung sind, dass es existieren sollte, wenden Sie sich bitte an Casey und teilen Sie ihm diesen Fehlercode mit:",
   :member-unique-phone "Ein Mitglied hat diese Telefonnummer bereits",
   :notify "Click to notify Casey",
   :member-unique-username

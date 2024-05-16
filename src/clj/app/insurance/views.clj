@@ -2298,16 +2298,29 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
       [:ul {:role "list" :class "grid grid-cols-1 gap-x-6 gap-y-8 mb-2"}
        (instrument-card req active-report decisions)]]]))
 
+(defn survey-already-closed [{:keys [tr]}]
+  [:div {:class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
+   [:div {:class "bg-white min-h-80 mt-8 gap-6 p-6 flex flex-col items-center justify-center"}
+    [:div {:class "flex items-center justify-center text-sno-orange-500"}
+     [:h1 {:class "text-3xl font-bold"} (tr [:insurance.survey/already-closed])]]
+    [:div {:class "flex flex-col items-center"}
+     [:p {:class "prose"} (tr [:insurance.survey/already-closed-hint])]
+     [:p {:class "prose"} [:a {:href (urls/link-faq-insurance-team)} (tr [:insurance.survey/contact-insurance-team])]]]
+    [:div {:class "h-12"}
+     (ui/link-button  :href "/" :size :xlarge :label (tr [:error/go-home]) :priority :white)]]])
+
 (ctmx/defcomponent ^:endpoint survey-start-page [{:keys [db tr] :as req}]
   survey-flow-progress
   survey-edit-instrument-handler
   (let [policy (:policy req)
         {:as data :keys [active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req policy)
         {:keys [start-flow] :as flow} (build-survey-flow req)]
-    (if (= 0 total-todo)
-      (survey-report-interstitial (util/make-get-request req {:transitioning? true}))
-      [:div {:id :comp/survey-page}
-       [:div {:class (ui/cs "flex justify-center items-center mt-10" (when new-step? "steps-new-step"))}
-        (ui/step-circles total-reports current-idx)]
-       [:div {:class "survey-panel-fade-in"}
-        (survey-question-page req flow [] active-report start-flow)]])))
+    (if (some? active-report)
+      (if (= 0 total-todo)
+        (survey-report-interstitial (util/make-get-request req {:transitioning? true}))
+        [:div {:id :comp/survey-page}
+         [:div {:class (ui/cs "flex justify-center items-center mt-10" (when new-step? "steps-new-step"))}
+          (ui/step-circles total-reports current-idx)]
+         [:div {:class "survey-panel-fade-in"}
+          (survey-question-page req flow [] active-report start-flow)]])
+      (survey-already-closed req))))

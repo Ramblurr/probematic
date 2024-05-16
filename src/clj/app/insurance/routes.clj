@@ -100,10 +100,15 @@
 (def policy-interceptor {:name ::insurance-policy--interceptor
                          :enter (fn [ctx]
                                   (let [conn (-> ctx :request :datomic-conn)
-                                        db (d/db conn)
-                                        policy-id (-> ctx :request :path-params :policy-id)]
-                                    (cond-> ctx
-                                      policy-id (assoc-in  [:request :policy] (q/retrieve-policy db (parse-uuid policy-id))))))})
+                                        db (d/db conn)]
+                                    (try
+                                      (let [policy (q/retrieve-policy db (-> ctx :request :path-params :policy-id parse-uuid))]
+                                        (assoc-in ctx [:request :policy] policy))
+                                      (catch Exception e
+                                        (throw (ex-info "Policy not found" {:app/error-type :app.error.type/not-found
+                                                                            :policy-id (-> ctx :request :path-params :policy-id)
+                                                                            :exception e}))))))})
+
 (def coverage-interceptor {:name ::insurance-coverage--interceptor
                            :enter (fn [ctx]
                                     (let [coverage-id (-> ctx :request :path-params :coverage-id)]
@@ -148,13 +153,13 @@
                                       [:instrument-id :uuid]]}
              :handler (fn [req] (view/instrument-image-upload-button-handler req))}}]]
 
+   (insurance-index)
    ["" {:app.route/name :app/insurance2
         :interceptors [policy-interceptor instrument-interceptor]}
     ;; (ctmx/make-routes
     ;;  "/insurance-policy-duplicate/"
     ;;  (fn [req]
     ;;    (view/insurance-policy-duplicate req)))
-    (insurance-index)
     ["" {:app.route/name :app/instrument.coverage
          :interceptors [coverage-interceptor]}
      (insurance-coverage-detail)
