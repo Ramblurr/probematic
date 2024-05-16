@@ -1,7 +1,23 @@
 (ns user
   (:require
-   [clojure.tools.namespace.repl :as repl]
-   [portal.api :as inspect]))
+   [com.brunobonacci.mulog.buffer :as rb]))
+
+(deftype TapPublisher [buffer transform]
+  com.brunobonacci.mulog.publisher.PPublisher
+  (agent-buffer [_]
+    buffer)
+
+  (publish-delay [_]
+    200)
+
+  (publish [_ buffer]
+    (doseq [item (transform (map second (rb/items buffer)))]
+      (tap> item))
+    (rb/clear buffer)))
+
+(defn tap-publisher
+  [{:keys [transform] :as _config}]
+  (TapPublisher. (rb/agent-buffer 10000) (or transform identity)))
 
 (defn dev
   "Load and switch to the 'dev' namespace."
@@ -13,20 +29,26 @@
 (comment
 
   ;; Clear all values in the portal inspector window
-  (inspect/clear)
+  (p/clear)
 
   ;; Close the inspector
-  (inspect/close)) ;; End of rich comment block
+  (p/close)) ;; End of rich comment block
 
 (comment
   (dev)
 
-  (require '[portal.api :as p])
+  (do
+    (require '[com.brunobonacci.mulog :as mu])
+    (require '[clojure.tools.namespace.repl :as repl])
+    (require '[portal.api :as p]))
+
   (p/open {:theme :portal.colors/gruvbox})
 
   (repl/disable-reload! *ns*)
-  (inspect/open {:theme :portal.colors/gruvbox})
+  (p/open {:theme :portal.colors/gruvbox})
   (add-tap portal.api/submit)
   (dev)
+
+  (mu/log ::my-event ::ns (ns-publics *ns*))
   ;;
   )
