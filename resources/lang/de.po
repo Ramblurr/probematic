@@ -3535,8 +3535,6 @@ msgstr "Repertoire"
 #~ "Fehlercode mit:"
 
 #, fuzzy, ycp-format
-#~| msgctxt ":member/filter-active"
-#~| msgid "Active Members"
 #~ msgctxt ":stats/mean-active-members"
 #~ msgid "Average Active Members"
 #~ msgstr "Durchschnitt aktive Mitglieder"
