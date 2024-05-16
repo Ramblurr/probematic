@@ -217,5 +217,19 @@
     :transform error/redact-mulog-events}))
 
 (defmethod ig/halt-key! ::console-logging
-  [_ pub]
-  (pub))
+  [_ stop-pub]
+  (stop-pub))
+
+(defmethod ig/init-key ::openobserve
+  [_ {:keys [url user password data-stream]}]
+  (μ/start-publisher!
+   {:type :elasticsearch
+    :url url
+    :els-version :v7.x
+    :data-stream data-stream
+    :http-opts {:basic-auth [user password]}
+    :transform error/redact-mulog-events}))
+
+(defmethod ig/halt-key! ::openobserve
+  [_ stop-pub]
+  (stop-pub))

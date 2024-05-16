@@ -52,12 +52,17 @@
                                                       :demo :demo
                                                       :test :test}
                    :app.ig/console-logging  {:pretty? #profile {:prod false
-                                                                :dev true
+                                                                :dev  true
                                                                 :test true
                                                                 :demo true}}
-                   :app.ig/env              {:profile #ig/ref :app.ig/profile
-                                             :console-logging #ig/ref :app.ig/console-logging}
+                   :app.ig/openobserve      #merge [#ref [:secrets :openobserve]
+                                                    {:data-stream #profile {:prod "snorga_prod_logs"
+                                                                            :dev  "snorga_dev_logs"
+                                                                            :test "snorga_test_logs"}}]
 
+                   :app.ig/env              {:profile         #ig/ref :app.ig/profile
+                                             :console-logging #ig/ref :app.ig/console-logging
+                                             :openobserve     #ig/ref :app.ig/openobserve}
                    :app.ig/nrepl-server     {:port #long #or [#env NREPL_PORT
                                                               #profile {:prod 7000
                                                                         :dev  -1
