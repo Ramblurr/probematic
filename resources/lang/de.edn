@@ -126,17 +126,26 @@
   :build-year "Baujahr",
   :serial-number "Seriennummer",
   :if-available "wenn verfügbar",
+  :make-hint
+  "Von welcher Firma wird der Artikel hergestellt? Zum Beispiel Yamaha, unbekannt",
   :make "Marke",
   :instrument "Instrument",
   :images "Fotos",
   :name "Instrumentenname",
   :create-title "Neues Instrument",
+  :model-hint "Was ist die Modellnummer?",
   :description-hint "Z.B. farbe, material",
   :photo-upload-title "Lade Instrumentenfotos hoch",
+  :name-hint "z. B. Trompete, Yamaha oder Mundstück Tenorsax",
   :images-share-url-hint
   "Verwende diesen Link, wenn du ihn außerhalb der Band teilst",
   :images-share-url "Fotos öffentlicher Link",
-  :create-subtitle "Details zum Instrument",
+  :separate-warning
+  "Für jedes Instrument und Zubehör muss ein separates Formular ausgefüllt werden.",
+  :category-hint
+  "Was für ein Gegenstand ist das? Pass auf! Flöten sind Holz, aber Saxophone sind Blech, Sax, Elektrisch!",
+  :create-subtitle
+  "Bitte trage die unten gefragten Informationen zu deinem Instrument/Zubehör so detailliert wie möglich ein.",
   :owner "Inhaber:in",
   :photo-upload "Foto-Upload",
   :model "Modell"},
@@ -247,17 +256,18 @@
   "Es ist Zeit, deine versicherten Instrumente/Gegenstände zu überprüfen.",
   :yes-pay "Ja, ich werde zahlen",
   :pay-cost-confirm
-  "Du musst etwa %1€ pro Jahr für diesen Artikel bezahlen. Ist das in Ordnung?",
+  "Du musst etwa %1 pro Jahr für diesen Artikel bezahlen. Ist das in Ordnung?",
   :admin-title "Bandversicherungsumfrage",
   :keep-insured-private-hint
-  "Da dies im letzten Jahr nicht bei einem Auftritt verwendet wurde, kann die Band nicht mehr dafür bezahlen.",
+  "Da dies im letzten Jahr nicht bei einem Gig verwendet wurde, kann die Band nicht mehr dafür bezahlen.",
   :already-closed "Bereits geschlossen",
   :survey-name "Umfragebezeichnung",
   :keep-insured-pay "Willst du zahlen, um es versichert zu halten?",
   :keep-insured-private-cost
-  "Wenn du möchtest, dass der Artikel versichert bleibt, musst du selbst dafür bezahlen. Das wird etwa %1€ pro Jahr für diesen Artikel kosten.",
+  "Wenn du möchtest, dass der Artikel versichert bleibt, musst du selbst dafür bezahlen. Das wird etwa %1 pro Jahr für diesen Artikel kosten.",
   :close-survey "Umfrage schließen",
   :email-p2 "Oder füge neue hinzu! Es dauert nur ein paar Minuten.",
+  :almost-there "Fast geschafft",
   :confirm-close-title "Umfrage schließen?",
   :confirm-remove-band-hint
   "Die Band übernimmt die Kosten für die Versicherung, da es ein Instrument der Band ist.",
