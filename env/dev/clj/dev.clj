@@ -1,7 +1,7 @@
 (ns dev
   (:require
    [app.ig]
-   [browser :as browser]
+   ;; [browser :as browser]
    [ol.app.dev.dev-extras :as dev-extra]))
 
 ;; (repl/disable-reload! (find-ns 'browser))
@@ -11,11 +11,11 @@
 
 ;; (mr/set-default-registry! schemas/registry)
 
-(defn go-with-browser
-  []
-  (dev-extra/go)
-  (browser/open-browser "http://localhost:4180/")
-  :done)
+#_(defn go-with-browser
+    []
+    (dev-extra/go)
+    (browser/open-browser "http://localhost:4180/")
+    :done)
 
 (defn go
   []
@@ -35,7 +35,7 @@
 (defn reset
   []
   (dev-extra/reset)
-  (browser/refresh))
+  #_(browser/refresh))
 
 (comment
 
@@ -52,7 +52,7 @@
   ;; If you have chromium  and chromium driver installed
   ;; you can get code reloading by using this version of go
   ;; see readme for more info
-  (go-with-browser)
+  #_(go-with-browser)
 
 ;;;; Setup Integrant Repl State
 ;;; Run this before running either of the seeds below

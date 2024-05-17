@@ -1,9 +1,10 @@
 (ns user
   (:require
+   [com.brunobonacci.mulog.publisher :as pp]
    [com.brunobonacci.mulog.buffer :as rb]))
 
 (deftype TapPublisher [buffer transform]
-  com.brunobonacci.mulog.publisher.PPublisher
+  pp/PPublisher
   (agent-buffer [_]
     buffer)
 
