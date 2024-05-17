@@ -698,9 +698,9 @@ Mit freundlichen Grüßen,
 
 (declare insurance-survey-table)
 (declare survey-response-table-row)
-(ctmx/defcomponent ^:endpoint create-survey-handler [req]
+(ctmx/defcomponent ^:endpoint upsert-survey-handler [req]
   (when (util/post? req)
-    (controller/create-survey! req)
+    (controller/upsert-survey! req)
     (insurance-survey-table (util/make-get-request req))))
 
 (ctmx/defcomponent ^:endpoint close-survey-handler [req]
@@ -757,7 +757,7 @@ Mit freundlichen Grüßen,
         has-open-surveys? (seq open-surveys)
         insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
         {:insurance.survey/keys [survey-name closes-at responses survey-id] :as active-survey} (first open-surveys)
-        end-date (t/>> (t/instant) (t/new-period 4 :weeks))
+        closes-at (or closes-at (t/>> (t/instant) (t/new-period 4 :weeks)))
         toggle-rw-script "on click toggle .hidden on .survey-ro then toggle .hidden on .survey-rw"
         {:keys [$no-mobile-col $mobile-col $action-col $first-col]} survey-col-classes]
     [:div {:id (util/id :comp/insurance-survey-table)}
@@ -769,9 +769,9 @@ Mit freundlichen Grüßen,
                                        :attr {:_ "on click add .hidden to me then remove .hidden from .create-survey-form then add .hidden to .no-surveys"})))}
 
                [:div {:class "mb-2"}
-                [:form {:class "create-survey-form hidden" :hx-post (util/endpoint-path create-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)}
-                 (ui/text-left :label (tr [:insurance.survey/survey-name]) :id "survey-name" :value (:insurance.policy/name policy))
-                 (ui/datetime-left :label (tr [:insurance.survey/closes-at]) :hint (tr [:insurance.survey/closes-at-hint]) :id "closes-at" :value end-date :required? true)
+                [:form {:class "create-survey-form hidden" :hx-post (util/endpoint-path upsert-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)}
+                 (ui/text-left :label (tr [:insurance.survey/survey-name]) :id "survey-name" :value survey-name)
+                 (ui/datetime-left :label (tr [:insurance.survey/closes-at]) :hint (tr [:insurance.survey/closes-at-hint]) :id "closes-at" :value closes-at :required? true)
                  (ui/form-buttons
                   :buttons-right (list
                                   (ui/button {:label (tr [:action/open-insurance-survey]) :priority :primary-orange})))]]
@@ -787,14 +787,15 @@ Mit freundlichen Grüßen,
                      (ui/dl (ui/dl-item (tr [:insurance.survey/survey-name]) survey-name)
                             (ui/dl-item (tr [:insurance.survey/closes-at]) (ui/format-dt closes-at))
                             (ui/dl-item (tr [:time-left]) (ui/humanize-dt closes-at)))]
-                    [:div {:class "survey-rw hidden"}
+                    [:form {:class "survey-rw hidden" :hx-post (util/endpoint-path upsert-survey-handler) :hx-target (util/hash :comp/insurance-survey-table)}
+                     [:input {:type :hidden :name "survey-id" :value (str survey-id)}]
                      (ui/dl (ui/dl-item ""
-                                        (ui/text :label (tr [:insurance.survey/survey-name]) :id "survey-name" :value (:insurance.policy/name policy) :required? true))
+                                        (ui/text :label (tr [:insurance.survey/survey-name]) :name "survey-name" :value (:insurance.policy/name policy) :required? true))
                             (ui/dl-item ""
-                                        (ui/input-datetime2 :value end-date :label (tr [:insurance.survey/closes-at]) :name "closes-at"))
+                                        (ui/input-datetime2 :value closes-at :label (tr [:insurance.survey/closes-at]) :name "closes-at"))
                             (ui/dl-item ""
                                         [:div {:class "flex space-x-4"}
-                                         (ui/button :label (tr [:action/cancel]) :priority :white :attr {:_ toggle-rw-script})
+                                         (ui/button :label (tr [:action/cancel]) :priority :white :attr {:_ toggle-rw-script :type :button})
                                          (ui/button :label (tr [:action/save]) :priority :primary)]))]]
 
                    [:div {:class "mt-4 sm:ml-16 sm:mt-0 flex sm:flex-none space-x-4"}
@@ -1533,7 +1534,7 @@ document.addEventListener('DOMContentLoaded', function() {
                              :priority :primary :icon icon/plus)]]]])])))
 
 (ctmx/defcomponent insurance-detail-page [{:keys [db] :as req}]
-  create-survey-handler close-survey-handler toggle-survey-response-completion-handler send-survey-notifications-handler
+  upsert-survey-handler close-survey-handler toggle-survey-response-completion-handler send-survey-notifications-handler
   [:div
    (insurance-detail-page-header req false)
    (insurance-survey-table req)

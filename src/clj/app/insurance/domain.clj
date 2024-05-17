@@ -150,6 +150,13 @@
                                      :human (s/explain-human schema survey)})))
      (s/encode-datomic schema survey))))
 
+(defn txs-update-survey [survey-id name closes-at]
+  (assert survey-id "Survey ID must be non-nil")
+  (assert name "Name must be non-nil")
+  (assert closes-at "Closes at must be non-nil")
+  [[:db/add [:insurance.survey/survey-id survey-id] :insurance.survey/survey-name name]
+   [:db/add [:insurance.survey/survey-id survey-id] :insurance.survey/closes-at (closes-at-inst closes-at)]])
+
 (defn tx-new-survey [tempid name policy-id closes-at response-tempids]
   (assert tempid "Tempid must be non-nil")
   (assert name "Name must be non-nil")

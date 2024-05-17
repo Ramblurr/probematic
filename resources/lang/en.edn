@@ -548,7 +548,7 @@
                     :confirm-remove-band-hint "The band pays for the cost of the insurance since it is a band instrument."
                     :no-keep "No, keep the insurance"
                     :yes-remove "Yes, remove it"
-                    :keep-insured-private-hint "Since this wasn't used at a gig in the last year you the band can no longer pay for it."
+                    :keep-insured-private-hint "Since this wasn't used at a gig in the last year the band can no longer pay for it."
                     :keep-insured-private-cost "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about %1€ per year for this item."
                     :no-stop "No, stop insurance"
                     :yes-pay "Yes, I'll pay"

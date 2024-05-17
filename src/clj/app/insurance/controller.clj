@@ -822,12 +822,13 @@
         survey-tx (domain/tx-new-survey survey-tempid survey-name policy-id closes-at response-tempids)]
     (conj response-txs survey-tx)))
 
-(defn create-survey! [{:keys [db] :as req}]
+(defn upsert-survey! [{:keys [db] :as req}]
   (let [insurance-team-member? (q/insurance-team-member? db (auth/get-current-member req))
         policy (:policy req)
-        {:keys [survey-name closes-at] :as p} (util.http/unwrap-params req)
-        txs (txs-new-survey db survey-name (t/date-time closes-at) policy)]
-    ;; (tap> [:params p :tx txs])
+        {:keys [survey-id survey-name closes-at] :as p} (util.http/unwrap-params req)
+        txs (if (str/blank? survey-id)
+              (txs-new-survey db survey-name (t/date-time closes-at) policy)
+              (domain/txs-update-survey (util/ensure-uuid! survey-id) survey-name (t/date-time closes-at)))]
     (when insurance-team-member?
       (d/transact-wrapper! req {:tx-data txs}))))
 
