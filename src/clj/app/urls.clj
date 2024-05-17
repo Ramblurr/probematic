@@ -1,6 +1,11 @@
 (ns app.urls
   (:import [java.net URLEncoder])
-  (:require [app.config :as config]))
+  (:require [app.config :as config]
+            [ring.util.codec :as codec]
+            [clojure.string :as str]))
+
+(defn params->query-string [m]
+  (codec/form-encode m))
 
 (defn entity-id [id-key maybe-id]
   (if (map? maybe-id) (id-key maybe-id)
@@ -17,6 +22,7 @@
   [string]
   (some-> string str (URLEncoder/encode "UTF-8") (.replace "+" "%20")))
 
+(defn link-dashboard [] "/")
 (def link-member (partial link-helper "/member/" :member/member-id))
 (def link-member-ledger #(link-member % "/#member-ledger-panel"))
 (def link-member-ledger-table #(link-member % "/#member-ledger-table"))
@@ -46,20 +52,54 @@
 (defn link-polls-create [] "/polls/new/")
 (defn link-insurance [] "/insurance/")
 
-(defn link-coverage-create
-  ([policy-id] (link-coverage-create policy-id nil))
-  ([policy-id instrument-id] (str "/insurance-coverage-create/" policy-id "/" (when instrument-id (str "?instrument-id=" instrument-id)))))
-
 (defn link-insurance-survey-start [policy-id]
   (str "/insurance-survey/" policy-id "/"))
 
 (defn link-faq-insurance-team [] "/insurance/#faq10")
 
-(defn link-insurance-add-coverage [policy-id]
-  (str "/insurance-coverage-create/" policy-id "/"))
+(defn append-qps
+  "Given a map of query parameters, return a string of query parameters (starting with ?) to append to a URL.
+  nil or blank values will be omittted. If the map is empty, an empty string is returned."
+  [m]
+  (let [encoded
+        (->> m
+             (filter #(not (or
+                            (when (string? (val %)) (str/blank? (val %)))
+                            (nil? (val %)))))
+             (into {})
+             (params->query-string))]
+    (if (str/blank? encoded)
+      ""
+      (str "?" encoded))))
 
-(defn link-coverage-create2 [policy-id instrument-id] (str "/insurance-coverage-create2/" policy-id "/" instrument-id "/"))
-(defn link-coverage-create3 [policy-id instrument-id] (str "/insurance-coverage-create3/" policy-id "/" instrument-id "/"))
+(defn link-coverage-create-edit
+  "The link in the create coverage flow where the instrument can be edited"
+  ([policy-id instrument-id]
+   (link-coverage-edit policy-id instrument-id nil))
+  ([policy-id instrument-id redirect]
+   (str "/insurance-coverage-create/" policy-id "/"
+        (append-qps {:instrument-id instrument-id
+                     :redirect redirect}))))
+
+(defn link-coverage-create
+  ([policy-id]
+   (link-coverage-create policy-id nil))
+  ([policy-id redirect-url]
+   (str "/insurance-coverage-create/" policy-id "/" (append-qps {:redirect redirect-url}))))
+
+(defn link-coverage-create2
+  ([policy-id instrument-id]
+   (link-coverage-create2 policy-id instrument-id nil))
+  ([policy-id instrument-id redirect-url]
+   (str "/insurance-coverage-create2/" policy-id "/" instrument-id "/"
+        (append-qps {:redirect redirect-url}))))
+
+(defn link-coverage-create3
+  ([policy-id instrument-id]
+   (link-coverage-create3 policy-id instrument-id nil))
+  ([policy-id instrument-id redirect-url]
+   (str "/insurance-coverage-create3/" policy-id "/" instrument-id "/"
+        (append-qps {:redirect redirect-url}))))
 
 (defn link-instrument-image-upload [instrument-id]
   (format "/instrument-image/%s"  instrument-id))

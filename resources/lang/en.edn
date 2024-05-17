@@ -518,6 +518,7 @@
                     :cta-p1 "%1, it's time to review your insured instruments/items."
                     :cta-p2 "You have %1 items to review, it should take about %2 minutes. Ready to go?"
                     :cta-p2-none "You don't have any insured instruments to review. But you should add new ones!"
+                    :almost-there "Almost there"
                     :no-surveys "No open surveys"
                     :start-button "Start Review"
                     :start-survey "Start Survey"

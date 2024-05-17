@@ -1411,25 +1411,28 @@ document.addEventListener('DOMContentLoaded', function() {
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page3 [{:keys [db tr] :as req}]
   (let [post? (util/post? req)
         result (when post? (controller/upsert-coverage! req))
+        redirect      (-> req :params :redirect)
         error (:error result)]
     (if (and post? (not error))
-      (response/hx-redirect (urls/link-policy (:policy result)))
+      (response/hx-redirect (or redirect (urls/link-policy (:policy result))))
       (let [policy-id (util.http/path-param-uuid! req :policy-id)
             instrument-id  (util.http/path-param-uuid! req :instrument-id)
             policy (q/retrieve-policy db policy-id)
             coverage-types (:insurance.policy/coverage-types policy)]
-        [:div {:id id}
+        [:div {:id (util/id :comp/coverage-create3)}
          [:div {:class "flex justify-center items-center mt-10"}
           (ui/step-circles 3 3)]
          (ui/panel {:title (tr [:insurance/instrument-coverage])}
-                   [:form {:hx-post (path ".") :class "space-y-8" :hx-target (hash ".")}
+                   [:form {:hx-post (util/endpoint-path insurance-coverage-create-page3)  :class "space-y-8" :hx-target (util/hash :comp/coverage-create3)}
+                    (when redirect
+                      [:input {:type :hidden :name "redirect" :value redirect}])
                     [:input {:type :hidden :name "policy-id" :value policy-id}]
                     [:input {:type :hidden :name "instrument-id" :value instrument-id}]
                     (coverage-form req error nil coverage-types)
                     (ui/form-buttons
                      :buttons-left
                      (list
-                      (ui/link-button {:attr {:href (urls/link-coverage-create2 policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                      (ui/link-button {:attr {:href (urls/link-coverage-create2 policy-id instrument-id redirect)} :label (tr [:action/back]) :white :primary-orange}))
                      :buttons-right
                      (list
                       (ui/button {:label (tr [:action/save]) :priority :primary-orange})))])]))))
@@ -1449,7 +1452,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 (ctmx/defcomponent ^:endpoint image-upload [{:keys [tr] :as req}]
   (let [instrument-id (util.http/path-param-uuid! req :instrument-id)
-        policy-id (util.http/path-param-uuid! req :policy-id)]
+        policy-id (util.http/path-param-uuid! req :policy-id)
+        redirect      (-> req :params :redirect)]
     [:div {:id id}
      [:div {:class "flex justify-center items-center mt-10"}
       (ui/step-circles 3 2)]
@@ -1459,33 +1463,48 @@ document.addEventListener('DOMContentLoaded', function() {
                        :class "dropzone space-y-8"
                        :id (util/id :comp/imageUpload)
                        :enctype "multipart/form-data"}
+
                 (photo-upload-widget)]
                (ui/form-buttons :buttons-left (list
-                                               (ui/link-button {:attr {:href (urls/link-coverage-create policy-id instrument-id)} :label (tr [:action/back]) :white :primary-orange}))
+                                               (ui/link-button {:attr {:href (urls/link-coverage-create-edit policy-id instrument-id redirect)} :label (tr [:action/back]) :white :primary-orange}))
                                 :buttons-right (list
-                                                (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id)} :label (tr [:action/next]) :priority :primary-orange}))))]))
+                                                (ui/link-button {:attr {:href (urls/link-coverage-create3 policy-id instrument-id redirect)} :label (tr [:action/next]) :priority :primary-orange}))))]))
+
+(declare insurance-coverage-create-page-start)
+
+(ctmx/defcomponent ^:endpoint insurance-coverage-create-handler [{:keys [db tr] :as req}]
+  (when (util/post? req)
+    (let [result (controller/upsert-instrument! req)
+          policy-id     (util.http/path-param-uuid! req :policy-id)
+          instrument-id (-> result :instrument :instrument/instrument-id)
+          instrument (when instrument-id (q/retrieve-instrument db instrument-id))
+          error (:error result)
+          redirect      (-> req :params :redirect)]
+      (if error
+        (insurance-coverage-create-page-start req  error instrument)
+        (response/hx-redirect (urls/link-coverage-create2 policy-id instrument-id redirect))))))
+
+(defn insurance-coverage-create-page-start [{:keys [tr] :as req}  error {:instrument/keys [instrument-id] :as maybe-instrument}]
+  (let [redirect      (-> req :params :redirect)]
+    [:div {:id (util/id :comp/coverage-create)}
+     [:div {:class "flex justify-center items-center mt-10"}
+      (ui/step-circles 3 1)]
+     (ui/panel {:title (tr [:instrument/create-title])}
+               [:form {:hx-post (util/endpoint-path insurance-coverage-create-handler) :class "space-y-8" :hx-target (util/hash :comp/coverage-create)}
+                (when redirect
+                  [:input {:type :hidden :name "redirect" :value redirect}])
+                [:input {:type :hidden :name "instrument-id" :value instrument-id}]
+                (instrument-form req error maybe-instrument)
+                (ui/form-buttons :buttons-right
+                                 (list
+                                  (ui/button {:label (tr [:action/next]) :priority :primary-orange})))])]))
 
 (ctmx/defcomponent ^:endpoint insurance-coverage-create-page [{:keys [db tr] :as req}]
-  (let [post? (util/post? req)
-        result (when post? (controller/upsert-instrument! req))
-        error (:error result)
-        instrument-id (if post?
-                        (-> result :instrument :instrument/instrument-id)
-                        (util.http/query-param-uuid req :instrument-id))
-        policy-id (util.http/path-param-uuid! req :policy-id)]
-    (if (and post? (not error))
-      (response/hx-redirect (urls/link-coverage-create2 policy-id instrument-id))
-      (let [instrument (when instrument-id (q/retrieve-instrument db instrument-id))]
-        [:div {:id id}
-         [:div {:class "flex justify-center items-center mt-10"}
-          (ui/step-circles 3 1)]
-         (ui/panel {:title (tr [:instrument/create-title])}
-                   [:form {:hx-post (path ".") :class "space-y-8" :hx-target (hash ".")}
-                    [:input {:type :hidden :name "instrument-id" :value instrument-id}]
-                    (instrument-form req error instrument)
-                    (ui/form-buttons :buttons-right
-                                     (list
-                                      (ui/button {:label (tr [:action/next]) :priority :primary-orange})))])]))))
+  insurance-coverage-create-handler
+  (let [instrument-id (util.http/query-param-uuid req :instrument-id)
+        policy-id     (util.http/path-param-uuid! req :policy-id)
+        instrument    (when instrument-id (q/retrieve-instrument db instrument-id))]
+    (insurance-coverage-create-page-start req nil instrument)))
 
 (ctmx/defcomponent ^:endpoint insurance-instrument-coverage [{:keys [db] :as req}]
   (let [policy-id (-> req :policy :insurance.policy/policy-id)
@@ -1967,34 +1986,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             :icon icon/envelope
                             :priority :primary)]])]))
 
-(defn dashboard-survey-widget [{:keys [tr db] :as req} survey-response dismiss-endpoint-path dismiss-target]
-  (let [{:member/keys [name] :as member} (:insurance.survey.response/member survey-response)
-        {:insurance.policy/keys [policy-id] :as policy} (-> survey-response :survey :insurance.survey/policy)
-        open-items (q/open-survey-for-member-items db member policy)
-        has-open-items? (not= 0 open-items)
-        time-dur (java.lang.String/format java.util.Locale/GERMAN "%.2f" (to-array [(float (* open-items 0.75))]))]
-    [:div {:class "flex items-center justify-center space-x-4"}
-     [:div
-      [:img {:class "cursor-pointer pbj-frozen hidden w-32 sm:w-16" :src "/img/peanut_butter_jelly_time_still.gif"
-             :_ "on click remove .hidden from .pbj-live then add .hidden to me"}]
-      [:img {:class "cursor-pointer pbj-live w-32 sm:w-16" :src "/img/peanut_butter_jelly_time.gif"
-             :_ "on click remove .hidden from .pbj-frozen then add .hidden to me"}]]
-     [:div
-      [:p (tr [:insurance.survey/cta-p1] [name])]
-      (if has-open-items?
-        [:p (tr [:insurance.survey/cta-p2] [open-items time-dur])]
-        [:p (tr [:insurance.survey/cta-p2-none])])
-      [:div {:class "mt-2 flex items-center space-x-4"}
-       (if has-open-items?
-         (ui/link-button
-          :href (urls/link-insurance-survey-start policy-id)
-          :label (tr [:insurance.survey/start-button]) :priority :primary :icon icon/arrow-right)
-         (ui/link-button
-          :href (urls/link-insurance-add-coverage (-> survey-response :survey :insurance.survey/policy :insurance.policy/policy-id))
-          :label (tr [:instrument.coverage/create-button]) :priority :primary))
-       (when-not has-open-items?
-         (ui/button :label (tr [:action/im-finished]) :priority :white :hx-post dismiss-endpoint-path :hx-target dismiss-target :hx-vals {:policy-id policy-id}))]]]))
-
 (defn band-or-private-bubble [tr private?]
   (ui/bool-bubble (not private?) {true "Band" false "Privat"}))
 
@@ -2110,73 +2101,135 @@ document.addEventListener('DOMContentLoaded', function() {
 (defn survey-flow-invalid-transition []
   [:div "That isn't allowed"])
 
+(ctmx/defcomponent ^:endpoint survey-dismiss-response [{:keys [db] :as req}]
+  (when (util/post? req)
+    (let [policy-id (-> req util/unwrap-params :policy-id util/ensure-uuid!)]
+      (controller/dismiss-insurance-widget! req policy-id)
+      (response/hx-redirect (urls/link-insurance-survey-start policy-id)))))
+
+(defn dashboard-survey-widget [{:keys [tr db] :as req} survey-response]
+  (let [{:member/keys [name] :as member} (:insurance.survey.response/member survey-response)
+        {:insurance.policy/keys [policy-id] :as policy} (-> survey-response :survey :insurance.survey/policy)
+        open-items (q/open-survey-for-member-items db member policy)
+        has-open-items? (not= 0 open-items)
+        time-dur (java.lang.String/format java.util.Locale/GERMAN "%.2f" (to-array [(float (* open-items 0.75))]))]
+    [:div {:class "flex items-center justify-center space-x-4"}
+     [:div
+      [:img {:class "cursor-pointer pbj-frozen hidden w-32 sm:w-16" :src "/img/peanut_butter_jelly_time_still.gif"
+             :_ "on click remove .hidden from .pbj-live then add .hidden to me"}]
+      [:img {:class "cursor-pointer pbj-live w-32 sm:w-16" :src "/img/peanut_butter_jelly_time.gif"
+             :_ "on click remove .hidden from .pbj-frozen then add .hidden to me"}]]
+     [:div
+      [:p (tr [:insurance.survey/cta-p1] [name])]
+      (if has-open-items?
+        [:p (tr [:insurance.survey/cta-p2] [open-items time-dur])]
+        [:p (tr [:insurance.survey/cta-p2-none])])
+      [:div {:class "mt-2 flex items-center space-x-4"}
+       (if has-open-items?
+         (ui/link-button
+          :href (urls/link-insurance-survey-start policy-id)
+          :label (tr [:insurance.survey/start-button]) :priority :primary :icon icon/arrow-right)
+         (ui/link-button
+          :href (urls/link-coverage-create policy-id (urls/absolute-link-insurance-survey-start (-> req :system :env) policy-id))
+          :label (tr [:instrument.coverage/create-button]) :priority :primary))
+       (when-not has-open-items?
+         (ui/button :label (tr [:action/im-finished]) :priority :white
+                    :hx-post (util/endpoint-path survey-dismiss-response) :hx-vals {:policy-id policy-id}))]]]))
+
 (defn prepare-next-active-report [{:keys [db] :as req} policy]
-  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req policy)
+  (let [{:insurance.survey.response/keys [member response-id coverage-reports survey completed-at] :as survey-response} (controller/survey-response-for-member req policy)
         todo-reports (filter #(nil? (:insurance.survey.report/completed-at %)) coverage-reports)]
     {:active-report (first todo-reports)
+     :survey survey
+     :survey-closed? (some? (:insurance.survey/closed-at survey))
+     :survey-response survey-response
+     :survey-response-completed? (some? completed-at)
      :todo-reports todo-reports
      :total-reports (count coverage-reports)
      :total-todo (count todo-reports)
      :current-idx  (inc (- (count coverage-reports) (count todo-reports)))
      :new-step? (some? (-> (util/unwrap-params req) :new-step))}))
 
-(defn show-encouragement? [current-idx total-todo]
-  (or
-    ;; show on 2nd item, cause at least they did one
-   (= current-idx 2)
-    ;; otherwise show every 4th item, unless its the 2nd to last one
-   (and (= 0 (mod current-idx 4))
-        (not= current-idx (dec total-todo)))))
+(defn show-encouragement? [current-idx total-todo new-step? transitioning?]
+  #_(tap> {:current-idx current-idx
+           :total-todo total-todo
+           :new-step? new-step?
+           :transitioning? transitioning?})
+  (and
+   (not new-step?)
+   transitioning?
+   (or
+      ;; always show on 2nd item, because at least they did one
+    (= current-idx 2)
+      ;; otherwise show every 4th item, unless its the 2nd to last one
+    (and (= 0 (mod current-idx 4))
+         (not= current-idx (dec total-todo))))))
 
-(defn survey-report-interstitial [{:keys [tr] :as req}]
-  (let [{:keys [active-report todo-reports total-reports total-todo current-idx]} (prepare-next-active-report req (:policy req))
-        total-completed (- total-reports total-todo)
-        {:insurance.survey.response/keys [member response-id coverage-reports survey]} (controller/survey-response-for-member req (:policy req))]
-    (if (= 0 total-todo)
-      [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
-       [:div {:data-celebrate "true"}]
-       [:div {:class "bg-white min-h-80 mt-8 gap-6 p-6 flex flex-col items-center justify-center"}
-        [:div {:class "flex items-center justify-center text-sno-green-500"}
-         (icon/shield-check-outline {:class "h-32 w-32"})
-         [:h1 {:class "text-3xl font-bold"} (tr [:insurance.survey/all-done])]]
-        [:div {:class "flex flex-col items-center"}
-         (ui/button :size :xlarge  :label (tr [:action/celebrate]) :priority :white
-                    :attr {:data-counter 0 :_
-                           "on click call celebrate() then increment @data-counter
+(defn survey-report-end-add-prompt [{:keys [tr] :as req}]
+  (let [policy-id (-> req :policy :insurance.policy/policy-id)]
+    [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
+     [:div {:class "bg-white min-h-80 mt-8 gap-6 p-6 flex flex-col items-center justify-center"}
+      [:div {:class "flex items-center justify-center text-sno-orange-500"}
+       (icon/shield-check-outline {:class "h-32 w-32"})
+       [:h1 {:class "text-3xl font-bold"} (tr [:insurance.survey/almost-there]) "..."]]
+      [:div {:class "flex flex-col items-center space-y-4"}
+       [:p (tr [:insurance.survey/cta-p2-none])]
+       (ui/link-button :href (urls/link-coverage-create policy-id (urls/absolute-link-insurance-survey-start (-> req :system :env) policy-id))
+                       :label (tr [:instrument.coverage/create-button]) :priority :primary)
+       (ui/button :label (tr [:action/im-finished]) :priority :white :hx-post (util/endpoint-path survey-dismiss-response) :hx-vals {:policy-id policy-id})]]]))
+
+(defn survey-report-end-all-done [{:keys [tr] :as req}]
+  (let [policy-id (-> req :policy :insurance.policy/policy-id)]
+    [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
+     [:div {:data-celebrate "true"}]
+     [:div {:class "bg-white min-h-80 mt-8 gap-6 p-6 flex flex-col items-center justify-center"}
+      [:div {:class "flex items-center justify-center text-sno-green-500"}
+       (icon/shield-check-outline {:class "h-32 w-32"})
+       [:h1 {:class "text-3xl font-bold"} (tr [:insurance.survey/all-done])]]
+      [:div {:class "flex flex-col items-center"}
+       (ui/button :size :xlarge  :label (tr [:action/celebrate]) :priority :white
+                  :attr {:data-counter 0 :_
+                         (format  "
+on load get localStorage.getItem('celebrate-%s') if it is 'true' remove .opacity-0 from .stage-1 then remove .opacity-0 from .stage-2 then remove .opacity-0 from .stage-3 then remove .opacity-0 from .go-home end
+on click call celebrate() then increment @data-counter
 if @data-counter as Int is equal to 1 remove .opacity-0 from .stage-1
 else if @data-counter as Int is equal to 2 remove .opacity-0 from .stage-2
-else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then remove .opacity-0 from .go-home "})
+else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then remove .opacity-0 from .go-home then call localStorage.setItem('celebrate-%s', true)"
+                                  policy-id
+                                  policy-id)})
 
-         [:p {:class "opacity-0 stage-1 pt-2 transition-opacity duration-1000"} "Why not celebrate again?"]]
-        [:p {:class "opacity-0 stage-2 pt-2 transition-opacity duration-1000"} "Feels good right?"]
-        [:p {:class "opacity-0 stage-3 pt-2 transition-opacity duration-1000"}
-         "The Versicherungsteam Team thanks you"
-         [:span {:class "text-red-500"} "❤️"]]
-        [:div {:class "h-12"}
-         (ui/link-button  :href "/" :size :xlarge :class "opacity-0 transition-opacity delay-1000 duration-1000 go-home" :label (tr [:error/go-home]) :priority :white)]]]
-
-      (if (show-encouragement? current-idx total-todo)
-        [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
-         [:form {:class (ui/cs "mx-auto mt-8 max-w-2xl gap-6 p-6 bg-white min-h-80") :hx-ext "class-tools"}
-          [:div {:class "flex items-center space-x-2"}
-           (ui/thumbs-up-animation)
-           [:div {:class "transition-opacity opacity-0 hidden" :classes "remove hidden:1.1s & remove opacity-0:1.1s"}
-            [:h1 {:class "text-2xl"} (tr [:good-job])]
-            [:p {:class "opacity-0 transition-opacity" :classes "remove opacity-0:1.5s"}
-             (if (> total-completed 1)
-               (tr [:youve-completed-plural] [total-completed total-todo])
-               (tr [:youve-completed-sing] [total-todo]))]
-            [:div {:class "opacity-0 transition-opacity" :classes "remove opacity-0:1.5s"}
-             (ui/button :label (tr [:action/keep-going]) :icon icon/arrow-right
-                        :hx-get (util/endpoint-path survey-start-page)
-                        :hx-target (util/hash :comp/survey-page)
-                        :hx-vals {:new-step true})]]]]]
-        (survey-start-page req)))))
+       [:p {:class "opacity-0 stage-1 pt-2 transition-opacity duration-1000"} "Why not celebrate again?"]]
+      [:p {:class "opacity-0 stage-2 pt-2 transition-opacity duration-1000"} "Feels good right?"]
+      [:p {:class "opacity-0 stage-3 pt-2 transition-opacity duration-1000 prose"}
+       [:span "The Versicherungsteam Team thanks you"]
+       [:span {:class "text-red-500"} "❤️"]]
+      [:div {:class "h-24 sm:h-12 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2"}
+       (ui/link-button :href (urls/link-coverage-create policy-id (urls/absolute-link-insurance-survey-start (-> req :system :env) policy-id))
+                       :class "opacity-0 transition-opacity delay-1000 go-home"
+                       :label (tr [:instrument.coverage/create-button]) :priority :primary)
+       (ui/link-button  :href "/" :size :xlarge :class "opacity-0 transition-opacity delay-1000 duration-1000 go-home" :label (tr [:error/go-home]) :priority :white)]]]))
+(defn survey-report-show-encouragement [{:keys [tr] :as req} {:keys [total-reports total-todo]}]
+  (let [total-completed (- total-reports total-todo)]
+    [:div {:id (util/id :comp/survey-page) :class (ui/cs "mx-auto max-w-2xl overflow-hidden")}
+     [:form {:class (ui/cs "mx-auto mt-8 max-w-2xl gap-6 p-6 bg-white min-h-80") :hx-ext "class-tools"}
+      [:div {:class "flex items-center space-x-2"}
+       (ui/thumbs-up-animation)
+       [:div {:class "transition-opacity opacity-0 hidden" :classes "remove hidden:1.1s & remove opacity-0:1.1s"}
+        [:h1 {:class "text-2xl"} (tr [:good-job])]
+        [:p {:class "opacity-0 transition-opacity" :classes "remove opacity-0:1.5s"}
+         (if (> total-completed 1)
+           (tr [:youve-completed-plural] [total-completed total-todo])
+           (tr [:youve-completed-sing] [total-todo]))]
+        [:div {:class "opacity-0 transition-opacity" :classes "remove opacity-0:1.5s"}
+         (ui/button :label (tr [:action/keep-going]) :icon icon/arrow-right
+                    :hx-get (util/endpoint-path survey-start-page)
+                    :hx-target (util/hash :comp/survey-page)
+                    :hx-vals {:new-step true})]]]]]))
 
 (defn survey-flow-complete [{:keys [tr] :as req} flow decisions active-report]
   (let [decisions (set (map keyword decisions))]
     (controller/resolve-survey-report! req active-report decisions)
-    (survey-report-interstitial (util/make-get-request req {:transitioning? true}))))
+    (survey-start-page (util/make-get-request req {:transitioning? true}))))
 
 (ctmx/defcomponent ^:endpoint survey-edit-instrument-handler [{:keys [db tr] :as req}]
   (when (util/post? req)
@@ -2312,15 +2365,25 @@ else if @data-counter as Int is equal to 3 remove .opacity-0 from .stage-3 then 
 (ctmx/defcomponent ^:endpoint survey-start-page [{:keys [db tr] :as req}]
   survey-flow-progress
   survey-edit-instrument-handler
+  survey-dismiss-response
   (let [policy (:policy req)
-        {:as data :keys [active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req policy)
+        {:as data :keys [survey-closed? active-report todo-reports total-reports total-todo current-idx new-step?]} (prepare-next-active-report req policy)
+        {:keys [active-report todo-reports total-reports total-todo current-idx survey-response survey-response-completed?] :as report-data} (prepare-next-active-report req (:policy req))
+        {:insurance.survey.response/keys [member response-id coverage-reports survey]} survey-response
         {:keys [start-flow] :as flow} (build-survey-flow req)]
-    (if (some? active-report)
-      (if (= 0 total-todo)
-        (survey-report-interstitial (util/make-get-request req {:transitioning? true}))
-        [:div {:id :comp/survey-page}
-         [:div {:class (ui/cs "flex justify-center items-center mt-10" (when new-step? "steps-new-step"))}
-          (ui/step-circles total-reports current-idx)]
-         [:div {:class "survey-panel-fade-in"}
-          (survey-question-page req flow [] active-report start-flow)]])
-      (survey-already-closed req))))
+    (cond
+      survey-closed? (survey-already-closed req)
+
+      survey-response-completed? (survey-report-end-all-done req)
+
+      ;; they never had any reports to do, so ask them to add an instrument
+      (and  (= 0 total-todo) (= 0 total-reports)) (survey-report-end-add-prompt req)
+
+      ;; there are reports to fill out
+      :else (if (show-encouragement? current-idx total-todo new-step? (:transitioning? req))
+              (survey-report-show-encouragement req report-data)
+              [:div {:id :comp/survey-page}
+               [:div {:class (ui/cs "flex justify-center items-center mt-10" (when new-step? "steps-new-step"))}
+                (ui/step-circles total-reports current-idx)]
+               [:div {:class "survey-panel-fade-in"}
+                (survey-question-page req flow [] active-report start-flow)]]))))

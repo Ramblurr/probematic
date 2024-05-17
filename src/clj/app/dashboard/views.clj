@@ -195,14 +195,8 @@ put '%s' into .copy-link in me"
 
 (declare dashboard-page)
 
-(ctmx/defcomponent ^:endpoint dismiss-insurance-widget [{:keys [db] :as req}]
-  (when (util/post? req)
-    (let [policy-id (-> req util/unwrap-params :policy-id util/ensure-uuid!)]
-      (insurance.controller/dismiss-insurance-widget! req policy-id))
-    (dashboard-page (util/make-get-request req))))
-
 (ctmx/defcomponent ^:endpoint dashboard-page [{:keys [db tr system] :as req}]
-  dismiss-insurance-widget
+  insurance.view/survey-dismiss-response
   (let [member (auth/get-current-member req)
         _ (assert member)
         gigs-planned (gig.service/gigs-planned-for db member)
@@ -228,7 +222,7 @@ put '%s' into .copy-link in me"
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left [:span   "Insurance Time!"])
         [:div {:class "bg-white p-4 rounded-md shadow-md"}
-         (insurance.view/dashboard-survey-widget req survey-response (util/endpoint-path dismiss-insurance-widget) (util/hash :comp/dashboard))]])
+         (insurance.view/dashboard-survey-widget req survey-response)]])
      (when (seq polls-open)
        [:div {:class "mt-6 sm:px-6 lg:px-8" :hx-boost "true"}
         (ui/divider-left (tr [:dashboard/polls-open]))
