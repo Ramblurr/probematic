@@ -4,51 +4,30 @@
 
 > "Probe" = "rehearsal" in German. Pronounced PRO-beh ([listen](https://upload.wikimedia.org/wikipedia/commons/f/f9/De-probe.ogg))
 
+Probematic is a web tool to help an anarchist band manage itself. Built with Clojure and HTMX.
+
 Canonical repo: https://github.com/Ramblurr/probematic
 
 ### Pre-req
 
 1. You need clojure installed `clj`
 2. You need node/npm installed to build the CSS
+3. You probably want some editor that can connect to the dev repl
 
-### Build the CSS
-
-``` sh
-npm install
-
-npx tailwindcss -i resources/public/css/main.css -o resources/public/css/compiled/main.css
-```
-
-### Run in demo mode
-
-``` sh
-APP_PROFILE=demo clj -M:run-m
-```
-
-Then visit [http://localhost:6160]
-
-
-### Run in repl
-
-Jack-in using your favorite editor. Be sure to supply `-A:dev` to set the dev profile
-
-1. from the `user` ns run `(dev)`
-   this loads the app code and switches you into the `dev` ns
-2. run `(dev-extra/go)` to start the integrant system and boot the app
-
-
-## Notes for Future Me
+## Run in dev mode
 
 ```
+# start dev services
+docker compose -f docker-compose.dev.yml up -d
 
-# term 1
-bb repl
+# term 1, starts the nrepl
+bb repl-portal
 
 # term 2
 bb watch-css
 
-# open user.clj
-# connect to repl
+# in your editor, open user.clj
+# connect to the nrepl
 # (dev)
 # (go)
 ```
@@ -60,7 +39,7 @@ This software is licensed under the GNU AGPL v3.0 or later.
 
 ```
 probematic
-Copyright (C) 2022-2023 Casey Link
+Copyright (C) 2022-2024 Casey Link
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
