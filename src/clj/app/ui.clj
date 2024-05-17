@@ -193,13 +193,16 @@
    (when required?
      [:span  {:class "text-red-400"} " required"])))
 
-(defn select-left [& {:keys [id label options required? error value]
+(defn select-left [& {:keys [id label options required? error value hint]
                       :or {required? true}}]
   (let [has-error? (get error (keyword id))
         selected-value value]
     [:div {:class "sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5"}
      [:label {:for id :class "block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"}
-      label (required-label required?)]
+      label (required-label required?)
+      (when hint
+        [:p {:class "mt-2 text-sm text-gray-500 font-normal"}
+         hint])]
      [:div {:class "mt-1 sm:col-span-2 sm:mt-0"}
       [:div {:class "relative max-w-lg sm:max-w-xs "}
        (when has-error?
@@ -597,7 +600,7 @@
                          :value value
                          :options options))))
 
-(defn instrument-category-select [& {:keys [id value label categories variant with-empty-opt?]
+(defn instrument-category-select [& {:keys [id value label categories variant with-empty-opt? hint]
                                      :or {label "Instrument Category"
                                           with-empty-opt? true
                                           variant :inline}}]
@@ -623,6 +626,7 @@
               :options options)
       :left
       (select-left :id id
+                   :hint hint
                    :label label
                    :value value
                    :options options))))

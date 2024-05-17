@@ -555,7 +555,7 @@ Mit freundlichen Grüßen,
                       (:member/member-id current-member)))]
 
      (list
-      (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error)
+      (ui/text-left :label (tr [:instrument/name]) :id  "instrument-name" :value name :error error :hint (tr [:instrument/name-hint]))
       (when-not hide-owner?
         (ui/member-select :with-empty-opt? insurance-team-member?
                           :full-names? true
@@ -565,9 +565,13 @@ Mit freundlichen Grüßen,
                           :value owner-id
                           :members (q/members-for-select db)
                           :error error))
-      (ui/instrument-category-select :variant :left :label (tr [:instrument/category]) :id "category-id" :value (:instrument.category/category-id category) :categories (controller/instrument-categories db) :error error)
-      (ui/text-left :label (tr [:instrument/make]) :id  "make" :value make  :error error)
-      (ui/text-left :label (tr [:instrument/model]) :hint (tr [:instrument/if-available]) :id  "model" :value model :required? false :error error)
+      (ui/instrument-category-select :variant :left :label (tr [:instrument/category])
+                                     :hint (tr [:instrument/category-hint])
+                                     :id "category-id" :value (:instrument.category/category-id category) :categories (controller/instrument-categories db) :error error)
+      (ui/text-left :label (tr [:instrument/make])
+                    :hint (tr [:instrument/make-hint]) :id  "make" :value make  :error error)
+      (ui/text-left :label (tr [:instrument/model])
+                    :hint [:span (tr [:instrument/model-hint]) [:br] (tr [:instrument/if-available])] :id  "model" :value model :required? false :error error)
       (ui/text-left :label (tr [:instrument/serial-number]) :hint (tr [:instrument/if-available]) :id  "serial-number" :value serial-number :required? false :error error)
       (ui/text-left :label (tr [:instrument/build-year]) :hint (tr [:instrument/if-available]) :id  "build-year" :value build-year :required? false :error error)
       (ui/textarea-left :label (tr [:instrument/description]) :hint (tr [:instrument/description-hint]) :name "description" :id "description" :value description :required? false :error error)))))
@@ -1489,7 +1493,9 @@ document.addEventListener('DOMContentLoaded', function() {
     [:div {:id (util/id :comp/coverage-create)}
      [:div {:class "flex justify-center items-center mt-10"}
       (ui/step-circles 3 1)]
-     (ui/panel {:title (tr [:instrument/create-title])}
+     (ui/panel {:title (tr [:instrument/create-title])
+                :subtitle (tr [:instrument/create-subtitle])}
+               [:div [:span (icon/circle-exclamation {:class "w-5 h-5 text-sno-orange-500 inline mr-2"}) (tr [:instrument/separate-warning])]]
                [:form {:hx-post (util/endpoint-path insurance-coverage-create-handler) :class "space-y-8" :hx-target (util/hash :comp/coverage-create)}
                 (when redirect
                   [:input {:type :hidden :name "redirect" :value redirect}])

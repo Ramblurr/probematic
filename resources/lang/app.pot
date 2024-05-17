@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Probematic\n"
-"POT-Creation-Date: 2024-05-16 16:13+0200\n"
+"POT-Creation-Date: 2024-05-17 11:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -611,6 +611,12 @@ msgctxt ":instrument/if-available"
 msgid "if available"
 msgstr ""
 
+#: :instrument/make-hint
+#, ycp-format
+msgctxt ":instrument/make-hint"
+msgid "Which company manufactures the item? e.g., Yamaha, unknown"
+msgstr ""
+
 #: :instrument/make
 #, ycp-format
 msgctxt ":instrument/make"
@@ -641,6 +647,12 @@ msgctxt ":instrument/create-title"
 msgid "New Instrument"
 msgstr ""
 
+#: :instrument/model-hint
+#, ycp-format
+msgctxt ":instrument/model-hint"
+msgid "What is the model number?"
+msgstr ""
+
 #: :instrument/description-hint
 #, ycp-format
 msgctxt ":instrument/description-hint"
@@ -651,6 +663,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":instrument/photo-upload-title"
 msgid "Upload Instrument Photos"
+msgstr ""
+
+#: :instrument/name-hint
+#, ycp-format
+msgctxt ":instrument/name-hint"
+msgid "e.g., Trompet, Yamaha or Mouthpiece Tenorsax"
 msgstr ""
 
 #: :instrument/images-share-url-hint
@@ -665,10 +683,22 @@ msgctxt ":instrument/images-share-url"
 msgid "Photos Public Link"
 msgstr ""
 
+#: :instrument/separate-warning
+#, ycp-format
+msgctxt ":instrument/separate-warning"
+msgid "A separate form must be filled out for each instrument and accessory."
+msgstr ""
+
+#: :instrument/category-hint
+#, ycp-format
+msgctxt ":instrument/category-hint"
+msgid "What type of item is this? Watch out! Flutes are Holz, but saxophones are Blech, Sax, Elektrisch!"
+msgstr ""
+
 #: :instrument/create-subtitle
 #, ycp-format
 msgctxt ":instrument/create-subtitle"
-msgid "Enter details for the Instrument"
+msgid "Please enter the information about your instrument/accessories asked below in as much detail as possible."
 msgstr ""
 
 #: :instrument/owner
@@ -1184,7 +1214,7 @@ msgstr ""
 #: :insurance.survey/pay-cost-confirm
 #, ycp-format
 msgctxt ":insurance.survey/pay-cost-confirm"
-msgid "You will have to pay about %1€ per year for this item. Is that OK?"
+msgid "You will have to pay about %1 per year for this item. Is that OK?"
 msgstr ""
 
 #: :insurance.survey/admin-title
@@ -1196,7 +1226,7 @@ msgstr ""
 #: :insurance.survey/keep-insured-private-hint
 #, ycp-format
 msgctxt ":insurance.survey/keep-insured-private-hint"
-msgid "Since this wasn't used at a gig in the last year you the band can no longer pay for it."
+msgid "Since this wasn't used at a gig in the last year the band can no longer pay for it."
 msgstr ""
 
 #: :insurance.survey/already-closed
@@ -1220,7 +1250,7 @@ msgstr ""
 #: :insurance.survey/keep-insured-private-cost
 #, ycp-format
 msgctxt ":insurance.survey/keep-insured-private-cost"
-msgid "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about %1€ per year for this item."
+msgid "If you want the item to stay insured, you'll have to pay for it yourself. This will cost about %1 per year for this item."
 msgstr ""
 
 #: :insurance.survey/close-survey
@@ -1233,6 +1263,12 @@ msgstr ""
 #, ycp-format
 msgctxt ":insurance.survey/email-p2"
 msgid "Or add new ones! It only takes a few minutes."
+msgstr ""
+
+#: :insurance.survey/almost-there
+#, ycp-format
+msgctxt ":insurance.survey/almost-there"
+msgid "Almost there"
 msgstr ""
 
 #: :insurance.survey/confirm-close-title
