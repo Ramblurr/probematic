@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2024-05-17 11:52+0200\n"
-"PO-Revision-Date: 2024-05-16 14:25+0000\n"
+"PO-Revision-Date: 2024-05-17 09:56+0000\n"
 "Last-Translator: casey <me@caseylink.com>\n"
 "Language-Team: German <https://translate.streetnoise.at/projects/snorga/"
 "snorga/de/>\n"
@@ -667,6 +667,8 @@ msgstr "wenn verfügbar"
 msgctxt ":instrument/make-hint"
 msgid "Which company manufactures the item? e.g., Yamaha, unknown"
 msgstr ""
+"Von welcher Firma wird der Artikel hergestellt? Zum Beispiel Yamaha, "
+"unbekannt"
 
 #: :instrument/make
 #, ycp-format
@@ -702,7 +704,7 @@ msgstr "Neues Instrument"
 #, ycp-format
 msgctxt ":instrument/model-hint"
 msgid "What is the model number?"
-msgstr ""
+msgstr "Was ist die Modellnummer?"
 
 #: :instrument/description-hint
 #, ycp-format
@@ -720,7 +722,7 @@ msgstr "Lade Instrumentenfotos hoch"
 #, ycp-format
 msgctxt ":instrument/name-hint"
 msgid "e.g., Trompet, Yamaha or Mouthpiece Tenorsax"
-msgstr ""
+msgstr "z. B. Trompete, Yamaha oder Mundstück Tenorsax"
 
 #: :instrument/images-share-url-hint
 #, ycp-format
@@ -739,6 +741,8 @@ msgstr "Fotos öffentlicher Link"
 msgctxt ":instrument/separate-warning"
 msgid "A separate form must be filled out for each instrument and accessory."
 msgstr ""
+"Für jedes Instrument und Zubehör muss ein separates Formular ausgefüllt "
+"werden."
 
 #: :instrument/category-hint
 #, ycp-format
@@ -747,6 +751,8 @@ msgid ""
 "What type of item is this? Watch out! Flutes are Holz, but saxophones are "
 "Blech, Sax, Elektrisch!"
 msgstr ""
+"Was für ein Gegenstand ist das? Pass auf! Flöten sind Holz, aber Saxophone "
+"sind Blech, Sax, Elektrisch!"
 
 #: :instrument/create-subtitle
 #, ycp-format
@@ -755,6 +761,8 @@ msgid ""
 "Please enter the information about your instrument/accessories asked below "
 "in as much detail as possible."
 msgstr ""
+"Bitte trage die unten gefragten Informationen zu deinem Instrument/Zubehör "
+"so detailliert wie möglich ein."
 
 #: :instrument/owner
 #, ycp-format
@@ -1296,6 +1304,7 @@ msgstr "Ja, ich werde zahlen"
 msgctxt ":insurance.survey/pay-cost-confirm"
 msgid "You will have to pay about %1 per year for this item. Is that OK?"
 msgstr ""
+"Du musst etwa %1 pro Jahr für diesen Artikel bezahlen. Ist das in Ordnung?"
 
 #: :insurance.survey/admin-title
 #, ycp-format
@@ -1310,6 +1319,8 @@ msgid ""
 "Since this wasn't used at a gig in the last year the band can no longer pay "
 "for it."
 msgstr ""
+"Da dies im letzten Jahr nicht bei einem Gig verwendet wurde, kann die Band "
+"nicht mehr dafür bezahlen."
 
 #: :insurance.survey/already-closed
 #, ycp-format
@@ -1336,6 +1347,8 @@ msgid ""
 "If you want the item to stay insured, you'll have to pay for it yourself. "
 "This will cost about %1 per year for this item."
 msgstr ""
+"Wenn du möchtest, dass der Artikel versichert bleibt, musst du selbst dafür "
+"bezahlen. Das wird etwa %1 pro Jahr für diesen Artikel kosten."
 
 #: :insurance.survey/close-survey
 #, ycp-format
@@ -1353,7 +1366,7 @@ msgstr "Oder füge neue hinzu! Es dauert nur ein paar Minuten."
 #, ycp-format
 msgctxt ":insurance.survey/almost-there"
 msgid "Almost there"
-msgstr ""
+msgstr "Fast geschafft"
 
 #: :insurance.survey/confirm-close-title
 #, ycp-format
