@@ -14,7 +14,7 @@
 (def SHEET-NAME "Inventar")
 
 (defn coverage->row [{:instrument.coverage/keys [value insurer-id item-count types] :as coverage}]
-  (let [nachzeit? (some #(= "Over Night" (:insurance.coverage.type/name %)) types)
+  (let [nachzeit? (some #(= "Nachzeit im Auto" (:insurance.coverage.type/name %)) types)
         proberaum? (some #(= "Proberaum" (:insurance.coverage.type/name %)) types)
         item-count (or item-count 1)
         {:instrument/keys [category description serial-number build-year name model make owner images-share-url]} (:instrument.coverage/instrument coverage)]
