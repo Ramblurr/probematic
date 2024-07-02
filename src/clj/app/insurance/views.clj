@@ -580,7 +580,7 @@ Mit freundlichen Grüßen,
   ([req error coverage coverage-types]
    (coverage-form req error coverage coverage-types {}))
   ([{:keys [tr]} error coverage coverage-types {:keys [hide-private?] :as opts}]
-   (let [{:instrument.coverage/keys [value private? instrument item-count types]} coverage
+   (let [{:instrument.coverage/keys [value private? instrument item-count types insurer-id]} coverage
          {:instrument/keys [name]} instrument]
      (list
       (ui/text-left :type :number :attr {:step 1 :min 1} :label (tr [:insurance/item-count]) :hint (tr [:insurance/item-count-hint]) :id  "item-count" :value (or item-count 1) :error error)
@@ -609,7 +609,8 @@ Mit freundlichen Grüßen,
                                                                               :checked? (if (= 0 type-idx) true checked?)
                                                                               :disabled? (= 0 type-idx)))))
 
-                                                       coverage-types))))))
+                                                       coverage-types))
+      (ui/text-left :label (tr [:instrument.coverage/insurer-id]) :id "insurer-id" :value (or insurer-id "") :error error :required? false)))))
 
 (declare insurance-instrument-coverage-table)
 
@@ -1161,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', function() {
              :buttons (list
                        (when (controller/policy-editable? policy)
                          (ui/link-button :hx-boost "true" :href (urls/link-coverage-edit coverage) :label (tr [:action/edit]))))}
-            (ui/dl
+            [:dl {:class "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-4"}
              (ui/dl-item (tr [:insurance/item-count])
                          (:instrument.coverage/item-count coverage))
              (ui/dl-item (tr [:insurance/value])
@@ -1169,10 +1170,12 @@ document.addEventListener('DOMContentLoaded', function() {
              (ui/dl-item (tr [:band-private])
                          (if (:instrument.coverage/private? coverage)
                            [:span {:class "text-red-400"} (tr [:private-instrument])]
-                           [:span {:class "text-green-400"} (tr [:band-instrument])])))
+                           [:span {:class "text-green-400"} (tr [:band-instrument])]))
+             (ui/dl-item (tr [:instrument.coverage/insurer-id])
+                         (:instrument.coverage/insurer-id coverage))]
             [:div {:class "mt-4 max-w-xs"}
              [:h3 {:class "font-medium text-sm text-gray-500"} (tr [:insurance/coverage-types])]
-             [:dl {:class "mt-2  border-t border-b border-gray-200"}
+             [:dl {:class "mt-2  border-t border-gray-200"}
               (map (fn [{:insurance.coverage.type/keys [cost name]}]
                      [:div {:class "flex justify-between py-3 text-sm font-medium"}
                       [:dt {:class "text-gray-500"} name]

@@ -176,6 +176,7 @@
                        :status "Workflow Status"
                        :coverage-id "Coverage ID"
                        :types "Coverage Types"
+                       :insurer-id "Harmonia ID"
                        :value "Versicherungswert"
                        :value-hint "The estimated market value of the item, i.e., how much it would cost to replace it if lost."
                        :item-count "Item Count"

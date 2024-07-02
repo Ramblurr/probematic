@@ -361,13 +361,14 @@
     [:coverage-types [:vector {:min 1} :uuid]]
     [:value [:int {:min 1}]]
     [:item-count [:int {:min 1}]]
+    [:insurer-id {:optional true} :string]
     [:private-band [:enum "band" "private"]]]))
 
 (def UpdateInstrumentAndCoverage
   "This schema describes the http post we receive when updating an instrument and coverage "
   (mu/merge UpdateInstrument UpdateCoverage))
 
-(defn update-coverage-txs [policy {:keys [value coverage-types item-count private-band] :as decoded} coverage owner-changed? category-changed?]
+(defn update-coverage-txs [policy {:keys [value coverage-types item-count private-band insurer-id] :as decoded} coverage owner-changed? category-changed?]
   (let [coverage-ref (d/ref coverage)
         selected-coverage-type-ids (util/remove-dummy-uuid (mapv util.http/ensure-uuid (util/ensure-coll coverage-types)))
         private? (= "private" private-band)
@@ -405,7 +406,9 @@
              [:db/add coverage-ref :instrument.coverage/status (if has-upstream-change? :instrument.coverage.status/needs-review (:instrument.coverage/status coverage))]
              [:db/add coverage-ref :instrument.coverage/change change-status-value]
              [:db/add coverage-ref :instrument.coverage/private? private?]
-             [:db/add coverage-ref :instrument.coverage/item-count item-count]])))
+             [:db/add coverage-ref :instrument.coverage/item-count item-count]]
+            (when-not (str/blank? insurer-id)
+              [[:db/add coverage-ref :instrument.coverage/insurer-id insurer-id]]))))
 
 (defn create-coverage-txs [policy {:keys [value coverage-types item-count private-band policy-id instrument-id] :as decoded}]
   (let [private? (= "private" private-band)
