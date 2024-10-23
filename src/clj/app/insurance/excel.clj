@@ -70,12 +70,13 @@
 
 (defn -add-instruments! [sheet normal-style stuckpreis-style total-style label-style title items]
   (when (seq items)
-    (add-label-row! sheet title label-style)
+    (when title
+      (add-label-row! sheet title label-style))
     (doseq [item items]
       (let [row (excel/add-row! sheet item)]
         (set-item-styles! row normal-style stuckpreis-style total-style)))))
 
-(defn- generate-excel [fname output-fname new-items changed-items removed-items]
+(defn- generate-excel [fname output-fname {changed-items  :instrument.coverage.change/changed  removed-items  :instrument.coverage.change/removed new-items :instrument.coverage.change/new :as cs}]
   (let [wb               (excel/load-workbook-from-resource fname)
         sheet            (excel/select-sheet SHEET-NAME wb)
         total-style      (get-cell-style-at sheet 4 TOTAL-COL)
@@ -90,34 +91,39 @@
         date-today       (t/format (t/formatter "dd MMM yyyy" Locale/GERMAN) (t/today))
         add-instruments! (partial -add-instruments! sheet normal-style stuckpreis-style total-style label-style)]
     (clear-rows! sheet)
-    (add-instruments! (format "Neue Instrumente: (Ab %s)" date-today) new-items)
-    (add-blank-rows! sheet 3 normal-style)
-    (add-instruments! (format "Änderungen: (Ab %s)" date-today) changed-items)
-    (add-blank-rows! sheet 3 normal-style)
-    (add-instruments! (format "Entfernung: (Ab %s)" date-today) removed-items)
+    (when new-items
+      ;; they don't like the new items to have a title
+      (add-instruments! nil new-items)
+      (add-blank-rows! sheet 3 normal-style))
+    (when changed-items
+      (add-instruments! (format "Änderungen: (Ab %s)" date-today) changed-items)
+      (add-blank-rows! sheet 3 normal-style))
+    (when removed-items
+      (add-instruments! (format "Entfernung: (Ab %s)" date-today) removed-items))
     (excel/save-workbook! output-fname wb)))
 
-(defn generate-excel-changeset! [{:insurance.policy/keys [covered-instruments] :as policy} output]
-  (let [changed (into [] (filter #(= :instrument.coverage.change/changed (:instrument.coverage/change %)) covered-instruments))
-        removed (into [] (filter #(= :instrument.coverage.change/removed (:instrument.coverage/change %)) covered-instruments))
-        new (into [] (filter #(= :instrument.coverage.change/new (:instrument.coverage/change %)) covered-instruments))]
+(defn generate-excel-changeset! [changeset-scope {:insurance.policy/keys [covered-instruments] :as policy} output]
+  (let [gather-changeset (fn [scope]
+                           (into [] (filter #(= scope (:instrument.coverage/change %)) covered-instruments)))
+        changesets (into {} (map (fn [k] [k (map coverage->row (gather-changeset k))]) changeset-scope))]
 
-    (generate-excel  "insurance-changes-template.xls" output
-                     (map coverage->row new)
-                     (map coverage->row changed)
-                     (map coverage->row removed)))
+    (generate-excel  "insurance-changes-template.xls" output changesets))
   output)
 
-(defn send-email! [policy smtp-params from to subject body attachment-filename]
+(defn send-email! [policy smtp-params from to subject body attachment-filename-new attachment-filename-changes]
   (with-open [conn (tarayo/connect smtp-params)]
-    (let [output-stream (ByteArrayOutputStream.)]
-      (generate-excel-changeset! policy output-stream)
+    (let [new-items-output-stream (ByteArrayOutputStream.)
+          changed-items-output-stream (ByteArrayOutputStream.)]
+      (generate-excel-changeset! #{:instrument.coverage.change/new} policy new-items-output-stream)
+      (generate-excel-changeset! #{:instrument.coverage.change/changed :instrument.coverage.change/removed} policy changed-items-output-stream)
       (tarayo/send! conn {:from    from
                           :to      to
                           :subject subject
                           :body    [{:content body}
-                                    {:content      (.toByteArray output-stream)
-                                     :content-type "application/vnd.ms-excel" :filename attachment-filename}]}))))
+                                    {:content      (.toByteArray new-items-output-stream)
+                                     :content-type "application/vnd.ms-excel" :filename attachment-filename-new}
+                                    {:content      (.toByteArray changed-items-output-stream)
+                                     :content-type "application/vnd.ms-excel" :filename attachment-filename-changes}]}))))
 
 (comment
 

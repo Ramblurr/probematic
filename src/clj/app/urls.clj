@@ -33,6 +33,13 @@
 (def link-policy (partial link-helper "/insurance-policy/" :insurance.policy/policy-id))
 (def link-policy-send-notifications (partial link-helper "/insurance-policy-notify/" :insurance.policy/policy-id))
 (def link-policy-changes (partial link-helper "/insurance-policy-changes/" :insurance.policy/policy-id))
+
+(defn link-policy-changes-download-excel [policy preview-type attachment-filename]
+  (str
+   (link-helper "/insurance-changes-excel-download/" :insurance.policy/policy-id policy)
+   "?preview-type=" preview-type
+   "&attachment-filename=" (url-encode attachment-filename)))
+
 (def link-policy-changes-confirm (partial link-helper "/insurance-changes-excel/" :insurance.policy/policy-id))
 (defn link-policy-table-member [policy-or-policy-id member-or-member-id]
   (link-policy policy-or-policy-id (str "/#coverages-" (entity-id :member/member-id member-or-member-id))))

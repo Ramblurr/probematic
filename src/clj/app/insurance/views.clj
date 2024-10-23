@@ -177,12 +177,22 @@
         [:p {:class "flex items-center text-sm text-gray-500"}
          premium-factor]]]]]))
 
+(defn insurance-policy-changes-excel-download [req]
+  (controller/download-changes-excel req))
+
 (defn insurance-policy-changes-file [{:keys [db] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
         {:keys [action] :as p} (util.http/unwrap-params req)]
     (condp = action
       "preview"
-      (controller/download-changes-excel req)
+      (let [{:keys [preview-type] :as p} (util.http/unwrap-params req)
+            _ (assert preview-type)
+            attachment-filename (get (util.http/unwrap-params req) (keyword (str "attachment-filename-" preview-type)))
+            _ (assert attachment-filename)
+            url (urls/link-policy-changes-download-excel policy-id preview-type attachment-filename)]
+        (if (:htmx? req)
+          (response/hx-redirect url)
+          (response/redirect url)))
       "send"
       (do
         (controller/send-changes! req)
@@ -203,9 +213,14 @@
         member (auth/get-current-member req)
         sender (:member/name member)
         subject (format "Aktualisierung %s" policy-number)
-        attachment-filename (format "AnlageÄnderungen-%s.xls" (t/format (t/formatter "yyyy-M-d") (t/today)))]
+        attachments [{:title "Neue Instrumente"
+                      :type "new"
+                      :filename (format "AnlageNeueInstrumente-%s.xls" (t/format (t/formatter "yyyy-M-d") (t/today)))}
+                     {:title "Änderungen/Entfernung"
+                      :type "changes"
+                      :filename (format "AnlageÄnderungen-%s.xls" (t/format (t/formatter "yyyy-M-d") (t/today)))}]]
 
-    ;; (excel/generate-excel-changeset! policy nil)
+  ;; (excel/generate-excel-changeset! policy nil)
 
     [:div {:class "bg-white shadow py-4 px-6 space-y-12"}
      [:form {:action (urls/link-policy-changes-confirm policy) :method :post}
@@ -236,6 +251,8 @@
 
 Anbei finden Sie die neuesten Änderungen unserer Versicherungspolice für die Instrumente unserer Band. Bitte nehmen Sie sich einen Moment Zeit, um die Aktualisierungen durchzugehen.
 
+Sie finden einen Anhang mit den neuen Elementen und einen zweiten Anhang mit den Änderungen und Entfernungen.
+
 Für Rückfragen oder weitere Informationen stehe ich Ihnen gerne zur Verfügung.
 
 Mit freundlichen Grüßen,
@@ -243,18 +260,22 @@ Mit freundlichen Grüßen,
 "
                    recipient-title recipient-name sender)]]]
 
-        [:div {:class "col-span-full"}
-         [:label {:for "photo", :class "block text-sm font-medium leading-6 text-gray-900"} "Anhang"]
-         [:div {:class "mt-2 flex items-center gap-x-3"}
-          (icon/file-excel-outline {:class "h-12 w-12 text-gray-300"})
-          [:div {:class "mt-2 w-full space-y-2"}
-           [:div {:class "flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-sno-orange-600 sm:max-w-lg"}
-            [:input {:type :text :name "attachment-filename" :value attachment-filename
-                     :id "attachment-filename" :class "block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"}]]
-           [:button {:type :submit :class "rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                     :name "action"
-                     :value "preview"}
-            "Vorschau"]]]]]
+        (map-indexed (fn [idx {:keys [filename type title]}]
+                       (assert type)
+                       [:div {:class "col-span-full"}
+                        [:label {:for "photo", :class "block text-sm font-medium leading-6 text-gray-900"} (str "Anhang " (inc idx) ": " title)]
+                        [:div {:class "mt-2 flex items-center gap-x-3"}
+                         (icon/file-excel-outline {:class "h-12 w-12 text-gray-300"})
+                         [:div {:class "mt-2 w-full space-y-2"}
+                          [:div {:class "flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-sno-orange-600 sm:max-w-lg"}
+                           [:input {:type :text :name (str "attachment-filename-" type) :value filename :class "attachment-filename block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"}]]
+                          [:button {:type :button :class "rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                    :name "action"
+                                    :hx-post (urls/link-policy-changes-confirm policy)
+                                    :hx-include "input.attachment-filename"
+                                    :hx-vals {"preview-type" type}
+                                    :value "preview"}
+                           "Vorschau"]]]]) attachments)]
 
        [:div {:class "mt-6 flex items-center justify-end gap-x-6"}
         (ui/button :label (tr [:action/cancel]) :priority :white

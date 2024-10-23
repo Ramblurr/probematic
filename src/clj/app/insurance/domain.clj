@@ -61,7 +61,7 @@
 (defn update-total-coverage-price
   "Given a policy and a specific instrument coverage, calculate the total price for the instrument"
   [policy {:instrument.coverage/keys [value instrument] :as coverage}]
-    ;;  value * category factor * premium factor * coverage factor
+  ;;  value * category factor * premium factor * coverage factor
   (let [category-id (-> instrument :instrument/category :instrument.category/category-id)
         _  (assert category-id)
         category-factor (get  (make-category-factor-lookup policy) category-id)

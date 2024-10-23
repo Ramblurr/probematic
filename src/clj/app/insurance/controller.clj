@@ -612,12 +612,15 @@
 
 (defn download-changes-excel [{:keys [db] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
-
         policy (q/retrieve-policy db policy-id)
-        {:keys [attachment-filename]} (util.http/unwrap-params req)
-        _ (assert "attachment-filename")
+        {:keys [attachment-filename preview-type] :as p} (-> req :params)
+        _ (assert preview-type)
+        _ (assert attachment-filename)
         output-stream (ByteArrayOutputStream.)
-        file-bytes (.toByteArray (excel/generate-excel-changeset! policy output-stream))]
+        changeset-scope (condp = preview-type
+                          "new"  #{:instrument.coverage.change/new}
+                          "changes" #{:instrument.coverage.change/changed :instrument.coverage.change/removed})
+        file-bytes (.toByteArray (excel/generate-excel-changeset! changeset-scope policy output-stream))]
     {:status 200
      :headers {"Content-Disposition" (format "%s; filename*=UTF-8''%s" "attachment" (URLEncoder/encode attachment-filename "UTF-8"))
                "Content-Type" "application/vnd.ms-excel"
@@ -635,14 +638,16 @@
 
 (defn send-changes! [{:keys [db] :as req}]
   (let [policy-id (util.http/path-param-uuid! req :policy-id)
-        {:keys [attachment-filename] :as p} (util.http/unwrap-params req)
-        _ (assert "attachment-filename")
+        {:keys [attachment-filename-changes attachment-filename-new] :as p} (:params req)
+        _ (tap> [:send-changes! (:params req)])
+        _ (assert attachment-filename-changes)
+        _ (assert attachment-filename-new)
         policy (q/retrieve-policy db policy-id)
         {:keys [subject recipient body]} p
         smtp (-> req :system :env :smtp-sno)
         from (:from smtp)]
-    (excel/send-email! policy smtp from recipient subject body attachment-filename)
-    (confirm-and-activate-policy req (util.http/path-param-uuid! req :policy-id))))
+    (excel/send-email! policy smtp from recipient subject body attachment-filename-new attachment-filename-changes)
+    #_(confirm-and-activate-policy req (util.http/path-param-uuid! req :policy-id))))
 
 (defn instrument-coverage-history [{:keys [db] :as req} {:instrument.coverage/keys [coverage-id instrument] :as coverage}]
   (let [instr-id (:instrument/instrument-id instrument)

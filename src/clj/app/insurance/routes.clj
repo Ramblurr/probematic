@@ -147,6 +147,14 @@
     (insurance-detail)
     (insurance-notification)
 
+    ["/insurance-changes-excel-download/{policy-id}/"
+     {:get {:summary "Download the changes excel file"
+            :parameters {:query [:map
+                                 [:preview-type [:enum "new" "changes"]]
+                                 [:attachment-filename :string]]}
+            :handler (fn [req]
+                       (view/insurance-policy-changes-excel-download req))}}]
+
     ["/insurance-changes-excel/{policy-id}/"
      {:post {:summary "Get the changes excel file"
              :parameters {}
